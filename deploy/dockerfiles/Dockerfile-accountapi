@@ -1,0 +1,14 @@
+FROM golang:1.19-alpine AS builder
+
+WORKDIR /app
+COPY . .
+RUN go mod download
+RUN cd app/account/api && go build -o account-api ./account.go
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/app/account/api/account-api .
+COPY --from=builder /app/app/account/api/etc/account.yaml ./etc/
+EXPOSE 8080
+CMD ["./account-api"]

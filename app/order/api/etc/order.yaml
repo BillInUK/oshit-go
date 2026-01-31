@@ -1,0 +1,24 @@
+app:
+  name: "order-api"
+  port: 1200
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: "postgres"
+  dbname: "oshit_db"
+  sslmode: "disable"
+
+redis:
+  addr: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+
+nacos:
+  host: "localhost"
+  port: 8848
+  gprc-port: 9848
+  namespace: "public"
+  group: "DEFAULT_GROUP"

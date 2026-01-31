@@ -1,0 +1,49 @@
+# dubbo.yaml
+dubbo:
+  registries:
+    nacos:
+      protocol: nacos
+      address: ${NACOS_ADDRESS:127.0.0.1:8848}
+      username: nacos
+      password: lJPQwjjO9k
+      params:
+        grpc-port: ${GRPC_PORT:50051}
+        metadata-type: local
+
+  config_center:
+    protocol: nacos
+    address: ${NACOS_ADDRESS:127.0.0.1:8848}
+    username: nacos
+    password: lJPQwjjO9k
+    group: ${CONFIG_GROUP:DEFAULT_GROUP}
+    data_id: ${CONFIG_DATA_ID:account-service-config}
+    namespace: ${CONFIG_NAMESPACE:}
+    timeout: 5s
+
+  consumer:
+    references:
+      AccountService:
+        protocol: grpc
+        interface: com.example.account.service.AccountService  # 您的服务接口名
+        version: 1.0.0
+        group: test
+        cluster: failover
+        retries: 3
+        loadbalance: random
+        request_timeout: 3s
+
+  # 可选：配置元数据中心
+  metadata_report:
+    protocol: nacos
+    address: ${NACOS_ADDRESS:127.0.0.1:8848}
+    username: nacos
+    password: lJPQwjjO9k
+
+  # 应用配置
+  application:
+    name: account-consumer
+    organization: your-company
+    module: account-consumer
+    version: 1.0.0
+    environment: dev
+    metadata-type: local
