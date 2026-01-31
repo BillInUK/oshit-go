@@ -1,0 +1,5 @@
+{
+  "accountRpcTimeout": "3s",
+  "appName": "order-service",
+  "logLevel": "info"
+}

@@ -1,0 +1,21 @@
+# dubbo.yaml 核心配置
+dubbo:
+  application:
+    name: order-service # 你的应用名，和Nacos配置一致
+  registry:
+    address: nacos://127.0.0.1:8848 # 你的Nacos地址，服务发现已配置
+    params:
+      namespace: public # 你的命名空间
+      username: nacos   # 你的Nacos用户名
+      password: lJPQwjjO9k # 你的Nacos密码
+  # 新增：配置中心（Nacos），和registry同级
+  config_center:
+    protocol: nacos # 配置中心类型为Nacos
+    address: nacos://127.0.0.1:8848 # 同服务发现的Nacos地址
+    params:
+      namespace: public # 必须和你已有的Nacos命名空间一致
+      username: nacos   # 必须和你已有的Nacos用户名一致
+      password: lJPQwjjO9k # 必须和你已有的Nacos密码一致
+      group: DEFAULT_GROUP # 可选，和你Nacos配置的分组一致即可
+  consumer:
+    timeout: 3s # 原有消费端配置，不变

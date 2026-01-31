@@ -1,0 +1,67 @@
+2026-01-31T17:07:56.094+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-426bce71-07da-4fec-909b-45516a085c10 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:07:56.095+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:07:56.203+0800	INFO	rpc/rpc_client.go:234	config-0-426bce71-07da-4fec-909b-45516a085c10 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769850476099_172.17.0.1_58506
+2026-01-31T17:07:56.209+0800	ERROR	cache/disk_cache.go:86	failed to delete config file,cache:./nacos/cache/config/order-service-config@@DEFAULT_GROUP@@your-namespace-id ,value: ,err:remove ./nacos/cache/config/order-service-config@@DEFAULT_GROUP@@your-namespace-id: no such file or directory
+2026-01-31T17:11:50.555+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-685852a7-4546-4e71-894d-36b375078ce3 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:11:50.556+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:11:50.660+0800	INFO	rpc/rpc_client.go:234	config-0-685852a7-4546-4e71-894d-36b375078ce3 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769850710558_172.17.0.1_57730
+2026-01-31T17:11:50.663+0800	ERROR	cache/disk_cache.go:86	failed to delete config file,cache:./nacos/cache/config/order-service-config@@DEFAULT_GROUP@@your-namespace-id ,value: ,err:remove ./nacos/cache/config/order-service-config@@DEFAULT_GROUP@@your-namespace-id: no such file or directory
+2026-01-31T17:12:45.427+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-ae820d35-8e85-49f8-9f92-11edf790cd3d try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:12:45.427+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:12:45.532+0800	INFO	rpc/rpc_client.go:234	config-0-ae820d35-8e85-49f8-9f92-11edf790cd3d success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769850765430_172.17.0.1_58814
+2026-01-31T17:12:45.536+0800	ERROR	cache/disk_cache.go:86	failed to delete config file,cache:./nacos/cache/config/order-service-config@@DEFAULT_GROUP@@your-namespace-id ,value: ,err:remove ./nacos/cache/config/order-service-config@@DEFAULT_GROUP@@your-namespace-id: no such file or directory
+2026-01-31T17:14:38.591+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-9ec191f4-6972-4633-ae8f-792491e0faf6 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:14:38.592+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:14:38.697+0800	INFO	rpc/rpc_client.go:234	config-0-9ec191f4-6972-4633-ae8f-792491e0faf6 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769850878594_172.17.0.1_65478
+2026-01-31T17:14:48.952+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-01-31T17:30:06.061+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-363b1820-a953-4e9d-b50a-4d66c99a40d0 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:30:06.062+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:30:06.166+0800	INFO	rpc/rpc_client.go:234	config-0-363b1820-a953-4e9d-b50a-4d66c99a40d0 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769851806064_172.17.0.1_58156
+2026-01-31T17:34:10.863+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-bf540d85-39fc-420c-b918-39c3190dcd40 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:34:10.866+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:34:10.969+0800	INFO	rpc/rpc_client.go:234	config-0-bf540d85-39fc-420c-b918-39c3190dcd40 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769852050867_172.17.0.1_61136
+2026-01-31T17:34:29.492+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-a088be12-df16-4653-82b1-8fb181175ad8 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:34:29.493+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:34:29.596+0800	INFO	rpc/rpc_client.go:234	config-0-a088be12-df16-4653-82b1-8fb181175ad8 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769852069494_172.17.0.1_63218
+2026-01-31T17:35:15.044+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-18640401-8538-4fac-b937-87145cc04d04 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:35:15.044+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:35:15.148+0800	INFO	rpc/rpc_client.go:234	config-0-18640401-8538-4fac-b937-87145cc04d04 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769852115046_172.17.0.1_63740
+2026-01-31T17:35:44.140+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-2c76ad05-b667-4463-be64-69e6aff6b1ca try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:35:44.140+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:35:44.244+0800	INFO	rpc/rpc_client.go:234	config-0-2c76ad05-b667-4463-be64-69e6aff6b1ca success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769852144141_172.17.0.1_55750
+2026-01-31T17:44:22.888+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-eab04059-8c7a-4451-b2a1-84cae835dada try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:44:22.890+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:44:22.994+0800	INFO	rpc/rpc_client.go:234	config-0-eab04059-8c7a-4451-b2a1-84cae835dada success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769852662892_172.17.0.1_63006
+2026-01-31T17:44:22.999+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-01-31T17:52:54.291+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-67f94771-f86e-4245-94bf-563215aefb21 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:52:54.293+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:52:54.396+0800	INFO	rpc/rpc_client.go:234	config-0-67f94771-f86e-4245-94bf-563215aefb21 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769853174294_172.17.0.1_63808
+2026-01-31T17:52:54.402+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-01-31T17:56:02.015+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-eeb29e6e-4ed9-4179-9359-85f60f6d4f3e try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:56:02.017+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:56:02.119+0800	INFO	rpc/rpc_client.go:234	config-0-eeb29e6e-4ed9-4179-9359-85f60f6d4f3e success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769853362016_172.17.0.1_59590
+2026-01-31T17:56:02.124+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-01-31T17:57:27.941+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-d1b0bc8e-42ba-4120-b4b2-401e114dac9c try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:57:27.944+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:57:28.047+0800	INFO	rpc/rpc_client.go:234	config-0-d1b0bc8e-42ba-4120-b4b2-401e114dac9c success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769853447945_172.17.0.1_61472
+2026-01-31T17:57:28.055+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-01-31T17:58:28.930+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-9946b1ff-1599-4a96-a93c-df3f211e0c9f try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T17:58:28.933+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T17:58:29.037+0800	INFO	rpc/rpc_client.go:234	config-0-9946b1ff-1599-4a96-a93c-df3f211e0c9f success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769853508934_172.17.0.1_61026
+2026-01-31T17:58:29.043+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-01-31T18:01:23.493+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-56ff5851-5a24-4c08-ae8c-fb7072a4aca1 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T18:01:23.495+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T18:01:23.599+0800	INFO	rpc/rpc_client.go:234	config-0-56ff5851-5a24-4c08-ae8c-fb7072a4aca1 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769853683496_172.17.0.1_58980
+2026-01-31T18:01:23.606+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-01-31T18:05:30.965+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-4240cc91-8339-4d91-a7d2-48dc41bbc505 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T18:05:30.967+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T18:05:31.070+0800	INFO	rpc/rpc_client.go:234	config-0-4240cc91-8339-4d91-a7d2-48dc41bbc505 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769853930968_172.17.0.1_64946
+2026-01-31T18:05:31.077+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-01-31T18:06:15.247+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-f1ddd4bc-a7bb-4884-920d-171c06cd4fd4 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T18:06:15.248+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T18:06:15.351+0800	INFO	rpc/rpc_client.go:234	config-0-f1ddd4bc-a7bb-4884-920d-171c06cd4fd4 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769853975249_172.17.0.1_56118
+2026-01-31T18:06:15.358+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-01-31T18:07:07.720+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-e0304525-21e2-407c-9523-0eb0cb699fd5 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-01-31T18:07:07.721+0800	INFO	util/common.go:96	Local IP:192.168.110.177
+2026-01-31T18:07:07.824+0800	INFO	rpc/rpc_client.go:234	config-0-e0304525-21e2-407c-9523-0eb0cb699fd5 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1769854027722_172.17.0.1_56254
+2026-01-31T18:07:07.831+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>

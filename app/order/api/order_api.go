@@ -1,16 +1,30 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"log"
+	"oshit-go/app/order/api/internal/config"
 	"oshit-go/app/order/api/internal/handler"
+	"oshit-go/app/order/api/internal/rpc"
 	"oshit-go/app/order/api/internal/svc"
 	"strconv"
 )
 
 func main() {
+	if err := config.InitNacosConfig(); err != nil {
+		fmt.Printf("Nacos配置中心初始化失败，程序退出：%v\n", err)
+		return
+	}
+
+	// 2. 第二步：初始化dubbo-go消费端（调用上面的InitDubboClient）
+	if err := rpc.InitDubboClient(); err != nil {
+		fmt.Printf("❌ dubbo-go消费端初始化失败，程序退出: %v\n", err)
+		return
+	}
+
 	// 创建服务上下文
 	srvCtx, err := svc.NewServiceContext()
 	if err != nil {
