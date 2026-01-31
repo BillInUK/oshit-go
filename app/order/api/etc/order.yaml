@@ -17,8 +17,20 @@ redis:
   db: 0
 
 nacos:
-  host: "localhost"
-  port: 8848
-  gprc-port: 9848
-  namespace: "public"
-  group: "DEFAULT_GROUP"
+  server_config:                    # Nacos服务端配置（集群模式可添加多个server_config）
+    - host: "127.0.0.1"
+      port: 8848
+      grpc_port: 9848
+  client_config:                    # Nacos客户端配置（匹配服务端认证/命名空间配置）
+    namespace_id: "public"          # 命名空间（public/自定义）
+    timeout_ms: 5000                # 超时时间
+    not_load_cache_at_start: true   # 启动不加载本地缓存
+    log_dir: "./log/nacos"          # 日志目录（api/下相对路径）
+    cache_dir: "./cache/nacos"      # 缓存目录（api/下相对路径）
+    log_level: "info"               # 日志级别
+    username: "nacos"               # Nacos用户名
+    password: "lJPQwjjO9k"          # Nacos密码
+
+  subscribe_config:                 # Nacos订阅配置（要读取的业务配置标识）
+    data_id: "order-service-config" # 业务配置DataId
+    group: "DEFAULT_GROUP"          # 业务配置Group

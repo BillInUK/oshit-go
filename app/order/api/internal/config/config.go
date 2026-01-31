@@ -32,14 +32,42 @@ type RedisConfig struct {
 	DB       int    `mapstructure:"db"`
 }
 
+// NacosServerConfig Nacos服务端配置结构体（匹配yaml中的server_config）
+type NacosServerConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     uint64 `mapstructure:"port"`      // 注意：Nacos SDK的Port是uint64类型
+	GrpcPort uint64 `mapstructure:"grpc_port"` // 注意：Nacos SDK的Port是uint64类型
+}
+
+// NacosClientConfig Nacos客户端配置结构体（匹配yaml中的client_config）
+type NacosClientConfig struct {
+	NamespaceId         string `mapstructure:"namespace_id"`
+	TimeoutMs           uint64 `mapstructure:"timeout_ms"`
+	NotLoadCacheAtStart bool   `mapstructure:"not_load_cache_at_start"`
+	LogDir              string `mapstructure:"log_dir"`
+	CacheDir            string `mapstructure:"cache_dir"`
+	LogLevel            string `mapstructure:"log_level"`
+	Username            string `mapstructure:"username"`
+	Password            string `mapstructure:"password"`
+}
+
+// NacosSubscribeConfig Nacos订阅配置结构体（匹配yaml中的subscribe_config）
+type NacosSubscribeConfig struct {
+	DataId string `mapstructure:"data_id"`
+	Group  string `mapstructure:"group"`
+}
+
 type NacosConfig struct {
-	Host      string `mapstructure:"host"`
-	Port      int    `mapstructure:"port"`
-	GrpcPort  int    `mapstructure:"grpc-port"`
-	Namespace string `mapstructure:"namespace"`
-	Group     string `mapstructure:"group"`
-	Username  string `mapstructure:"username"`
-	Password  string `mapstructure:"password"`
+	ServerConfig    []NacosServerConfig  `mapstructure:"server_config"`
+	ClientConfig    NacosClientConfig    `mapstructure:"client_config"`
+	SubscribeConfig NacosSubscribeConfig `mapstructure:"subscribe_config"`
+}
+
+// NacosOrderCfg 原有业务配置结构体
+type NacosOrderCfg struct {
+	AccountRpcTimeout string `json:"accountRpcTimeout"`
+	AppName           string `json:"appName"`
+	LogLevel          string `json:"logLevel"`
 }
 
 func LoadConfig() (*Config, error) {

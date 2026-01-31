@@ -1,0 +1,4 @@
+2026-01-31T21:56:47.237+0800	ERROR	cache/disk_cache.go:101	get config from cache, cacheKey:order-service-config@@DEFAULT_GROUP@@public, cacheDir:./cache/nacos/config, error:open ./cache/nacos/config/order-service-config@@DEFAULT_GROUP@@public: no such file or directory 
+2026-01-31T21:56:47.238+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-01-31T22:10:18.375+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-01-31T22:10:58.868+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>

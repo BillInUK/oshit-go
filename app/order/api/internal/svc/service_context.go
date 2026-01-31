@@ -4,35 +4,39 @@ import (
 	"context"
 	"dubbo.apache.org/dubbo-go/v3/client"
 	_ "dubbo.apache.org/dubbo-go/v3/client"
-	"dubbo.apache.org/dubbo-go/v3/config_center"
+	dubbo_config "dubbo.apache.org/dubbo-go/v3/config"
 	_ "dubbo.apache.org/dubbo-go/v3/config_center/nacos"
 	_ "dubbo.apache.org/dubbo-go/v3/imports"
 	"dubbo.apache.org/dubbo-go/v3/registry"
 	_ "dubbo.apache.org/dubbo-go/v3/registry"
+	"encoding/json"
 	"fmt"
-	"github.com/dubbogo/gost/log/logger"
 	"github.com/go-redis/redis/v8"
+	"github.com/nacos-group/nacos-sdk-go/v2/clients"
+	nacos_client "github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
+	nacos_const "github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	account_pb "oshit-go/app/account/rpc/pb"
 	"oshit-go/app/order/api/internal/config"
 	"strconv"
+	"sync"
 )
 
 type ServiceContext struct {
-	Config        *config.Config
-	DB            *gorm.DB
-	Redis         *redis.Client
-	Ctx           context.Context
-	AccountClient account_pb.AccountService
+	Config      *config.Config
+	DB          *gorm.DB
+	Redis       *redis.Client
+	Ctx         context.Context
+	AccountCli  account_pb.AccountService
+	NacosCfgCli nacos_client.IConfigClient
 }
 
-// 自定义配置监听器（可选，用于监听配置变更）
-type configListener struct{}
-
-func (l *configListener) Process(event *config_center.ConfigChangeEvent) {
-	logger.Infof("配置中心监听器: Key=%s, Value=%s", event.Key, event.Value)
-}
+var (
+	configRWMutex sync.RWMutex         // 并发安全读写锁
+	nacosOrderCfg config.NacosOrderCfg // nacos配置的全局参数
+)
 
 func NewServiceContext() (*ServiceContext, error) {
 	// 加载配置
@@ -48,25 +52,63 @@ func NewServiceContext() (*ServiceContext, error) {
 	}
 
 	// 初始化Redis
-	redisClient, err := initRedis(cfg.Redis)
+	redisCli, err := initRedis(cfg.Redis)
 	if err != nil {
 		return nil, err
 	}
 
-	accountClient, err := initAccountRpcClient(cfg.Nacos)
+	// 初始化配置中心
+	nacosCfgCli, err := initNacosCfgCli(cfg.Nacos)
 	if err != nil {
 		return nil, err
 	}
 
+	// 初始化dubbo client
+	err = initDubboCli()
+	if err != nil {
+		return nil, err
+	}
+
+	// 初始化account的rpc客户端
+	accountCli, err := initAccountCli(cfg.Nacos)
+	if err != nil {
+		return nil, err
+	}
+
+	// 返回最终的service context
 	return &ServiceContext{
-		Ctx:           context.Background(),
-		Config:        cfg,
-		DB:            db,
-		Redis:         redisClient,
-		AccountClient: accountClient,
+		Ctx:         context.Background(),
+		Config:      cfg,
+		DB:          db,
+		Redis:       redisCli,
+		AccountCli:  accountCli,
+		NacosCfgCli: nacosCfgCli,
 	}, nil
 }
 
+// GetNacosOrderCfg 原有安全获取配置方法
+func (s *ServiceContext) GetNacosOrderCfg() config.NacosOrderCfg {
+	configRWMutex.RLock()
+	defer configRWMutex.RUnlock()
+	return nacosOrderCfg
+}
+
+// Close 程序结束时关闭资源
+func (s *ServiceContext) Close() error {
+	if s.Redis != nil {
+		if err := s.Redis.Close(); err != nil {
+			return err
+		}
+	}
+
+	sqlDB, err := s.DB.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
+}
+
+// initDatabase 初始化数据库
 func initDatabase(cfg config.DatabaseConfig) (*gorm.DB, error) {
 	portStr := strconv.Itoa(cfg.Port)
 	dsn := "host=" + cfg.Host +
@@ -79,6 +121,7 @@ func initDatabase(cfg config.DatabaseConfig) (*gorm.DB, error) {
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
 }
 
+// initRedis 初始化redis
 func initRedis(cfg config.RedisConfig) (*redis.Client, error) {
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	client := redis.NewClient(&redis.Options{
@@ -95,70 +138,98 @@ func initRedis(cfg config.RedisConfig) (*redis.Client, error) {
 	return client, nil
 }
 
-//func initAccountRpcClient(cfg config.NacosConfig) (account_pb.AccountService, error) {
-//	fmt.Println("正在连接Account RPC服务...")
-//	fmt.Println("地址: tri://127.0.0.1:20880")
-//
-//	cli, err := client.NewClient(
-//		client.WithClientURL("tri://127.0.0.1:20880"),
-//	)
-//	if err != nil {
-//		fmt.Printf("创建客户端失败: %v\n", err)
-//		return nil, err
-//	}
-//
-//	srv, err := account_pb.NewAccountService(cli)
-//	if err != nil {
-//		fmt.Printf("创建服务代理失败: %v\n", err)
-//		return nil, err
-//	}
-//
-//	fmt.Println("Account RPC客户端初始化成功")
-//	return srv, nil
-//}
+// initNacosCfgCli 初始化Nacos配置客户端
+func initNacosCfgCli(cfg config.NacosConfig) (nacos_client.IConfigClient, error) {
 
-//func initDynamicConfig(cfg config.NacosConfig) {
-//	rootConfig := dubbo_config.NewRootConfigBuilder().
-//		SetApplication(dubbo_config.NewApplicationConfigBuilder().
-//			SetName("account-consumer").
-//			Build()).
-//		AddRegistry("nacos", dubbo_config.NewRegistryConfigBuilder().
-//			SetAddress(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)).
-//			SetUsername("nacos").
-//			SetPassword("lJPQwjjO9k").
-//			AddParam("grpc-port", strconv.Itoa(cfg.GrpcPort)).
-//			AddParam("metadata-type", "local").
-//			Build()).
-//		SetConfigCenter(dubbo_config.NewConfigCenterConfigBuilder().
-//			SetProtocol("nacos").
-//			SetAddress(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)).
-//			SetUserName("nacos").
-//			SetPassword("lJPQwjjO9k").
-//			SetGroup("DEFAULT_GROUP").
-//			SetDataID("account-service-config").
-//			Build()).
-//		AddReference("AccountService", dubbo_config.NewReferenceConfigBuilder().
-//			SetProtocol("grpc").
-//			SetInterface("com.example.account.service.AccountService").
-//			Build()).
-//		Build()
-//
-//	dubbo_config.SetRootConfig(rootConfig)
-//}
+	// 步骤1：转换为Nacos SDK要求的ServerConfig格式（替代硬编码）
+	var serverConfigs []nacos_const.ServerConfig
+	for _, s := range cfg.ServerConfig {
+		serverConfigs = append(serverConfigs, nacos_const.ServerConfig{
+			IpAddr: s.Host,
+			Port:   s.Port,
+		})
+	}
 
-func initAccountRpcClient(cfg config.NacosConfig) (account_pb.AccountService, error) {
-	fmt.Printf("Account RPC客户端 通过注册Nacos host %s port %d grpc-port %d\n",
-		cfg.Host, cfg.Port, cfg.GrpcPort)
+	// 步骤2：转换为Nacos SDK要求的ClientConfig格式（替代硬编码）
+	clientConfig := nacos_const.ClientConfig{
+		NamespaceId:         cfg.ClientConfig.NamespaceId,
+		TimeoutMs:           cfg.ClientConfig.TimeoutMs,
+		NotLoadCacheAtStart: cfg.ClientConfig.NotLoadCacheAtStart,
+		LogDir:              cfg.ClientConfig.LogDir,
+		CacheDir:            cfg.ClientConfig.CacheDir,
+		LogLevel:            cfg.ClientConfig.LogLevel,
+		Username:            cfg.ClientConfig.Username,
+		Password:            cfg.ClientConfig.Password,
+	}
 
-	// 方法1：直接指定gRPC端口（推荐）
+	// 步骤3：创建Nacos配置客户端（逻辑不变，参数来源改为配置文件）
+	cfgClient, err := clients.CreateConfigClient(map[string]interface{}{
+		"serverConfigs": serverConfigs,
+		"clientConfig":  clientConfig,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("创建Nacos配置客户端失败: %v", err)
+	}
+
+	// 步骤4：监听业务配置变更（改用配置文件中的DataId/Group）
+	if err := listenConfigChange(cfg, cfgClient); err != nil {
+		return nil, fmt.Errorf("监听业务配置变更失败: %v", err)
+	}
+
+	fmt.Println("Nacos配置中心初始化成功，初始业务配置：", nacosOrderCfg)
+	return cfgClient, nil
+}
+
+// listenConfigChange 监听Nacos配置变更
+func listenConfigChange(cfg config.NacosConfig, cli nacos_client.IConfigClient) error {
+	// 从配置文件中获取订阅的DataId和Group，替代硬编码
+	subscribeCfg := cfg.SubscribeConfig
+	return cli.ListenConfig(vo.ConfigParam{
+		DataId: subscribeCfg.DataId,
+		Group:  subscribeCfg.Group,
+		OnChange: func(namespace, group, dataId, content string) {
+			fmt.Printf("Nacos业务配置已变更（DataId：%s），新配置：%s\n", dataId, content)
+			// 重新解析配置（逻辑不变）
+			configRWMutex.Lock()
+			defer configRWMutex.Unlock()
+			if err := json.Unmarshal([]byte(content), &nacosOrderCfg); err != nil {
+				fmt.Printf("解析变更后的Nacos业务配置失败: %v\n", err)
+				return
+			}
+			fmt.Println("全局业务配置已更新：", nacosOrderCfg)
+		},
+	})
+}
+
+// initDubboCli 初始化dubbo client
+func initDubboCli() error {
+	if err := dubbo_config.Load(dubbo_config.WithPath("./etc/dubbo.yaml")); err != nil {
+		return fmt.Errorf("dubbo-go 加载配置文件失败: %v", err)
+	}
+	fmt.Println("✅ dubbo-go消费端初始化成功（配置文件驱动，Nacos注册+配置中心集成完成）")
+	return nil
+}
+
+// initAccountCli 初始化AccountService的Rpc客户端
+func initAccountCli(cfg config.NacosConfig) (account_pb.AccountService, error) {
+
+	userName := cfg.ClientConfig.Username
+	password := cfg.ClientConfig.Password
+	host := cfg.ServerConfig[0].Host
+	port := cfg.ServerConfig[0].Port
+	grpcPort := cfg.ServerConfig[0].GrpcPort
+
+	fmt.Printf("Account RPC客户端 通过注册Nacos host %s port %d grpc-port %d\n", host, port, grpcPort)
+
+	grpcPortStr := strconv.FormatUint(grpcPort, 10)
 	cli, err := client.NewClient(
 		client.WithClientRegistry(
 			registry.WithNacos(),
-			registry.WithUsername("nacos"),
-			registry.WithPassword("lJPQwjjO9k"),
-			registry.WithAddress(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)),
+			registry.WithUsername(userName),
+			registry.WithPassword(password),
+			registry.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 			registry.WithParams(map[string]string{
-				"grpc-port":     strconv.Itoa(cfg.GrpcPort),
+				"grpc-port":     grpcPortStr,
 				"metadata-type": "local",
 			}),
 		),
@@ -174,87 +245,4 @@ func initAccountRpcClient(cfg config.NacosConfig) (account_pb.AccountService, er
 
 	fmt.Println("Account RPC客户端 (通过Nacos服务发现) 初始化成功")
 	return accountClient, nil
-}
-
-//func initAccountRpcClient(cfg config.NacosConfig) (account_pb.AccountService, error) {
-//	// 1. 构建并加载完整的Dubbo-go根配置（核心）
-//	rootConfig := dubbo_config.NewRootConfigBuilder().
-//		// 1.1 设置注册中心（用于服务发现）
-//		AddRegistry("nacos",
-//			dubbo_config.NewRegistryConfigBuilder().
-//				SetProtocol("nacos").
-//				SetAddress(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)).
-//				SetParams(map[string]string{
-//					"username":      "nacos",
-//					"password":      cfg.Password,
-//					"grpc-port":     strconv.Itoa(cfg.GrpcPort),
-//					"metadata-type": "local", // 避免metadata报告错误
-//				}).
-//				SetNamespace(cfg.Namespace).
-//				SetGroup(cfg.Group).
-//				Build(),
-//		).
-//		// 1.2 设置配置中心（指向同一个Nacos，用于管理动态配置）
-//		SetConfigCenter(
-//			dubbo_config.NewConfigCenterConfigBuilder().
-//				SetProtocol("nacos").
-//				SetAddress(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)).
-//				SetDataID("dubbo-order-config"). // 你的order服务专用配置DataID
-//				SetGroup("DUBBO_GROUP").
-//				SetNamespace(cfg.Namespace).
-//				Build(),
-//		).
-//		// 1.3 设置消费者引用 (关键修正：使用SetRegistryIDs)
-//		SetConsumer(
-//			dubbo_config.NewConsumerConfigBuilder().
-//				AddReference("AccountService",
-//					dubbo_config.NewReferenceConfigBuilder().
-//						SetInterface("dubbo"). // 必须与account服务注册名完全一致
-//						SetProtocol("tri").
-//						SetRegistryIDs("nacos"). // 修正：关联到上面AddRegistry的ID "nacos"
-//						SetVersion("1.0.0").
-//						SetGroup(cfg.Group).
-//						// 可选：设置超时、重试等参数
-//						// SetTimeout("5s").
-//						// SetRetries("3").
-//						Build(),
-//				).
-//				Build(),
-//		).
-//		Build()
-//
-//	// 2. 初始化框架（这会启动配置中心、注册中心等所有组件）
-//	if err := rootConfig.Init(); err != nil {
-//		return nil, fmt.Errorf("Dubbo-go框架初始化失败: %w", err)
-//	}
-//
-//	// 3. 现在可以安全地创建Dubbo客户端
-//	// 注意：这里创建的是与全局配置关联的客户端
-//	cli, err := client.NewClient()
-//	if err != nil {
-//		return nil, fmt.Errorf("创建Dubbo客户端失败: %w", err)
-//	}
-//
-//	// 4. 使用客户端创建AccountService代理
-//	accountClient, err := account_pb.NewAccountService(cli)
-//	if err != nil {
-//		return nil, fmt.Errorf("创建AccountService代理失败: %w", err)
-//	}
-//
-//	logger.Info("Account RPC客户端初始化成功 (通过Nacos配置中心与服务发现)")
-//	return accountClient, nil
-//}
-
-func (s *ServiceContext) Close() error {
-	if s.Redis != nil {
-		if err := s.Redis.Close(); err != nil {
-			return err
-		}
-	}
-
-	sqlDB, err := s.DB.DB()
-	if err != nil {
-		return err
-	}
-	return sqlDB.Close()
 }
