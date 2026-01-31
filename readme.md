@@ -28,10 +28,12 @@ docker run --name nacos-standalone-derby \
 
 # 进入控制台 
 http://127.0.0.1:8080/index.html#/register
-```
-lJPQwjjO9k
-```
 
+* 首次进入控制台之后回生成用户名和密码
+```
+用户名:    nacos
+密码:     lJPQwjjO9k
+```
 
 # 使用protocol buf
 
