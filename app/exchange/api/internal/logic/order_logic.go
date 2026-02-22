@@ -5,8 +5,8 @@ import (
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 	account_pb "oshit-go/app/account/rpc/pb"
-	"oshit-go/app/order/api/internal/svc"
-	"oshit-go/app/order/api/types"
+	"oshit-go/app/exchange/api/internal/svc"
+	"oshit-go/app/exchange/api/types"
 )
 
 type OrderLogic struct {
@@ -28,7 +28,7 @@ func NewOrderLogic(ctx context.Context, srvCtx *svc.ServiceContext) *OrderLogic 
 func (l *OrderLogic) FetchUserOrders(req *types.UserOrdersReq) (*types.UserOrdersResp, error) {
 	cli := l.srvCtx.AccountCli
 	user, err := cli.GetUser(l.ctx, &account_pb.GetUserRequest{
-		UserId: int64(0),
+		UserId: int64(1),
 	})
 	if err != nil {
 		return nil, err

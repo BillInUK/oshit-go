@@ -106,3 +106,13 @@ protoc --go_out=. --go-triple_out=. ./proto/account.proto
 # 如果你的 .proto 文件在其它目录，例如 ./proto/account.proto，命令如下：
 # protoc --go_out=. --go-triple_out=. ./proto/account.proto
 ```
+
+# gentool
+
+```
+gentool \
+  --dsn="postgres://postgres:postgres@localhost:5432/oshit_db?search_path=account&sslmode=disable" \
+  --db="postgres" \
+  --tables="t_user_info" \
+  --outPath="./app/account/dal" 
+```

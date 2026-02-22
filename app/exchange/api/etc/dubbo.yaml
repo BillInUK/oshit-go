@@ -2,7 +2,7 @@
 dubbo:
   # 应用配置（与Nacos、业务标识一致）
   application:
-    name: order-service
+    name: exchange-service
 
   # 注册中心配置（Nacos，与nacos_config.go中的连接信息完全一致）
   registries:
@@ -22,7 +22,7 @@ dubbo:
     password: lJPQwjjO9k
     namespace: public
     group: DEFAULT_GROUP
-    data-id: order-service-config  # 核心必选：与Nacos控制台、nacos_config.go一致
+    data-id: exchange-service-config  # 核心必选：与Nacos控制台、nacos_config.go一致
 
   # 消费端核心配置（纯消费端专属，匹配原硬编码规则）
   consumer:
@@ -36,7 +36,7 @@ dubbo:
     level: warn                    # 日志级别
     format: json                   # 日志输出格式
     appender: console,file         # 输出位置：控制台+文件
-    file-name: order-dubbo.log     # 日志文件名（工作目录api/下）
+    file-name: exchange-dubbo.log     # 日志文件名（工作目录api/下）
     file-max-size: 200             # 单个日志文件最大200MB
     file-compress: true            # 日志文件自动压缩
 

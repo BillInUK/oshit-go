@@ -5,8 +5,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"log"
-	"oshit-go/app/order/api/internal/handler"
-	"oshit-go/app/order/api/internal/svc"
+	"oshit-go/app/exchange/api/internal/handler"
+	"oshit-go/app/exchange/api/internal/svc"
 	"strconv"
 )
 
@@ -35,6 +35,6 @@ func main() {
 	handler.RegisterRoutes(app, srvCtx)
 
 	// 启动服务
-	log.Printf("Order API starting on :%s", appPort)
+	log.Printf("Exchange API starting on :%s", appPort)
 	log.Fatal(app.Listen(":" + appPort))
 }

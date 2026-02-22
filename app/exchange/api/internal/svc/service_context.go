@@ -19,7 +19,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	account_pb "oshit-go/app/account/rpc/pb"
-	"oshit-go/app/order/api/internal/config"
+	"oshit-go/app/exchange/api/internal/config"
 	"strconv"
 	"sync"
 )

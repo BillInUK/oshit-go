@@ -71,7 +71,7 @@ type NacosOrderCfg struct {
 }
 
 func LoadConfig() (*Config, error) {
-	viper.SetConfigFile("./etc/order.yaml")
+	viper.SetConfigFile("./etc/exchange.yaml")
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {

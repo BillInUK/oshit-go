@@ -1,5 +1,5 @@
 app:
-  name: "order-api"
+  name: "exchange-api"
   port: 1200
 
 database:
@@ -32,5 +32,5 @@ nacos:
     password: "lJPQwjjO9k"          # Nacos密码
 
   subscribe_config:                 # Nacos订阅配置（要读取的业务配置标识）
-    data_id: "order-service-config" # 业务配置DataId
+    data_id: "exchange-service-config" # 业务配置DataId
     group: "DEFAULT_GROUP"          # 业务配置Group

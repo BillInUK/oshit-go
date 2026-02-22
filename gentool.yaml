@@ -1,0 +1,31 @@
+version: "0.1"
+database:
+  # 数据库连接信息
+  dsn: "postgres://postgres:postgres@localhost:5432/oshit_db?search_path=account&sslmode=disable"
+  # 指定数据库类型，这里使用postgresql
+  db_type: "postgresql"
+  # 指定表前缀，用于生成模型时去掉表前缀
+  table_prefix: "t_"
+  # 指定是否将数据库字段名转换为小写，这里设置为false，因为我们要使用原始的字段名
+  no_lower_case: true
+  # 指定模型名称是否使用单数形式（gentool中可能没有这个配置，但我们可以在生成模型时指定）
+  # 注意：gentool的配置项可能不同，以下配置项名称可能需要调整
+  singular_table: true  # 如果支持的话，使用单数表名
+
+model:
+  # 模型代码的输出目录
+  out_path: "./app/account/dal/model"
+  # 模型包名
+  package_name: "model"
+  # 是否生成模型的同时生成查询代码
+  with_query: true
+  # 查询代码的输出目录
+  query_out_path: "./app/account/dal/query"
+  # 查询包名
+  query_package_name: "query"
+  # 字段JSON标签的命名策略，这里使用lower_camel，即小写驼峰
+  field_json_tag: "lower_camel"
+  # 是否生成默认查询，相当于代码中的gen.WithDefaultQuery
+  gen_default_query: true
+  # 是否生成查询接口，相当于代码中的gen.WithQueryInterface
+  gen_query_interface: true
