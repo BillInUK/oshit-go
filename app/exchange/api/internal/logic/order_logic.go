@@ -28,7 +28,7 @@ func NewOrderLogic(ctx context.Context, srvCtx *svc.ServiceContext) *OrderLogic 
 func (l *OrderLogic) FetchUserOrders(req *types.UserOrdersReq) (*types.UserOrdersResp, error) {
 	cli := l.srvCtx.AccountCli
 	user, err := cli.GetUser(l.ctx, &account_pb.GetUserRequest{
-		UserId: int64(1),
+		UserId: req.UserID,
 	})
 	if err != nil {
 		return nil, err
