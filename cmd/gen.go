@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-const PostgreSQLDSN = "postgres://postgres:postgres@localhost:5432/my_db"
+const PostgreSQLDSN = "postgres://postgres:postgres@localhost:5432/oshit_db"
 
 func connectDB(dsn string) *gorm.DB {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -27,6 +27,7 @@ func connectDB(dsn string) *gorm.DB {
 	return db
 }
 
+// 运行方法: go run gen.go ${service}，例如: go run gen.go base
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: go run gen.go <service>")
@@ -41,7 +42,15 @@ func main() {
 
 	db := connectDB(PostgreSQLDSN)
 	db = db.Debug()
-	db.Exec("set search_path to " + service) // 设置当前 schema
+
+	// 如果是base模块，则只生成public里面的表
+	dbSchema := "public"
+	if service != "base" {
+		dbSchema = service
+	}
+
+	// 设置当前 schema
+	db.Exec("set search_path to " + dbSchema)
 
 	g := gen.NewGenerator(gen.Config{
 		OutPath:      fmt.Sprintf("../app/%s/dal/query", service),
@@ -68,7 +77,7 @@ func main() {
 
 	// 自定义表名：添加 schema 前缀
 	g.WithTableNameStrategy(func(tableName string) string {
-		return service + "." + tableName
+		return dbSchema + "." + tableName
 	})
 
 	g.UseDB(db)

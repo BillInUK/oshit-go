@@ -1,0 +1,215 @@
+Kafka producer initialized successfully
+Task fee_task started
+Task compute_unit_task started
+Task price_task started
+2026/03/23 18:14:48 Base API starting on :1100
+
+ ┌───────────────────────────────────────────────────┐ 
+ │                     base-api                      │ 
+ │                   Fiber v2.52.5                   │ 
+ │               http://127.0.0.1:1100               │ 
+ │       (bound on host 0.0.0.0 and port 1100)       │ 
+ │                                                   │ 
+ │ Handlers ............ 32  Processes ........... 1 │ 
+ │ Prefork ....... Disabled  PID ............. 16045 │ 
+ └───────────────────────────────────────────────────┘ 
+
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T18:14:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T18:14:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T18:14:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:14:48+08:00
+ComputeUnitTask updated Redis cache at 2026-03-23T18:14:48+08:00
+18:15:08 | 200 |    6.274041ms | 127.0.0.1 | POST | /api/config/token | -
+FeeTask updated Redis cache at 2026-03-23T18:15:18+08:00
+18:15:27 | 200 |    1.558667ms | 127.0.0.1 | POST | /api/config/token | -
+18:15:27 | 200 |      14.875µs | 127.0.0.1 | GET | /api/config/fee-tolerance | -
+18:15:27 | 200 |    2.050417ms | 127.0.0.1 | GET | /api/fee/priority | -
+18:15:27 | 200 |      1.5175ms | 127.0.0.1 | GET | /api/fee/priority/on-chain | -
+
+2026/03/23 18:15:27 [31;1m/Users/mac/go/oshit-go/app/base/api/internal/logic/service_logic.go:38 [35;1mrecord not found
+[0m[33m[2.058ms] [34;1m[rows:0][0m SELECT * FROM "public"."t_service_info" WHERE "public"."t_service_info"."service" = 'test_service_1774260927' ORDER BY "t_service_info"."service" LIMIT 1
+18:15:27 | 200 |   10.606375ms | 127.0.0.1 | POST | /api/service/register | -
+Starting scan task for service: test_service_1774260927
+18:15:27 | 200 |     722.667µs | 127.0.0.1 | POST | /api/service/query | -
+FeeTask updated Redis cache at 2026-03-23T18:15:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:16:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:16:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:17:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:17:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:18:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:18:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:19:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:19:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T18:19:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T18:19:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T18:19:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:20:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:20:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:21:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:21:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:22:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:22:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:23:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:23:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:24:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:24:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T18:24:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T18:24:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T18:24:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:25:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:25:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:26:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:26:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:27:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:27:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:28:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:28:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:29:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:29:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T18:29:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T18:29:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T18:29:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:30:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:30:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:31:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:31:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:32:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:32:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:33:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:33:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:34:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:34:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T18:34:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T18:34:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T18:34:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:35:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:35:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:36:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:36:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:37:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:37:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:38:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:38:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:39:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:39:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T18:39:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T18:39:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T18:39:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:40:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:40:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:41:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:41:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:42:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:42:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:43:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:43:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:44:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:44:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T18:44:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T18:44:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T18:44:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:45:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:45:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:46:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:46:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:47:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:47:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:48:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:48:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:49:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:49:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T18:49:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T18:49:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T18:49:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:50:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:50:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:51:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:51:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:52:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:52:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:53:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:53:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:54:18+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T18:54:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T18:54:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T18:54:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:54:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:55:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:55:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:56:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:56:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:57:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:57:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:58:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:58:48+08:00
+FeeTask updated Redis cache at 2026-03-23T18:59:18+08:00
+FeeTask updated Redis cache at 2026-03-23T18:59:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T18:59:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T18:59:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T18:59:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:00:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:00:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:01:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:01:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:02:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:02:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:03:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:03:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:04:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:04:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T19:04:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T19:04:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T19:04:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:05:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:05:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:06:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:06:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:07:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:07:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:08:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:08:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:09:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:09:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T19:09:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T19:09:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T19:09:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:10:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:10:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:11:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:11:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:12:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:12:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:13:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:13:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:14:18+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T19:14:48+08:00
+ComputeUnitTask updated Redis cache at 2026-03-23T19:14:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T19:14:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T19:14:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:14:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:15:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:15:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:16:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:16:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:17:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:17:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:18:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:18:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:19:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:19:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T19:19:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T19:19:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T19:19:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:20:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:20:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:21:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:21:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:22:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:22:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:23:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:23:48+08:00
+FeeTask updated Redis cache at 2026-03-23T19:24:18+08:00
+FeeTask updated Redis cache at 2026-03-23T19:24:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1W cache at 2026-03-23T19:24:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1M cache at 2026-03-23T19:24:48+08:00
+PriceTask updated BIRD-EYE-APP-PRICE-1D cache at 2026-03-23T19:24:48+08:00
