@@ -13,4 +13,16 @@ func NewTaskManager(taskCtx *TaskContext) *TaskManager {
 func (m *TaskManager) StartAllTasks() {
 	feeTask := NewFeeTask(m.taskCtx)
 	feeTask.Start()
+
+	unitTask := NewUnitTask(m.taskCtx)
+	unitTask.Start()
+
+	priceTask := NewPriceTask(m.taskCtx)
+	priceTask.Start()
+
+	klineTask := NewKLineTask(m.taskCtx)
+	klineTask.Start()
+
+	holdersTask := NewHoldersTask(m.taskCtx)
+	holdersTask.Start()
 }

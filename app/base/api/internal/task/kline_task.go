@@ -46,7 +46,7 @@ func NewKLineTask(taskCtx *TaskContext) *KLineTask {
 	}
 }
 
-func (t *KLineTask) startKLineTask() {
+func (t *KLineTask) Start() {
 	// 更新后的时间间隔配置
 	intervals := map[string]IntervalConfig{
 		"1D": {TimeUnit: "D", Quantity: 1},

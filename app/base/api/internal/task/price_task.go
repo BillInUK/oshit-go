@@ -46,6 +46,51 @@ func NewPriceTask(taskCtx *TaskContext) *PriceTask {
 	}
 }
 
+func (t *PriceTask) Start() {
+	go t.startFetchRaydiumQuoteSOLPrice()
+}
+
+func (t *PriceTask) startFetchRaydiumQuoteSOLPrice() {
+	const (
+		lockKey       = "SOL-FETCH-RAYDIUM-PRICE"
+		refreshWindow = 15 * time.Second
+	)
+
+	for {
+		func() {
+			// 匿名函数隔离锁作用域
+			// 获取分布式锁（防重入）
+			mutex := t.redSync.NewMutex(lockKey)
+			if err := mutex.Lock(); err != nil {
+				var errTaken *redsync.ErrTaken
+				if errors.As(err, &errTaken) { // 过滤预期错误
+					return
+				}
+				log.Errorf("价格锁获取失败: %v", err)
+				return
+			}
+			defer mutex.Unlock() // 确保解锁
+
+			// 带重试的价格获取（参考之前fetchRaydiumPrice优化）
+			if err := t.fetchRaydiumQuoteTokenPrice("SOL", "So11111111111111111111111111111111111111112", 9); err != nil {
+				log.Errorf("获取token兑换solana价格获取失败: %v", err)
+				return
+			}
+			if err := t.fetchRaydiumQuoteTokenPrice("USDT", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", 6); err != nil {
+				log.Errorf("获取token兑换usdt价格获取失败: %v", err)
+				return
+			}
+			if err := t.fetchRaydiumUSDTQuoteSOLPrice("USDT", "SOL", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", "So11111111111111111111111111111111111111112", 1000000, 6, 9); err != nil {
+				log.Errorf("获取usdt兑换sol价格获取失败: %v", err)
+				return
+			}
+		}()
+
+		// 统一间隔控制
+		time.Sleep(refreshWindow)
+	}
+}
+
 func (t *PriceTask) fetchRaydiumQuoteTokenPrice(symbol, account string, decimal int) error {
 	priceTTL := 2 * time.Minute
 	redisKey := fmt.Sprintf("RAYDIUM-QUOTE-%s-PRICE", symbol)
@@ -203,45 +248,4 @@ func (t *PriceTask) fetchRaydiumUSDTQuoteSOLPrice(inputSymbol, outputSymbol, inp
 	}
 
 	return nil
-}
-
-func (t *PriceTask) startFetchRaydiumQuoteSOLPrice() {
-	const (
-		lockKey       = "SOL-FETCH-RAYDIUM-PRICE"
-		refreshWindow = 15 * time.Second
-	)
-
-	for {
-		func() {
-			// 匿名函数隔离锁作用域
-			// 获取分布式锁（防重入）
-			mutex := t.redSync.NewMutex(lockKey)
-			if err := mutex.Lock(); err != nil {
-				var errTaken *redsync.ErrTaken
-				if errors.As(err, &errTaken) { // 过滤预期错误
-					return
-				}
-				log.Errorf("价格锁获取失败: %v", err)
-				return
-			}
-			defer mutex.Unlock() // 确保解锁
-
-			// 带重试的价格获取（参考之前fetchRaydiumPrice优化）
-			if err := t.fetchRaydiumQuoteTokenPrice("SOL", "So11111111111111111111111111111111111111112", 9); err != nil {
-				log.Errorf("获取token兑换solana价格获取失败: %v", err)
-				return
-			}
-			if err := t.fetchRaydiumQuoteTokenPrice("USDT", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", 6); err != nil {
-				log.Errorf("获取token兑换usdt价格获取失败: %v", err)
-				return
-			}
-			if err := t.fetchRaydiumUSDTQuoteSOLPrice("USDT", "SOL", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", "So11111111111111111111111111111111111111112", 1000000, 6, 9); err != nil {
-				log.Errorf("获取usdt兑换sol价格获取失败: %v", err)
-				return
-			}
-		}()
-
-		// 统一间隔控制
-		time.Sleep(refreshWindow)
-	}
 }
