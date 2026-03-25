@@ -71,6 +71,9 @@ CREATE TABLE public.t_fee_statistics
     updated_at         timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE ONLY public.t_fee_statistics ADD CONSTRAINT fee_slot_tx_index UNIQUE (slot, transaction_index);
+ALTER TABLE ONLY public.t_fee_statistics ADD CONSTRAINT fee_transaction_id UNIQUE (transaction_id);
+
 DROP TABLE IF EXISTS public.t_qn_fee;
 CREATE TABLE public.t_qn_fee
 (
@@ -82,6 +85,8 @@ CREATE TABLE public.t_qn_fee
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE ONLY public.t_qn_fee ADD CONSTRAINT t_sol_qn_fee_pkey PRIMARY KEY (id);
 
 DROP TABLE IF EXISTS public.t_native_account_info;
 CREATE TABLE public.t_native_account_info

@@ -2,43 +2,25 @@ package svc
 
 import (
 	"context"
-	"crypto/rsa"
 	"fmt"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redsync/redsync/v4"
+	"github.com/go-redsync/redsync/v4/redis/goredis/v9"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"math"
 	"oshit-go/app/base/api/internal/config"
+	core_context "oshit-go/app/base/api/internal/context"
+	"oshit-go/app/base/api/internal/task"
 	"oshit-go/app/base/dal/model"
-	"oshit-go/app/base/task"
 	"oshit-go/common/utils"
 	"strconv"
 )
 
 type ServiceContext struct {
-	Config *config.Config
-	DB     *gorm.DB
-	Redis  *redis.Client
-	Ctx    context.Context
-
-	// 全局变量
-	AppGlobalPublicKey     *rsa.PublicKey
-	SolRpcClient           *rpc.Client
-	SolUserWalletRpcClient *rpc.Client
-	LightHouseAddress      solana.PublicKey
-	TokenDecimal           float64
-	KafkaProducer          interface{} // kafka.Producer类型，在kafka.go中定义
-	TaskManager            *task.TaskManager
-	TxScanTask             *task.TxScanTask
-
-	// 配置表数据
-	SystemConfig        *model.SystemConfig
-	ChainConfig         *model.ChainConfig
-	UserWalletRPCConfig *model.UserWalletRpcConfig
-	TokenConfig         *model.TokenConfig
-	AwsConfig           *model.AwsConfig
+	core_context.CoreContext
 }
 
 func NewServiceContext() (*ServiceContext, error) {
@@ -60,12 +42,18 @@ func NewServiceContext() (*ServiceContext, error) {
 		return nil, err
 	}
 
+	pool := goredis.NewPool(*redisClient)
+	redSync := redsync.New(pool)
+
 	// 创建ServiceContext
 	svcCtx := &ServiceContext{
-		Config: cfg,
-		DB:     db,
-		Redis:  redisClient,
-		Ctx:    context.Background(),
+		CoreContext: core_context.CoreContext{
+			Config:  cfg,
+			DB:      db,
+			Redis:   *redisClient,
+			RedSync: *redSync,
+			Ctx:     context.Background(),
+		},
 	}
 
 	// 初始化RSA公钥
@@ -87,7 +75,7 @@ func NewServiceContext() (*ServiceContext, error) {
 	}
 
 	// 初始化任务管理器
-	svcCtx.initTaskManager()
+	svcCtx.startTasks()
 
 	return svcCtx, nil
 }
@@ -104,12 +92,11 @@ func initDatabase(cfg config.DatabaseConfig) (*gorm.DB, error) {
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
 }
 
-func initRedis(cfg config.RedisConfig) (*redis.Client, error) {
-	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
-	client := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: cfg.Password,
-		DB:       cfg.DB,
+func initRedis(cfg config.RedisConfig) (*redis.UniversalClient, error) {
+	client := redis.NewUniversalClient(&redis.UniversalOptions{
+		MasterName: cfg.MasterName,
+		Addrs:      cfg.Hosts,
+		Password:   cfg.Password,
 	})
 
 	ctx := context.Background()
@@ -117,7 +104,7 @@ func initRedis(cfg config.RedisConfig) (*redis.Client, error) {
 		return nil, err
 	}
 
-	return client, nil
+	return &client, nil
 }
 
 const rsaPublicKey = `-----BEGIN PUBLIC KEY-----
@@ -166,7 +153,7 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 	s.TokenConfig = &tokenConfig
 
 	// 计算TokenDecimal
-	s.TokenDecimal = math.Pow(10, float64(tokenConfig.Decimal))
+	s.TokenDecimal = math.Pow(10, float64(tokenConfig.Decimals))
 
 	// 初始化AWS配置
 	var awsConfig model.AwsConfig
@@ -188,39 +175,23 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 func (s *ServiceContext) initSolanaRPC() {
 	// 初始化Solana RPC客户端
 	if s.ChainConfig != nil && s.ChainConfig.RPCURL != "" {
-		s.SolRpcClient = rpc.New(s.ChainConfig.RPCURL)
+		s.RpcClient = rpc.New(s.ChainConfig.RPCURL)
 	}
 
 	if s.UserWalletRPCConfig != nil && s.UserWalletRPCConfig.RPCURL != "" {
-		s.SolUserWalletRpcClient = rpc.New(s.UserWalletRPCConfig.RPCURL)
+		s.UserWalletRpcClient = rpc.New(s.UserWalletRPCConfig.RPCURL)
 	}
 }
 
-func (s *ServiceContext) initTaskManager() {
-	// 初始化任务管理器
-	s.TaskManager = task.NewTaskManager(s.DB, s.Redis, s.SolRpcClient)
-
-	// 初始化交易扫描任务
-	s.TxScanTask = task.NewTxScanTask(s.DB, s.SolRpcClient)
-
-	// 启动所有任务
-	if err := s.TaskManager.StartAll(s.Ctx); err != nil {
-		fmt.Printf("Start tasks error: %v\n", err)
+func (s *ServiceContext) startTasks() {
+	taskCtx := &task.TaskContext{
+		CoreContext: s.CoreContext,
 	}
-
-	// 启动交易扫描任务
-	if err := s.TxScanTask.Start(s.Ctx); err != nil {
-		fmt.Printf("Start tx scan task error: %v\n", err)
-	}
+	taskMgr := task.NewTaskManager(taskCtx)
+	taskMgr.StartAllTasks()
 }
 
 func (s *ServiceContext) Close() error {
-	// 停止所有任务
-	if s.TaskManager != nil {
-		if err := s.TaskManager.StopAll(); err != nil {
-			fmt.Printf("Stop tasks error: %v\n", err)
-		}
-	}
 
 	// 关闭Kafka生产者
 	if err := s.closeKafkaProducer(); err != nil {

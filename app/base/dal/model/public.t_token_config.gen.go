@@ -14,7 +14,7 @@ const TableNameTokenConfig = "public.t_token_config"
 type TokenConfig struct {
 	Name      string    `gorm:"column:name;not null" json:"name"`
 	Symbol    string    `gorm:"column:symbol;not null" json:"symbol"`
-	Decimal   int32     `gorm:"column:decimal;not null" json:"decimal"`
+	Decimals  int32     `gorm:"column:decimals;not null" json:"decimals"`
 	Mint      string    `gorm:"column:mint;not null" json:"mint"`
 	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`

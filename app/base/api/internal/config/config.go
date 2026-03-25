@@ -26,10 +26,9 @@ type DatabaseConfig struct {
 }
 
 type RedisConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	Password string `mapstructure:"password"`
-	DB       int    `mapstructure:"db"`
+	MasterName string   `mapstructure:"master-name"`
+	Hosts      []string `mapstructure:"hosts"`
+	Password   string   `mapstructure:"password"`
 }
 
 type KafkaConfig struct {

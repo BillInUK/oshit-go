@@ -27,7 +27,7 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 	// 配置路由
 	config := api.Group("/config")
 	{
-		config.Post("/token", configHandler.GetTokenInfo)
+		config.Get("/token", configHandler.GetTokenInfo)
 		config.Get("/fee-tolerance", configHandler.GetFeeTolerance)
 	}
 
@@ -38,7 +38,7 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 		fee.Get("/priority/on-chain", feeHandler.GetPriorityFeeOnBlockchain)
 		fee.Get("/compute-units", feeHandler.GetComputeUnitConsumed)
 	}
-
+	
 	// 价格路由
 	price := api.Group("/price")
 	{

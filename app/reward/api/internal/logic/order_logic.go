@@ -2,7 +2,6 @@ package logic
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 	base_pb "oshit-go/app/base/rpc/pb"
 	"oshit-go/app/reward/api/internal/svc"

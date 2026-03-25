@@ -226,7 +226,7 @@ func (l *ServiceLogic) QueryService(req *types.ServiceQueryReq) (*types.ServiceQ
 
 	if scan != nil {
 		resp.UntilTxID = scan.UntilTxID
-		resp.Slot = scan.Slot
+		resp.Slot = int64(scan.Slot)
 	}
 
 	return resp, nil

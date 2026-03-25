@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/gagliardetto/solana-go"
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redsync/redsync/v4"
 	"github.com/pkg/errors"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
@@ -25,7 +26,8 @@ type AuthLogic struct {
 	ctx    context.Context
 	srvCtx *svc.ServiceContext
 	db     *gorm.DB
-	rd     *redis.Client
+	rd     redis.UniversalClient
+	rs     redsync.Redsync
 }
 
 func NewAuthLogic(ctx context.Context, srvCtx *svc.ServiceContext) *AuthLogic {
@@ -34,6 +36,7 @@ func NewAuthLogic(ctx context.Context, srvCtx *svc.ServiceContext) *AuthLogic {
 		srvCtx: srvCtx,
 		db:     srvCtx.DB,
 		rd:     srvCtx.Redis,
+		rs:     srvCtx.RedSync,
 	}
 }
 

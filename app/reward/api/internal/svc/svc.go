@@ -11,7 +11,6 @@ import (
 	_ "dubbo.apache.org/dubbo-go/v3/registry"
 	"encoding/json"
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	nacos_client "github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
 	nacos_const "github.com/nacos-group/nacos-sdk-go/v2/common/constant"

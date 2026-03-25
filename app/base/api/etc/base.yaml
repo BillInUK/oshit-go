@@ -11,10 +11,13 @@ database:
   sslmode: "disable"
 
 redis:
-  host: "localhost"
-  port: 6379
-  password: ""
-  db: 0
+  hosts: localhost:6379
+  password:
+
+#redis:
+#  master-name: mymaster
+#  hosts: 172.31.7.31:26379,172.31.0.184:26379,172.31.1.124:26379
+#  password:
 
 kafka:
   brokers:

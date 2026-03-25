@@ -346,7 +346,7 @@ func TestGetTokenInfo(t *testing.T) {
 	t.Logf("✅ Get token info successful")
 	t.Logf("   Name: %s", resp.Name)
 	t.Logf("   Symbol: %s", resp.Symbol)
-	t.Logf("   Decimal: %d", resp.Decimal)
+	t.Logf("   Decimals: %d", resp.Decimal)
 	t.Logf("   Mint: %s", resp.Mint)
 }
 

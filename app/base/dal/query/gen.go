@@ -28,6 +28,7 @@ var (
 	ServiceTx           *serviceTx
 	SystemConfig        *systemConfig
 	TokenConfig         *tokenConfig
+	TxScanInfo          *txScanInfo
 	UserWalletRpcConfig *userWalletRpcConfig
 )
 
@@ -44,6 +45,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	ServiceTx = &Q.ServiceTx
 	SystemConfig = &Q.SystemConfig
 	TokenConfig = &Q.TokenConfig
+	TxScanInfo = &Q.TxScanInfo
 	UserWalletRpcConfig = &Q.UserWalletRpcConfig
 }
 
@@ -61,6 +63,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		ServiceTx:           newServiceTx(db, opts...),
 		SystemConfig:        newSystemConfig(db, opts...),
 		TokenConfig:         newTokenConfig(db, opts...),
+		TxScanInfo:          newTxScanInfo(db, opts...),
 		UserWalletRpcConfig: newUserWalletRpcConfig(db, opts...),
 	}
 }
@@ -79,6 +82,7 @@ type Query struct {
 	ServiceTx           serviceTx
 	SystemConfig        systemConfig
 	TokenConfig         tokenConfig
+	TxScanInfo          txScanInfo
 	UserWalletRpcConfig userWalletRpcConfig
 }
 
@@ -98,6 +102,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		ServiceTx:           q.ServiceTx.clone(db),
 		SystemConfig:        q.SystemConfig.clone(db),
 		TokenConfig:         q.TokenConfig.clone(db),
+		TxScanInfo:          q.TxScanInfo.clone(db),
 		UserWalletRpcConfig: q.UserWalletRpcConfig.clone(db),
 	}
 }
@@ -124,6 +129,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		ServiceTx:           q.ServiceTx.replaceDB(db),
 		SystemConfig:        q.SystemConfig.replaceDB(db),
 		TokenConfig:         q.TokenConfig.replaceDB(db),
+		TxScanInfo:          q.TxScanInfo.replaceDB(db),
 		UserWalletRpcConfig: q.UserWalletRpcConfig.replaceDB(db),
 	}
 }
@@ -140,6 +146,7 @@ type queryCtx struct {
 	ServiceTx           IServiceTxDo
 	SystemConfig        ISystemConfigDo
 	TokenConfig         ITokenConfigDo
+	TxScanInfo          ITxScanInfoDo
 	UserWalletRpcConfig IUserWalletRpcConfigDo
 }
 
@@ -156,6 +163,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		ServiceTx:           q.ServiceTx.WithContext(ctx),
 		SystemConfig:        q.SystemConfig.WithContext(ctx),
 		TokenConfig:         q.TokenConfig.WithContext(ctx),
+		TxScanInfo:          q.TxScanInfo.WithContext(ctx),
 		UserWalletRpcConfig: q.UserWalletRpcConfig.WithContext(ctx),
 	}
 }

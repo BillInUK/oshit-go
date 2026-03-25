@@ -1,6 +1,9 @@
 package types
 
-import "oshit-go/common/utils"
+import (
+	"oshit-go/common/pkg/entity"
+	"oshit-go/common/utils"
+)
 
 // Auth Types
 type LoginReq struct {
@@ -25,7 +28,7 @@ type GetTokenInfoReq struct {
 type GetTokenInfoRsp struct {
 	Name      string `json:"name"`
 	Symbol    string `json:"symbol"`
-	Decimal   int32  `json:"decimal"`
+	Decimals  int32  `json:"decimal"`
 	Mint      string `json:"mint"`
 	CreatedAt string `json:"created_at"`
 }
@@ -35,18 +38,9 @@ type GetFeeToleranceRsp struct {
 	MaxFee uint64 `json:"max_fee"`
 }
 
-// Fee Types
-type FeeDetail struct {
-	P50  uint64 `json:"p50"`
-	P90  uint64 `json:"p90"`
-	P95  uint64 `json:"p95"`
-	P99  uint64 `json:"p99"`
-	Mean uint64 `json:"mean"`
-}
-
 type PriorityFeeRsp struct {
-	PerComputeUnit FeeDetail `json:"per_compute_unit"`
-	PerTransaction FeeDetail `json:"per_transaction"`
+	PerComputeUnit entity.FeeDetail `json:"per_compute_unit"`
+	PerTransaction entity.FeeDetail `json:"per_transaction"`
 }
 
 type ComputeUnitConsumedRsp struct {

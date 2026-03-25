@@ -3,7 +3,6 @@ package svc
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"

@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
+	"oshit-go/common/pkg/entity"
 )
 
 type FeeLogic struct {
@@ -28,7 +29,7 @@ func (l *FeeLogic) GetPriorityFee() (*types.PriorityFeeRsp, error) {
 		return nil, errors.New("get per compute unit fee error")
 	}
 
-	var perComputeUnit types.FeeDetail
+	var perComputeUnit entity.FeeDetail
 	if err := json.Unmarshal([]byte(perComputeUnitJSON), &perComputeUnit); err != nil {
 		return nil, errors.New("unmarshal per compute unit fee error")
 	}
@@ -39,7 +40,7 @@ func (l *FeeLogic) GetPriorityFee() (*types.PriorityFeeRsp, error) {
 		return nil, errors.New("get per transaction fee error")
 	}
 
-	var perTransaction types.FeeDetail
+	var perTransaction entity.FeeDetail
 	if err := json.Unmarshal([]byte(perTransactionJSON), &perTransaction); err != nil {
 		return nil, errors.New("unmarshal per transaction fee error")
 	}
@@ -58,25 +59,5 @@ func (l *FeeLogic) GetPriorityFeeOnBlockchain() (*types.PriorityFeeRsp, error) {
 
 // GetComputeUnitConsumed 获取计算单元消耗
 func (l *FeeLogic) GetComputeUnitConsumed() (*types.ComputeUnitConsumedRsp, error) {
-	// 通过TaskManager获取计算单元消耗
-	if l.srvCtx.TaskManager == nil {
-		return nil, errors.New("task manager not initialized")
-	}
-
-	computeUnitTask := l.srvCtx.TaskManager.GetComputeUnitTask()
-	if computeUnitTask == nil {
-		return nil, errors.New("compute unit task not found")
-	}
-
-	consumed, err := computeUnitTask.GetComputeUnitConsumed(l.ctx)
-	if err != nil {
-		return nil, errors.New("get compute unit consumed error")
-	}
-
-	return &types.ComputeUnitConsumedRsp{
-		MiniRent:          consumed["mini_rent"],
-		AssociatedAccount: consumed["associated_account"],
-		TransferChecked:   consumed["transfer_checked"],
-		Memo:              consumed["memo"],
-	}, nil
+	return nil, nil
 }

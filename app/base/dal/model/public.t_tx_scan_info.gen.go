@@ -8,12 +8,12 @@ const TableNameTxScanInfo = "public.t_tx_scan_info"
 
 // TxScanInfo mapped from table <public.t_tx_scan_info>
 type TxScanInfo struct {
-	Service       string `gorm:"column:service;not null;primaryKey" json:"service"`
-	NativeAccount string `gorm:"column:native_account;not null" json:"native_account"`
-	PdaAccount    string `gorm:"column:pda_account;not null;primaryKey" json:"pda_account"`
-	UntilTxID     string `gorm:"column:until_tx_id;not null" json:"until_tx_id"`
-	BeforeTxID    string `gorm:"column:before_tx_id" json:"before_tx_id"`
-	Slot          int64  `gorm:"column:slot;not null;default:0" json:"slot"`
+	Service       string  `gorm:"column:service;primaryKey;comment:业务服务名称" json:"service"`                          // 业务服务名称
+	NativeAccount string  `gorm:"column:native_account;not null;comment:原生Solana地址" json:"native_account"`          // 原生Solana地址
+	PdaAccount    string  `gorm:"column:pda_account;primaryKey;comment:PDA地址（通常是token_account）" json:"pda_account"` // PDA地址（通常是token_account）
+	UntilTxID     string  `gorm:"column:until_tx_id;not null;comment:扫描截止的交易ID" json:"until_tx_id"`                 // 扫描截止的交易ID
+	BeforeTxID    string  `gorm:"column:before_tx_id;comment:扫描起始的交易ID（可选）" json:"before_tx_id"`                    // 扫描起始的交易ID（可选）
+	Slot          float64 `gorm:"column:slot;not null;comment:最后扫描的slot" json:"slot"`                               // 最后扫描的slot
 }
 
 // TableName TxScanInfo's table name

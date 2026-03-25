@@ -24,10 +24,9 @@ func NewConfigLogic(ctx context.Context, srvCtx *svc.ServiceContext) *ConfigLogi
 }
 
 // GetTokenInfo 获取token信息
-func (l *ConfigLogic) GetTokenInfo(req *types.GetTokenInfoReq) (*types.GetTokenInfoRsp, error) {
+func (l *ConfigLogic) GetTokenInfo() (*types.GetTokenInfoRsp, error) {
 	var tokenConfig model.TokenConfig
 	if err := l.db.Model(&tokenConfig).
-		Where("name = ? AND symbol = ?", req.Brand, req.Symbol).
 		First(&tokenConfig).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("token config not found")
@@ -36,11 +35,10 @@ func (l *ConfigLogic) GetTokenInfo(req *types.GetTokenInfoReq) (*types.GetTokenI
 	}
 
 	return &types.GetTokenInfoRsp{
-		Name:      tokenConfig.Name,
-		Symbol:    tokenConfig.Symbol,
-		Decimal:   tokenConfig.Decimal,
-		Mint:      tokenConfig.Mint,
-		CreatedAt: tokenConfig.CreatedAt.Format("2006-01-02 15:04:05"),
+		Name:     tokenConfig.Name,
+		Symbol:   tokenConfig.Symbol,
+		Decimals: tokenConfig.Decimals,
+		Mint:     tokenConfig.Mint,
 	}, nil
 }
 
