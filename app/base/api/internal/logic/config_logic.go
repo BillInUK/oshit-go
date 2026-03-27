@@ -2,11 +2,9 @@ package logic
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
-	"oshit-go/app/base/dal/model"
 )
 
 type ConfigLogic struct {
@@ -21,25 +19,6 @@ func NewConfigLogic(ctx context.Context, srvCtx *svc.ServiceContext) *ConfigLogi
 		srvCtx: srvCtx,
 		db:     srvCtx.DB,
 	}
-}
-
-// GetTokenInfo 获取token信息
-func (l *ConfigLogic) GetTokenInfo() (*types.GetTokenInfoRsp, error) {
-	var tokenConfig model.TokenConfig
-	if err := l.db.Model(&tokenConfig).
-		First(&tokenConfig).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("token config not found")
-		}
-		return nil, errors.New("query token info error")
-	}
-
-	return &types.GetTokenInfoRsp{
-		Name:     tokenConfig.Name,
-		Symbol:   tokenConfig.Symbol,
-		Decimals: tokenConfig.Decimals,
-		Mint:     tokenConfig.Mint,
-	}, nil
 }
 
 // GetFeeTolerance 获取手续费容错

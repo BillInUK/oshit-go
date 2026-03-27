@@ -8,7 +8,6 @@ import (
 	"oshit-go/app/base/api/internal/types"
 	"oshit-go/app/base/dal/model"
 	"oshit-go/app/base/dal/query"
-	"strconv"
 	"time"
 
 	"gorm.io/gorm"
@@ -198,37 +197,5 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 
 	return &types.RecursiveQueryRsp{
 		Records: responseRecords,
-	}, nil
-}
-
-func (l *InviteLogic) GetRewardDistribution() (*types.RewardDistributionRsp, error) {
-	return &types.RewardDistributionRsp{
-		Level: 1,
-	}, nil
-}
-
-func (l *InviteLogic) GetRewardClaims(levelStr string) (*types.RewardClaimRsp, error) {
-	level, err := strconv.ParseInt(levelStr, 10, 32)
-	if err != nil || level > 20 {
-		return nil, errors.New("level must be integer <= 20")
-	}
-
-	return &types.RewardClaimRsp{
-		Level: int32(level),
-		Rate:  0.1,
-	}, nil
-}
-
-func (l *InviteLogic) GetTokenHolders() (*types.TokenHoldersRsp, error) {
-	q := query.Use(l.svcCtx.DB)
-	naInfo := q.NativeAccountInfo
-
-	count, err := naInfo.WithContext(l.ctx).Count()
-	if err != nil {
-		return nil, fmt.Errorf("get token holders error: %v", err)
-	}
-
-	return &types.TokenHoldersRsp{
-		HoldersNumber: int(count),
 	}, nil
 }

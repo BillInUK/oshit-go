@@ -27,28 +27,14 @@ func (h *FeeHandler) GetPriorityFee(fiberCtx *fiber.Ctx) error {
 	return fiberCtx.JSON(resp)
 }
 
-// GetPriorityFeeOnBlockchain 获取链上优先手续费
-func (h *FeeHandler) GetPriorityFeeOnBlockchain(fiberCtx *fiber.Ctx) error {
+// GetInstUnits 获取计算单元消耗
+func (h *FeeHandler) GetInstUnits(fiberCtx *fiber.Ctx) error {
 	fl := logic.NewFeeLogic(fiberCtx.Context(), h.srvCtx)
-	resp, err := fl.GetPriorityFeeOnBlockchain()
+	resp, err := fl.GetInstUnits()
 	if err != nil {
 		return fiberCtx.Status(500).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
-
-	return fiberCtx.JSON(resp)
-}
-
-// GetComputeUnitConsumed 获取计算单元消耗
-func (h *FeeHandler) GetComputeUnitConsumed(fiberCtx *fiber.Ctx) error {
-	fl := logic.NewFeeLogic(fiberCtx.Context(), h.srvCtx)
-	resp, err := fl.GetComputeUnitConsumed()
-	if err != nil {
-		return fiberCtx.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
 	return fiberCtx.JSON(resp)
 }

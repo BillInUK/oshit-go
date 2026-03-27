@@ -188,7 +188,7 @@ func (s *ServiceContext) startTasks() {
 		CoreContext: s.CoreContext,
 	}
 	taskMgr := task.NewTaskManager(taskCtx)
-	taskMgr.StartAllTasks()
+	go taskMgr.StartAllTasks()
 }
 
 func (s *ServiceContext) Close() error {

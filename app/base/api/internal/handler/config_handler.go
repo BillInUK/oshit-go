@@ -14,18 +14,6 @@ func NewConfigHandler(svc *svc.ServiceContext) *ConfigHandler {
 	return &ConfigHandler{svc}
 }
 
-// GetTokenInfo 获取token信息
-func (h *ConfigHandler) GetTokenInfo(fiberCtx *fiber.Ctx) error {
-	cl := logic.NewConfigLogic(fiberCtx.Context(), h.srvCtx)
-	resp, err := cl.GetTokenInfo()
-	if err != nil {
-		return fiberCtx.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-	return fiberCtx.JSON(resp)
-}
-
 // GetFeeTolerance 获取手续费容错
 func (h *ConfigHandler) GetFeeTolerance(fiberCtx *fiber.Ctx) error {
 	cl := logic.NewConfigLogic(fiberCtx.Context(), h.srvCtx)

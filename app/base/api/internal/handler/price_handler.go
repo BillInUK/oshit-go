@@ -5,6 +5,7 @@ import (
 	"oshit-go/app/base/api/internal/logic"
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
+	"oshit-go/common/pkg/response"
 )
 
 type PriceHandler struct {
@@ -61,6 +62,16 @@ func (h *PriceHandler) GetBirdEyePrice(fiberCtx *fiber.Ctx) error {
 		return fiberCtx.Status(400).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
+	}
+
+	// 验证时间间隔参数
+	validIntervals := map[string]bool{"1D": true, "1W": true, "1M": true}
+	if req.Interval == "" {
+		return response.BadRequest(fiberCtx, "interval must be 1D,1W,1M")
+	}
+
+	if !validIntervals[req.Interval] {
+		return response.BadRequest(fiberCtx, "interval must be 1D,1W,1M")
 	}
 
 	pl := logic.NewPriceLogic(fiberCtx.Context(), h.srvCtx)

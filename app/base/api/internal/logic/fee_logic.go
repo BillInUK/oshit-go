@@ -3,10 +3,12 @@ package logic
 import (
 	"context"
 	"encoding/json"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
 	"oshit-go/common/pkg/entity"
+	"strconv"
 )
 
 type FeeLogic struct {
@@ -51,13 +53,43 @@ func (l *FeeLogic) GetPriorityFee() (*types.PriorityFeeRsp, error) {
 	}, nil
 }
 
-// GetPriorityFeeOnBlockchain 获取链上优先手续费
-func (l *FeeLogic) GetPriorityFeeOnBlockchain() (*types.PriorityFeeRsp, error) {
-	// 与GetPriorityFee相同，因为数据都来自链上
-	return l.GetPriorityFee()
-}
-
-// GetComputeUnitConsumed 获取计算单元消耗
-func (l *FeeLogic) GetComputeUnitConsumed() (*types.ComputeUnitConsumedRsp, error) {
-	return nil, nil
+// GetInstUnits 获取计算单元消耗
+func (l *FeeLogic) GetInstUnits() (*types.ComputeUnitConsumedRsp, error) {
+	ctx := context.Background()
+	miniRentStr, err := l.srvCtx.Redis.Get(ctx, "COMPUTE-UNIT-ASSOCIATED-ACCOUNT-MINI-RENT").Result()
+	if err != nil {
+		log.Errorf("获取solana 最小账户租金错误: %v", err)
+		return nil, errors.New("get mini rent error")
+	}
+	miniRent, err := strconv.ParseUint(miniRentStr, 10, 64)
+	if err != nil {
+		log.Errorf("获取solana 最小账户租金，无法将redis内的值转成float64错误: %v", err)
+		return nil, errors.New("get mini rent error")
+	}
+	associatedAccountStr, err := l.srvCtx.Redis.Get(ctx, "COMPUTE-UNIT-ASSOCIATED-ACCOUNT").Result()
+	if err != nil {
+		log.Errorf("获取solana 获取创建token account消耗计算单元错误: %v", err)
+		return nil, errors.New("get associated account units consumed error")
+	}
+	associatedAccount, err := strconv.ParseUint(associatedAccountStr, 10, 64)
+	if err != nil {
+		log.Errorf("获取solana 获取创建token account消耗计算单元，无法将redis内的值转成float64错误: %v", err)
+		return nil, errors.New("get mini rent error")
+	}
+	memoStr, err := l.srvCtx.Redis.Get(ctx, "COMPUTE-UNIT-MEMO").Result()
+	if err != nil {
+		log.Errorf("获取solana 获取memo指令消耗计算单元，将redis内的值转成float64错误: %v", err)
+		return nil, errors.New("get transfer checked units consumed error")
+	}
+	memo, err := strconv.ParseUint(memoStr, 10, 64)
+	if err != nil {
+		log.Errorf("获取solana 获取memo指令消耗计算单元，将redis内的值转成float64错误: %v", err)
+		return nil, errors.New("get mini rent error")
+	}
+	return &types.ComputeUnitConsumedRsp{
+		MiniRent:          miniRent,
+		AssociatedAccount: associatedAccount,
+		TransferChecked:   6472,
+		Memo:              memo,
+	}, nil
 }
