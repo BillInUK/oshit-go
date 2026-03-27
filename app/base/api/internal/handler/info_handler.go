@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"oshit-go/app/base/api/internal/logic"
 	"oshit-go/app/base/api/internal/svc"
+	"oshit-go/common/pkg/response"
 )
 
 type InfoHandler struct {
@@ -19,11 +20,9 @@ func (h *InfoHandler) GetTokenInfo(fiberCtx *fiber.Ctx) error {
 	cl := logic.NewInfoLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := cl.GetTokenInfo()
 	if err != nil {
-		return fiberCtx.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return response.FailWithMsg(fiberCtx, err.Error())
 	}
-	return fiberCtx.JSON(resp)
+	return response.OkWithData(fiberCtx, resp)
 }
 
 // GetTokenHolders 获取token持有者数量
@@ -31,10 +30,8 @@ func (h *InfoHandler) GetTokenHolders(fiberCtx *fiber.Ctx) error {
 	il := logic.NewInfoLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := il.GetTokenHolders()
 	if err != nil {
-		return fiberCtx.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return response.ServerError(fiberCtx, "GetTokenHolders failed", err)
 	}
 
-	return fiberCtx.JSON(resp)
+	return response.OkWithData(fiberCtx, resp)
 }

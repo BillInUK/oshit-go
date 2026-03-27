@@ -21,12 +21,10 @@ func (h *PriceHandler) GetTokenQuoteSOLPrice(fiberCtx *fiber.Ctx) error {
 	pl := logic.NewPriceLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := pl.GetTokenQuoteSOLPrice()
 	if err != nil {
-		return fiberCtx.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return response.ServerError(fiberCtx, "GetTokenQuoteSOLPrice failed", err)
 	}
 
-	return fiberCtx.JSON(resp)
+	return response.OkWithData(fiberCtx, resp)
 }
 
 // GetTokenQuoteUSDTPrice 获取token兑换USDT价格
@@ -34,12 +32,10 @@ func (h *PriceHandler) GetTokenQuoteUSDTPrice(fiberCtx *fiber.Ctx) error {
 	pl := logic.NewPriceLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := pl.GetTokenQuoteUSDTPrice()
 	if err != nil {
-		return fiberCtx.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return response.ServerError(fiberCtx, "GetTokenQuoteUSDTPrice failed", err)
 	}
 
-	return fiberCtx.JSON(resp)
+	return response.OkWithData(fiberCtx, resp)
 }
 
 // GetUSDTQuoteSOLPrice 获取USDT兑换SOL价格
@@ -47,21 +43,17 @@ func (h *PriceHandler) GetUSDTQuoteSOLPrice(fiberCtx *fiber.Ctx) error {
 	pl := logic.NewPriceLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := pl.GetUSDTQuoteSOLPrice()
 	if err != nil {
-		return fiberCtx.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return response.ServerError(fiberCtx, "GetUSDTQuoteSOLPrice failed", err)
 	}
 
-	return fiberCtx.JSON(resp)
+	return response.OkWithData(fiberCtx, resp)
 }
 
 // GetBirdEyePrice 获取BirdEye价格数据
 func (h *PriceHandler) GetBirdEyePrice(fiberCtx *fiber.Ctx) error {
 	var req types.GetBirdEyePriceReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
-		return fiberCtx.Status(400).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
+		return response.BadRequest(fiberCtx, "Invalid request body")
 	}
 
 	// 验证时间间隔参数
@@ -77,10 +69,8 @@ func (h *PriceHandler) GetBirdEyePrice(fiberCtx *fiber.Ctx) error {
 	pl := logic.NewPriceLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := pl.GetBirdEyePrice(&req)
 	if err != nil {
-		return fiberCtx.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return response.ServerError(fiberCtx, "GetBirdEyePrice failed", err)
 	}
 
-	return fiberCtx.JSON(resp)
+	return response.OkWithData(fiberCtx, resp)
 }

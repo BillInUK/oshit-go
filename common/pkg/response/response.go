@@ -26,7 +26,17 @@ func ResultError(c *fiber.Ctx, status, code int, msg string) error {
 	})
 }
 
-func ResultOk(c *fiber.Ctx, code int, msg string, count int, data interface{}) error {
+// resultOkSingle 单对象响应，不含 count 字段
+func resultOkSingle(c *fiber.Ctx, code int, msg string, data interface{}) error {
+	return c.JSON(fiber.Map{
+		"code": code,
+		"msg":  msg,
+		"data": data,
+	})
+}
+
+// ResultOk 列表响应，含 count 字段（count 为数据库总记录数，用于分页）
+func ResultOk(c *fiber.Ctx, code int, msg string, count int64, data interface{}) error {
 	return c.JSON(fiber.Map{
 		"code":  code,
 		"msg":   msg,
@@ -37,32 +47,32 @@ func ResultOk(c *fiber.Ctx, code int, msg string, count int, data interface{}) e
 
 // Ok returns 200 ok
 func Ok(c *fiber.Ctx) error {
-	return ResultOk(c, SUCCESS, "success", 0, map[string]interface{}{})
+	return resultOkSingle(c, SUCCESS, "success", map[string]interface{}{})
 }
 
 // OkWithMessage returns 200 ok and message in content
 func OkWithMessage(c *fiber.Ctx, message string) error {
-	return ResultOk(c, SUCCESS, message, 0, map[string]interface{}{})
+	return resultOkSingle(c, SUCCESS, message, map[string]interface{}{})
 }
 
-// OkWithData returns 200 ok and single data in content
+// OkWithData returns 200 ok and single object，不含 count
 func OkWithData(c *fiber.Ctx, data interface{}) error {
-	return ResultOk(c, SUCCESS, "success", 1, data)
+	return resultOkSingle(c, SUCCESS, "success", data)
 }
 
-// OkWithMsgData returns 200 ok and single data in content
+// OkWithMsgData returns 200 ok and single object with message，不含 count
 func OkWithMsgData(c *fiber.Ctx, message string, data interface{}) error {
-	return ResultOk(c, SUCCESS, message, 1, data)
+	return resultOkSingle(c, SUCCESS, message, data)
 }
 
-// OkWithList returns 200 ok and collection in content
-func OkWithList(c *fiber.Ctx, count int, data interface{}) error {
+// OkWithList returns 200 ok and paginated list，count 为数据库总记录数
+func OkWithList(c *fiber.Ctx, count int64, data interface{}) error {
 	return ResultOk(c, SUCCESS, "success", count, data)
 }
 
 // FailWithMsg returns 200 ok and failed message in content
 func FailWithMsg(c *fiber.Ctx, message string) error {
-	return ResultOk(c, FAILED, message, 0, map[string]interface{}{})
+	return resultOkSingle(c, FAILED, message, map[string]interface{}{})
 }
 
 // FailWithError returns 200 ok and failed message in content
@@ -71,7 +81,7 @@ func FailWithError(c *fiber.Ctx, message string, err error) error {
 	builder.WriteString(message)
 	builder.WriteString(": ")
 	builder.WriteString(err.Error())
-	return ResultOk(c, FAILED, builder.String(), 0, nil)
+	return resultOkSingle(c, FAILED, builder.String(), nil)
 }
 
 // FailWithStatus return status and status message in content

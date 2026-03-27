@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"oshit-go/app/base/api/internal/logic"
 	"oshit-go/app/base/api/internal/svc"
+	"oshit-go/common/pkg/response"
 )
 
 type FeeHandler struct {
@@ -19,12 +20,10 @@ func (h *FeeHandler) GetPriorityFee(fiberCtx *fiber.Ctx) error {
 	fl := logic.NewFeeLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := fl.GetPriorityFee()
 	if err != nil {
-		return fiberCtx.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return response.ServerError(fiberCtx, "GetPriorityFee failed", err)
 	}
 
-	return fiberCtx.JSON(resp)
+	return response.OkWithData(fiberCtx, resp)
 }
 
 // GetInstUnits 获取计算单元消耗
@@ -32,9 +31,7 @@ func (h *FeeHandler) GetInstUnits(fiberCtx *fiber.Ctx) error {
 	fl := logic.NewFeeLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := fl.GetInstUnits()
 	if err != nil {
-		return fiberCtx.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return response.ServerError(fiberCtx, "GetInstUnits failed", err)
 	}
-	return fiberCtx.JSON(resp)
+	return response.OkWithData(fiberCtx, resp)
 }
