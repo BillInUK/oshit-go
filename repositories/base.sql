@@ -102,20 +102,22 @@ CREATE TABLE public.t_native_account_info
 DROP TABLE IF EXISTS public.t_service_info;
 CREATE TABLE public.t_service_info
 (
-    service    character varying(64)                 NOT NULL,
-    address    character varying(64)                 NOT NULL,
-    webhook    character varying(1024)     DEFAULT NULL,
-    mq_group   character varying(64)       DEFAULT NULL,
-    mq_topic   character varying(64)       DEFAULT NULL,
-    hook_type  integer                     DEFAULT 0 NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    service     character varying(64)                 NOT NULL,
+    sub_service character varying(64)                 NOT NULL,
+    address     character varying(64)                 NOT NULL,
+    webhook     character varying(1024)     DEFAULT NULL,
+    mq_group    character varying(64)       DEFAULT NULL,
+    mq_topic    character varying(64)       DEFAULT NULL,
+    hook_type   integer                     DEFAULT 0 NOT NULL,
+    created_at  timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at  timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 DROP TABLE IF EXISTS public.t_tx_scan_info;
 CREATE TABLE public.t_tx_scan_info
 (
     service        character varying(64)    NOT NULL,
+    sub_service    character varying(64)    NOT NULL,
     native_account character varying(64)    NOT NULL,
     pda_account    character varying(64)    NOT NULL,
     until_tx_id    character varying(128)   NOT NULL,
@@ -128,6 +130,7 @@ CREATE TABLE public.t_service_tx
 (
     record_id       ULID      DEFAULT gen_ulid() NOT NULL PRIMARY KEY,
     service         VARCHAR(64)                  NOT NULL,
+    sub_service     VARCHAR(64)                  NOT NULL,
     tx_id           VARCHAR(128)                 NOT NULL,
     state           INTEGER   DEFAULT 0          NOT NULL,
     retry_count     INTEGER   DEFAULT 0          NOT NULL,

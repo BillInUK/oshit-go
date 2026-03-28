@@ -30,8 +30,12 @@ func newServiceTx(db *gorm.DB, opts ...gen.DOOption) serviceTx {
 	_serviceTx.ALL = field.NewAsterisk(tableName)
 	_serviceTx.RecordID = field.NewString(tableName, "record_id")
 	_serviceTx.Service = field.NewString(tableName, "service")
+	_serviceTx.SubService = field.NewString(tableName, "sub_service")
 	_serviceTx.TxID = field.NewString(tableName, "tx_id")
 	_serviceTx.State = field.NewInt32(tableName, "state")
+	_serviceTx.RetryCount = field.NewInt32(tableName, "retry_count")
+	_serviceTx.NextRetryTime = field.NewTime(tableName, "next_retry_time")
+	_serviceTx.MaxRetries = field.NewInt32(tableName, "max_retries")
 	_serviceTx.CreatedAt = field.NewTime(tableName, "created_at")
 	_serviceTx.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -43,13 +47,17 @@ func newServiceTx(db *gorm.DB, opts ...gen.DOOption) serviceTx {
 type serviceTx struct {
 	serviceTxDo serviceTxDo
 
-	ALL       field.Asterisk
-	RecordID  field.String
-	Service   field.String
-	TxID      field.String
-	State     field.Int32
-	CreatedAt field.Time
-	UpdatedAt field.Time
+	ALL           field.Asterisk
+	RecordID      field.String
+	Service       field.String
+	SubService    field.String
+	TxID          field.String
+	State         field.Int32
+	RetryCount    field.Int32
+	NextRetryTime field.Time
+	MaxRetries    field.Int32
+	CreatedAt     field.Time
+	UpdatedAt     field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -68,8 +76,12 @@ func (s *serviceTx) updateTableName(table string) *serviceTx {
 	s.ALL = field.NewAsterisk(table)
 	s.RecordID = field.NewString(table, "record_id")
 	s.Service = field.NewString(table, "service")
+	s.SubService = field.NewString(table, "sub_service")
 	s.TxID = field.NewString(table, "tx_id")
 	s.State = field.NewInt32(table, "state")
+	s.RetryCount = field.NewInt32(table, "retry_count")
+	s.NextRetryTime = field.NewTime(table, "next_retry_time")
+	s.MaxRetries = field.NewInt32(table, "max_retries")
 	s.CreatedAt = field.NewTime(table, "created_at")
 	s.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -98,11 +110,15 @@ func (s *serviceTx) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (s *serviceTx) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 6)
+	s.fieldMap = make(map[string]field.Expr, 10)
 	s.fieldMap["record_id"] = s.RecordID
 	s.fieldMap["service"] = s.Service
+	s.fieldMap["sub_service"] = s.SubService
 	s.fieldMap["tx_id"] = s.TxID
 	s.fieldMap["state"] = s.State
+	s.fieldMap["retry_count"] = s.RetryCount
+	s.fieldMap["next_retry_time"] = s.NextRetryTime
+	s.fieldMap["max_retries"] = s.MaxRetries
 	s.fieldMap["created_at"] = s.CreatedAt
 	s.fieldMap["updated_at"] = s.UpdatedAt
 }

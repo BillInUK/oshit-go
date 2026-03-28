@@ -29,6 +29,7 @@ func newTxScanInfo(db *gorm.DB, opts ...gen.DOOption) txScanInfo {
 	tableName := _txScanInfo.txScanInfoDo.TableName()
 	_txScanInfo.ALL = field.NewAsterisk(tableName)
 	_txScanInfo.Service = field.NewString(tableName, "service")
+	_txScanInfo.SubService = field.NewString(tableName, "sub_service")
 	_txScanInfo.NativeAccount = field.NewString(tableName, "native_account")
 	_txScanInfo.PdaAccount = field.NewString(tableName, "pda_account")
 	_txScanInfo.UntilTxID = field.NewString(tableName, "until_tx_id")
@@ -44,12 +45,13 @@ type txScanInfo struct {
 	txScanInfoDo txScanInfoDo
 
 	ALL           field.Asterisk
-	Service       field.String  // 业务服务名称
-	NativeAccount field.String  // 原生Solana地址
-	PdaAccount    field.String  // PDA地址（通常是token_account）
-	UntilTxID     field.String  // 扫描截止的交易ID
-	BeforeTxID    field.String  // 扫描起始的交易ID（可选）
-	Slot          field.Float64 // 最后扫描的slot
+	Service       field.String
+	SubService    field.String
+	NativeAccount field.String
+	PdaAccount    field.String
+	UntilTxID     field.String
+	BeforeTxID    field.String
+	Slot          field.Float64
 
 	fieldMap map[string]field.Expr
 }
@@ -67,6 +69,7 @@ func (t txScanInfo) As(alias string) *txScanInfo {
 func (t *txScanInfo) updateTableName(table string) *txScanInfo {
 	t.ALL = field.NewAsterisk(table)
 	t.Service = field.NewString(table, "service")
+	t.SubService = field.NewString(table, "sub_service")
 	t.NativeAccount = field.NewString(table, "native_account")
 	t.PdaAccount = field.NewString(table, "pda_account")
 	t.UntilTxID = field.NewString(table, "until_tx_id")
@@ -98,8 +101,9 @@ func (t *txScanInfo) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (t *txScanInfo) fillFieldMap() {
-	t.fieldMap = make(map[string]field.Expr, 6)
+	t.fieldMap = make(map[string]field.Expr, 7)
 	t.fieldMap["service"] = t.Service
+	t.fieldMap["sub_service"] = t.SubService
 	t.fieldMap["native_account"] = t.NativeAccount
 	t.fieldMap["pda_account"] = t.PdaAccount
 	t.fieldMap["until_tx_id"] = t.UntilTxID

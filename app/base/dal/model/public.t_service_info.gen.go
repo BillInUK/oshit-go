@@ -12,15 +12,15 @@ const TableNameServiceInfo = "public.t_service_info"
 
 // ServiceInfo mapped from table <public.t_service_info>
 type ServiceInfo struct {
-	Service       string    `gorm:"column:service;primaryKey;comment:业务服务名称" json:"service"`                        // 业务服务名称
-	NativeAccount string    `gorm:"column:native_account;not null;comment:原生Solana地址" json:"native_account"`        // 原生Solana地址
-	PdaAccount    string    `gorm:"column:pda_account;not null;comment:PDA地址（通常是token_account）" json:"pda_account"` // PDA地址（通常是token_account）
-	Webhook       string    `gorm:"column:webhook;default:NULL;comment:Webhook回调URL" json:"webhook"`                // Webhook回调URL
-	MqGroup       string    `gorm:"column:mq_group;default:NULL;comment:Kafka消费者组（可选）" json:"mq_group"`             // Kafka消费者组（可选）
-	MqTopic       string    `gorm:"column:mq_topic;default:NULL;comment:Kafka主题" json:"mq_topic"`                   // Kafka主题
-	HookType      int32     `gorm:"column:hook_type;not null;comment:通知类型: 0=Kafka, 1=Webhook" json:"hook_type"`    // 通知类型: 0=Kafka, 1=Webhook
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	Service    string    `gorm:"column:service;not null" json:"service"`
+	SubService string    `gorm:"column:sub_service;not null" json:"sub_service"`
+	Address    string    `gorm:"column:address;not null" json:"address"`
+	Webhook    string    `gorm:"column:webhook;default:NULL" json:"webhook"`
+	MqGroup    string    `gorm:"column:mq_group;default:NULL" json:"mq_group"`
+	MqTopic    string    `gorm:"column:mq_topic;default:NULL" json:"mq_topic"`
+	HookType   int32     `gorm:"column:hook_type;not null" json:"hook_type"`
+	CreatedAt  time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt  time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
 // TableName ServiceInfo's table name

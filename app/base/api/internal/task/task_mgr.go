@@ -25,4 +25,10 @@ func (m *TaskManager) StartAllTasks() {
 
 	holdersTask := NewHoldersTask(m.taskCtx)
 	holdersTask.Start()
+
+	txScanTask := NewTxScanTask(m.taskCtx)
+	txScanTask.Start()
+
+	txExpireTask := NewTxExpireTask(m.taskCtx)
+	txExpireTask.Start()
 }

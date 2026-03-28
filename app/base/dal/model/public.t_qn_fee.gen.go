@@ -12,7 +12,7 @@ const TableNameQnFee = "public.t_qn_fee"
 
 // QnFee mapped from table <public.t_qn_fee>
 type QnFee struct {
-	ID        int32     `gorm:"column:id;not null" json:"id"`
+	ID        int32     `gorm:"column:id;primaryKey" json:"id"`
 	Slot      int64     `gorm:"column:slot" json:"slot"`
 	LowAvg    float64   `gorm:"column:low_avg" json:"low_avg"`
 	MediumAvg float64   `gorm:"column:medium_avg" json:"medium_avg"`

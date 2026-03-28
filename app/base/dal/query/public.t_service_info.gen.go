@@ -29,8 +29,8 @@ func newServiceInfo(db *gorm.DB, opts ...gen.DOOption) serviceInfo {
 	tableName := _serviceInfo.serviceInfoDo.TableName()
 	_serviceInfo.ALL = field.NewAsterisk(tableName)
 	_serviceInfo.Service = field.NewString(tableName, "service")
-	_serviceInfo.NativeAccount = field.NewString(tableName, "native_account")
-	_serviceInfo.PdaAccount = field.NewString(tableName, "pda_account")
+	_serviceInfo.SubService = field.NewString(tableName, "sub_service")
+	_serviceInfo.Address = field.NewString(tableName, "address")
 	_serviceInfo.Webhook = field.NewString(tableName, "webhook")
 	_serviceInfo.MqGroup = field.NewString(tableName, "mq_group")
 	_serviceInfo.MqTopic = field.NewString(tableName, "mq_topic")
@@ -46,16 +46,16 @@ func newServiceInfo(db *gorm.DB, opts ...gen.DOOption) serviceInfo {
 type serviceInfo struct {
 	serviceInfoDo serviceInfoDo
 
-	ALL           field.Asterisk
-	Service       field.String // 业务服务名称
-	NativeAccount field.String // 原生Solana地址
-	PdaAccount    field.String // PDA地址（通常是token_account）
-	Webhook       field.String // Webhook回调URL
-	MqGroup       field.String // Kafka消费者组（可选）
-	MqTopic       field.String // Kafka主题
-	HookType      field.Int32  // 通知类型: 0=Kafka, 1=Webhook
-	CreatedAt     field.Time
-	UpdatedAt     field.Time
+	ALL        field.Asterisk
+	Service    field.String
+	SubService field.String
+	Address    field.String
+	Webhook    field.String
+	MqGroup    field.String
+	MqTopic    field.String
+	HookType   field.Int32
+	CreatedAt  field.Time
+	UpdatedAt  field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -73,8 +73,8 @@ func (s serviceInfo) As(alias string) *serviceInfo {
 func (s *serviceInfo) updateTableName(table string) *serviceInfo {
 	s.ALL = field.NewAsterisk(table)
 	s.Service = field.NewString(table, "service")
-	s.NativeAccount = field.NewString(table, "native_account")
-	s.PdaAccount = field.NewString(table, "pda_account")
+	s.SubService = field.NewString(table, "sub_service")
+	s.Address = field.NewString(table, "address")
 	s.Webhook = field.NewString(table, "webhook")
 	s.MqGroup = field.NewString(table, "mq_group")
 	s.MqTopic = field.NewString(table, "mq_topic")
@@ -109,8 +109,8 @@ func (s *serviceInfo) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 func (s *serviceInfo) fillFieldMap() {
 	s.fieldMap = make(map[string]field.Expr, 9)
 	s.fieldMap["service"] = s.Service
-	s.fieldMap["native_account"] = s.NativeAccount
-	s.fieldMap["pda_account"] = s.PdaAccount
+	s.fieldMap["sub_service"] = s.SubService
+	s.fieldMap["address"] = s.Address
 	s.fieldMap["webhook"] = s.Webhook
 	s.fieldMap["mq_group"] = s.MqGroup
 	s.fieldMap["mq_topic"] = s.MqTopic
