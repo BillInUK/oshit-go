@@ -7,10 +7,11 @@ import (
 )
 
 type BrowserContext struct {
-	AllocCtx    context.Context
-	AllocCancel context.CancelFunc
-	Ctx         context.Context
-	CtxCancel   context.CancelFunc
+	AllocCtx      context.Context
+	AllocCancel   context.CancelFunc
+	Ctx           context.Context
+	chromedpCancel context.CancelFunc // chromedp.NewContext 的 cancel，确保浏览器进程正常退出
+	timeoutCancel  context.CancelFunc // context.WithTimeout 的 cancel，释放 timer 资源
 }
 
 // CreateBrowserContext 创建浏览器上下文资源
@@ -24,20 +25,22 @@ func CreateBrowserContext(headless bool) (*BrowserContext, error) {
 	)
 
 	allocCtx, allocCancel := chromedp.NewExecAllocator(context.Background(), opts...)
-	ctx, ctxCancel := chromedp.NewContext(allocCtx)
+	chromedpCtx, chromedpCancel := chromedp.NewContext(allocCtx)
 
-	// 设置全局超时
-	ctx, ctxCancel = context.WithTimeout(ctx, 1*time.Minute)
+	// 在 chromedp context 上叠加超时，两个 cancel 分开保存
+	ctx, timeoutCancel := context.WithTimeout(chromedpCtx, 1*time.Minute)
 
 	return &BrowserContext{
-		AllocCtx:    allocCtx,
-		AllocCancel: allocCancel,
-		Ctx:         ctx,
-		CtxCancel:   ctxCancel,
+		AllocCtx:      allocCtx,
+		AllocCancel:   allocCancel,
+		Ctx:           ctx,
+		chromedpCancel: chromedpCancel,
+		timeoutCancel:  timeoutCancel,
 	}, nil
 }
 
-func (ctx BrowserContext) Close() {
-	ctx.CtxCancel()
-	ctx.AllocCancel()
+func (bc BrowserContext) Close() {
+	bc.timeoutCancel()   // 释放 timer
+	bc.chromedpCancel()  // 关闭 chromedp context，触发浏览器进程退出
+	bc.AllocCancel()     // 释放 allocator，清理临时 profile 目录
 }
