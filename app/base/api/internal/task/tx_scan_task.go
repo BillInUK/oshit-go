@@ -26,6 +26,12 @@ import (
 
 const txScanKafkaTopic = "OShitPos"
 
+// 分布式锁 key 格式
+const (
+	txScanLockFmt   = "base:sol:tx-scan:%s-%s:lock"  // args: service, subService
+	txHandleLockFmt = "base:sol:tx-handle:%s:lock"    // args: txSig
+)
+
 // TxScanTask 业务交易扫描任务
 type TxScanTask struct {
 	db          *gorm.DB
@@ -162,7 +168,7 @@ func (t *TxScanTask) getLatestTransaction(ctx context.Context, pdaAccountStr, un
 // startTxScanTasks 开启单独的协程扫描业务相关交易
 func (t *TxScanTask) startTxScanTasks(service, subService string) {
 	prefix := fmt.Sprintf("%s服务 - %s业务", service, subService)
-	lockKey := fmt.Sprintf("%s:%sScanTokenTx", service, subService)
+	lockKey := fmt.Sprintf(txScanLockFmt, service, subService)
 	ctx := context.Background()
 
 	// 初始化配置（无需加锁）
@@ -252,10 +258,10 @@ func (t *TxScanTask) handleServiceTx(service string, txSig rpc.TransactionSignat
 		time.Sleep(time.Duration(10+rand.Intn(40)) * time.Millisecond)
 	}
 
-	handleMutex := t.redSync.NewMutex("HandleStakeBuyToken" + "-" + txSig.Signature.String())
+	handleMutex := t.redSync.NewMutex(fmt.Sprintf(txHandleLockFmt, txSig.Signature.String()))
 	if err := handleMutex.Lock(); err != nil {
 		var errTaken *redsync.ErrTaken
-		if !errors.As(err, errTaken) {
+		if !errors.As(err, &errTaken) {
 			log.Errorf("%s 交易Id[%s] 获取分布式锁出错: %v", prefix, txSig.Signature.String(), err)
 		}
 		return

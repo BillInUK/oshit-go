@@ -3,7 +3,6 @@ package task
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/network"
@@ -15,7 +14,6 @@ import (
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -47,27 +45,17 @@ func NewKLineTask(taskCtx *TaskContext) *KLineTask {
 }
 
 func (t *KLineTask) Start() {
-	// 更新后的时间间隔配置
 	intervals := map[string]IntervalConfig{
 		"1D": {TimeUnit: "D", Quantity: 1},
 		"1W": {TimeUnit: "W", Quantity: 1},
 		"1M": {TimeUnit: "M", Quantity: 1},
 	}
-
-	for {
-		// 并发获取所有间隔的数据
-		var wg sync.WaitGroup
-		for interval, config := range intervals {
-			wg.Add(1)
-			go func(intv string, cfg IntervalConfig) {
-				defer wg.Done()
-				t.getKlineWithBrowser(intv, cfg)
-			}(interval, config)
-		}
-		wg.Wait()
-
-		// 等待5小时后进入下一轮循环
-		time.Sleep(5 * time.Hour)
+	for interval, config := range intervals {
+		intv, cfg := interval, config
+		lockKey := fmt.Sprintf("base:sol:kline:birdeye:%s:lock", strings.ToLower(intv))
+		go runPeriodicWithWatchdog(&t.redSync, 5*time.Hour, lockKey, 30*time.Second, func() {
+			t.getKlineWithBrowser(intv, cfg)
+		})
 	}
 }
 
@@ -88,19 +76,6 @@ func (t *KLineTask) getKlineWithBrowser(interval string, config IntervalConfig) 
 		log.Errorf("未知时间单位: %s", config.TimeUnit)
 		return
 	}
-
-	mutexName := fmt.Sprintf("FETCH-BIRD-EYE-APP-PRICE-%s", interval)
-	scanMutex := t.redSync.NewMutex(mutexName)
-
-	if err := scanMutex.Lock(); err != nil {
-		var errTaken *redsync.ErrTaken
-		if errors.As(err, &errTaken) {
-			return
-		}
-		log.Errorf("获取%s锁失败: %v", interval, err)
-		return
-	}
-	defer scanMutex.Unlock()
 
 	bc, err := t.browserInitRaydium()
 	if err != nil {
@@ -172,7 +147,7 @@ func (t *KLineTask) getKlineWithBrowser(interval string, config IntervalConfig) 
 	}
 
 	// 存储到Redis
-	redisKey := fmt.Sprintf("BIRD-EYE-APP-PRICE-%s", interval)
+	redisKey := fmt.Sprintf("base:sol:kline:birdeye:%s", strings.ToLower(interval))
 	if err := t.redis.Set(
 		context.Background(),
 		redisKey,
@@ -184,8 +159,6 @@ func (t *KLineTask) getKlineWithBrowser(interval string, config IntervalConfig) 
 	}
 
 	log.Infof("%s数据更新成功", interval)
-
-	return
 }
 
 // 获取浏览器上下文中的所有 Cookie

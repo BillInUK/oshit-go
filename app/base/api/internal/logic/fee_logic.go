@@ -26,7 +26,7 @@ func NewFeeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *FeeLogic {
 // GetPriorityFee 获取优先手续费
 func (l *FeeLogic) GetPriorityFee() (*types.PriorityFeeRsp, error) {
 	// 从Redis获取每计算单元手续费
-	perComputeUnitJSON, err := l.srvCtx.Redis.Get(l.ctx, "SOL-PRIORITY-FEE-PER-COMPUTE-UNIT-ON-BLOCKCHAIN").Result()
+	perComputeUnitJSON, err := l.srvCtx.Redis.Get(l.ctx, "base:sol:fee:priority-per-unit").Result()
 	if err != nil {
 		return nil, errors.New("get per compute unit fee error")
 	}
@@ -37,7 +37,7 @@ func (l *FeeLogic) GetPriorityFee() (*types.PriorityFeeRsp, error) {
 	}
 
 	// 从Redis获取每交易手续费
-	perTransactionJSON, err := l.srvCtx.Redis.Get(l.ctx, "SOL-PRIORITY-FEE-PER-TRANSACTION-ON-BLOCKCHAIN").Result()
+	perTransactionJSON, err := l.srvCtx.Redis.Get(l.ctx, "base:sol:fee:priority-per-tx").Result()
 	if err != nil {
 		return nil, errors.New("get per transaction fee error")
 	}
@@ -56,7 +56,7 @@ func (l *FeeLogic) GetPriorityFee() (*types.PriorityFeeRsp, error) {
 // GetInstUnits 获取计算单元消耗
 func (l *FeeLogic) GetInstUnits() (*types.ComputeUnitConsumedRsp, error) {
 	ctx := context.Background()
-	miniRentStr, err := l.srvCtx.Redis.Get(ctx, "COMPUTE-UNIT-ASSOCIATED-ACCOUNT-MINI-RENT").Result()
+	miniRentStr, err := l.srvCtx.Redis.Get(ctx, "base:sol:unit:associated-account-rent").Result()
 	if err != nil {
 		log.Errorf("获取solana 最小账户租金错误: %v", err)
 		return nil, errors.New("get mini rent error")
@@ -66,7 +66,7 @@ func (l *FeeLogic) GetInstUnits() (*types.ComputeUnitConsumedRsp, error) {
 		log.Errorf("获取solana 最小账户租金，无法将redis内的值转成float64错误: %v", err)
 		return nil, errors.New("get mini rent error")
 	}
-	associatedAccountStr, err := l.srvCtx.Redis.Get(ctx, "COMPUTE-UNIT-ASSOCIATED-ACCOUNT").Result()
+	associatedAccountStr, err := l.srvCtx.Redis.Get(ctx, "base:sol:unit:associated-account").Result()
 	if err != nil {
 		log.Errorf("获取solana 获取创建token account消耗计算单元错误: %v", err)
 		return nil, errors.New("get associated account units consumed error")
@@ -76,7 +76,7 @@ func (l *FeeLogic) GetInstUnits() (*types.ComputeUnitConsumedRsp, error) {
 		log.Errorf("获取solana 获取创建token account消耗计算单元，无法将redis内的值转成float64错误: %v", err)
 		return nil, errors.New("get mini rent error")
 	}
-	memoStr, err := l.srvCtx.Redis.Get(ctx, "COMPUTE-UNIT-MEMO").Result()
+	memoStr, err := l.srvCtx.Redis.Get(ctx, "base:sol:unit:memo").Result()
 	if err != nil {
 		log.Errorf("获取solana 获取memo指令消耗计算单元，将redis内的值转成float64错误: %v", err)
 		return nil, errors.New("get transfer checked units consumed error")

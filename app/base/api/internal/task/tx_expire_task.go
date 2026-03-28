@@ -21,6 +21,9 @@ import (
 	"time"
 )
 
+// 分布式锁 key
+const txExpireScanLock = "base:sol:tx-expire:scan:lock"
+
 // TxExpireTask 业务交易扫描任务
 type TxExpireTask struct {
 	db          *gorm.DB
@@ -57,18 +60,7 @@ func NewTxExpireTask(taskCtx *TaskContext) *TxExpireTask {
 
 // Start 启动定时扫描任务
 func (t *TxExpireTask) Start() {
-	for {
-		func() {
-			//log.Tracef("%s 任务开始", t.prefix)
-			distMutex := t.redSync.NewMutex("PosScanExpiredTx", redsync.WithTries(1))
-			if err := distMutex.Lock(); err != nil {
-				return
-			}
-			defer distMutex.Unlock()
-			t.scanExpiredTransactions()
-		}()
-		time.Sleep(5 * time.Second)
-	}
+	go runPeriodic(&t.redSync, 5*time.Second, txExpireScanLock, 2*time.Minute, t.scanExpiredTransactions)
 }
 
 // scanExpiredTransactions 扫描过期交易

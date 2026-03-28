@@ -3,7 +3,6 @@ package task
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/go-redsync/redsync/v4"
@@ -11,14 +10,17 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"io"
-	"io/ioutil"
 	"math"
 	"net/http"
 	"oshit-go/app/base/dal/model"
 	"oshit-go/common/pkg/entity"
 	"strconv"
+	"strings"
 	"time"
 )
+
+// 分布式锁 key
+const priceFetchRaydiumLock = "base:sol:price:fetch-raydium:lock"
 
 // PriceTask 手续费统计任务
 type PriceTask struct {
@@ -47,53 +49,27 @@ func NewPriceTask(taskCtx *TaskContext) *PriceTask {
 }
 
 func (t *PriceTask) Start() {
-	go t.startFetchRaydiumQuoteSOLPrice()
+	go runPeriodic(&t.redSync, 15*time.Second, priceFetchRaydiumLock, 5*time.Minute, t.fetchRaydiumPrice)
 }
 
-func (t *PriceTask) startFetchRaydiumQuoteSOLPrice() {
-	const (
-		lockKey       = "SOL-FETCH-RAYDIUM-PRICE"
-		refreshWindow = 15 * time.Second
-	)
-
-	for {
-		func() {
-			// 匿名函数隔离锁作用域
-			// 获取分布式锁（防重入）
-			mutex := t.redSync.NewMutex(lockKey)
-			if err := mutex.Lock(); err != nil {
-				var errTaken *redsync.ErrTaken
-				if errors.As(err, &errTaken) { // 过滤预期错误
-					return
-				}
-				log.Errorf("价格锁获取失败: %v", err)
-				return
-			}
-			defer mutex.Unlock() // 确保解锁
-
-			// 带重试的价格获取（参考之前fetchRaydiumPrice优化）
-			if err := t.fetchRaydiumQuoteTokenPrice("SOL", "So11111111111111111111111111111111111111112", 9); err != nil {
-				log.Errorf("获取token兑换solana价格获取失败: %v", err)
-				return
-			}
-			if err := t.fetchRaydiumQuoteTokenPrice("USDT", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", 6); err != nil {
-				log.Errorf("获取token兑换usdt价格获取失败: %v", err)
-				return
-			}
-			if err := t.fetchRaydiumUSDTQuoteSOLPrice("USDT", "SOL", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", "So11111111111111111111111111111111111111112", 1000000, 6, 9); err != nil {
-				log.Errorf("获取usdt兑换sol价格获取失败: %v", err)
-				return
-			}
-		}()
-
-		// 统一间隔控制
-		time.Sleep(refreshWindow)
+func (t *PriceTask) fetchRaydiumPrice() {
+	if err := t.fetchRaydiumQuoteTokenPrice("SOL", "So11111111111111111111111111111111111111112", 9); err != nil {
+		log.Errorf("获取token兑换solana价格获取失败: %v", err)
+		return
+	}
+	if err := t.fetchRaydiumQuoteTokenPrice("USDT", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", 6); err != nil {
+		log.Errorf("获取token兑换usdt价格获取失败: %v", err)
+		return
+	}
+	if err := t.fetchRaydiumUSDTQuoteSOLPrice("USDT", "SOL", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", "So11111111111111111111111111111111111111112", 1000000, 6, 9); err != nil {
+		log.Errorf("获取usdt兑换sol价格获取失败: %v", err)
+		return
 	}
 }
 
 func (t *PriceTask) fetchRaydiumQuoteTokenPrice(symbol, account string, decimal int) error {
 	priceTTL := 2 * time.Minute
-	redisKey := fmt.Sprintf("RAYDIUM-QUOTE-%s-PRICE", symbol)
+	redisKey := fmt.Sprintf("base:sol:price:raydium-quote-%s", strings.ToLower(symbol))
 	url := fmt.Sprintf("https://transaction-v1.raydium.io/compute/swap-base-in?inputMint=ShitJuMfPKCQU7LedLERFYapDta7CCdKExPWX2gETRH&outputMint=%s&amount=1000&slippageBps=50&txVersion=V0", account)
 	// Create a new HTTP client with a timeout
 	client := &http.Client{
@@ -112,7 +88,7 @@ func (t *PriceTask) fetchRaydiumQuoteTokenPrice(symbol, account string, decimal 
 	}
 
 	// Read the response body
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %v", err)
 	}
@@ -168,7 +144,7 @@ func (t *PriceTask) fetchRaydiumQuoteTokenPrice(symbol, account string, decimal 
 
 func (t *PriceTask) fetchRaydiumUSDTQuoteSOLPrice(inputSymbol, outputSymbol, inputMint, outputMint string, inputAmount uint64, inputDecimal, outputDecimal int) error {
 	priceTTL := 2 * time.Minute
-	redisKey := fmt.Sprintf("RAYDIUM-%s-QUOTE-%s-PRICE", inputSymbol, outputSymbol)
+	redisKey := fmt.Sprintf("base:sol:price:raydium-%s-quote-%s", strings.ToLower(inputSymbol), strings.ToLower(outputSymbol))
 	url := fmt.Sprintf("https://transaction-v1.raydium.io/compute/swap-base-in?inputMint=%s&outputMint=%s&amount=%d&slippageBps=50&txVersion=V0", inputMint, outputMint, inputAmount)
 	prefix := fmt.Sprintf("获取 raydium %s 兑换 %s 价格 -", inputSymbol, outputSymbol)
 	// Create a new HTTP client with a timeout

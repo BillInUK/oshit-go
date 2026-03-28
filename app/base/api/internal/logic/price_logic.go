@@ -11,6 +11,7 @@ import (
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
 	"strconv"
+	"strings"
 )
 
 type PriceLogic struct {
@@ -28,7 +29,7 @@ func NewPriceLogic(ctx context.Context, srvCtx *svc.ServiceContext) *PriceLogic 
 // GetTokenQuoteSOLPrice 获取token兑换SOL价格
 func (l *PriceLogic) GetTokenQuoteSOLPrice() (*types.PriceQuoteRsp, error) {
 	// 计算所有的token的价格
-	quoteSOLPriceStr, err := l.srvCtx.Redis.Get(context.Background(), "RAYDIUM-QUOTE-SOL-PRICE").Result()
+	quoteSOLPriceStr, err := l.srvCtx.Redis.Get(context.Background(), "base:sol:price:raydium-quote-sol").Result()
 	if err != nil {
 		log.Errorf("计算奖励金额价格错误: %v", err)
 		return nil, errors.New("get toke quote sol price failed")
@@ -47,7 +48,7 @@ func (l *PriceLogic) GetTokenQuoteSOLPrice() (*types.PriceQuoteRsp, error) {
 // GetTokenQuoteUSDTPrice 获取token兑换USDT价格
 func (l *PriceLogic) GetTokenQuoteUSDTPrice() (*types.PriceQuoteRsp, error) {
 	// 计算所有的token的价格
-	quoteSOLPriceStr, err := l.srvCtx.Redis.Get(context.Background(), "RAYDIUM-QUOTE-USDT-PRICE").Result()
+	quoteSOLPriceStr, err := l.srvCtx.Redis.Get(context.Background(), "base:sol:price:raydium-quote-usdt").Result()
 	if err != nil {
 		log.Errorf("计算奖励金额价格错误: %v", err)
 		return nil, errors.New("get toke quote usdt price failed")
@@ -64,7 +65,7 @@ func (l *PriceLogic) GetTokenQuoteUSDTPrice() (*types.PriceQuoteRsp, error) {
 // GetUSDTQuoteSOLPrice 获取USDT兑换SOL价格
 func (l *PriceLogic) GetUSDTQuoteSOLPrice() (*types.PriceQuoteRsp, error) {
 	// 计算USDT兑换SOL的价格
-	priceStr, err := l.srvCtx.Redis.Get(context.Background(), "RAYDIUM-USDT-QUOTE-SOL-PRICE").Result()
+	priceStr, err := l.srvCtx.Redis.Get(context.Background(), "base:sol:price:raydium-usdt-quote-sol").Result()
 	if err != nil {
 		log.Errorf("计算奖励金额价格错误: %v", err)
 		return nil, errors.New("get usdt quote sol price failed")
@@ -82,7 +83,7 @@ func (l *PriceLogic) GetUSDTQuoteSOLPrice() (*types.PriceQuoteRsp, error) {
 // GetBirdEyePrice 获取BirdEye价格数据
 func (l *PriceLogic) GetBirdEyePrice(req *types.GetBirdEyePriceReq) (*types.BirdEyePriceRsp, error) {
 	// 构建Redis键名
-	redisKey := fmt.Sprintf("BIRD-EYE-APP-PRICE-%s", req.Interval)
+	redisKey := fmt.Sprintf("base:sol:kline:birdeye:%s", strings.ToLower(req.Interval))
 
 	// 从Redis获取数据
 	var rawData interface{}
