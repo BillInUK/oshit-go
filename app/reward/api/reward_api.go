@@ -1,16 +1,13 @@
 package main
 
 import (
-	"context"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	jsoniter "github.com/json-iterator/go"
 	"log"
 	"oshit-go/app/reward/api/internal/handler"
-	"oshit-go/app/reward/api/internal/logic"
 	"oshit-go/app/reward/api/internal/svc"
-	"oshit-go/common/pkg/entity"
 	"strconv"
 )
 
@@ -23,21 +20,7 @@ func main() {
 	defer srvCtx.Close()
 
 	// 注册 Kafka 消息处理器并启动任务
-	if srvCtx.TaskMgr != nil {
-		srvCtx.TaskMgr.RegisterScannedTxHandler("TakeToken", func(ctx context.Context, tx entity.NewScannedTx) error {
-			return logic.NewTakeLogic(ctx, srvCtx).HandleScannedTx(tx)
-		})
-		srvCtx.TaskMgr.RegisterScannedTxHandler("GiveToken", func(ctx context.Context, tx entity.NewScannedTx) error {
-			return logic.NewGiveTokenLogic(ctx, srvCtx).HandleScannedTx(tx)
-		})
-		srvCtx.TaskMgr.RegisterExpiredTxHandler("TakeToken", func(ctx context.Context, tx entity.NewExpiredTx) error {
-			return logic.NewTakeLogic(ctx, srvCtx).HandleExpiredTx(tx)
-		})
-		srvCtx.TaskMgr.RegisterExpiredTxHandler("GiveToken", func(ctx context.Context, tx entity.NewExpiredTx) error {
-			return logic.NewGiveTokenLogic(ctx, srvCtx).HandleExpiredTx(tx)
-		})
-		go srvCtx.TaskMgr.StartAllTasks()
-	}
+	registerTasks(srvCtx)
 
 	// 读取启动参数
 	appName := srvCtx.Config.App.Name
