@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-	basepb "oshit-go/app/pb/base"
 	rewardrpc "oshit-go/app/reward/api/internal/rpc"
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
@@ -311,12 +310,11 @@ func (l *GiveTokenLogic) limitExceed() (bool, error) {
 }
 
 // getUpInviters 查询上级邀请人的以及每个上级邀请人所能拿到的奖励费率
-func (l *GiveTokenLogic) getUpInviters(nativeAccount string) ([]*basepb.InviteRelation, error) {
-	rsp, err := l.baseClient.GetUpInviterRecords(l.ctx, nativeAccount, l.srvCtx.LevelDist.Level)
+func (l *GiveTokenLogic) getUpInviters(nativeAccount string) ([]model.InviteRelation, error) {
+	inviteRecords, err := NewRewardInviteLogic(l.ctx, l.srvCtx.DB).GetUpInviterRecords(nativeAccount, l.srvCtx.LevelDist.Level)
 	if err != nil {
 		return nil, err
 	}
-	inviteRecords := rsp.GetRecords()
 	// 获取两个数组的最小长度
 	minLength := min(len(l.srvCtx.LevelRatio), len(inviteRecords))
 	// 返回截取后的数组

@@ -11,14 +11,12 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	basepb "oshit-go/app/pb/base"
 	rewardrpc "oshit-go/app/reward/api/internal/rpc"
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
 	app_utils "oshit-go/app/utils"
 	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
-	"oshit-go/common/pkg/dal/query"
 	"oshit-go/common/pkg/entity"
 	"oshit-go/common/utils"
 	"runtime/debug"
@@ -40,6 +38,7 @@ type TakeTokenLogic struct {
 	serviceConfig     *model.TakeTokenConfig
 	rpcClient         *rpc.Client
 	LightHouseAddress solana.PublicKey
+	inviteLogic       *RewardInviteLogic
 }
 
 func NewTakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *TakeTokenLogic {
@@ -58,6 +57,7 @@ func NewTakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *TakeTokenLog
 		serviceConfig:     srvCtx.TakeTokenConfig,
 		decimals:          uint8(srvCtx.TokenConfig.Decimals),
 		LightHouseAddress: srvCtx.LightHouseAddress,
+		inviteLogic:       NewRewardInviteLogic(ctx, srvCtx.DB),
 	}
 }
 
@@ -78,7 +78,7 @@ func (l *TakeTokenLogic) GetRecordByTxId(txId string) (*model.TakeTokenRecord, e
 
 // inviteCodeValid 判断邀请码是否有效
 // 必须确保 邀请码有效获取确定邀请关系时会返回直接邀请人信息
-func (l *TakeTokenLogic) inviteCodeValid(ctx context.Context, receiptAccount, inviteCode string) (*basepb.GetAccountByInviteCodeRsp, bool, bool, error) {
+func (l *TakeTokenLogic) inviteCodeValid(ctx context.Context, receiptAccount, inviteCode string) (*model.NativeAccountInfo, bool, bool, error) {
 	var prefix = fmt.Sprintf("%s 根据地址 [%s]  邀请码 [%s] 获取交易信息 -", l.prefix, receiptAccount, inviteCode)
 	// 1. 邀请码为空，直接跳过查询
 	if inviteCode == "" {
@@ -86,7 +86,7 @@ func (l *TakeTokenLogic) inviteCodeValid(ctx context.Context, receiptAccount, in
 		return nil, false, false, nil
 	}
 	// 2. 直接邀请人不存在，或使用自己的邀请码
-	directInviter, err := l.baseClient.GetAccountByInviteCode(ctx, inviteCode)
+	directInviter, err := l.inviteLogic.GetAccountByInviteCode(inviteCode)
 	if err != nil {
 		log.Errorf("%s 邀请码无效 - 查询邀请人失败: %v", prefix, err)
 		return nil, false, false, err
@@ -107,12 +107,12 @@ func (l *TakeTokenLogic) inviteCodeValid(ctx context.Context, receiptAccount, in
 		return directInviter, false, false, nil
 	}
 	// 4. 查询地址是否存在于邀请关系表里面，如果存在，则不确定邀请关系
-	receiptInviteRecord, err := l.baseClient.FindInviteRelationByAccount(ctx, receiptAccount)
+	receiptInviteRecord, err := l.inviteLogic.FindInviteRelationByAccount(receiptAccount)
 	if err != nil {
 		log.Errorf("%s 查询地址是否在邀请关系内错误 :%v", prefix, err)
 		return directInviter, false, false, errors.New("query invite record exist by to native account error")
 	}
-	if receiptInviteRecord != nil && receiptInviteRecord.RecordId != "" {
+	if receiptInviteRecord != nil && receiptInviteRecord.RecordID != "" {
 		log.Infof("%s 邀请码无效 - 地址已经邀请关系内", prefix)
 		return directInviter, true, false, nil
 	}
@@ -144,21 +144,21 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	receiptTokenAccount := receiptTokenPubKey.String()
 
 	// 如果确定邀请关系
-	var sortedInvites []*basepb.InviteRelation
+	var sortedInvites []model.InviteRelation
 	var sortedItems []types.RewardTokenItem
 	if (invited || codeValid) && directInviter != nil {
 		// 如果确定邀请·，则查询邀请码对应的地址的的上级和上上级
-		rsp, err := l.baseClient.GetUpInviterRecords(ctx, receiptNativeAccount, l.levelDist)
+		sortedInvites, err = l.inviteLogic.GetUpInviterRecords(receiptNativeAccount, l.levelDist)
 		if err != nil {
 			log.Errorf("%s 递归向上查询邀请人错误[%v]", prefix, err)
 			return nil, errors.New("recursive query up inviter records error")
 		}
-		sortedInvites = rsp.Records
 		// 排序排序邀请人信息，加上索引，方便前端排序
 		for index, record := range sortedInvites {
 			account := types.RewardTokenItem{
 				Index:         index + 1,
 				NativeAccount: record.InviterNativeAccount,
+				TokenAccount:  record.InviterTokenAccount,
 				Amount:        uint64(0),
 			}
 			sortedItems = append(sortedItems, account)
@@ -168,16 +168,16 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 		sortedItems = append([]types.RewardTokenItem{directItem}, sortedItems...)
 	} else {
 		// 如果不确定邀请关系，则查询领取奖励地址的上级和上上级
-		rsp, err := l.baseClient.GetUpInviterRecords(ctx, receiptNativeAccount, l.levelDist)
+		sortedInvites, err = l.inviteLogic.GetUpInviterRecords(receiptNativeAccount, l.levelDist)
 		if err != nil {
 			log.Errorf("%s 递归向上查询邀请人错误[%v]", prefix, err)
 			return nil, errors.New("recursive query up inviter records error")
 		}
-		sortedInvites = rsp.Records
 		for index, record := range sortedInvites {
 			account := types.RewardTokenItem{
 				Index:         index + 1,
 				NativeAccount: record.InviterNativeAccount,
+				TokenAccount:  record.InviterTokenAccount,
 				Amount:        uint64(0),
 			}
 			sortedItems = append(sortedItems, account)
@@ -238,11 +238,7 @@ func (l *TakeTokenLogic) GetRecordByInviteCode(nativeAccount string) (*model.Tak
 	var err error
 	var record model.TakeTokenRecord
 	table := l.db.Table(model.TableNameTakeTokenRecord)
-	err = table.Where(
-		query.TakeTokenRecord.ReceiptNativeAccount.Eq(nativeAccount),
-		query.TakeTokenRecord.UseInviteCode.Is(true),
-		query.TakeTokenRecord.State.Eq(1),
-	).First(&record).Error
+	err = table.Where("receipt_native_account = ? and use_invite_code = ? and state = ?", nativeAccount, true, 1).First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -414,10 +410,10 @@ func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 			{Name: "flow_type"},
 		},
 		DoUpdates: clause.Assignments(map[string]interface{}{
-			"update_time": time.Now(),
+			"updated_at": time.Now(),
 		}),
 	}).CreateInBatches(&fundFlows, batchSize).Error; err != nil {
-		log.Errorf("%s - 记录流水错误: %v", prefix, err)
+		log.Errorf("TakeToken - 记录流水错误: %v", err)
 		return err
 	}
 
@@ -529,22 +525,26 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 
 		// 如果需要确定邀请层级关系
 		if takeTokenRecord.Invited {
-			inviterInfo, err := l.baseClient.GetAccountByInviteCode(context.Background(), takeTokenRecord.InviteCode)
+			inviterInfo, err := l.inviteLogic.GetAccountByInviteCode(takeTokenRecord.InviteCode)
 			if err != nil {
 				log.Errorf("%s 确定邀请关系错误，无法根据邀请码找到邀请人", prefix)
 				dbTx.Rollback()
 				return err
 			}
-
-			if _, err = commonRpcClient.RecordDetermineInvitationHierarchy(
-				inviterInfo.TokenAccount,
-				inviterInfo.NativeAccount,
-				takeTokenRecord.ReceiptTokenAccount,
-				takeTokenRecord.ReceiptNativeAccount,
-				txId, "InviteCode"); err != nil {
-				log.Errorf("%s - 确定邀请关系错误: %v", prefix, err)
-				dbTx.Rollback()
-				return err
+			if inviterInfo != nil {
+				_, err = l.inviteLogic.RecordDetermineInvitationHierarchy(
+					inviterInfo.TokenAccount,
+					inviterInfo.NativeAccount,
+					takeTokenRecord.ReceiptTokenAccount,
+					takeTokenRecord.ReceiptNativeAccount,
+					takeTokenRecord.RewardTxID,
+					"InviteCode",
+				)
+				if err != nil {
+					log.Errorf("%s 记录邀请层级关系错误: %v", prefix, err)
+					dbTx.Rollback()
+					return err
+				}
 			}
 		}
 	}

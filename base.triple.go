@@ -16,19 +16,39 @@ import (
 	"dubbo.apache.org/dubbo-go/v3/server"
 )
 
+// This is a compile-time assertion to ensure that this generated file and the Triple package
+// are compatible. If you get a compiler error that this constant is not defined, this code was
+// generated with a version of Triple newer than the one compiled into your binary. You can fix the
+// problem by either regenerating this code with an older version of Triple or updating the Triple
+// version compiled into your binary.
 const _ = triple_protocol.IsAtLeastVersion0_1_0
 
 const (
+	// BaseServiceName is the fully-qualified name of the BaseService service.
 	BaseServiceName = "base.BaseService"
 )
 
+// These constants are the fully-qualified names of the RPCs defined in this package. They're
+// exposed at runtime as procedure and as the final two segments of the HTTP route.
+//
+// Note that these are different from the fully-qualified method names used by
+// google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
+// reflection-formatted method names, remove the leading slash and convert the remaining slash to a
+// period.
 const (
-	BaseServiceGetFeeToleranceProcedure        = "/base.BaseService/GetFeeTolerance"
-	BaseServiceGetPriorityFeeProcedure         = "/base.BaseService/GetPriorityFee"
-	BaseServiceGetInstUnitsProcedure           = "/base.BaseService/GetInstUnits"
-	BaseServiceGetTokenQuoteSOLPriceProcedure  = "/base.BaseService/GetTokenQuoteSOLPrice"
+	// BaseServiceGetFeeToleranceProcedure is the fully-qualified name of the BaseService's GetFeeTolerance RPC.
+	BaseServiceGetFeeToleranceProcedure = "/base.BaseService/GetFeeTolerance"
+	// BaseServiceGetPriorityFeeProcedure is the fully-qualified name of the BaseService's GetPriorityFee RPC.
+	BaseServiceGetPriorityFeeProcedure = "/base.BaseService/GetPriorityFee"
+	// BaseServiceGetInstUnitsProcedure is the fully-qualified name of the BaseService's GetInstUnits RPC.
+	BaseServiceGetInstUnitsProcedure = "/base.BaseService/GetInstUnits"
+	// BaseServiceGetTokenQuoteSOLPriceProcedure is the fully-qualified name of the BaseService's GetTokenQuoteSOLPrice RPC.
+	BaseServiceGetTokenQuoteSOLPriceProcedure = "/base.BaseService/GetTokenQuoteSOLPrice"
+	// BaseServiceGetTokenQuoteUSDTPriceProcedure is the fully-qualified name of the BaseService's GetTokenQuoteUSDTPrice RPC.
 	BaseServiceGetTokenQuoteUSDTPriceProcedure = "/base.BaseService/GetTokenQuoteUSDTPrice"
-	BaseServiceGetUSDTQuoteSOLPriceProcedure   = "/base.BaseService/GetUSDTQuoteSOLPrice"
+	// BaseServiceGetUSDTQuoteSOLPriceProcedure is the fully-qualified name of the BaseService's GetUSDTQuoteSOLPrice RPC.
+	BaseServiceGetUSDTQuoteSOLPriceProcedure = "/base.BaseService/GetUSDTQuoteSOLPrice"
+	// BaseServiceSendTransactionProcedure is the fully-qualified name of the BaseService's SendTransaction RPC.
 	BaseServiceSendTransactionProcedure = "/base.BaseService/SendTransaction"
 )
 
@@ -53,7 +73,9 @@ func NewBaseService(cli *client.Client, opts ...client.ReferenceOption) (BaseSer
 	if err != nil {
 		return nil, err
 	}
-	return &BaseServiceImpl{conn: conn}, nil
+	return &BaseServiceImpl{
+		conn: conn,
+	}, nil
 }
 
 func SetConsumerBaseService(srv common.RPCService) {
@@ -156,9 +178,12 @@ var BaseService_ServiceInfo = server.ServiceInfo{
 		{
 			Name: "GetFeeTolerance",
 			Type: constant.CallUnary,
-			ReqInitFunc: func() interface{} { return new(GetFeeToleranceReq) },
+			ReqInitFunc: func() interface{} {
+				return new(GetFeeToleranceReq)
+			},
 			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
-				res, err := handler.(BaseServiceHandler).GetFeeTolerance(ctx, args[0].(*GetFeeToleranceReq))
+				req := args[0].(*GetFeeToleranceReq)
+				res, err := handler.(BaseServiceHandler).GetFeeTolerance(ctx, req)
 				if err != nil {
 					return nil, err
 				}
@@ -168,9 +193,12 @@ var BaseService_ServiceInfo = server.ServiceInfo{
 		{
 			Name: "GetPriorityFee",
 			Type: constant.CallUnary,
-			ReqInitFunc: func() interface{} { return new(GetPriorityFeeReq) },
+			ReqInitFunc: func() interface{} {
+				return new(GetPriorityFeeReq)
+			},
 			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
-				res, err := handler.(BaseServiceHandler).GetPriorityFee(ctx, args[0].(*GetPriorityFeeReq))
+				req := args[0].(*GetPriorityFeeReq)
+				res, err := handler.(BaseServiceHandler).GetPriorityFee(ctx, req)
 				if err != nil {
 					return nil, err
 				}
@@ -180,9 +208,12 @@ var BaseService_ServiceInfo = server.ServiceInfo{
 		{
 			Name: "GetInstUnits",
 			Type: constant.CallUnary,
-			ReqInitFunc: func() interface{} { return new(GetInstUnitsReq) },
+			ReqInitFunc: func() interface{} {
+				return new(GetInstUnitsReq)
+			},
 			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
-				res, err := handler.(BaseServiceHandler).GetInstUnits(ctx, args[0].(*GetInstUnitsReq))
+				req := args[0].(*GetInstUnitsReq)
+				res, err := handler.(BaseServiceHandler).GetInstUnits(ctx, req)
 				if err != nil {
 					return nil, err
 				}
@@ -192,9 +223,12 @@ var BaseService_ServiceInfo = server.ServiceInfo{
 		{
 			Name: "GetTokenQuoteSOLPrice",
 			Type: constant.CallUnary,
-			ReqInitFunc: func() interface{} { return new(GetTokenQuoteSOLPriceReq) },
+			ReqInitFunc: func() interface{} {
+				return new(GetTokenQuoteSOLPriceReq)
+			},
 			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
-				res, err := handler.(BaseServiceHandler).GetTokenQuoteSOLPrice(ctx, args[0].(*GetTokenQuoteSOLPriceReq))
+				req := args[0].(*GetTokenQuoteSOLPriceReq)
+				res, err := handler.(BaseServiceHandler).GetTokenQuoteSOLPrice(ctx, req)
 				if err != nil {
 					return nil, err
 				}
@@ -204,9 +238,12 @@ var BaseService_ServiceInfo = server.ServiceInfo{
 		{
 			Name: "GetTokenQuoteUSDTPrice",
 			Type: constant.CallUnary,
-			ReqInitFunc: func() interface{} { return new(GetTokenQuoteUSDTPriceReq) },
+			ReqInitFunc: func() interface{} {
+				return new(GetTokenQuoteUSDTPriceReq)
+			},
 			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
-				res, err := handler.(BaseServiceHandler).GetTokenQuoteUSDTPrice(ctx, args[0].(*GetTokenQuoteUSDTPriceReq))
+				req := args[0].(*GetTokenQuoteUSDTPriceReq)
+				res, err := handler.(BaseServiceHandler).GetTokenQuoteUSDTPrice(ctx, req)
 				if err != nil {
 					return nil, err
 				}
@@ -216,9 +253,12 @@ var BaseService_ServiceInfo = server.ServiceInfo{
 		{
 			Name: "GetUSDTQuoteSOLPrice",
 			Type: constant.CallUnary,
-			ReqInitFunc: func() interface{} { return new(GetUSDTQuoteSOLPriceReq) },
+			ReqInitFunc: func() interface{} {
+				return new(GetUSDTQuoteSOLPriceReq)
+			},
 			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
-				res, err := handler.(BaseServiceHandler).GetUSDTQuoteSOLPrice(ctx, args[0].(*GetUSDTQuoteSOLPriceReq))
+				req := args[0].(*GetUSDTQuoteSOLPriceReq)
+				res, err := handler.(BaseServiceHandler).GetUSDTQuoteSOLPrice(ctx, req)
 				if err != nil {
 					return nil, err
 				}
@@ -228,9 +268,12 @@ var BaseService_ServiceInfo = server.ServiceInfo{
 		{
 			Name: "SendTransaction",
 			Type: constant.CallUnary,
-			ReqInitFunc: func() interface{} { return new(SendTransactionReq) },
+			ReqInitFunc: func() interface{} {
+				return new(SendTransactionReq)
+			},
 			MethodFunc: func(ctx context.Context, args []interface{}, handler interface{}) (interface{}, error) {
-				res, err := handler.(BaseServiceHandler).SendTransaction(ctx, args[0].(*SendTransactionReq))
+				req := args[0].(*SendTransactionReq)
+				res, err := handler.(BaseServiceHandler).SendTransaction(ctx, req)
 				if err != nil {
 					return nil, err
 				}

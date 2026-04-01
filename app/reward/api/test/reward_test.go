@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	SOLLoginSignMsg               = "I am login %s for token %s with my address %s with nonce %d"
-	SOLLoginWithInviteCodeSignMsg = "I am login %s for token %s with my address %s with nonce %d inviteCode %s"
+	systemTransferCU              uint64 = 500 // System Transfer 固定预留
+	SOLLoginSignMsg                      = "I am login %s for token %s with my address %s with nonce %d"
+	SOLLoginWithInviteCodeSignMsg        = "I am login %s for token %s with my address %s with nonce %d inviteCode %s"
 	// mainnet:
 	//RpcUrl           = "https://radial-purple-sailboat.solana-mainnet.quiknode.pro/0afcb192bb26b0dbcba3d49df6ad2ee2829c529b/"
 	//WssUrl           = "wss://radial-purple-sailboat.solana-mainnet.quiknode.pro/0afcb192bb26b0dbcba3d49df6ad2ee2829c529b/"
@@ -268,16 +269,6 @@ func getTakeTokenTxInfo(req types.GetTakeTokenTxInfoReq) (*types.TakeTokenTxInfo
 }
 
 func TestGetTakeTokenTxInfo(t *testing.T) {
-	//privKey, err := solana.PrivateKeyFromBase58(AlicePrivate)
-	//if err != nil {
-	//	t.Fatalf("parse private key failed: %v", err)
-	//}
-
-	//token, err := loginForToken(Brand, Symbol, privKey.PublicKey(), privKey)
-	//if err != nil {
-	//	t.Fatalf("login failed: %v", err)
-	//}
-
 	txInfo, err := getTakeTokenTxInfo(types.GetTakeTokenTxInfoReq{
 		ReceiptAccount: AliceNativePubKey,
 	})
@@ -302,7 +293,7 @@ func TestGetTakeTokenTxInfo(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(AlicePrivate)
+	privKey, err := solana.PrivateKeyFromBase58(BobPrivate)
 	if err != nil {
 		t.Fatalf("parse private key failed: %v", err)
 	}
@@ -319,72 +310,22 @@ func TestLogin(t *testing.T) {
 	fmt.Println("Refresh:", token.Refresh)
 }
 
-func createHexEncodedTx(ctx context.Context, fromPrivateKey solana.PrivateKey, inviteCode string) (string, error) {
-	fromNativeAccount := fromPrivateKey.PublicKey()
+func createHexEncodedTx(ctx context.Context, privKey solana.PrivateKey, inviteCode string) (string, error) {
+	receiptPubKey := privKey.PublicKey()
 
 	req := types.GetTakeTokenTxInfoReq{
-		ReceiptAccount: AliceNativePubKey,
+		ReceiptAccount: receiptPubKey.String(),
+		InviteCode:     inviteCode,
 	}
-	fmt.Printf("from native account %v: \n", fromNativeAccount)
+	fmt.Printf("receipt native account %v: \n", receiptPubKey)
 	txInfo, err := getTakeTokenTxInfo(req)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("give token info %v \n", txInfo)
-	fmt.Printf("total reward amount %v \n", txInfo.TotalRewardAmount)
-	fmt.Printf("quote sol price %v \n", txInfo.QuoteSOLPrice)
-	fmt.Printf("quoted sol amount %v \n", txInfo.QuotedSOLAmount)
-
-	var fromTokenAccountExist = true
-	rewardNativeAccount := solana.MPK(txInfo.RewardNativeAccount)
-	rewardTokenAccount := solana.MPK(txInfo.RewardTokenAccount)
-	tokenMintAccount := solana.MPK(txInfo.TokenMintAccount)
-	dexNativeAccount := solana.MPK(txInfo.DexNativeAccount)
-	decimals := uint8(txInfo.Decimals)
-	fromTokenAccount, err := utils.GetSPLTokenAccountByNative(rpcClient, fromNativeAccount, solana.MPK(txInfo.TokenMintAccount))
-
 	priorityFee, err := getPriorityFee()
 	if err != nil {
 		panic(err)
 	}
-	computePrice := priorityFee.PerComputeUnit.Medium
-	computeBudgetPriceInst := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(computePrice).Build()
-
-	fmt.Printf("compute price is %d\n", computePrice)
-
-	// 奖励领取人token指令
-	rewardInst := token.NewTransferCheckedInstructionBuilder().
-		SetAmount(txInfo.RewardInfo.Amount).
-		SetDecimals(decimals).
-		SetSourceAccount(rewardTokenAccount).
-		SetMintAccount(tokenMintAccount).
-		SetDestinationAccount(*fromTokenAccount).
-		SetOwnerAccount(rewardNativeAccount).
-		Build()
-
-	// 奖励邀请人指令
-	var rewardInviterInstructions []solana.Instruction
-	if txInfo.InviteDetermine {
-		for _, rewardInfo := range txInfo.RewardInviterInfo {
-			inst := token.NewTransferCheckedInstructionBuilder().
-				SetAmount(rewardInfo.Amount).
-				SetDecimals(decimals).
-				SetSourceAccount(rewardTokenAccount).
-				SetMintAccount(tokenMintAccount).
-				SetDestinationAccount(solana.MPK(rewardInfo.TokenAccount)).
-				SetOwnerAccount(rewardNativeAccount).
-				Build()
-			rewardInviterInstructions = append(rewardInviterInstructions, inst)
-		}
-	}
-
-	// 发送给dex的sol
-	toDexInst := system.NewTransferInstructionBuilder().
-		SetLamports(uint64(txInfo.QuotedSOLAmount)).
-		SetFundingAccount(fromNativeAccount).
-		SetRecipientAccount(dexNativeAccount).
-		Build()
-
 	// 用 instUnits API 计算 computeUnitLimit：
 	//   每条 TransferChecked 按 instUnits.TransferChecked 计，
 	//   加上 System Transfer 的固定预留（500 CU），再留 20% buffer。
@@ -394,8 +335,58 @@ func createHexEncodedTx(ctx context.Context, fromPrivateKey solana.PrivateKey, i
 	if err != nil {
 		panic(err)
 	}
-	transferCheckedCount := 1 + len(rewardInviterInstructions)
-	const systemTransferCU uint64 = 500 // System Transfer 固定预留
+
+	fmt.Printf("take token tx info %v \n", txInfo)
+	fmt.Printf("total reward amount %v \n", txInfo.TotalRewardAmount)
+	fmt.Printf("quote sol price %v \n", txInfo.QuoteSOLPrice)
+	fmt.Printf("quoted sol amount %v \n", txInfo.QuotedSOLAmount)
+
+	var receiptPDAExist = true
+	rewardNativeAccount := solana.MPK(txInfo.RewardNativeAccount)
+	rewardTokenAccount := solana.MPK(txInfo.RewardTokenAccount)
+	tokenMintAccount := solana.MPK(txInfo.TokenMintAccount)
+	dexNativeAccount := solana.MPK(txInfo.DexNativeAccount)
+	decimals := uint8(txInfo.Decimals)
+
+	receiptTokenAccount, err := utils.GetSPLTokenAccountByNative(rpcClient, receiptPubKey, solana.MPK(txInfo.TokenMintAccount))
+
+	computePrice := priorityFee.PerComputeUnit.Medium
+	computeBudgetPriceInst := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(computePrice).Build()
+
+	fmt.Printf("compute price is %d\n", computePrice)
+
+	// 奖励领取人token指令
+	receiptInst := token.NewTransferCheckedInstructionBuilder().
+		SetAmount(txInfo.RewardInfo.Amount).
+		SetDecimals(decimals).
+		SetSourceAccount(rewardTokenAccount).
+		SetMintAccount(tokenMintAccount).
+		SetDestinationAccount(*receiptTokenAccount).
+		SetOwnerAccount(rewardNativeAccount).
+		Build()
+
+	// 奖励邀请人指令
+	var inviterInsts []solana.Instruction
+	for _, rewardInfo := range txInfo.RewardInviterInfo {
+		inst := token.NewTransferCheckedInstructionBuilder().
+			SetAmount(rewardInfo.Amount).
+			SetDecimals(decimals).
+			SetSourceAccount(rewardTokenAccount).
+			SetMintAccount(tokenMintAccount).
+			SetDestinationAccount(solana.MPK(rewardInfo.TokenAccount)).
+			SetOwnerAccount(rewardNativeAccount).
+			Build()
+		inviterInsts = append(inviterInsts, inst)
+	}
+
+	// 发送给dex的sol
+	toDexInst := system.NewTransferInstructionBuilder().
+		SetLamports(uint64(txInfo.QuotedSOLAmount)).
+		SetFundingAccount(receiptPubKey).
+		SetRecipientAccount(dexNativeAccount).
+		Build()
+
+	transferCheckedCount := 1 + len(inviterInsts)
 	computeUnitLimit := uint32(float64(uint64(transferCheckedCount)*instUnits.TransferChecked+systemTransferCU) * 1.2)
 	computeBudgetLimitInst := computebudget.NewSetComputeUnitLimitInstructionBuilder().SetUnits(computeUnitLimit).Build()
 	fmt.Printf("computeUnitLimit: %d (transferCheckedCount=%d, perTC=%d)\n", computeUnitLimit, transferCheckedCount, instUnits.TransferChecked)
@@ -403,14 +394,14 @@ func createHexEncodedTx(ctx context.Context, fromPrivateKey solana.PrivateKey, i
 	var instructions1 []solana.Instruction
 	instructions1 = append(instructions1, computeBudgetPriceInst)
 	instructions1 = append(instructions1, computeBudgetLimitInst)
-	if !fromTokenAccountExist {
-		associated := associatedtokenaccount.NewCreateInstruction(fromNativeAccount, fromNativeAccount, tokenMintAccount).Build()
+	if !receiptPDAExist {
+		associated := associatedtokenaccount.NewCreateInstruction(receiptPubKey, receiptPubKey, tokenMintAccount).Build()
 		instructions1 = append(instructions1, associated)
 	}
-	instructions1 = append(instructions1, rewardInst)
+	instructions1 = append(instructions1, receiptInst)
 	instructions1 = append(instructions1, toDexInst)
-	if len(rewardInviterInstructions) > 0 {
-		instructions1 = append(instructions1, rewardInviterInstructions...)
+	if len(inviterInsts) > 0 {
+		instructions1 = append(instructions1, inviterInsts...)
 	}
 
 	recent, err := rpcClient.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
@@ -422,7 +413,7 @@ func createHexEncodedTx(ctx context.Context, fromPrivateKey solana.PrivateKey, i
 	tx, err := solana.NewTransaction(
 		instructions1,
 		recent.Value.Blockhash,
-		solana.TransactionPayer(fromNativeAccount),
+		solana.TransactionPayer(receiptPubKey),
 	)
 	if err != nil {
 		panic(err)
@@ -433,14 +424,11 @@ func createHexEncodedTx(ctx context.Context, fromPrivateKey solana.PrivateKey, i
 		panic(err)
 	}
 
-	fromSign, err := fromPrivateKey.Sign(messageContent1)
+	fromSign, err := privKey.Sign(messageContent1)
 	if err != nil {
 		panic(err)
 	}
 	tx.Signatures = append(tx.Signatures, fromSign)
-
-	//actualFee := utils.CalcGasFee(2, 5000, computePrice, uint64(unitConsumed), true)
-	//fmt.Printf("actual fee %v\n", actualFee)
 
 	txBytes, _ := tx.MarshalBinary()
 	hexEncodedTx := hex.EncodeToString(txBytes)
@@ -448,15 +436,17 @@ func createHexEncodedTx(ctx context.Context, fromPrivateKey solana.PrivateKey, i
 }
 
 func TestTakeToken(t *testing.T) {
-	fromPrivateKey, _ := solana.PrivateKeyFromBase58(AlicePrivate)
-	hexEncodedTx0, err := createHexEncodedTx(context.Background(), fromPrivateKey, "")
+	inviteCode := "ogG0W1OK"
+	privateKey, _ := solana.PrivateKeyFromBase58(DavidPrivate)
+	encodedTx, err := createHexEncodedTx(context.Background(), privateKey, inviteCode)
 	if err != nil {
 		panic(err)
 	}
 	// 调用 officialGiveToken
 	txId, err := commitTakeTokenTx(
 		types.CommitTakeTokenTxInfoReq{
-			EncodedTx: hexEncodedTx0,
+			EncodedTx:  encodedTx,
+			InviteCode: inviteCode,
 		},
 	)
 	fmt.Printf("请求成功: https://solscan.io/tx/%s?cluster=devnet\n", txId)

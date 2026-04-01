@@ -40,6 +40,7 @@ CREATE TABLE public.t_sol_fund_flow
     created_at          timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at          timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
+CREATE UNIQUE INDEX uq_sol_fund_flow_tx_to_flow ON public.t_sol_fund_flow (tx_id, to_native_account, flow_type);
 
 -- 旧工程 t_sol_official_give_token_reward_rule
 DROP TABLE IF EXISTS public.t_take_token_config;

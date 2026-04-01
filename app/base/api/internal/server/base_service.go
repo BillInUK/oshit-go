@@ -79,75 +79,6 @@ func (s *BaseRpcService) GetUSDTQuoteSOLPrice(ctx context.Context, _ *basepb.Get
 	return &basepb.PriceQuoteRsp{Price: rsp.Price}, nil
 }
 
-// ---- Invite ----
-
-func (s *BaseRpcService) GetAccountByInviteCode(ctx context.Context, req *basepb.GetAccountByInviteCodeReq) (*basepb.GetAccountByInviteCodeRsp, error) {
-	rsp, err := logic.NewInviteLogic(ctx, s.svcCtx).GetAccountByInviteCode(&types.GetAccountByInviteCodeReq{
-		InviteCode: req.InviteCode,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if rsp == nil {
-		return &basepb.GetAccountByInviteCodeRsp{}, nil
-	}
-	return &basepb.GetAccountByInviteCodeRsp{
-		RecordId:      rsp.RecordID,
-		NativeAccount: rsp.NativeAccount,
-		TokenAccount:  rsp.TokenAccount,
-		InviteCode:    rsp.InviteCode,
-		CreatedAt:     rsp.CreatedAt,
-	}, nil
-}
-
-func (s *BaseRpcService) FindInviteRelationByAccount(ctx context.Context, req *basepb.FindInviteRelationByAccountReq) (*basepb.FindInviteRelationByAccountRsp, error) {
-	record, err := logic.NewInviteLogic(ctx, s.svcCtx).FindInviteRelationByAccount(&types.FindInviteRelationByAccountReq{
-		NativeAccount: req.NativeAccount,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if record == nil {
-		return &basepb.FindInviteRelationByAccountRsp{Found: false}, nil
-	}
-	return &basepb.FindInviteRelationByAccountRsp{
-		Found:  true,
-		Record: inviteRelationPb(*record),
-	}, nil
-}
-
-func (s *BaseRpcService) CheckInviteRecord(ctx context.Context, req *basepb.CheckInviteRecordReq) (*basepb.CheckInviteRecordRsp, error) {
-	rsp, err := logic.NewInviteLogic(ctx, s.svcCtx).CheckInviteRecord(&types.CheckInviteRecordReq{
-		NativeAccount: req.NativeAccount,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &basepb.CheckInviteRecordRsp{Exists: rsp.Exists}, nil
-}
-
-func (s *BaseRpcService) GetUpInviterRecords(ctx context.Context, req *basepb.RecursiveQueryReq) (*basepb.RecursiveQueryRsp, error) {
-	rsp, err := logic.NewInviteLogic(ctx, s.svcCtx).GetUpInviterRecords(&types.RecursiveQueryReq{
-		NativeAccount: req.NativeAccount,
-		Depth:         int(req.Depth),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return inviteRelationsPb(rsp), nil
-}
-
-func (s *BaseRpcService) GetDownInviteeRecords(ctx context.Context, req *basepb.RecursiveQueryReq) (*basepb.RecursiveQueryRsp, error) {
-	rsp, err := logic.NewInviteLogic(ctx, s.svcCtx).GetDownInviteeRecords(&types.RecursiveQueryReq{
-		NativeAccount: req.NativeAccount,
-		Depth:         int(req.Depth),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return inviteRelationsPb(rsp), nil
-}
-
 // ---- Tx ----
 
 func (s *BaseRpcService) SendTransaction(ctx context.Context, req *basepb.SendTransactionReq) (*basepb.SendTransactionRsp, error) {
@@ -173,26 +104,4 @@ func feeDetailPb(f entity.FeeDetail) *basepb.FeeDetail {
 		High:    f.High,
 		Extreme: f.Extreme,
 	}
-}
-
-func inviteRelationPb(r types.InviteRelation) *basepb.InviteRelation {
-	return &basepb.InviteRelation{
-		RecordId:             r.RecordID,
-		InviterNativeAccount: r.InviterNativeAccount,
-		InviterTokenAccount:  r.InviterTokenAccount,
-		InviteeNativeAccount: r.InviteeNativeAccount,
-		InviteeTokenAccount:  r.InviteeTokenAccount,
-		Channel:              r.Channel,
-		Level:                r.Level,
-		TxId:                 r.TxID,
-		CreatedAt:            r.CreatedAt,
-	}
-}
-
-func inviteRelationsPb(rsp *types.RecursiveQueryRsp) *basepb.RecursiveQueryRsp {
-	records := make([]*basepb.InviteRelation, 0, len(rsp.Records))
-	for _, r := range rsp.Records {
-		records = append(records, inviteRelationPb(r))
-	}
-	return &basepb.RecursiveQueryRsp{Records: records}
 }

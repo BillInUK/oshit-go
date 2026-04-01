@@ -171,7 +171,7 @@ CREATE TABLE public.t_invite_relation
     invitee_token_account  character varying(64)                                 NOT NULL,
     channel                character varying(64)                                 NOT NULL,
     level                  integer                     DEFAULT 1                 NOT NULL,
-    tx_id                  character varying(64)                                 NOT NULL,
+    tx_id                  character varying(128)                                 NOT NULL,
     created_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );

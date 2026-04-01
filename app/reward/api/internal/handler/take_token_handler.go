@@ -82,6 +82,8 @@ func (h *TakeTokenHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 		return response.FailWithError(fiberCtx, "pre check encoded transaction error: %v", err)
 	}
 
+	log.Infof("%s 地址 %v 使用邀请码 %s 领取奖励", prefix, preCheckedTx.From, inviteCode)
+
 	// 处理交易主逻辑
 	l := logic.NewTakeLogic(ctx, h.srvCtx)
 	rsp, err := l.ProcessCommitTx(ctx, preCheckedTx, inviteCode)

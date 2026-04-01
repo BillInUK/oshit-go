@@ -9,8 +9,8 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
-	basepb "oshit-go/app/pb/base"
 	app_utils "oshit-go/app/utils"
+	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 )
 
@@ -251,7 +251,7 @@ func (l *GiveTokenLogic) checkToReceiptInst(decodedInst entity.DecodedSolTransfe
 // checkSOLTx 解析交易后检查交易内的参数
 func (l *GiveTokenLogic) checkSOLTx(
 	decodedTx *entity.DecodedSolanaTransaction,
-	upInvitersInfo []*basepb.InviteRelation,
+	upInvitersInfo []model.InviteRelation,
 	receiptTokenAccount solana.PublicKey,
 	valid bool) (*entity.DecodedServiceTransaction, error) {
 	var err error
@@ -279,7 +279,7 @@ func (l *GiveTokenLogic) checkSOLTx(
 
 	// 检查TransferChecked指令的地址和金额
 	transferCheckedMap := make(map[solana.PublicKey]entity.DecodedSolTransferCheckedInst)
-	inviterRecordMap := make(map[string]basepb.InviteRelation)
+	inviterRecordMap := make(map[string]model.InviteRelation)
 	inviterClaimMap := make(map[string]uint64)
 
 	// 将所有的transfer checked指令存放到map里面,key-ToTokenAccount value-DecodedSolTransferCheckedInst
@@ -288,7 +288,7 @@ func (l *GiveTokenLogic) checkSOLTx(
 	}
 	// 所有的邀请人记录存放到map里面,key-InviterTokenAccount value=SolDetermineInviteRecord
 	for _, record := range upInvitersInfo {
-		inviterRecordMap[record.InviterTokenAccount] = *record
+		inviterRecordMap[record.InviterTokenAccount] = record
 	}
 
 	// 解析转账地址转出token的指令

@@ -99,42 +99,6 @@ func (c *BaseClient) GetUSDTQuoteSOLPrice(ctx context.Context) (float64, error) 
 	return price, nil
 }
 
-// ---- Invite ----
-
-func (c *BaseClient) GetAccountByInviteCode(ctx context.Context, inviteCode string) (*basepb.GetAccountByInviteCodeRsp, error) {
-	rsp, err := c.svc.GetAccountByInviteCode(ctx, &basepb.GetAccountByInviteCodeReq{InviteCode: inviteCode})
-	if err != nil {
-		return nil, err
-	}
-	// RecordId 为空说明记录不存在（base 侧返回空结构体）
-	if rsp == nil || rsp.RecordId == "" {
-		return nil, nil
-	}
-	return rsp, nil
-}
-
-func (c *BaseClient) CheckInviteRecord(ctx context.Context, nativeAccount string) (bool, error) {
-	rsp, err := c.svc.CheckInviteRecord(ctx, &basepb.CheckInviteRecordReq{NativeAccount: nativeAccount})
-	if err != nil {
-		return false, err
-	}
-	return rsp.Exists, nil
-}
-
-func (c *BaseClient) GetUpInviterRecords(ctx context.Context, nativeAccount string, depth int32) (*basepb.RecursiveQueryRsp, error) {
-	return c.svc.GetUpInviterRecords(ctx, &basepb.RecursiveQueryReq{
-		NativeAccount: nativeAccount,
-		Depth:         depth,
-	})
-}
-
-func (c *BaseClient) GetDownInviteeRecords(ctx context.Context, nativeAccount string, depth int32) (*basepb.RecursiveQueryRsp, error) {
-	return c.svc.GetDownInviteeRecords(ctx, &basepb.RecursiveQueryReq{
-		NativeAccount: nativeAccount,
-		Depth:         depth,
-	})
-}
-
 // SendTransaction 将 Solana 交易序列化后发给 base 模块签名并异步广播
 // service / subService 用于在 t_service_key 中查找对应私钥
 func (c *BaseClient) SendTransaction(ctx context.Context, tx *solana.Transaction, service, subService string) (string, error) {
@@ -155,13 +119,3 @@ func (c *BaseClient) SendTransaction(ctx context.Context, tx *solana.Transaction
 	return rsp.TxId, nil
 }
 
-func (c *BaseClient) FindInviteRelationByAccount(ctx context.Context, nativeAccount string) (*basepb.InviteRelation, error) {
-	rsp, err := c.svc.FindInviteRelationByAccount(ctx, &basepb.FindInviteRelationByAccountReq{NativeAccount: nativeAccount})
-	if err != nil {
-		return nil, err
-	}
-	if !rsp.Found {
-		return nil, nil
-	}
-	return rsp.Record, nil
-}

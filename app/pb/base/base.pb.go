@@ -89,114 +89,6 @@ func (x *FeeDetail) GetExtreme() uint64 {
 	return 0
 }
 
-type InviteRelation struct {
-	state                protoimpl.MessageState `protogen:"open.v1"`
-	RecordId             string                 `protobuf:"bytes,1,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
-	InviterNativeAccount string                 `protobuf:"bytes,2,opt,name=inviter_native_account,json=inviterNativeAccount,proto3" json:"inviter_native_account,omitempty"`
-	InviterTokenAccount  string                 `protobuf:"bytes,3,opt,name=inviter_token_account,json=inviterTokenAccount,proto3" json:"inviter_token_account,omitempty"`
-	InviteeNativeAccount string                 `protobuf:"bytes,4,opt,name=invitee_native_account,json=inviteeNativeAccount,proto3" json:"invitee_native_account,omitempty"`
-	InviteeTokenAccount  string                 `protobuf:"bytes,5,opt,name=invitee_token_account,json=inviteeTokenAccount,proto3" json:"invitee_token_account,omitempty"`
-	Channel              string                 `protobuf:"bytes,6,opt,name=channel,proto3" json:"channel,omitempty"`
-	Level                int32                  `protobuf:"varint,7,opt,name=level,proto3" json:"level,omitempty"`
-	TxId                 string                 `protobuf:"bytes,8,opt,name=tx_id,json=txId,proto3" json:"tx_id,omitempty"`
-	CreatedAt            string                 `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
-}
-
-func (x *InviteRelation) Reset() {
-	*x = InviteRelation{}
-	mi := &file_base_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *InviteRelation) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*InviteRelation) ProtoMessage() {}
-
-func (x *InviteRelation) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use InviteRelation.ProtoReflect.Descriptor instead.
-func (*InviteRelation) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *InviteRelation) GetRecordId() string {
-	if x != nil {
-		return x.RecordId
-	}
-	return ""
-}
-
-func (x *InviteRelation) GetInviterNativeAccount() string {
-	if x != nil {
-		return x.InviterNativeAccount
-	}
-	return ""
-}
-
-func (x *InviteRelation) GetInviterTokenAccount() string {
-	if x != nil {
-		return x.InviterTokenAccount
-	}
-	return ""
-}
-
-func (x *InviteRelation) GetInviteeNativeAccount() string {
-	if x != nil {
-		return x.InviteeNativeAccount
-	}
-	return ""
-}
-
-func (x *InviteRelation) GetInviteeTokenAccount() string {
-	if x != nil {
-		return x.InviteeTokenAccount
-	}
-	return ""
-}
-
-func (x *InviteRelation) GetChannel() string {
-	if x != nil {
-		return x.Channel
-	}
-	return ""
-}
-
-func (x *InviteRelation) GetLevel() int32 {
-	if x != nil {
-		return x.Level
-	}
-	return 0
-}
-
-func (x *InviteRelation) GetTxId() string {
-	if x != nil {
-		return x.TxId
-	}
-	return ""
-}
-
-func (x *InviteRelation) GetCreatedAt() string {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return ""
-}
-
 type GetFeeToleranceReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -205,7 +97,7 @@ type GetFeeToleranceReq struct {
 
 func (x *GetFeeToleranceReq) Reset() {
 	*x = GetFeeToleranceReq{}
-	mi := &file_base_proto_msgTypes[2]
+	mi := &file_base_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -217,7 +109,7 @@ func (x *GetFeeToleranceReq) String() string {
 func (*GetFeeToleranceReq) ProtoMessage() {}
 
 func (x *GetFeeToleranceReq) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[2]
+	mi := &file_base_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -230,7 +122,7 @@ func (x *GetFeeToleranceReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFeeToleranceReq.ProtoReflect.Descriptor instead.
 func (*GetFeeToleranceReq) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{2}
+	return file_base_proto_rawDescGZIP(), []int{1}
 }
 
 type GetFeeToleranceRsp struct {
@@ -243,7 +135,7 @@ type GetFeeToleranceRsp struct {
 
 func (x *GetFeeToleranceRsp) Reset() {
 	*x = GetFeeToleranceRsp{}
-	mi := &file_base_proto_msgTypes[3]
+	mi := &file_base_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -255,7 +147,7 @@ func (x *GetFeeToleranceRsp) String() string {
 func (*GetFeeToleranceRsp) ProtoMessage() {}
 
 func (x *GetFeeToleranceRsp) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[3]
+	mi := &file_base_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -268,7 +160,7 @@ func (x *GetFeeToleranceRsp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFeeToleranceRsp.ProtoReflect.Descriptor instead.
 func (*GetFeeToleranceRsp) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{3}
+	return file_base_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *GetFeeToleranceRsp) GetMaxFeeLess() float64 {
@@ -293,7 +185,7 @@ type GetPriorityFeeReq struct {
 
 func (x *GetPriorityFeeReq) Reset() {
 	*x = GetPriorityFeeReq{}
-	mi := &file_base_proto_msgTypes[4]
+	mi := &file_base_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -305,7 +197,7 @@ func (x *GetPriorityFeeReq) String() string {
 func (*GetPriorityFeeReq) ProtoMessage() {}
 
 func (x *GetPriorityFeeReq) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[4]
+	mi := &file_base_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -318,7 +210,7 @@ func (x *GetPriorityFeeReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPriorityFeeReq.ProtoReflect.Descriptor instead.
 func (*GetPriorityFeeReq) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{4}
+	return file_base_proto_rawDescGZIP(), []int{3}
 }
 
 type GetPriorityFeeRsp struct {
@@ -331,7 +223,7 @@ type GetPriorityFeeRsp struct {
 
 func (x *GetPriorityFeeRsp) Reset() {
 	*x = GetPriorityFeeRsp{}
-	mi := &file_base_proto_msgTypes[5]
+	mi := &file_base_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -343,7 +235,7 @@ func (x *GetPriorityFeeRsp) String() string {
 func (*GetPriorityFeeRsp) ProtoMessage() {}
 
 func (x *GetPriorityFeeRsp) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[5]
+	mi := &file_base_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -356,7 +248,7 @@ func (x *GetPriorityFeeRsp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPriorityFeeRsp.ProtoReflect.Descriptor instead.
 func (*GetPriorityFeeRsp) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{5}
+	return file_base_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetPriorityFeeRsp) GetPerComputeUnit() *FeeDetail {
@@ -381,7 +273,7 @@ type GetInstUnitsReq struct {
 
 func (x *GetInstUnitsReq) Reset() {
 	*x = GetInstUnitsReq{}
-	mi := &file_base_proto_msgTypes[6]
+	mi := &file_base_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -393,7 +285,7 @@ func (x *GetInstUnitsReq) String() string {
 func (*GetInstUnitsReq) ProtoMessage() {}
 
 func (x *GetInstUnitsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[6]
+	mi := &file_base_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -406,7 +298,7 @@ func (x *GetInstUnitsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetInstUnitsReq.ProtoReflect.Descriptor instead.
 func (*GetInstUnitsReq) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{6}
+	return file_base_proto_rawDescGZIP(), []int{5}
 }
 
 type GetInstUnitsRsp struct {
@@ -421,7 +313,7 @@ type GetInstUnitsRsp struct {
 
 func (x *GetInstUnitsRsp) Reset() {
 	*x = GetInstUnitsRsp{}
-	mi := &file_base_proto_msgTypes[7]
+	mi := &file_base_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -433,7 +325,7 @@ func (x *GetInstUnitsRsp) String() string {
 func (*GetInstUnitsRsp) ProtoMessage() {}
 
 func (x *GetInstUnitsRsp) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[7]
+	mi := &file_base_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -446,7 +338,7 @@ func (x *GetInstUnitsRsp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetInstUnitsRsp.ProtoReflect.Descriptor instead.
 func (*GetInstUnitsRsp) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{7}
+	return file_base_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetInstUnitsRsp) GetMiniRent() uint64 {
@@ -485,7 +377,7 @@ type GetTokenQuoteSOLPriceReq struct {
 
 func (x *GetTokenQuoteSOLPriceReq) Reset() {
 	*x = GetTokenQuoteSOLPriceReq{}
-	mi := &file_base_proto_msgTypes[8]
+	mi := &file_base_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -497,7 +389,7 @@ func (x *GetTokenQuoteSOLPriceReq) String() string {
 func (*GetTokenQuoteSOLPriceReq) ProtoMessage() {}
 
 func (x *GetTokenQuoteSOLPriceReq) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[8]
+	mi := &file_base_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -510,7 +402,7 @@ func (x *GetTokenQuoteSOLPriceReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTokenQuoteSOLPriceReq.ProtoReflect.Descriptor instead.
 func (*GetTokenQuoteSOLPriceReq) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{8}
+	return file_base_proto_rawDescGZIP(), []int{7}
 }
 
 type GetTokenQuoteUSDTPriceReq struct {
@@ -521,7 +413,7 @@ type GetTokenQuoteUSDTPriceReq struct {
 
 func (x *GetTokenQuoteUSDTPriceReq) Reset() {
 	*x = GetTokenQuoteUSDTPriceReq{}
-	mi := &file_base_proto_msgTypes[9]
+	mi := &file_base_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -533,7 +425,7 @@ func (x *GetTokenQuoteUSDTPriceReq) String() string {
 func (*GetTokenQuoteUSDTPriceReq) ProtoMessage() {}
 
 func (x *GetTokenQuoteUSDTPriceReq) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[9]
+	mi := &file_base_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -546,7 +438,7 @@ func (x *GetTokenQuoteUSDTPriceReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTokenQuoteUSDTPriceReq.ProtoReflect.Descriptor instead.
 func (*GetTokenQuoteUSDTPriceReq) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{9}
+	return file_base_proto_rawDescGZIP(), []int{8}
 }
 
 type GetUSDTQuoteSOLPriceReq struct {
@@ -557,7 +449,7 @@ type GetUSDTQuoteSOLPriceReq struct {
 
 func (x *GetUSDTQuoteSOLPriceReq) Reset() {
 	*x = GetUSDTQuoteSOLPriceReq{}
-	mi := &file_base_proto_msgTypes[10]
+	mi := &file_base_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -569,7 +461,7 @@ func (x *GetUSDTQuoteSOLPriceReq) String() string {
 func (*GetUSDTQuoteSOLPriceReq) ProtoMessage() {}
 
 func (x *GetUSDTQuoteSOLPriceReq) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[10]
+	mi := &file_base_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -582,7 +474,7 @@ func (x *GetUSDTQuoteSOLPriceReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUSDTQuoteSOLPriceReq.ProtoReflect.Descriptor instead.
 func (*GetUSDTQuoteSOLPriceReq) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{10}
+	return file_base_proto_rawDescGZIP(), []int{9}
 }
 
 type PriceQuoteRsp struct {
@@ -594,7 +486,7 @@ type PriceQuoteRsp struct {
 
 func (x *PriceQuoteRsp) Reset() {
 	*x = PriceQuoteRsp{}
-	mi := &file_base_proto_msgTypes[11]
+	mi := &file_base_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -606,7 +498,7 @@ func (x *PriceQuoteRsp) String() string {
 func (*PriceQuoteRsp) ProtoMessage() {}
 
 func (x *PriceQuoteRsp) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[11]
+	mi := &file_base_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -619,7 +511,7 @@ func (x *PriceQuoteRsp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PriceQuoteRsp.ProtoReflect.Descriptor instead.
 func (*PriceQuoteRsp) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{11}
+	return file_base_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *PriceQuoteRsp) GetPrice() float64 {
@@ -627,310 +519,6 @@ func (x *PriceQuoteRsp) GetPrice() float64 {
 		return x.Price
 	}
 	return 0
-}
-
-type GetAccountByInviteCodeReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	InviteCode    string                 `protobuf:"bytes,1,opt,name=invite_code,json=inviteCode,proto3" json:"invite_code,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetAccountByInviteCodeReq) Reset() {
-	*x = GetAccountByInviteCodeReq{}
-	mi := &file_base_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetAccountByInviteCodeReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetAccountByInviteCodeReq) ProtoMessage() {}
-
-func (x *GetAccountByInviteCodeReq) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetAccountByInviteCodeReq.ProtoReflect.Descriptor instead.
-func (*GetAccountByInviteCodeReq) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *GetAccountByInviteCodeReq) GetInviteCode() string {
-	if x != nil {
-		return x.InviteCode
-	}
-	return ""
-}
-
-type GetAccountByInviteCodeRsp struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	RecordId      string                 `protobuf:"bytes,1,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
-	NativeAccount string                 `protobuf:"bytes,2,opt,name=native_account,json=nativeAccount,proto3" json:"native_account,omitempty"`
-	TokenAccount  string                 `protobuf:"bytes,3,opt,name=token_account,json=tokenAccount,proto3" json:"token_account,omitempty"`
-	InviteCode    string                 `protobuf:"bytes,4,opt,name=invite_code,json=inviteCode,proto3" json:"invite_code,omitempty"`
-	CreatedAt     string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetAccountByInviteCodeRsp) Reset() {
-	*x = GetAccountByInviteCodeRsp{}
-	mi := &file_base_proto_msgTypes[13]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetAccountByInviteCodeRsp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetAccountByInviteCodeRsp) ProtoMessage() {}
-
-func (x *GetAccountByInviteCodeRsp) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[13]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetAccountByInviteCodeRsp.ProtoReflect.Descriptor instead.
-func (*GetAccountByInviteCodeRsp) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *GetAccountByInviteCodeRsp) GetRecordId() string {
-	if x != nil {
-		return x.RecordId
-	}
-	return ""
-}
-
-func (x *GetAccountByInviteCodeRsp) GetNativeAccount() string {
-	if x != nil {
-		return x.NativeAccount
-	}
-	return ""
-}
-
-func (x *GetAccountByInviteCodeRsp) GetTokenAccount() string {
-	if x != nil {
-		return x.TokenAccount
-	}
-	return ""
-}
-
-func (x *GetAccountByInviteCodeRsp) GetInviteCode() string {
-	if x != nil {
-		return x.InviteCode
-	}
-	return ""
-}
-
-func (x *GetAccountByInviteCodeRsp) GetCreatedAt() string {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return ""
-}
-
-type CheckInviteRecordReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	NativeAccount string                 `protobuf:"bytes,1,opt,name=native_account,json=nativeAccount,proto3" json:"native_account,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CheckInviteRecordReq) Reset() {
-	*x = CheckInviteRecordReq{}
-	mi := &file_base_proto_msgTypes[14]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CheckInviteRecordReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CheckInviteRecordReq) ProtoMessage() {}
-
-func (x *CheckInviteRecordReq) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[14]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CheckInviteRecordReq.ProtoReflect.Descriptor instead.
-func (*CheckInviteRecordReq) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *CheckInviteRecordReq) GetNativeAccount() string {
-	if x != nil {
-		return x.NativeAccount
-	}
-	return ""
-}
-
-type CheckInviteRecordRsp struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Exists        bool                   `protobuf:"varint,1,opt,name=exists,proto3" json:"exists,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CheckInviteRecordRsp) Reset() {
-	*x = CheckInviteRecordRsp{}
-	mi := &file_base_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CheckInviteRecordRsp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CheckInviteRecordRsp) ProtoMessage() {}
-
-func (x *CheckInviteRecordRsp) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CheckInviteRecordRsp.ProtoReflect.Descriptor instead.
-func (*CheckInviteRecordRsp) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *CheckInviteRecordRsp) GetExists() bool {
-	if x != nil {
-		return x.Exists
-	}
-	return false
-}
-
-type FindInviteRelationByAccountReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	NativeAccount string                 `protobuf:"bytes,1,opt,name=native_account,json=nativeAccount,proto3" json:"native_account,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *FindInviteRelationByAccountReq) Reset() {
-	*x = FindInviteRelationByAccountReq{}
-	mi := &file_base_proto_msgTypes[16]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *FindInviteRelationByAccountReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*FindInviteRelationByAccountReq) ProtoMessage() {}
-
-func (x *FindInviteRelationByAccountReq) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[16]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use FindInviteRelationByAccountReq.ProtoReflect.Descriptor instead.
-func (*FindInviteRelationByAccountReq) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{16}
-}
-
-func (x *FindInviteRelationByAccountReq) GetNativeAccount() string {
-	if x != nil {
-		return x.NativeAccount
-	}
-	return ""
-}
-
-type FindInviteRelationByAccountRsp struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Found         bool                   `protobuf:"varint,1,opt,name=found,proto3" json:"found,omitempty"`
-	Record        *InviteRelation        `protobuf:"bytes,2,opt,name=record,proto3" json:"record,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *FindInviteRelationByAccountRsp) Reset() {
-	*x = FindInviteRelationByAccountRsp{}
-	mi := &file_base_proto_msgTypes[17]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *FindInviteRelationByAccountRsp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*FindInviteRelationByAccountRsp) ProtoMessage() {}
-
-func (x *FindInviteRelationByAccountRsp) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[17]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use FindInviteRelationByAccountRsp.ProtoReflect.Descriptor instead.
-func (*FindInviteRelationByAccountRsp) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *FindInviteRelationByAccountRsp) GetFound() bool {
-	if x != nil {
-		return x.Found
-	}
-	return false
-}
-
-func (x *FindInviteRelationByAccountRsp) GetRecord() *InviteRelation {
-	if x != nil {
-		return x.Record
-	}
-	return nil
 }
 
 type SendTransactionReq struct {
@@ -944,7 +532,7 @@ type SendTransactionReq struct {
 
 func (x *SendTransactionReq) Reset() {
 	*x = SendTransactionReq{}
-	mi := &file_base_proto_msgTypes[18]
+	mi := &file_base_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -956,7 +544,7 @@ func (x *SendTransactionReq) String() string {
 func (*SendTransactionReq) ProtoMessage() {}
 
 func (x *SendTransactionReq) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[18]
+	mi := &file_base_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -969,7 +557,7 @@ func (x *SendTransactionReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendTransactionReq.ProtoReflect.Descriptor instead.
 func (*SendTransactionReq) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{18}
+	return file_base_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *SendTransactionReq) GetEncodedTx() string {
@@ -1003,7 +591,7 @@ type SendTransactionRsp struct {
 
 func (x *SendTransactionRsp) Reset() {
 	*x = SendTransactionRsp{}
-	mi := &file_base_proto_msgTypes[19]
+	mi := &file_base_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1015,7 +603,7 @@ func (x *SendTransactionRsp) String() string {
 func (*SendTransactionRsp) ProtoMessage() {}
 
 func (x *SendTransactionRsp) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[19]
+	mi := &file_base_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1028,7 +616,7 @@ func (x *SendTransactionRsp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendTransactionRsp.ProtoReflect.Descriptor instead.
 func (*SendTransactionRsp) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{19}
+	return file_base_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *SendTransactionRsp) GetRecordId() string {
@@ -1045,102 +633,6 @@ func (x *SendTransactionRsp) GetTxId() string {
 	return ""
 }
 
-type RecursiveQueryReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Depth         int32                  `protobuf:"varint,1,opt,name=depth,proto3" json:"depth,omitempty"`
-	NativeAccount string                 `protobuf:"bytes,2,opt,name=native_account,json=nativeAccount,proto3" json:"native_account,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *RecursiveQueryReq) Reset() {
-	*x = RecursiveQueryReq{}
-	mi := &file_base_proto_msgTypes[20]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RecursiveQueryReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RecursiveQueryReq) ProtoMessage() {}
-
-func (x *RecursiveQueryReq) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[20]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RecursiveQueryReq.ProtoReflect.Descriptor instead.
-func (*RecursiveQueryReq) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{20}
-}
-
-func (x *RecursiveQueryReq) GetDepth() int32 {
-	if x != nil {
-		return x.Depth
-	}
-	return 0
-}
-
-func (x *RecursiveQueryReq) GetNativeAccount() string {
-	if x != nil {
-		return x.NativeAccount
-	}
-	return ""
-}
-
-type RecursiveQueryRsp struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Records       []*InviteRelation      `protobuf:"bytes,1,rep,name=records,proto3" json:"records,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *RecursiveQueryRsp) Reset() {
-	*x = RecursiveQueryRsp{}
-	mi := &file_base_proto_msgTypes[21]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RecursiveQueryRsp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RecursiveQueryRsp) ProtoMessage() {}
-
-func (x *RecursiveQueryRsp) ProtoReflect() protoreflect.Message {
-	mi := &file_base_proto_msgTypes[21]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RecursiveQueryRsp.ProtoReflect.Descriptor instead.
-func (*RecursiveQueryRsp) Descriptor() ([]byte, []int) {
-	return file_base_proto_rawDescGZIP(), []int{21}
-}
-
-func (x *RecursiveQueryRsp) GetRecords() []*InviteRelation {
-	if x != nil {
-		return x.Records
-	}
-	return nil
-}
-
 var File_base_proto protoreflect.FileDescriptor
 
 const file_base_proto_rawDesc = "" +
@@ -1151,18 +643,7 @@ const file_base_proto_rawDesc = "" +
 	"\x03low\x18\x01 \x01(\x04R\x03low\x12\x16\n" +
 	"\x06medium\x18\x02 \x01(\x04R\x06medium\x12\x12\n" +
 	"\x04high\x18\x03 \x01(\x04R\x04high\x12\x18\n" +
-	"\aextreme\x18\x04 \x01(\x04R\aextreme\"\xe5\x02\n" +
-	"\x0eInviteRelation\x12\x1b\n" +
-	"\trecord_id\x18\x01 \x01(\tR\brecordId\x124\n" +
-	"\x16inviter_native_account\x18\x02 \x01(\tR\x14inviterNativeAccount\x122\n" +
-	"\x15inviter_token_account\x18\x03 \x01(\tR\x13inviterTokenAccount\x124\n" +
-	"\x16invitee_native_account\x18\x04 \x01(\tR\x14inviteeNativeAccount\x122\n" +
-	"\x15invitee_token_account\x18\x05 \x01(\tR\x13inviteeTokenAccount\x12\x18\n" +
-	"\achannel\x18\x06 \x01(\tR\achannel\x12\x14\n" +
-	"\x05level\x18\a \x01(\x05R\x05level\x12\x13\n" +
-	"\x05tx_id\x18\b \x01(\tR\x04txId\x12\x1d\n" +
-	"\n" +
-	"created_at\x18\t \x01(\tR\tcreatedAt\"\x14\n" +
+	"\aextreme\x18\x04 \x01(\x04R\aextreme\"\x14\n" +
 	"\x12GetFeeToleranceReq\"O\n" +
 	"\x12GetFeeToleranceRsp\x12 \n" +
 	"\fmax_fee_less\x18\x01 \x01(\x01R\n" +
@@ -1182,27 +663,7 @@ const file_base_proto_rawDesc = "" +
 	"\x19GetTokenQuoteUSDTPriceReq\"\x19\n" +
 	"\x17GetUSDTQuoteSOLPriceReq\"%\n" +
 	"\rPriceQuoteRsp\x12\x14\n" +
-	"\x05price\x18\x01 \x01(\x01R\x05price\"<\n" +
-	"\x19GetAccountByInviteCodeReq\x12\x1f\n" +
-	"\vinvite_code\x18\x01 \x01(\tR\n" +
-	"inviteCode\"\xc4\x01\n" +
-	"\x19GetAccountByInviteCodeRsp\x12\x1b\n" +
-	"\trecord_id\x18\x01 \x01(\tR\brecordId\x12%\n" +
-	"\x0enative_account\x18\x02 \x01(\tR\rnativeAccount\x12#\n" +
-	"\rtoken_account\x18\x03 \x01(\tR\ftokenAccount\x12\x1f\n" +
-	"\vinvite_code\x18\x04 \x01(\tR\n" +
-	"inviteCode\x12\x1d\n" +
-	"\n" +
-	"created_at\x18\x05 \x01(\tR\tcreatedAt\"=\n" +
-	"\x14CheckInviteRecordReq\x12%\n" +
-	"\x0enative_account\x18\x01 \x01(\tR\rnativeAccount\".\n" +
-	"\x14CheckInviteRecordRsp\x12\x16\n" +
-	"\x06exists\x18\x01 \x01(\bR\x06exists\"G\n" +
-	"\x1eFindInviteRelationByAccountReq\x12%\n" +
-	"\x0enative_account\x18\x01 \x01(\tR\rnativeAccount\"d\n" +
-	"\x1eFindInviteRelationByAccountRsp\x12\x14\n" +
-	"\x05found\x18\x01 \x01(\bR\x05found\x12,\n" +
-	"\x06record\x18\x02 \x01(\v2\x14.base.InviteRelationR\x06record\"n\n" +
+	"\x05price\x18\x01 \x01(\x01R\x05price\"n\n" +
 	"\x12SendTransactionReq\x12\x1d\n" +
 	"\n" +
 	"encoded_tx\x18\x01 \x01(\tR\tencodedTx\x12\x18\n" +
@@ -1211,24 +672,14 @@ const file_base_proto_rawDesc = "" +
 	"subService\"F\n" +
 	"\x12SendTransactionRsp\x12\x1b\n" +
 	"\trecord_id\x18\x01 \x01(\tR\brecordId\x12\x13\n" +
-	"\x05tx_id\x18\x02 \x01(\tR\x04txId\"P\n" +
-	"\x11RecursiveQueryReq\x12\x14\n" +
-	"\x05depth\x18\x01 \x01(\x05R\x05depth\x12%\n" +
-	"\x0enative_account\x18\x02 \x01(\tR\rnativeAccount\"C\n" +
-	"\x11RecursiveQueryRsp\x12.\n" +
-	"\arecords\x18\x01 \x03(\v2\x14.base.InviteRelationR\arecords2\xc7\a\n" +
+	"\x05tx_id\x18\x02 \x01(\tR\x04txId2\x95\x04\n" +
 	"\vBaseService\x12G\n" +
 	"\x0fGetFeeTolerance\x12\x18.base.GetFeeToleranceReq\x1a\x18.base.GetFeeToleranceRsp\"\x00\x12D\n" +
 	"\x0eGetPriorityFee\x12\x17.base.GetPriorityFeeReq\x1a\x17.base.GetPriorityFeeRsp\"\x00\x12>\n" +
 	"\fGetInstUnits\x12\x15.base.GetInstUnitsReq\x1a\x15.base.GetInstUnitsRsp\"\x00\x12N\n" +
 	"\x15GetTokenQuoteSOLPrice\x12\x1e.base.GetTokenQuoteSOLPriceReq\x1a\x13.base.PriceQuoteRsp\"\x00\x12P\n" +
 	"\x16GetTokenQuoteUSDTPrice\x12\x1f.base.GetTokenQuoteUSDTPriceReq\x1a\x13.base.PriceQuoteRsp\"\x00\x12L\n" +
-	"\x14GetUSDTQuoteSOLPrice\x12\x1d.base.GetUSDTQuoteSOLPriceReq\x1a\x13.base.PriceQuoteRsp\"\x00\x12\\\n" +
-	"\x16GetAccountByInviteCode\x12\x1f.base.GetAccountByInviteCodeReq\x1a\x1f.base.GetAccountByInviteCodeRsp\"\x00\x12M\n" +
-	"\x11CheckInviteRecord\x12\x1a.base.CheckInviteRecordReq\x1a\x1a.base.CheckInviteRecordRsp\"\x00\x12I\n" +
-	"\x13GetUpInviterRecords\x12\x17.base.RecursiveQueryReq\x1a\x17.base.RecursiveQueryRsp\"\x00\x12K\n" +
-	"\x15GetDownInviteeRecords\x12\x17.base.RecursiveQueryReq\x1a\x17.base.RecursiveQueryRsp\"\x00\x12k\n" +
-	"\x1bFindInviteRelationByAccount\x12$.base.FindInviteRelationByAccountReq\x1a$.base.FindInviteRelationByAccountRsp\"\x00\x12G\n" +
+	"\x14GetUSDTQuoteSOLPrice\x12\x1d.base.GetUSDTQuoteSOLPriceReq\x1a\x13.base.PriceQuoteRsp\"\x00\x12G\n" +
 	"\x0fSendTransaction\x12\x18.base.SendTransactionReq\x1a\x18.base.SendTransactionRsp\"\x00B\bZ\x06.;baseb\x06proto3"
 
 var (
@@ -1243,65 +694,44 @@ func file_base_proto_rawDescGZIP() []byte {
 	return file_base_proto_rawDescData
 }
 
-var file_base_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_base_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_base_proto_goTypes = []any{
-	(*FeeDetail)(nil),                      // 0: base.FeeDetail
-	(*InviteRelation)(nil),                 // 1: base.InviteRelation
-	(*GetFeeToleranceReq)(nil),             // 2: base.GetFeeToleranceReq
-	(*GetFeeToleranceRsp)(nil),             // 3: base.GetFeeToleranceRsp
-	(*GetPriorityFeeReq)(nil),              // 4: base.GetPriorityFeeReq
-	(*GetPriorityFeeRsp)(nil),              // 5: base.GetPriorityFeeRsp
-	(*GetInstUnitsReq)(nil),                // 6: base.GetInstUnitsReq
-	(*GetInstUnitsRsp)(nil),                // 7: base.GetInstUnitsRsp
-	(*GetTokenQuoteSOLPriceReq)(nil),       // 8: base.GetTokenQuoteSOLPriceReq
-	(*GetTokenQuoteUSDTPriceReq)(nil),      // 9: base.GetTokenQuoteUSDTPriceReq
-	(*GetUSDTQuoteSOLPriceReq)(nil),        // 10: base.GetUSDTQuoteSOLPriceReq
-	(*PriceQuoteRsp)(nil),                  // 11: base.PriceQuoteRsp
-	(*GetAccountByInviteCodeReq)(nil),      // 12: base.GetAccountByInviteCodeReq
-	(*GetAccountByInviteCodeRsp)(nil),      // 13: base.GetAccountByInviteCodeRsp
-	(*CheckInviteRecordReq)(nil),           // 14: base.CheckInviteRecordReq
-	(*CheckInviteRecordRsp)(nil),           // 15: base.CheckInviteRecordRsp
-	(*FindInviteRelationByAccountReq)(nil), // 16: base.FindInviteRelationByAccountReq
-	(*FindInviteRelationByAccountRsp)(nil), // 17: base.FindInviteRelationByAccountRsp
-	(*SendTransactionReq)(nil),             // 18: base.SendTransactionReq
-	(*SendTransactionRsp)(nil),             // 19: base.SendTransactionRsp
-	(*RecursiveQueryReq)(nil),              // 20: base.RecursiveQueryReq
-	(*RecursiveQueryRsp)(nil),              // 21: base.RecursiveQueryRsp
+	(*FeeDetail)(nil),                 // 0: base.FeeDetail
+	(*GetFeeToleranceReq)(nil),        // 1: base.GetFeeToleranceReq
+	(*GetFeeToleranceRsp)(nil),        // 2: base.GetFeeToleranceRsp
+	(*GetPriorityFeeReq)(nil),         // 3: base.GetPriorityFeeReq
+	(*GetPriorityFeeRsp)(nil),         // 4: base.GetPriorityFeeRsp
+	(*GetInstUnitsReq)(nil),           // 5: base.GetInstUnitsReq
+	(*GetInstUnitsRsp)(nil),           // 6: base.GetInstUnitsRsp
+	(*GetTokenQuoteSOLPriceReq)(nil),  // 7: base.GetTokenQuoteSOLPriceReq
+	(*GetTokenQuoteUSDTPriceReq)(nil), // 8: base.GetTokenQuoteUSDTPriceReq
+	(*GetUSDTQuoteSOLPriceReq)(nil),   // 9: base.GetUSDTQuoteSOLPriceReq
+	(*PriceQuoteRsp)(nil),             // 10: base.PriceQuoteRsp
+	(*SendTransactionReq)(nil),        // 11: base.SendTransactionReq
+	(*SendTransactionRsp)(nil),        // 12: base.SendTransactionRsp
 }
 var file_base_proto_depIdxs = []int32{
 	0,  // 0: base.GetPriorityFeeRsp.per_compute_unit:type_name -> base.FeeDetail
 	0,  // 1: base.GetPriorityFeeRsp.per_transaction:type_name -> base.FeeDetail
-	1,  // 2: base.FindInviteRelationByAccountRsp.record:type_name -> base.InviteRelation
-	1,  // 3: base.RecursiveQueryRsp.records:type_name -> base.InviteRelation
-	2,  // 4: base.BaseService.GetFeeTolerance:input_type -> base.GetFeeToleranceReq
-	4,  // 5: base.BaseService.GetPriorityFee:input_type -> base.GetPriorityFeeReq
-	6,  // 6: base.BaseService.GetInstUnits:input_type -> base.GetInstUnitsReq
-	8,  // 7: base.BaseService.GetTokenQuoteSOLPrice:input_type -> base.GetTokenQuoteSOLPriceReq
-	9,  // 8: base.BaseService.GetTokenQuoteUSDTPrice:input_type -> base.GetTokenQuoteUSDTPriceReq
-	10, // 9: base.BaseService.GetUSDTQuoteSOLPrice:input_type -> base.GetUSDTQuoteSOLPriceReq
-	12, // 10: base.BaseService.GetAccountByInviteCode:input_type -> base.GetAccountByInviteCodeReq
-	14, // 11: base.BaseService.CheckInviteRecord:input_type -> base.CheckInviteRecordReq
-	20, // 12: base.BaseService.GetUpInviterRecords:input_type -> base.RecursiveQueryReq
-	20, // 13: base.BaseService.GetDownInviteeRecords:input_type -> base.RecursiveQueryReq
-	16, // 14: base.BaseService.FindInviteRelationByAccount:input_type -> base.FindInviteRelationByAccountReq
-	18, // 15: base.BaseService.SendTransaction:input_type -> base.SendTransactionReq
-	3,  // 16: base.BaseService.GetFeeTolerance:output_type -> base.GetFeeToleranceRsp
-	5,  // 17: base.BaseService.GetPriorityFee:output_type -> base.GetPriorityFeeRsp
-	7,  // 18: base.BaseService.GetInstUnits:output_type -> base.GetInstUnitsRsp
-	11, // 19: base.BaseService.GetTokenQuoteSOLPrice:output_type -> base.PriceQuoteRsp
-	11, // 20: base.BaseService.GetTokenQuoteUSDTPrice:output_type -> base.PriceQuoteRsp
-	11, // 21: base.BaseService.GetUSDTQuoteSOLPrice:output_type -> base.PriceQuoteRsp
-	13, // 22: base.BaseService.GetAccountByInviteCode:output_type -> base.GetAccountByInviteCodeRsp
-	15, // 23: base.BaseService.CheckInviteRecord:output_type -> base.CheckInviteRecordRsp
-	21, // 24: base.BaseService.GetUpInviterRecords:output_type -> base.RecursiveQueryRsp
-	21, // 25: base.BaseService.GetDownInviteeRecords:output_type -> base.RecursiveQueryRsp
-	17, // 26: base.BaseService.FindInviteRelationByAccount:output_type -> base.FindInviteRelationByAccountRsp
-	19, // 27: base.BaseService.SendTransaction:output_type -> base.SendTransactionRsp
-	16, // [16:28] is the sub-list for method output_type
-	4,  // [4:16] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	1,  // 2: base.BaseService.GetFeeTolerance:input_type -> base.GetFeeToleranceReq
+	3,  // 3: base.BaseService.GetPriorityFee:input_type -> base.GetPriorityFeeReq
+	5,  // 4: base.BaseService.GetInstUnits:input_type -> base.GetInstUnitsReq
+	7,  // 5: base.BaseService.GetTokenQuoteSOLPrice:input_type -> base.GetTokenQuoteSOLPriceReq
+	8,  // 6: base.BaseService.GetTokenQuoteUSDTPrice:input_type -> base.GetTokenQuoteUSDTPriceReq
+	9,  // 7: base.BaseService.GetUSDTQuoteSOLPrice:input_type -> base.GetUSDTQuoteSOLPriceReq
+	11, // 8: base.BaseService.SendTransaction:input_type -> base.SendTransactionReq
+	2,  // 9: base.BaseService.GetFeeTolerance:output_type -> base.GetFeeToleranceRsp
+	4,  // 10: base.BaseService.GetPriorityFee:output_type -> base.GetPriorityFeeRsp
+	6,  // 11: base.BaseService.GetInstUnits:output_type -> base.GetInstUnitsRsp
+	10, // 12: base.BaseService.GetTokenQuoteSOLPrice:output_type -> base.PriceQuoteRsp
+	10, // 13: base.BaseService.GetTokenQuoteUSDTPrice:output_type -> base.PriceQuoteRsp
+	10, // 14: base.BaseService.GetUSDTQuoteSOLPrice:output_type -> base.PriceQuoteRsp
+	12, // 15: base.BaseService.SendTransaction:output_type -> base.SendTransactionRsp
+	9,  // [9:16] is the sub-list for method output_type
+	2,  // [2:9] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_base_proto_init() }
@@ -1315,7 +745,7 @@ func file_base_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_base_proto_rawDesc), len(file_base_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   22,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

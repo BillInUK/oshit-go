@@ -13,18 +13,6 @@ message FeeDetail {
   uint64 extreme = 4;
 }
 
-message InviteRelation {
-  string record_id              = 1;
-  string inviter_native_account = 2;
-  string inviter_token_account  = 3;
-  string invitee_native_account = 4;
-  string invitee_token_account  = 5;
-  string channel                = 6;
-  int32  level                  = 7;
-  string tx_id                  = 8;
-  string created_at             = 9;
-}
-
 // ---- Fee ----
 
 message GetFeeToleranceReq {}
@@ -56,34 +44,6 @@ message PriceQuoteRsp {
   double price = 1;
 }
 
-// ---- Invite ----
-
-message GetAccountByInviteCodeReq {
-  string invite_code = 1;
-}
-message GetAccountByInviteCodeRsp {
-  string record_id      = 1;
-  string native_account = 2;
-  string token_account  = 3;
-  string invite_code    = 4;
-  string created_at     = 5;
-}
-
-message CheckInviteRecordReq {
-  string native_account = 1;
-}
-message CheckInviteRecordRsp {
-  bool exists = 1;
-}
-
-message FindInviteRelationByAccountReq {
-  string native_account = 1;
-}
-message FindInviteRelationByAccountRsp {
-  bool           found  = 1;
-  InviteRelation record = 2;
-}
-
 // ---- Tx ----
 
 message SendTransactionReq {
@@ -96,14 +56,6 @@ message SendTransactionRsp {
   string tx_id     = 2;
 }
 
-message RecursiveQueryReq {
-  int32  depth          = 1;
-  string native_account = 2;
-}
-message RecursiveQueryRsp {
-  repeated InviteRelation records = 1;
-}
-
 // ---- Service ----
 
 service BaseService {
@@ -113,10 +65,5 @@ service BaseService {
   rpc GetTokenQuoteSOLPrice  (GetTokenQuoteSOLPriceReq)  returns (PriceQuoteRsp)             {}
   rpc GetTokenQuoteUSDTPrice (GetTokenQuoteUSDTPriceReq) returns (PriceQuoteRsp)             {}
   rpc GetUSDTQuoteSOLPrice   (GetUSDTQuoteSOLPriceReq)   returns (PriceQuoteRsp)             {}
-  rpc GetAccountByInviteCode (GetAccountByInviteCodeReq) returns (GetAccountByInviteCodeRsp) {}
-  rpc CheckInviteRecord      (CheckInviteRecordReq)      returns (CheckInviteRecordRsp)      {}
-  rpc GetUpInviterRecords             (RecursiveQueryReq)                  returns (RecursiveQueryRsp)                  {}
-  rpc GetDownInviteeRecords           (RecursiveQueryReq)                  returns (RecursiveQueryRsp)                  {}
-  rpc FindInviteRelationByAccount      (FindInviteRelationByAccountReq)      returns (FindInviteRelationByAccountRsp)      {}
-  rpc SendTransaction                  (SendTransactionReq)                  returns (SendTransactionRsp)                  {}
+  rpc SendTransaction (SendTransactionReq) returns (SendTransactionRsp) {}
 }

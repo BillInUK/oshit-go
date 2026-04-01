@@ -140,7 +140,7 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 
 	// TransferChecked的指令需要包含: 平台奖励转账人,如果转账人有上级，还需要包含平台转账给转账人上级的指令
 	if len(decodedTx.TransferCheckedInstructions) != len(rewardClaims)+1 {
-		log.Errorf("%s  transfer checked 转账指令数量[%d] != 需要奖励上级邀请人的数量[%d] + 1", prefix, len(decodedTx.TransferCheckedInstructions), len(rewardClaims)+1)
+		log.Errorf("%s  transfer checked 转账指令数量[%d] != 需要奖励上级邀请人的数量[%d] + 1", prefix, len(decodedTx.TransferCheckedInstructions), len(rewardClaims))
 		log.Errorf("%s  需要奖励的上级为 %v", prefix, txInfo.RewardInviterInfo)
 		return nil, errors.New("decoded solana transaction error: transfer checked instruction number !=  reward claims+1 ")
 	}
