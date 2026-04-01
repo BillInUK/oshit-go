@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"oshit-go/app/reward/api/types"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/dal/query"
 )
@@ -240,4 +241,42 @@ func (l *RewardInviteLogic) RecordDetermineInvitationHierarchy(
 	}
 	err = l.db.Create(&determineInviteRecord).Error
 	return &determineInviteRecord, err
+}
+
+// BuildSortedInviterItems 根据上级邀请链构建排序好的邀请人奖励列表，并裁剪到奖励层级范围内。
+// 若 directInviter 不为 nil，则将其作为 index=0 的直接邀请人插入列表最前。
+// 返回裁剪后的 sortedItems 和对应的 sortedClaims（与 levelRatio 对齐）。
+func (l *RewardInviteLogic) BuildSortedInviterItems(
+	receiptNativeAccount string,
+	levelDist int32,
+	levelRatio []model.LevelRatio,
+	directInviter *model.NativeAccountInfo,
+) ([]types.RewardTokenItem, []model.LevelRatio, error) {
+	sortedInvites, err := l.GetUpInviterRecords(receiptNativeAccount, levelDist)
+	if err != nil {
+		return nil, nil, fmt.Errorf("recursive query up inviter records error: %w", err)
+	}
+
+	var sortedItems []types.RewardTokenItem
+	for index, record := range sortedInvites {
+		sortedItems = append(sortedItems, types.RewardTokenItem{
+			Index:         index + 1,
+			NativeAccount: record.InviterNativeAccount,
+			TokenAccount:  record.InviterTokenAccount,
+			Amount:        0,
+		})
+	}
+
+	if directInviter != nil {
+		directItem := types.RewardTokenItem{
+			Index:         0,
+			NativeAccount: directInviter.NativeAccount,
+			TokenAccount:  directInviter.TokenAccount,
+			Amount:        0,
+		}
+		sortedItems = append([]types.RewardTokenItem{directItem}, sortedItems...)
+	}
+
+	minLen := min(len(levelRatio), len(sortedItems))
+	return sortedItems[:minLen], levelRatio[:minLen], nil
 }

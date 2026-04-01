@@ -131,51 +131,18 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 		return nil, err
 	}
 
-	// 2. 递归向上查询需要奖励的邀请人
-	var sortedInvites []model.InviteRelation
-	var sortedItems []types.RewardTokenItem
+	// 2. 递归向上查询需要奖励的邀请人，若邀请关系已确定则将直接邀请人置于列表首位
+	var inviterForSort *model.NativeAccountInfo
 	if (invited || codeValid) && directInviter != nil {
-		// 如果确定邀请·，则查询邀请码对应的地址的的上级和上上级
-		sortedInvites, err = l.inviteLogic.GetUpInviterRecords(receiptNativeAccount, l.levelDist)
-		if err != nil {
-			log.Errorf("%s 递归向上查询邀请人错误[%v]", prefix, err)
-			return nil, errors.New("recursive query up inviter records error")
-		}
-		// 排序排序邀请人信息，加上索引，方便前端排序
-		for index, record := range sortedInvites {
-			account := types.RewardTokenItem{
-				Index:         index + 1,
-				NativeAccount: record.InviterNativeAccount,
-				TokenAccount:  record.InviterTokenAccount,
-				Amount:        uint64(0),
-			}
-			sortedItems = append(sortedItems, account)
-		}
-		// 将邀请人放到邀请账户记录之前
-		directItem := types.RewardTokenItem{Index: 0, NativeAccount: directInviter.NativeAccount, TokenAccount: directInviter.TokenAccount, Amount: uint64(0)}
-		sortedItems = append([]types.RewardTokenItem{directItem}, sortedItems...)
-	} else {
-		// 如果不确定邀请关系，则查询领取奖励地址的上级和上上级
-		sortedInvites, err = l.inviteLogic.GetUpInviterRecords(receiptNativeAccount, l.levelDist)
-		if err != nil {
-			log.Errorf("%s 递归向上查询邀请人错误[%v]", prefix, err)
-			return nil, errors.New("recursive query up inviter records error")
-		}
-		for index, record := range sortedInvites {
-			account := types.RewardTokenItem{
-				Index:         index + 1,
-				NativeAccount: record.InviterNativeAccount,
-				TokenAccount:  record.InviterTokenAccount,
-				Amount:        uint64(0),
-			}
-			sortedItems = append(sortedItems, account)
-		}
+		inviterForSort = directInviter
 	}
-
-	// 获取到要奖励的邀请人之后，取奖励层级和邀请人的最小集合
-	minLen := min(len(l.levelRatio), len(sortedItems))
-	sortedClaims := l.levelRatio[:minLen]
-	sortedItems = sortedItems[:minLen]
+	sortedItems, sortedClaims, err := l.inviteLogic.BuildSortedInviterItems(
+		receiptNativeAccount, l.levelDist, l.levelRatio, inviterForSort,
+	)
+	if err != nil {
+		log.Errorf("%s 递归向上查询邀请人错误[%v]", prefix, err)
+		return nil, errors.New("recursive query up inviter records error")
+	}
 
 	// 3. 根据是否确定邀请关系来决定奖励金额
 	var rewardAmount uint64 = 0
@@ -247,35 +214,7 @@ func (l *TakeTokenLogic) GetRecordByInviteCode(nativeAccount string) (*model.Tak
 	return &record, nil
 }
 
-// sendTransaction 签名并广播用户提交上来的交易
-func (l *TakeTokenLogic) sendTransaction(ctx context.Context, tx *solana.Transaction, service string) (*solana.Signature, error) {
-	messageContent, err := tx.Message.MarshalBinary()
-	if err != nil {
-		return nil, fmt.Errorf("encode transaction message for signing error:%v", err)
-	}
-	privateKey, exist := l.srvCtx.RewardKeyMap[service]
-	if !exist {
-		return nil, fmt.Errorf("sign tx error can not find %s private key", service)
-	}
-	rewardSign, err := privateKey.Sign(messageContent)
-	if err != nil {
-		return nil, fmt.Errorf("failed to signed with reward error:%v", err)
-	}
-	if len(tx.Signatures) == 2 {
-		tx.Signatures[1] = rewardSign
-	}
-	if len(tx.Signatures) == 1 {
-		tx.Signatures = append(tx.Signatures, rewardSign)
-	}
-	// 广播交易
-	txId, err := l.rpcClient.SendTransaction(ctx, tx)
-	if err != nil {
-		return nil, fmt.Errorf("send transaction error:%v", err)
-	}
-	return &txId, nil
-}
-
-// RecordOfficialGiveTokenRecord 记录官网领取token记录
+// recordTakeToken 记录官网领取token记录
 func (l *TakeTokenLogic) recordTakeToken(takeTokenTxInfo *types.TakeTokenTxInfo, decodedServiceTx *entity.DecodedServiceTransaction, invited bool) error {
 	// 开启事务
 	dbTx := l.db.Begin()
