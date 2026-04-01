@@ -20,13 +20,13 @@ func NewInviteHandler(svc *svc.ServiceContext) *InviteHandler {
 func (h *InviteHandler) GetAccountByInviteCode(fiberCtx *fiber.Ctx) error {
 	var req types.GetAccountByInviteCodeReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
-		return response.BadRequest(fiberCtx, "Invalid request body")
+		return response.BadRequest(fiberCtx, "invalid request body")
 	}
 
 	il := logic.NewInviteLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := il.GetAccountByInviteCode(&req)
 	if err != nil {
-		return response.ServerError(fiberCtx, "GetAccountByInviteCode failed", err)
+		return response.ServerError(fiberCtx, "get account by invite code failed", err)
 	}
 
 	return response.OkWithData(fiberCtx, resp)
@@ -36,13 +36,13 @@ func (h *InviteHandler) GetAccountByInviteCode(fiberCtx *fiber.Ctx) error {
 func (h *InviteHandler) CheckInviteRecord(fiberCtx *fiber.Ctx) error {
 	var req types.CheckInviteRecordReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
-		return response.BadRequest(fiberCtx, "Invalid request body")
+		return response.BadRequest(fiberCtx, "invalid request body")
 	}
 
 	il := logic.NewInviteLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := il.CheckInviteRecord(&req)
 	if err != nil {
-		return response.ServerError(fiberCtx, "CheckInviteRecord failed", err)
+		return response.ServerError(fiberCtx, "check invite relation failed", err)
 	}
 
 	return response.OkWithData(fiberCtx, resp)
@@ -52,13 +52,13 @@ func (h *InviteHandler) CheckInviteRecord(fiberCtx *fiber.Ctx) error {
 func (h *InviteHandler) GetUpInviterRecords(fiberCtx *fiber.Ctx) error {
 	var req types.RecursiveQueryReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
-		return response.BadRequest(fiberCtx, "Invalid request body")
+		return response.BadRequest(fiberCtx, "invalid request body")
 	}
 
 	il := logic.NewInviteLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := il.GetUpInviterRecords(&req)
 	if err != nil {
-		return response.ServerError(fiberCtx, "GetUpInviterRecords failed", err)
+		return response.ServerError(fiberCtx, "get up inviter records failed", err)
 	}
 
 	return response.OkWithData(fiberCtx, resp)
@@ -68,13 +68,13 @@ func (h *InviteHandler) GetUpInviterRecords(fiberCtx *fiber.Ctx) error {
 func (h *InviteHandler) GetDownInviteeRecords(fiberCtx *fiber.Ctx) error {
 	var req types.RecursiveQueryReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
-		return response.BadRequest(fiberCtx, "Invalid request body")
+		return response.BadRequest(fiberCtx, "invalid request body")
 	}
 
 	il := logic.NewInviteLogic(fiberCtx.Context(), h.srvCtx)
 	resp, err := il.GetDownInviteeRecords(&req)
 	if err != nil {
-		return response.ServerError(fiberCtx, "GetDownInviteeRecords failed", err)
+		return response.ServerError(fiberCtx, "get down invitee records failed", err)
 	}
 
 	return response.OkWithData(fiberCtx, resp)

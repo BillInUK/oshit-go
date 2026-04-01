@@ -35,3 +35,14 @@ func (h *FeeHandler) GetInstUnits(fiberCtx *fiber.Ctx) error {
 	}
 	return response.OkWithData(fiberCtx, resp)
 }
+
+// GetFeeTolerance 获取手续费容错
+func (h *FeeHandler) GetFeeTolerance(fiberCtx *fiber.Ctx) error {
+	cl := logic.NewFeeLogic(fiberCtx.Context(), h.srvCtx)
+	resp, err := cl.GetFeeTolerance()
+	if err != nil {
+		return response.ServerError(fiberCtx, "GetFeeTolerance failed", err)
+	}
+
+	return response.OkWithData(fiberCtx, resp)
+}

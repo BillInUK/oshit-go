@@ -1,0 +1,285 @@
+package svc
+
+import (
+	"context"
+	_ "dubbo.apache.org/dubbo-go/v3/imports"
+	"fmt"
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/go-redsync/redsync/v4"
+	"github.com/go-redsync/redsync/v4/redis/goredis/v9"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"math"
+	"oshit-go/app/reward/api/internal/config"
+	core_context "oshit-go/app/reward/api/internal/context"
+	rewardrpc "oshit-go/app/reward/api/internal/rpc"
+	"oshit-go/app/reward/api/internal/task"
+	"oshit-go/common/pkg/dal/model"
+	"oshit-go/common/utils"
+	"strconv"
+)
+
+type ServiceContext struct {
+	core_context.CoreContext
+	LevelDist         *model.LevelDist
+	LevelRatio        []model.LevelRatio
+	LevelRatioMap     map[int32]model.LevelRatio
+	DiscountRate      *model.DiscountRate
+	TakeTokenConfig   *model.TakeTokenConfig
+	GiveTokenConfig   *model.GiveTokenConfig
+	RewardKeyMap      map[string]solana.PrivateKey
+	LightHouseAddress solana.PublicKey
+	TaskMgr           *task.TaskManager
+}
+
+const (
+	decryptAlgo = "PBEWithHMACSHA512AndAES_256"
+	decryptPwd  = "fktYimwMl3OfUF3m"
+)
+
+func NewServiceContext() (*ServiceContext, error) {
+	// 加载配置
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// 初始化数据库
+	db, err := initDatabase(cfg.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	// 初始化 Redis
+	redisClient, err := initRedis(cfg.Redis)
+	if err != nil {
+		return nil, err
+	}
+
+	pool := goredis.NewPool(*redisClient)
+	redSync := redsync.New(pool)
+
+	// 创建 ServiceContext
+	svcCtx := &ServiceContext{
+		CoreContext: core_context.CoreContext{
+			Config:  cfg,
+			DB:      db,
+			Redis:   *redisClient,
+			RedSync: *redSync,
+			Ctx:     context.Background(),
+		},
+	}
+
+	// 初始化数据库配置
+	if err := svcCtx.initDatabaseConfigs(); err != nil {
+		return nil, err
+	}
+
+	// 初始化Solana RPC客户端
+	svcCtx.initSolanaRPC()
+
+	// 初始化Kafka生产者
+	if err := svcCtx.initKafkaProducer(); err != nil {
+		fmt.Printf("Init kafka producer error: %v\n", err)
+	}
+
+	// 初始化Kafka消费者
+	if err := svcCtx.initKafkaConsumer(); err != nil {
+		fmt.Printf("Init kafka consumer error: %v\n", err)
+	}
+
+	// 初始化 Base 模块 RPC 客户端
+	if err := svcCtx.initBaseClient(); err != nil {
+		fmt.Printf("Init base client error: %v\n", err)
+	}
+
+	// 初始化任务管理器
+	svcCtx.startTasks()
+
+	return svcCtx, nil
+}
+
+func initDatabase(cfg config.DatabaseConfig) (*gorm.DB, error) {
+	portStr := strconv.Itoa(cfg.Port)
+	dsn := "host=" + cfg.Host +
+		" user=" + cfg.User +
+		" password=" + cfg.Password +
+		" dbname=" + cfg.DBName +
+		" port=" + portStr +
+		" sslmode=" + cfg.SSLMode
+
+	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+}
+
+func initRedis(cfg config.RedisConfig) (*redis.UniversalClient, error) {
+	client := redis.NewUniversalClient(&redis.UniversalOptions{
+		MasterName: cfg.MasterName,
+		Addrs:      cfg.Hosts,
+		Password:   cfg.Password,
+	})
+
+	ctx := context.Background()
+	if err := client.Ping(ctx).Err(); err != nil {
+		return nil, err
+	}
+
+	return &client, nil
+}
+
+func (s *ServiceContext) initDatabaseConfigs() error {
+	// 初始化系统配置
+	var systemConfig model.SystemConfig
+	if err := s.DB.First(&systemConfig).Error; err != nil {
+		return fmt.Errorf("can not load system config: %v", err)
+	}
+	s.SystemConfig = &systemConfig
+
+	// 初始化链配置 - SOL链
+	var chainConfig model.ChainConfig
+	if err := s.DB.Where("chain = ?", "SOL").First(&chainConfig).Error; err != nil {
+		return fmt.Errorf("can not load solana chain configure of chain SOL from database: %v", err)
+	}
+	s.ChainConfig = &chainConfig
+
+	// 初始化Token配置
+	var tokenConfig model.TokenConfig
+	if err := s.DB.First(&tokenConfig).Error; err != nil {
+		return fmt.Errorf("can not load solana token configure from database: %v", err)
+	}
+	s.TokenConfig = &tokenConfig
+
+	// 计算TokenDecimal
+	s.TokenDecimal = math.Pow(10, float64(tokenConfig.Decimals))
+
+	// 初始化手续费容错配置
+	var feeTolerance model.FeeTolerance
+	if err := s.DB.First(&feeTolerance).Error; err != nil {
+		return fmt.Errorf("can not load solana fee tolerance from database: %v", err)
+	}
+	s.FeeTolerance = &feeTolerance
+
+	// 初始化LightHouse地址
+	lighthouseAddr, err := solana.PublicKeyFromBase58("L2TExMFKdjpN9kozasaurPirfHy9P8sbXoAN1qA3S95")
+	if err != nil {
+		return fmt.Errorf("invalid lighthouse address: %v", err)
+	}
+	s.LightHouseAddress = lighthouseAddr
+
+	// 初始化奖励层级和每个层级的抽取费用配置
+	var levelDist model.LevelDist
+	if err := s.DB.First(&levelDist).Error; err != nil {
+		return fmt.Errorf("can not load reward level dist from database: %v", err)
+	}
+	s.LevelDist = &levelDist
+
+	var levelRatio []model.LevelRatio
+	if err := s.DB.Find(&levelRatio).Error; err != nil {
+		return fmt.Errorf("can not load reward level ratio from database: %v", err)
+	}
+	s.LevelRatio = levelRatio
+
+	s.LevelRatioMap = make(map[int32]model.LevelRatio)
+	for _, ratio := range s.LevelRatio {
+		s.LevelRatioMap[ratio.Level] = ratio
+	}
+
+	// 加载折扣率配置
+	var discountRate model.DiscountRate
+	if err := s.DB.First(&discountRate).Error; err != nil {
+		return fmt.Errorf("can not load discount rate from database: %v", err)
+	}
+	s.DiscountRate = &discountRate
+
+	// 加载 take token 业务配置
+	var takeTokenConfig model.TakeTokenConfig
+	if err := s.DB.First(&takeTokenConfig).Error; err != nil {
+		return fmt.Errorf("can not find take token config from database: %v", err)
+	}
+	s.TakeTokenConfig = &takeTokenConfig
+
+	// 加载 give token 业务配置
+	var giveTokenConfig model.GiveTokenConfig
+	if err := s.DB.First(&giveTokenConfig).Error; err != nil {
+		return fmt.Errorf("can not find take give config from database: %v", err)
+	}
+	s.GiveTokenConfig = &giveTokenConfig
+
+	// 加载私钥
+	s.RewardKeyMap = make(map[string]solana.PrivateKey)
+	// 初始化所有业务的发送奖励私钥
+	table := s.DB.Table(model.TableNameRewardKeyConfig)
+	var rewardKeyConfigs []model.RewardKeyConfig
+	if err := table.Find(&rewardKeyConfigs).Error; err != nil {
+		return fmt.Errorf("can not load encrypted reward key config from database")
+	}
+	if len(rewardKeyConfigs) == 0 {
+		panic("can not load any reward key from database")
+	}
+	for _, keyConfig := range rewardKeyConfigs {
+		privateKey, err := utils.JasyptDecrypt(keyConfig.EncryptedKey, decryptPwd, decryptAlgo)
+		if err != nil {
+			return fmt.Errorf("decrypt service %s private key from database error: %v", keyConfig.Service, err)
+		}
+		if decryptedKey, err := solana.PrivateKeyFromBase58(privateKey); err != nil {
+			return fmt.Errorf("malformed service %s private key error: %v", keyConfig.Service, err)
+		} else {
+			s.RewardKeyMap[keyConfig.Service] = decryptedKey
+		}
+	}
+	return nil
+}
+
+func (s *ServiceContext) initSolanaRPC() {
+	// 初始化Solana RPC客户端
+	if s.ChainConfig != nil && s.ChainConfig.RPCURL != "" {
+		s.RpcClient = rpc.New(s.ChainConfig.RPCURL)
+	}
+}
+
+func (s *ServiceContext) startTasks() {
+	taskCtx := &task.TaskContext{
+		CoreContext: s.CoreContext,
+	}
+	s.TaskMgr = task.NewTaskManager(taskCtx)
+}
+
+func (s *ServiceContext) initBaseClient() error {
+	nacosServers := s.Config.Nacos.ServerConfig
+	if len(nacosServers) == 0 {
+		return fmt.Errorf("nacos server config is empty")
+	}
+	nacosAddr := fmt.Sprintf("%s:%d", nacosServers[0].Host, nacosServers[0].Port)
+	cli, err := rewardrpc.NewBaseClient(nacosAddr, s.Config.App.Name)
+	if err != nil {
+		return fmt.Errorf("init base client error: %w", err)
+	}
+	s.BaseClient = cli
+	return nil
+}
+
+func (s *ServiceContext) Close() error {
+
+	// 关闭Kafka消费者
+	if err := s.closeKafkaConsumer(); err != nil {
+		fmt.Printf("Close kafka consumer error: %v\n", err)
+	}
+
+	// 关闭Kafka生产者
+	if err := s.closeKafkaProducer(); err != nil {
+		fmt.Printf("Close kafka producer error: %v\n", err)
+	}
+
+	if s.Redis != nil {
+		if err := s.Redis.Close(); err != nil {
+			return err
+		}
+	}
+
+	sqlDB, err := s.DB.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
+}

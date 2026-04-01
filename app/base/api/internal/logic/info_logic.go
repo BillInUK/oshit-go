@@ -7,8 +7,8 @@ import (
 	"gorm.io/gorm"
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
-	"oshit-go/app/base/dal/model"
-	"oshit-go/app/base/dal/query"
+	"oshit-go/common/pkg/dal/model"
+	"oshit-go/common/pkg/dal/query"
 )
 
 type InfoLogic struct {

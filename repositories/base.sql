@@ -13,7 +13,9 @@ CREATE TABLE public.t_aws_config
 (
     access_key_id     character varying(128) NOT NULL,
     secret_access_key character varying(128) NOT NULL,
-    region            character varying(32)  NOT NULL
+    region            character varying(32)  NOT NULL,
+    created_at        timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at        timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 DROP TABLE IF EXISTS public.t_user_wallet_rpc_config;
@@ -23,7 +25,8 @@ CREATE TABLE public.t_user_wallet_rpc_config
     chain      character varying(1024)                               NOT NULL,
     rpc_url    character varying(1024)                               NOT NULL,
     wss_url    character varying(1024)                               NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 DROP TABLE IF EXISTS public.t_chain_config;
@@ -32,7 +35,7 @@ CREATE TABLE public.t_chain_config
     chain      character varying(64)   NOT NULL,
     rpc_url    character varying(1024) NOT NULL,
     wss_url    character varying(1024) NOT NULL,
-    decimal    integer                 NOT NULL,
+    decimals   integer                 NOT NULL,
     symbol     character varying(64)   NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
@@ -43,7 +46,7 @@ CREATE TABLE public.t_token_config
 (
     name       character varying(64) NOT NULL,
     symbol     character varying(64) NOT NULL,
-    decimal    integer               NOT NULL,
+    decimals   integer               NOT NULL,
     mint       character varying(64) NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
@@ -52,7 +55,9 @@ CREATE TABLE public.t_token_config
 DROP TABLE IF EXISTS public.t_fee_tolerance;
 CREATE TABLE public.t_fee_tolerance
 (
-    max_less_rate numeric(5, 2) NOT NULL
+    max_less_rate numeric(5, 2) NOT NULL,
+    created_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 DROP TABLE IF EXISTS public.t_fee_statistics;
@@ -71,8 +76,10 @@ CREATE TABLE public.t_fee_statistics
     updated_at         timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE ONLY public.t_fee_statistics ADD CONSTRAINT fee_slot_tx_index UNIQUE (slot, transaction_index);
-ALTER TABLE ONLY public.t_fee_statistics ADD CONSTRAINT fee_transaction_id UNIQUE (transaction_id);
+ALTER TABLE ONLY public.t_fee_statistics
+    ADD CONSTRAINT fee_slot_tx_index UNIQUE (slot, transaction_index);
+ALTER TABLE ONLY public.t_fee_statistics
+    ADD CONSTRAINT fee_transaction_id UNIQUE (transaction_id);
 
 DROP TABLE IF EXISTS public.t_qn_fee;
 CREATE TABLE public.t_qn_fee
@@ -86,7 +93,8 @@ CREATE TABLE public.t_qn_fee
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE ONLY public.t_qn_fee ADD CONSTRAINT t_sol_qn_fee_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.t_qn_fee
+    ADD CONSTRAINT t_sol_qn_fee_pkey PRIMARY KEY (id);
 
 DROP TABLE IF EXISTS public.t_native_account_info;
 CREATE TABLE public.t_native_account_info
@@ -113,16 +121,29 @@ CREATE TABLE public.t_service_info
     updated_at  timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 业务私钥
+DROP TABLE IF EXISTS public.t_service_key;
+CREATE TABLE public.t_service_key
+(
+    service       character varying(64)   NOT NULL,
+    sub_service   character varying(64)   NOT NULL,
+    encrypted_key character varying(1024) NOT NULL,
+    created_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
 DROP TABLE IF EXISTS public.t_tx_scan_info;
 CREATE TABLE public.t_tx_scan_info
 (
-    service        character varying(64)    NOT NULL,
-    sub_service    character varying(64)    NOT NULL,
-    native_account character varying(64)    NOT NULL,
-    pda_account    character varying(64)    NOT NULL,
-    until_tx_id    character varying(128)   NOT NULL,
+    service        character varying(64)                 NOT NULL,
+    sub_service    character varying(64)                 NOT NULL,
+    native_account character varying(64)                 NOT NULL,
+    pda_account    character varying(64)                 NOT NULL,
+    until_tx_id    character varying(128)                NOT NULL,
     before_tx_id   character varying(128),
-    slot           numeric(78, 0) DEFAULT 0 NOT NULL
+    slot           numeric(78, 0)              DEFAULT 0 NOT NULL,
+    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 DROP TABLE IF EXISTS public.t_service_tx;
@@ -140,4 +161,36 @@ CREATE TABLE public.t_service_tx
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS public.t_invite_relation;
+CREATE TABLE public.t_invite_relation
+(
+    record_id              public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    inviter_native_account character varying(64)                                 NOT NULL,
+    inviter_token_account  character varying(64)                                 NOT NULL,
+    invitee_native_account character varying(64)                                 NOT NULL,
+    invitee_token_account  character varying(64)                                 NOT NULL,
+    channel                character varying(64)                                 NOT NULL,
+    level                  integer                     DEFAULT 1                 NOT NULL,
+    tx_id                  character varying(64)                                 NOT NULL,
+    created_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
 
+DROP TABLE IF EXISTS public.t_hacker_account;
+CREATE TABLE public.t_hacker_account
+(
+    record_id      public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    native_account character varying(64)                                 NOT NULL,
+    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+DROP TABLE IF EXISTS public.t_exclude_account;
+CREATE TABLE public.t_exclude_account
+(
+    record_id      public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    native_account character varying(64)                                 NOT NULL,
+    remark         character varying(128),
+    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);

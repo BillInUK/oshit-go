@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
-	"oshit-go/app/base/dal/model"
-	"oshit-go/app/base/dal/query"
+	"oshit-go/common/pkg/dal/model"
+	"oshit-go/common/pkg/dal/query"
 	"time"
 
 	"gorm.io/gorm"
@@ -36,7 +36,7 @@ func (l *InviteLogic) GetAccountByInviteCode(req *types.GetAccountByInviteCodeRe
 		First()
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errors.New("invite code not found")
+		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("query native account info error: %v", err)
@@ -56,7 +56,7 @@ func (l *InviteLogic) CheckInviteRecord(req *types.CheckInviteRecordReq) (*types
 	inviteRel := q.InviteRelation
 
 	count, err := inviteRel.WithContext(l.ctx).
-		Where(inviteRel.Invitee.Eq(req.NativeAccount)).
+		Where(inviteRel.InviteeNativeAccount.Eq(req.NativeAccount)).
 		Count()
 
 	if err != nil {
@@ -77,8 +77,10 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 	WITH RECURSIVE invite_tree AS (
 		SELECT
 			record_id,
-			inviter,
-			invitee,
+			inviter_native_account,
+			inviter_token_account,
+			invitee_native_account,
+			invitee_token_account,
 			channel,
 			level,
 			tx_id,
@@ -87,14 +89,16 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 		FROM
 			public.t_invite_relation
 		WHERE
-			invitee = ?
+			invitee_native_account = ?
 
 		UNION ALL
 
 		SELECT
 			t.record_id,
-			t.inviter,
-			t.invitee,
+			t.inviter_native_account,
+			t.inviter_token_account,
+			t.invitee_native_account,
+			t.invitee_token_account,
 			t.channel,
 			t.level,
 			t.tx_id,
@@ -103,7 +107,7 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 		FROM
 			public.t_invite_relation t
 		INNER JOIN
-			invite_tree it ON t.invitee = it.inviter
+			invite_tree it ON t.invitee_native_account = it.inviter_native_account
 		WHERE
 			it.depth < ?
 	)
@@ -119,18 +123,49 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 	responseRecords := make([]types.InviteRelation, 0, len(records))
 	for _, record := range records {
 		responseRecords = append(responseRecords, types.InviteRelation{
-			RecordID:  record.RecordID,
-			Inviter:   record.Inviter,
-			Invitee:   record.Invitee,
-			Channel:   record.Channel,
-			Level:     record.Level,
-			TxID:      record.TxID,
-			CreatedAt: record.CreatedAt.Format(time.RFC3339),
+			RecordID:             record.RecordID,
+			InviterNativeAccount: record.InviterNativeAccount,
+			InviterTokenAccount:  record.InviterTokenAccount,
+			InviteeNativeAccount: record.InviteeNativeAccount,
+			InviteeTokenAccount:  record.InviteeTokenAccount,
+			Channel:              record.Channel,
+			Level:                record.Level,
+			TxID:                 record.TxID,
+			CreatedAt:            record.CreatedAt.Format(time.RFC3339),
 		})
 	}
 
 	return &types.RecursiveQueryRsp{
 		Records: responseRecords,
+	}, nil
+}
+
+func (l *InviteLogic) FindInviteRelationByAccount(req *types.FindInviteRelationByAccountReq) (*types.InviteRelation, error) {
+	q := query.Use(l.svcCtx.DB)
+	inviteRel := q.InviteRelation
+
+	record, err := inviteRel.WithContext(l.ctx).
+		Where(inviteRel.InviterNativeAccount.Eq(req.NativeAccount)).
+		Or(inviteRel.InviteeNativeAccount.Eq(req.NativeAccount)).
+		First()
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("find invite relation by account error: %v", err)
+	}
+
+	return &types.InviteRelation{
+		RecordID:             record.RecordID,
+		InviterNativeAccount: record.InviterNativeAccount,
+		InviterTokenAccount:  record.InviterTokenAccount,
+		InviteeNativeAccount: record.InviteeNativeAccount,
+		InviteeTokenAccount:  record.InviteeTokenAccount,
+		Channel:              record.Channel,
+		Level:                record.Level,
+		TxID:                 record.TxID,
+		CreatedAt:            record.CreatedAt.Format(time.RFC3339),
 	}, nil
 }
 
@@ -143,8 +178,10 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 	WITH RECURSIVE invite_tree AS (
 		SELECT
 			record_id,
-			inviter,
-			invitee,
+			inviter_native_account,
+			inviter_token_account,
+			invitee_native_account,
+			invitee_token_account,
 			channel,
 			level,
 			tx_id,
@@ -153,14 +190,16 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 		FROM
 			public.t_invite_relation
 		WHERE
-			inviter = ?
+			inviter_native_account = ?
 
 		UNION ALL
 
 		SELECT
 			t.record_id,
-			t.inviter,
-			t.invitee,
+			t.inviter_native_account,
+			t.inviter_token_account,
+			t.invitee_native_account,
+			t.invitee_token_account,
 			t.channel,
 			t.level,
 			t.tx_id,
@@ -169,7 +208,7 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 		FROM
 			public.t_invite_relation t
 		INNER JOIN
-			invite_tree it ON t.inviter = it.invitee
+			invite_tree it ON t.inviter_native_account = it.invitee_native_account
 		WHERE
 			it.depth < ?
 	)
@@ -185,13 +224,15 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 	responseRecords := make([]types.InviteRelation, 0, len(records))
 	for _, record := range records {
 		responseRecords = append(responseRecords, types.InviteRelation{
-			RecordID:  record.RecordID,
-			Inviter:   record.Inviter,
-			Invitee:   record.Invitee,
-			Channel:   record.Channel,
-			Level:     record.Level,
-			TxID:      record.TxID,
-			CreatedAt: record.CreatedAt.Format(time.RFC3339),
+			RecordID:             record.RecordID,
+			InviterNativeAccount: record.InviterNativeAccount,
+			InviterTokenAccount:  record.InviterTokenAccount,
+			InviteeNativeAccount: record.InviteeNativeAccount,
+			InviteeTokenAccount:  record.InviteeTokenAccount,
+			Channel:              record.Channel,
+			Level:                record.Level,
+			TxID:                 record.TxID,
+			CreatedAt:            record.CreatedAt.Format(time.RFC3339),
 		})
 	}
 

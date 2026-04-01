@@ -1,27 +1,73 @@
 package types
 
-type UserOrdersResp struct {
-	UserID int64       `json:"user_id"`
-	Orders []OrderInfo `json:"user_orders"`
+import "oshit-go/common/pkg/dal/model"
+
+type GetByTxIdReq struct {
+	TxId string `json:"txId"`
 }
 
-type UserOrdersReq struct {
-	UserID int64 `json:"user_id"`
+type GetGiveTokenTxInfoReq struct {
+	To     string  `json:"to"`
+	Amount float64 `json:"amount"`
 }
 
-type OrderInfo struct {
-	Id             string `json:"id"`               //id
-	OrderId        string `json:"order_id"`         //订单id
-	UserId         int64  `json:"user_id"`          //用户id
-	SymbolName     string `json:"symbol_name"`      //交易对名
-	Price          string `json:"price"`            //价格
-	Qty            string `json:"qty"`              //数量
-	Amount         string `json:"amount"`           //金额
-	Side           int32  `json:"side"`             //方向
-	Status         int32  `json:"status"`           // 状态
-	OrderType      int32  `json:"order_type"`       //订单类型
-	FilledQty      string `json:"filled_qty"`       //成交数量
-	FilledAmount   string `json:"filled_amount"`    //成交金额
-	FilledAvgPrice string `json:"filled_avg_price"` //成交均价
-	CreatedAt      int64  `json:"created_at"`       //创建时间
+type CommitGiveTokenTxInfoReq struct {
+	EncodedTx string `json:"encodedTx"`
+	To        string `json:"to"`
+}
+
+type GiveTokenTxInfo struct {
+	RewardNativeAccount string  `json:"rewardNativeAccount"`
+	RewardTokenAccount  string  `json:"rewardTokenAccount"`
+	TokenMintAccount    string  `json:"tokenMintAccount"`
+	DexNativeAccount    string  `json:"dexAccount"`
+	DexFeeRate          float64 `json:"dexFeeRate"`
+	MaxDexFee           float64 `json:"maxDexFee"`
+	Decimals            int32   `json:"decimals"`
+	QuoteSOLPrice       float64 `json:"quoteSOLPrice"`
+
+	TotalRewardAmount float64            `json:"totalRewardAmount"`
+	QuotedSOLAmount   float64            `json:"quotedSOLAmount"`
+	Claims            []model.LevelRatio `json:"claims"`
+	RewardInfo        RewardTokenItem    `json:"rewardInfo"`
+	RewardInviterInfo []RewardTokenItem  `json:"rewardInviterInfo"`
+}
+
+type GetTakeTokenTxInfoReq struct {
+	InviteCode     string  `json:"inviteCode"`
+	Custom         bool    `json:"custom"`
+	CustomAmount   float64 `json:"customAmount"`
+	ReceiptAccount string  `json:"receiptAccount"`
+}
+
+type CommitTakeTokenTxInfoReq struct {
+	EncodedTx  string `json:"encodedTx"`
+	InviteCode string `json:"inviteCode"`
+}
+
+type TakeTokenTxInfo struct {
+	RewardNativeAccount string  `json:"rewardNativeAccount"`
+	RewardTokenAccount  string  `json:"rewardTokenAccount"`
+	TokenMintAccount    string  `json:"tokenMintAccount"`
+	DexNativeAccount    string  `json:"dexAccount"`
+	DexFeeRate          float64 `json:"dexFeeRate"`
+	MaxDexFee           float64 `json:"maxDexFee"`
+	Decimals            int32   `json:"decimals"`
+	InviteCode          string  `json:"inviteCode"`
+	InviteCodeValid     bool    `json:"inviteCodeValid"`
+	InviteDetermine     bool    `json:"inviteDetermine"`
+	QuoteSOLPrice       float64 `json:"quoteSOLPrice"`
+
+	TotalRewardAmount float64            `json:"totalRewardAmount"`
+	QuotedSOLAmount   float64            `json:"quotedSOLAmount"`
+	Claims            []model.LevelRatio `json:"claims"`
+	RewardInfo        RewardTokenItem    `json:"rewardInfo"`
+	RewardInviterInfo []RewardTokenItem  `json:"rewardInviterInfo"`
+}
+
+type RewardTokenItem struct {
+	Index         int    `json:"index"`
+	NativeAccount string `json:"nativeAccount"`
+	TokenAccount  string `json:"tokenAccount"`
+	Amount        uint64 `json:"amount"`
 }

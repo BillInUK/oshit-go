@@ -4,8 +4,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	jsoniter "github.com/json-iterator/go"
 	"log"
 	"oshit-go/app/base/api/internal/handler"
+	"oshit-go/app/base/api/internal/server"
 	"oshit-go/app/base/api/internal/svc"
 	"strconv"
 )
@@ -22,14 +24,26 @@ func main() {
 	appName := srvCtx.Config.App.Name
 	appPort := strconv.Itoa(srvCtx.Config.App.Port)
 
+	// 配置 json-iterator
+	// 重要!! 需要禁用 6位小数截断
+	json := jsoniter.Config{
+		EscapeHTML:              true,
+		MarshalFloatWith6Digits: false,
+	}.Froze()
+
 	// 创建Fiber应用
 	app := fiber.New(fiber.Config{
-		AppName: appName,
+		AppName:     appName,
+		JSONEncoder: json.Marshal,
+		JSONDecoder: json.Unmarshal,
 	})
 
 	// 中间件
 	app.Use(logger.New())
 	app.Use(recover.New())
+
+	// 启动 Dubbo RPC 服务
+	go server.StartDubboServer(srvCtx)
 
 	// 注册路由
 	handler.RegisterRoutes(app, srvCtx)

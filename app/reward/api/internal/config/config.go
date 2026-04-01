@@ -8,6 +8,7 @@ type Config struct {
 	App      AppConfig      `mapstructure:"app"`
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
+	Kafka    KafkaConfig    `mapstructure:"kafka"`
 	Nacos    NacosConfig    `mapstructure:"nacos"`
 }
 
@@ -26,10 +27,19 @@ type DatabaseConfig struct {
 }
 
 type RedisConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	Password string `mapstructure:"password"`
-	DB       int    `mapstructure:"db"`
+	MasterName string   `mapstructure:"master-name"`
+	Hosts      []string `mapstructure:"hosts"`
+	Password   string   `mapstructure:"password"`
+}
+
+type KafkaConfig struct {
+	Brokers  []string            `mapstructure:"brokers"`
+	Consumer KafkaConsumerConfig `mapstructure:"consumer"`
+}
+
+type KafkaConsumerConfig struct {
+	GroupID string   `mapstructure:"group_id"`
+	Topics  []string `mapstructure:"topics"`
 }
 
 // NacosServerConfig Nacos服务端配置结构体（匹配yaml中的server_config）
@@ -71,7 +81,7 @@ type NacosOrderCfg struct {
 }
 
 func LoadConfig() (*Config, error) {
-	viper.SetConfigFile("./etc/exchange.yaml")
+	viper.SetConfigFile("./etc/reward.yaml")
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {

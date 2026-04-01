@@ -14,7 +14,7 @@ import (
 	"oshit-go/app/base/api/internal/config"
 	core_context "oshit-go/app/base/api/internal/context"
 	"oshit-go/app/base/api/internal/task"
-	"oshit-go/app/base/dal/model"
+	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/utils"
 	"strconv"
 )
@@ -66,6 +66,11 @@ func NewServiceContext() (*ServiceContext, error) {
 		return nil, err
 	}
 
+	// 初始化服务签名私钥
+	if err := svcCtx.initServiceKeys(); err != nil {
+		return nil, err
+	}
+
 	// 初始化Solana RPC客户端
 	svcCtx.initSolanaRPC()
 
@@ -106,6 +111,11 @@ func initRedis(cfg config.RedisConfig) (*redis.UniversalClient, error) {
 
 	return &client, nil
 }
+
+const (
+	serviceKeyDecryptAlgo = "PBEWithHMACSHA512AndAES_256"
+	serviceKeyDecryptPwd  = "fktYimwMl3OfUF3m"
+)
 
 const rsaPublicKey = `-----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCym6SwEHnkHqpVcS9sxP4I2D4b
@@ -155,6 +165,13 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 	// 计算TokenDecimal
 	s.TokenDecimal = math.Pow(10, float64(tokenConfig.Decimals))
 
+	// 初始化手续费容错配置
+	var feeTolerance model.FeeTolerance
+	if err := s.DB.First(&feeTolerance).Error; err != nil {
+		return fmt.Errorf("can not load solana fee tolerance from database: %v", err)
+	}
+	s.FeeTolerance = feeTolerance
+
 	// 初始化AWS配置
 	var awsConfig model.AwsConfig
 	if err := s.DB.First(&awsConfig).Error; err != nil {
@@ -169,6 +186,33 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 	}
 	s.LightHouseAddress = lighthouseAddr
 
+	return nil
+}
+
+func (s *ServiceContext) initServiceKeys() error {
+	var keys []model.ServiceKey
+	if err := s.DB.Find(&keys).Error; err != nil {
+		return fmt.Errorf("can not load service keys from database: %v", err)
+	}
+	if len(keys) == 0 {
+		return fmt.Errorf("no service keys found in t_service_key")
+	}
+
+	s.ServiceKeyMap = make(core_context.ServiceKey)
+	for _, k := range keys {
+		plainKey, err := utils.JasyptDecrypt(k.EncryptedKey, serviceKeyDecryptPwd, serviceKeyDecryptAlgo)
+		if err != nil {
+			return fmt.Errorf("decrypt service key [%s/%s] error: %v", k.Service, k.SubService, err)
+		}
+		privateKey, err := solana.PrivateKeyFromBase58(plainKey)
+		if err != nil {
+			return fmt.Errorf("malformed service key [%s/%s]: %v", k.Service, k.SubService, err)
+		}
+		if s.ServiceKeyMap[k.Service] == nil {
+			s.ServiceKeyMap[k.Service] = make(map[string]solana.PrivateKey)
+		}
+		s.ServiceKeyMap[k.Service][k.SubService] = privateKey
+	}
 	return nil
 }
 

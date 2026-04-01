@@ -12,7 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-	"oshit-go/app/base/dal/model"
+	"oshit-go/common/pkg/dal/model"
 	"time"
 )
 

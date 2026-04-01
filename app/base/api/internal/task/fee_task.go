@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm/clause"
 	"io/ioutil"
 	"net/http"
-	"oshit-go/app/base/dal/model"
+	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"oshit-go/common/utils"
 	"time"
@@ -238,8 +238,8 @@ func (t *FeeTask) readPriorityFee() {
 
 			// 遍历更新列表并批量更新
 			for i, update := range updates {
-				if err := table.
-					Where("record_id = ?", oldRecords[i].RecordID). // 通过 RecordId 匹配
+				if err := t.db.Model(&model.FeeStatistics{}).
+					Where("record_id = ?", oldRecords[i].RecordID).
 					Updates(update).Error; err != nil {
 					log.Errorf("%s 更新数据库错误: %v", prefix, err)
 					continue

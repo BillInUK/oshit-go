@@ -9,6 +9,26 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
 	Kafka    KafkaConfig    `mapstructure:"kafka"`
+	Dubbo    DubboConfig    `mapstructure:"dubbo"`
+}
+
+type DubboConfig struct {
+	Protocol ProtocolConfig `mapstructure:"protocol"`
+	Nacos    NacosConfig    `mapstructure:"nacos"`
+}
+
+type ProtocolConfig struct {
+	Name string `mapstructure:"name"`
+	Port int    `mapstructure:"port"`
+}
+
+type NacosConfig struct {
+	Host      string `mapstructure:"host"`
+	Port      int    `mapstructure:"port"`
+	GrpcPort  int    `mapstructure:"grpc-port"`
+	Namespace string `mapstructure:"namespace"`
+	Username  string `mapstructure:"username"`
+	Password  string `mapstructure:"password"`
 }
 
 type AppConfig struct {

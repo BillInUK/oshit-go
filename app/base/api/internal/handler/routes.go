@@ -6,12 +6,11 @@ import (
 )
 
 func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
-	api := fiberApp.Group("/base/api")
+	api := fiberApp.Group("/base")
 
 	// 初始化所有handler
 	authHandler := NewAuthHandler(srvCtx)
 	infoHandler := NewInfoHandler(srvCtx)
-	configHandler := NewConfigHandler(srvCtx)
 	feeHandler := NewFeeHandler(srvCtx)
 	priceHandler := NewPriceHandler(srvCtx)
 	inviteHandler := NewInviteHandler(srvCtx)
@@ -31,17 +30,12 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 		info.Get("/token-holders", infoHandler.GetTokenHolders)
 	}
 
-	// 配置路由
-	config := api.Group("/config")
-	{
-		config.Get("/fee-tolerance", configHandler.GetFeeTolerance)
-	}
-
 	// 手续费路由
 	fee := api.Group("/fee")
 	{
 		fee.Get("/priority", feeHandler.GetPriorityFee)
 		fee.Get("/inst-units", feeHandler.GetInstUnits)
+		fee.Get("/fee-tolerance", feeHandler.GetFeeTolerance)
 	}
 
 	// 价格路由

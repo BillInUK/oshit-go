@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"encoding/hex"
 	"fmt"
+	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
@@ -10,15 +12,25 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"oshit-go/app/base/dal/model"
+	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"oshit-go/common/utils"
 )
 
+type PreCheckedTx struct {
+	From  solana.PublicKey
+	TxId  solana.Signature
+	SOLTx solana.Transaction
+}
+
+func CalDecodedTxFee(sigNum uint64, decodedTx entity.DecodedSolanaTransaction) uint64 {
+	return utils.CalcGasFee(sigNum, 5000, decodedTx.ComputeUnitPrice, decodedTx.ComputeUnitLimit, decodedTx.ComputeUnitLimit != 0)
+}
+
 // QueryNativeAccountInfoByTokenAccount 查询原生账户信息
 func QueryNativeAccountInfoByTokenAccount(db *gorm.DB, tokenAccount string) (*model.NativeAccountInfo, error) {
 	var record model.NativeAccountInfo
-	err := db.Where("\"TokenAccount\"= ?", tokenAccount).Take(&record).Error
+	err := db.Where("token_account = ?", tokenAccount).Take(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -39,6 +51,36 @@ func QueryNativeAccountByTokenAccount(rpcClient *rpc.Client, db *gorm.DB, tokenA
 		return &nativeAccount, nil
 	}
 	return utils.GetSPLTokenAccountOwner(rpcClient, tokenAccount)
+}
+
+func PreCheckEncodedTx(encodedTx string) (*PreCheckedTx, error) {
+	// 解析交易
+	txBytes, err := hex.DecodeString(encodedTx)
+	if err != nil {
+		return nil, fmt.Errorf("decode hex encoded transaction error: %v", err)
+	}
+	tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(txBytes))
+	if err != nil {
+		return nil, fmt.Errorf("decode hex encoded transaction to solana transaction error: %v", err)
+	}
+	// Account0是交易的发起地址，同时也是转账token的地址，也是转sol到dex的地址，同时也是手续费的支付地址
+	txFromNativeAccount, err := tx.Message.Account(0)
+	if err != nil {
+		return nil, fmt.Errorf("can not get any signer from transaction error: %v", err)
+	}
+	messageBin, err := tx.Message.MarshalBinary()
+	if err != nil {
+		return nil, fmt.Errorf("marshal transaction to binary error: %v", err)
+	}
+	// 验证交易签名
+	if !txFromNativeAccount.Verify(messageBin, tx.Signatures[0]) {
+		return nil, fmt.Errorf("verify transaction signer failed")
+	}
+	return &PreCheckedTx{
+		From:  txFromNativeAccount,
+		TxId:  tx.Signatures[0],
+		SOLTx: *tx,
+	}, nil
 }
 
 // DecodeSolanaTransaction 解析solana交易
@@ -155,4 +197,65 @@ func DecodeSolanaTransaction(rpcClient *rpc.Client, db *gorm.DB, tx *solana.Tran
 		}
 	}
 	return &decodedTx, nil
+}
+
+// DecodeServiceTransaction 根据业务类型转成相应的交易，方便业务更好的处理
+func DecodeServiceTransaction(decodedTx *entity.DecodedSolanaTransaction) (*entity.DecodedServiceTransaction, error) {
+	var decodedServiceTx entity.DecodedServiceTransaction
+
+	decodedServiceTx.TxID = decodedTx.TxID.String()
+	decodedServiceTx.RefBlockHash = decodedTx.RefBlockHash.String()
+	decodedServiceTx.FromNativeAccount = decodedTx.FromNativeAccount.String()
+	decodedServiceTx.FromTokenAccount = decodedTx.FromTokenAccount.String()
+	decodedServiceTx.FeePayer = decodedTx.FeePayer.String()
+
+	for index, account := range decodedTx.Accounts {
+		decodedServiceTx.Accounts[index] = account.String()
+	}
+
+	// 解析出来转dex交易
+	if len(decodedTx.TransferInstructions) > 0 {
+		decodedServiceTx.ToDexInst.FromNativeAccount = decodedTx.TransferInstructions[0].FromNativeAccount.String()
+		decodedServiceTx.ToDexInst.ToNativeAccount = decodedTx.TransferInstructions[0].ToNativeAccount.String()
+		decodedServiceTx.ToDexInst.Amount = float64(decodedTx.TransferInstructions[0].Amount)
+	}
+
+	// 解析出来转账指令
+	for _, inst := range decodedTx.TransferCheckedInstructions {
+		if inst.FromNativeAccount.Equals(decodedTx.FromNativeAccount) {
+			// 如果发送token的transfer checked指令里面的 from native account跟发起交易的native account地址一致，则认为是交易发起人发送token到其他地址的指令
+			decodedServiceTx.TransferTokenInst.FromNativeAccount = inst.FromNativeAccount.String()
+			decodedServiceTx.TransferTokenInst.FromTokenAccount = inst.FromTokenAccount.String()
+			decodedServiceTx.TransferTokenInst.ToNativeAccount = inst.ToNativeAccount.String()
+			decodedServiceTx.TransferTokenInst.ToTokenAccount = inst.ToTokenAccount.String()
+			decodedServiceTx.TransferTokenInst.OwnerNativeAccount = inst.OwnerNativeAccount.String()
+			decodedServiceTx.TransferTokenInst.TokenMintAccount = inst.TokenMintAccount.String()
+			decodedServiceTx.TransferTokenInst.Amount = float64(inst.Amount)
+			decodedServiceTx.TransferTokenInst.Decimals = int32(inst.Decimals)
+		} else if inst.ToNativeAccount.Equals(decodedTx.FromNativeAccount) {
+			// 如果发送token的transfer checked指令里面的 to native account跟发起交易的native account地址一致，则认为是奖励交易发起人的token指令
+			decodedServiceTx.RewardInst.FromNativeAccount = inst.FromNativeAccount.String()
+			decodedServiceTx.RewardInst.FromTokenAccount = inst.FromTokenAccount.String()
+			decodedServiceTx.RewardInst.ToNativeAccount = inst.ToNativeAccount.String()
+			decodedServiceTx.RewardInst.ToTokenAccount = inst.ToTokenAccount.String()
+			decodedServiceTx.RewardInst.OwnerNativeAccount = inst.OwnerNativeAccount.String()
+			decodedServiceTx.RewardInst.TokenMintAccount = inst.TokenMintAccount.String()
+			decodedServiceTx.RewardInst.Amount = float64(inst.Amount)
+			decodedServiceTx.RewardInst.Decimals = int32(inst.Decimals)
+		} else {
+			// 否则认为是奖励代理人的奖励
+			decodedServiceInst := entity.DecodedServiceTransferCheckedInst{
+				FromNativeAccount:  inst.FromNativeAccount.String(),
+				FromTokenAccount:   inst.FromTokenAccount.String(),
+				ToNativeAccount:    inst.ToNativeAccount.String(),
+				ToTokenAccount:     inst.ToTokenAccount.String(),
+				OwnerNativeAccount: inst.OwnerNativeAccount.String(),
+				TokenMintAccount:   inst.TokenMintAccount.String(),
+				Amount:             float64(inst.Amount),
+				Decimals:           int32(inst.Decimals),
+			}
+			decodedServiceTx.RewardInviterInst = append(decodedServiceTx.RewardInviterInst, decodedServiceInst)
+		}
+	}
+	return &decodedServiceTx, nil
 }

@@ -14,9 +14,9 @@ import (
 	"github.com/segmentio/kafka-go"
 	"gorm.io/gorm"
 	"math/rand"
-	"oshit-go/app/base/dal/model"
 	app_utils "oshit-go/app/utils"
 	"oshit-go/common/constants"
+	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"time"
 )
@@ -64,6 +64,7 @@ func (t *TxExpireTask) Start() {
 }
 
 // scanExpiredTransactions 扫描过期交易
+// TODO: 该用xxl-job实现分页扫描
 func (t *TxExpireTask) scanExpiredTransactions() {
 	//log.Infof("%s - 任务开始", t.prefix)
 	ctx := context.Background()
@@ -217,7 +218,7 @@ func (t *TxExpireTask) markTxFetched(ctx context.Context, posTxRecord model.Serv
 		MsgType: "NewScannedTransaction",
 		MsgContent: entity.NewScannedTx{
 			Service:    posTxRecord.Service,
-			SubService: posTxRecord.Service,
+			SubService: posTxRecord.SubService,
 			TxSig:      txSig,
 			DecodedTx:  *decodedTx,
 		},

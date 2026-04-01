@@ -15,21 +15,21 @@ import (
 	"github.com/segmentio/kafka-go"
 	"gorm.io/gorm"
 	"math/rand"
-	"oshit-go/app/base/dal/model"
 	app_utils "oshit-go/app/utils"
 	"oshit-go/common/constants"
+	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"oshit-go/common/utils"
 	"sort"
 	"time"
 )
 
-const txScanKafkaTopic = "OShitPos"
+const txScanKafkaTopic = "ServiceTransaction"
 
 // 分布式锁 key 格式
 const (
-	txScanLockFmt   = "base:sol:tx-scan:%s-%s:lock"  // args: service, subService
-	txHandleLockFmt = "base:sol:tx-handle:%s:lock"    // args: txSig
+	txScanLockFmt   = "base:sol:tx-scan:%s-%s:lock" // args: service, subService
+	txHandleLockFmt = "base:sol:tx-handle:%s:lock"  // args: txSig
 )
 
 // TxScanTask 业务交易扫描任务
@@ -118,7 +118,7 @@ func (t *TxScanTask) QueryScanInfoWithLock(tx *gorm.DB, service, subService, pda
 // UpdateScanUntilTx 条件更新（事务内）
 func (t *TxScanTask) UpdateScanUntilTx(tx *gorm.DB, service, subService, pdaAccount, untilTxId string, slot uint64) error {
 	return tx.Model(&model.TxScanInfo{}).
-		Where("service = ? and sub_service = ? pda_account = ? AND slot < ?", service, subService, pdaAccount, slot).
+		Where("service = ? and sub_service = ? and pda_account = ? and slot < ?", service, subService, pdaAccount, slot).
 		Updates(map[string]interface{}{
 			"until_tx_id": untilTxId,
 			"slot":        slot,
@@ -322,7 +322,7 @@ func (t *TxScanTask) handleServiceTx(service string, txSig rpc.TransactionSignat
 		MsgType: "NewScannedTransaction",
 		MsgContent: entity.NewScannedTx{
 			Service:    rewardTxRecord.Service,
-			SubService: rewardTxRecord.Service,
+			SubService: rewardTxRecord.SubService,
 			TxSig:      txSig,
 			DecodedTx:  *decodedTx,
 		},

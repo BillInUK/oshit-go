@@ -12,7 +12,7 @@ import (
 	"io"
 	"math"
 	"net/http"
-	"oshit-go/app/base/dal/model"
+	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"strconv"
 	"strings"

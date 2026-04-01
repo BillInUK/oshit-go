@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
-	"oshit-go/app/base/dal/model"
+	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/utils"
 	"time"
 )
@@ -64,7 +64,7 @@ func (l *AuthLogic) Login(req *types.LoginReq) (*types.LoginRsp, error) {
 		return nil, errors.New("verify sign failed")
 	}
 	// 查询地址信息
-	record, err := l.QueryNativeAccountInfo(req.Brand, req.Symbol, req.Account)
+	record, err := l.QueryNativeAccountInfo(req.Account)
 	if err != nil {
 		return nil, errors.New("query native account info error")
 	}
@@ -92,7 +92,7 @@ func (l *AuthLogic) Login(req *types.LoginReq) (*types.LoginRsp, error) {
 }
 
 // QueryNativeAccountInfo 查询原生账户信息
-func (l *AuthLogic) QueryNativeAccountInfo(brand, symbol, nativeAccount string) (*model.NativeAccountInfo, error) {
+func (l *AuthLogic) QueryNativeAccountInfo(nativeAccount string) (*model.NativeAccountInfo, error) {
 	var record model.NativeAccountInfo
 
 	if err := l.db.Model(&record).Where("native_account = ?", nativeAccount).First(&record).Error; err != nil {
@@ -197,12 +197,12 @@ func (l *AuthLogic) RegisterNativeAccount(brand, symbol, nativeAccount, inviteCo
 		}
 
 		inviteRelation := model.InviteRelation{
-			Inviter:   inviterRecord.NativeAccount,
-			Invitee:   nativeAccount,
-			Channel:   "InviteCode",
-			Level:     int32(level),
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			InviterNativeAccount: inviterRecord.NativeAccount,
+			InviteeNativeAccount: nativeAccount,
+			Channel:              "InviteCode",
+			Level:                int32(level),
+			CreatedAt:            time.Now(),
+			UpdatedAt:            time.Now(),
 		}
 
 		if err := l.db.Create(&inviteRelation).Error; err != nil {

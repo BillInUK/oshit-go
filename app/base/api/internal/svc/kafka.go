@@ -17,8 +17,9 @@ func (s *ServiceContext) initKafkaProducer() error {
 
 	// 创建Kafka生产者
 	producer := &kafka.Writer{
-		Addr:     kafka.TCP(brokers...),
-		Balancer: &kafka.LeastBytes{},
+		Addr:                 kafka.TCP(brokers...),
+		Balancer:             &kafka.LeastBytes{},
+		AllowAutoTopicCreation: true,
 	}
 
 	s.KafkaProducer = producer

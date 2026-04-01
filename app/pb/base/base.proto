@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package base;
+
+option go_package = ".;base";
+
+// ---- 共享消息 ----
+
+message FeeDetail {
+  uint64 low     = 1;
+  uint64 medium  = 2;
+  uint64 high    = 3;
+  uint64 extreme = 4;
+}
+
+message InviteRelation {
+  string record_id              = 1;
+  string inviter_native_account = 2;
+  string inviter_token_account  = 3;
+  string invitee_native_account = 4;
+  string invitee_token_account  = 5;
+  string channel                = 6;
+  int32  level                  = 7;
+  string tx_id                  = 8;
+  string created_at             = 9;
+}
+
+// ---- Fee ----
+
+message GetFeeToleranceReq {}
+message GetFeeToleranceRsp {
+  double max_fee_less = 1;
+  uint64 max_fee      = 2;
+}
+
+message GetPriorityFeeReq {}
+message GetPriorityFeeRsp {
+  FeeDetail per_compute_unit = 1;
+  FeeDetail per_transaction  = 2;
+}
+
+message GetInstUnitsReq {}
+message GetInstUnitsRsp {
+  uint64 mini_rent          = 1;
+  uint64 associated_account = 2;
+  uint64 transfer_checked   = 3;
+  uint64 memo               = 4;
+}
+
+// ---- Price ----
+
+message GetTokenQuoteSOLPriceReq {}
+message GetTokenQuoteUSDTPriceReq {}
+message GetUSDTQuoteSOLPriceReq {}
+message PriceQuoteRsp {
+  double price = 1;
+}
+
+// ---- Invite ----
+
+message GetAccountByInviteCodeReq {
+  string invite_code = 1;
+}
+message GetAccountByInviteCodeRsp {
+  string record_id      = 1;
+  string native_account = 2;
+  string token_account  = 3;
+  string invite_code    = 4;
+  string created_at     = 5;
+}
+
+message CheckInviteRecordReq {
+  string native_account = 1;
+}
+message CheckInviteRecordRsp {
+  bool exists = 1;
+}
+
+message FindInviteRelationByAccountReq {
+  string native_account = 1;
+}
+message FindInviteRelationByAccountRsp {
+  bool           found  = 1;
+  InviteRelation record = 2;
+}
+
+// ---- Tx ----
+
+message SendTransactionReq {
+  string encoded_tx  = 1;
+  string service     = 2;
+  string sub_service = 3;
+}
+message SendTransactionRsp {
+  string record_id = 1;
+  string tx_id     = 2;
+}
+
+message RecursiveQueryReq {
+  int32  depth          = 1;
+  string native_account = 2;
+}
+message RecursiveQueryRsp {
+  repeated InviteRelation records = 1;
+}
+
+// ---- Service ----
+
+service BaseService {
+  rpc GetFeeTolerance        (GetFeeToleranceReq)        returns (GetFeeToleranceRsp)        {}
+  rpc GetPriorityFee         (GetPriorityFeeReq)         returns (GetPriorityFeeRsp)         {}
+  rpc GetInstUnits           (GetInstUnitsReq)           returns (GetInstUnitsRsp)           {}
+  rpc GetTokenQuoteSOLPrice  (GetTokenQuoteSOLPriceReq)  returns (PriceQuoteRsp)             {}
+  rpc GetTokenQuoteUSDTPrice (GetTokenQuoteUSDTPriceReq) returns (PriceQuoteRsp)             {}
+  rpc GetUSDTQuoteSOLPrice   (GetUSDTQuoteSOLPriceReq)   returns (PriceQuoteRsp)             {}
+  rpc GetAccountByInviteCode (GetAccountByInviteCodeReq) returns (GetAccountByInviteCodeRsp) {}
+  rpc CheckInviteRecord      (CheckInviteRecordReq)      returns (CheckInviteRecordRsp)      {}
+  rpc GetUpInviterRecords             (RecursiveQueryReq)                  returns (RecursiveQueryRsp)                  {}
+  rpc GetDownInviteeRecords           (RecursiveQueryReq)                  returns (RecursiveQueryRsp)                  {}
+  rpc FindInviteRelationByAccount      (FindInviteRelationByAccountReq)      returns (FindInviteRelationByAccountRsp)      {}
+  rpc SendTransaction                  (SendTransactionReq)                  returns (SendTransactionRsp)                  {}
+}

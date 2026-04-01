@@ -2,7 +2,7 @@
 dubbo:
   # 应用配置（与Nacos、业务标识一致）
   application:
-    name: exchange-service
+    name: reward-api
 
   # 注册中心配置（Nacos，与nacos_config.go中的连接信息完全一致）
   registries:
@@ -22,13 +22,13 @@ dubbo:
     password: lJPQwjjO9k
     namespace: public
     group: DEFAULT_GROUP
-    data-id: exchange-service-config  # 核心必选：与Nacos控制台、nacos_config.go一致
+    data-id: reward-api-config  # 核心必选：与Nacos控制台、nacos_config.go一致
 
   # 消费端核心配置（纯消费端专属，匹配原硬编码规则）
   consumer:
     request-timeout: 3s            # RPC调用超时时间
     check: false                   # 启动时不检查服务是否存在，避免启动失败
-    registry-ids: [nacos-registry] # 关联的注册中心ID
+    registry-ids: [ nacos-registry ] # 关联的注册中心ID
 
   # 日志配置（完全替代原LoggerConfig硬编码）
   logger:
@@ -36,7 +36,7 @@ dubbo:
     level: warn                    # 日志级别
     format: json                   # 日志输出格式
     appender: console,file         # 输出位置：控制台+文件
-    file-name: exchange-dubbo.log     # 日志文件名（工作目录api/下）
+    file-name: reward-api-dubbo.log     # 日志文件名（工作目录api/下）
     file-max-size: 200             # 单个日志文件最大200MB
     file-compress: true            # 日志文件自动压缩
 
@@ -55,7 +55,7 @@ dubbo:
 
   # 纯消费端Provider适配（框架强制要求，无服务端配置）
   provider:
-    services: {}                   # 空map，避免遍历nil触发panic
+    services: { }                   # 空map，避免遍历nil触发panic
     filter: -grpc_health, -grpc_reflection # 过滤内置服务，消除WARN
 
   # 元数据服务配置（固定端口，消除随机端口WARN）

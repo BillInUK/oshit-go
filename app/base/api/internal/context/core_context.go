@@ -9,8 +9,11 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"oshit-go/app/base/api/internal/config"
-	"oshit-go/app/base/dal/model"
+	"oshit-go/common/pkg/dal/model"
 )
+
+// ServiceKey 二维索引: ServiceKeyMap[service][subService] = privateKey
+type ServiceKey = map[string]map[string]solana.PrivateKey
 
 type CoreContext struct {
 	Config  *config.Config
@@ -32,5 +35,9 @@ type CoreContext struct {
 	ChainConfig         *model.ChainConfig
 	UserWalletRPCConfig *model.UserWalletRpcConfig
 	TokenConfig         *model.TokenConfig
+	FeeTolerance        model.FeeTolerance
 	AwsConfig           *model.AwsConfig
+
+	// 服务签名私钥: ServiceKeyMap[service][subService]
+	ServiceKeyMap ServiceKey
 }

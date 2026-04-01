@@ -22,3 +22,12 @@ redis:
 kafka:
   brokers:
     - "localhost:9092"
+
+dubbo:
+  protocol:
+    name: "base-api"
+    port: 20880
+  nacos:
+    host: "127.0.0.1"
+    port: 8848
+    grpc-port: 9848

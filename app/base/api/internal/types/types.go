@@ -34,8 +34,7 @@ type GetTokenInfoRsp struct {
 }
 
 type GetFeeToleranceRsp struct {
-	MinFee uint64 `json:"min_fee"`
-	MaxFee uint64 `json:"max_fee"`
+	MaxLessRate float64 `json:"max_less_rate"`
 }
 
 type PriorityFeeRsp struct {
@@ -84,23 +83,41 @@ type CheckInviteRecordRsp struct {
 	Exists bool `json:"exists"`
 }
 
+type FindInviteRelationByAccountReq struct {
+	NativeAccount string `json:"native_account"`
+}
+
 type RecursiveQueryReq struct {
 	Depth         int    `json:"depth"`
 	NativeAccount string `json:"native_account"`
 }
 
 type InviteRelation struct {
-	RecordID  string `json:"record_id"`
-	Inviter   string `json:"inviter"`
-	Invitee   string `json:"invitee"`
-	Channel   string `json:"channel"`
-	Level     int32  `json:"level"`
-	TxID      string `json:"tx_id"`
-	CreatedAt string `json:"created_at"`
+	RecordID             string `json:"record_id"`
+	InviterNativeAccount string `json:"inviter_native_account"`
+	InviterTokenAccount  string `json:"inviter_token_account"`
+	InviteeNativeAccount string `json:"invitee_native_account"`
+	InviteeTokenAccount  string `json:"invitee_token_account"`
+	Channel              string `json:"channel"`
+	Level                int32  `json:"level"`
+	TxID                 string `json:"tx_id"`
+	CreatedAt            string `json:"created_at"`
 }
 
 type RecursiveQueryRsp struct {
 	Records []InviteRelation `json:"records"`
+}
+
+// Tx Types
+type SendTransactionReq struct {
+	EncodedTx  string `json:"encoded_tx"`
+	Service    string `json:"service"`
+	SubService string `json:"sub_service"`
+}
+
+type SendTransactionRsp struct {
+	RecordID string `json:"record_id"`
+	TxID     string `json:"tx_id"`
 }
 
 type RewardDistributionRsp struct {
