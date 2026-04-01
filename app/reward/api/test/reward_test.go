@@ -23,23 +23,20 @@ import (
 )
 
 const (
-	systemTransferCU              uint64 = 500 // System Transfer 固定预留
-	SOLLoginSignMsg                      = "I am login %s for token %s with my address %s with nonce %d"
-	SOLLoginWithInviteCodeSignMsg        = "I am login %s for token %s with my address %s with nonce %d inviteCode %s"
+	systemTransferCU uint64 = 500 // System Transfer 固定预留
+	Brand                   = "OShit"
+	Symbol                  = "OShit"
+	SOLLoginSignMsg         = "I am login %s for token %s with my address %s with nonce %d"
+
 	// mainnet:
 	//RpcUrl           = "https://radial-purple-sailboat.solana-mainnet.quiknode.pro/0afcb192bb26b0dbcba3d49df6ad2ee2829c529b/"
 	//WssUrl           = "wss://radial-purple-sailboat.solana-mainnet.quiknode.pro/0afcb192bb26b0dbcba3d49df6ad2ee2829c529b/"
 	//TokenMintAddress = "ShitJuMfPKCQU7LedLERFYapDta7CCdKExPWX2gETRH"
-	//TokenMintAddress = "3zyKg7L471V9FGb4LGMLxpygY7M8srCAzQtM1HWgCixy"
 
 	// testnet:
 	RpcUrl           = "https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
 	WssUrl           = "wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
 	TokenMintAddress = "wtnrTujJqBRUknLRhQQcUSwzAzx8LvcxKXEuBwvFnJM"
-	//TokenMintAddress = "9TXFPq4UnFismeQyQmnJ6waJguhkevSLvxVyvTA29QMD"
-
-	MainPrivate      = "3coeLXLqdWi9kwSGDrNZZWf5bv6mBW2Zmd8gBSYJpqiGjy73cpmFYHM33Nn5Sxr2i2jJcE4xRXqDuDPTRtn3iHsz"
-	MainNativePubKey = "GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E"
 
 	AlicePrivate      = "46dPKNS2nHDuaGrdJ9tyr7mJ1H6Gu8EKcvPNDmC8zZ2xf1SpuhzR9kfK7uA3mf1RsfwoYvJDYdjA4WPkjtSv1r4E"
 	AliceNativePubKey = "5D4MWh35wxUcY1hBsm5GwuippPL2UBmfDnfkC8MeqxcN"
@@ -53,16 +50,8 @@ const (
 	RobertPrivate      = "MzJGrbzW1yqSzAAbGLHbSkHKmGFS6kuhACV8wFxePqSwe6rTsv7N3eRVozdJcJSBQAPT6rjtnmoCFxv6YuA5hGq"
 	RobertNativePubKey = "6HLScqNL4EQWLk8DTcB4hXUrHjDkVbeP2a3Sc5VtHozM"
 
-	DexNativePubKey = "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K"
-
-	//BaseURL = "https://testnet.oshit.io/meme/api/v1"
-	//BaseURL = "https://oshit.io/meme/api/v1"
-
 	BaseURL   = "http://localhost:1100/base"
 	RewardURL = "http://localhost:1200/reward"
-
-	Brand  = "OShit"
-	Symbol = "OShit"
 )
 
 var rpcClient = rpc.New(RpcUrl)
@@ -85,6 +74,27 @@ type TransactionParams struct {
 	PriorityFee        entity.PriorityFee       `json:"priorityFee"`
 	ConsumedUnits      entity.ComputeUnitDetail `json:"consumedUnits"`
 	DiscountRate       float64                  `json:"discountRate"`
+}
+
+// InstUnitsRsp 与 base 模块 /fee/inst-units 响应字段保持一致
+type InstUnitsRsp struct {
+	MiniRent          uint64 `json:"mini_rent"`
+	AssociatedAccount uint64 `json:"associated_account"`
+	TransferChecked   uint64 `json:"transfer_checked"`
+	Memo              uint64 `json:"memo"`
+}
+
+type loginReqBody struct {
+	Brand      string `json:"brand"`
+	Symbol     string `json:"symbol"`
+	Account    string `json:"account"`
+	Sign       string `json:"sign"`
+	Nonce      uint64 `json:"nonce"`
+	InviteCode string `json:"invite_code"`
+}
+
+type loginRspData struct {
+	Token JwtToken `json:"token"`
 }
 
 // postJsonRequest sends a POST request with a JSON body and parses the response.
@@ -157,19 +167,6 @@ func postFormRequest[T any](url string, formData url.Values, headers map[string]
 	return &apiResponse, nil
 }
 
-type loginReqBody struct {
-	Brand      string `json:"brand"`
-	Symbol     string `json:"symbol"`
-	Account    string `json:"account"`
-	Sign       string `json:"sign"`
-	Nonce      uint64 `json:"nonce"`
-	InviteCode string `json:"invite_code"`
-}
-
-type loginRspData struct {
-	Token JwtToken `json:"token"`
-}
-
 func loginForToken(brand, symbol string, nativeAccount solana.PublicKey, privKey solana.PrivateKey) (*JwtToken, error) {
 	nonce := uint64(time.Now().UnixMilli())
 	msg := fmt.Sprintf(SOLLoginSignMsg, brand, symbol, nativeAccount.String(), nonce)
@@ -220,14 +217,6 @@ func getJsonRequest[T any](reqURL string, headers map[string]string) (*ApiRespon
 	return &apiResponse, nil
 }
 
-// InstUnitsRsp 与 base 模块 /fee/inst-units 响应字段保持一致
-type InstUnitsRsp struct {
-	MiniRent          uint64 `json:"mini_rent"`
-	AssociatedAccount uint64 `json:"associated_account"`
-	TransferChecked   uint64 `json:"transfer_checked"`
-	Memo              uint64 `json:"memo"`
-}
-
 func getPriorityFee() (*entity.PriorityFee, error) {
 	rsp, err := getJsonRequest[entity.PriorityFee](BaseURL+"/fee/priority", nil)
 	if err != nil {
@@ -266,48 +255,6 @@ func getTakeTokenTxInfo(req types.GetTakeTokenTxInfoReq) (*types.TakeTokenTxInfo
 		return nil, err
 	}
 	return &rsp.Data, nil
-}
-
-func TestGetTakeTokenTxInfo(t *testing.T) {
-	txInfo, err := getTakeTokenTxInfo(types.GetTakeTokenTxInfoReq{
-		ReceiptAccount: AliceNativePubKey,
-	})
-	if err != nil {
-		t.Fatalf("getTakeTokenTxInfo failed: %v", err)
-	}
-
-	fmt.Printf("=== TakeToken TxInfo ===\n")
-	fmt.Printf("RewardNativeAccount : %s\n", txInfo.RewardNativeAccount)
-	fmt.Printf("RewardTokenAccount  : %s\n", txInfo.RewardTokenAccount)
-	fmt.Printf("TokenMintAccount    : %s\n", txInfo.TokenMintAccount)
-	fmt.Printf("DexAccount          : %s\n", txInfo.DexNativeAccount)
-	fmt.Printf("Decimals            : %d\n", txInfo.Decimals)
-	fmt.Printf("QuoteSOLPrice       : %v\n", txInfo.QuoteSOLPrice)
-	fmt.Printf("TotalRewardAmount   : %v\n", txInfo.TotalRewardAmount)
-	fmt.Printf("QuotedSOLAmount     : %v\n", txInfo.QuotedSOLAmount)
-	fmt.Printf("InviteCode          : %s\n", txInfo.InviteCode)
-	fmt.Printf("InviteCodeValid     : %v\n", txInfo.InviteCodeValid)
-	fmt.Printf("InviteDetermine     : %v\n", txInfo.InviteDetermine)
-	fmt.Printf("RewardInfo          : %+v\n", txInfo.RewardInfo)
-	fmt.Printf("RewardInviterInfo   : %+v\n", txInfo.RewardInviterInfo)
-}
-
-func TestLogin(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(BobPrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
-	nativeAccount := privKey.PublicKey()
-	t.Logf("账户地址: %s", nativeAccount.String())
-
-	token, err := loginForToken(Brand, Symbol, nativeAccount, privKey)
-	if err != nil {
-		t.Fatalf("login failed: %v", err)
-	}
-
-	fmt.Println("=== JWT Token ===")
-	fmt.Println("Access :", token.Access)
-	fmt.Println("Refresh:", token.Refresh)
 }
 
 func createHexEncodedTx(ctx context.Context, privKey solana.PrivateKey, inviteCode string) (string, error) {
@@ -433,6 +380,48 @@ func createHexEncodedTx(ctx context.Context, privKey solana.PrivateKey, inviteCo
 	txBytes, _ := tx.MarshalBinary()
 	hexEncodedTx := hex.EncodeToString(txBytes)
 	return hexEncodedTx, nil
+}
+
+func TestLogin(t *testing.T) {
+	privKey, err := solana.PrivateKeyFromBase58(BobPrivate)
+	if err != nil {
+		t.Fatalf("parse private key failed: %v", err)
+	}
+	nativeAccount := privKey.PublicKey()
+	t.Logf("账户地址: %s", nativeAccount.String())
+
+	token, err := loginForToken(Brand, Symbol, nativeAccount, privKey)
+	if err != nil {
+		t.Fatalf("login failed: %v", err)
+	}
+
+	fmt.Println("=== JWT Token ===")
+	fmt.Println("Access :", token.Access)
+	fmt.Println("Refresh:", token.Refresh)
+}
+
+func TestGetTakeTokenTxInfo(t *testing.T) {
+	txInfo, err := getTakeTokenTxInfo(types.GetTakeTokenTxInfoReq{
+		ReceiptAccount: AliceNativePubKey,
+	})
+	if err != nil {
+		t.Fatalf("getTakeTokenTxInfo failed: %v", err)
+	}
+
+	fmt.Printf("=== TakeToken TxInfo ===\n")
+	fmt.Printf("RewardNativeAccount : %s\n", txInfo.RewardNativeAccount)
+	fmt.Printf("RewardTokenAccount  : %s\n", txInfo.RewardTokenAccount)
+	fmt.Printf("TokenMintAccount    : %s\n", txInfo.TokenMintAccount)
+	fmt.Printf("DexAccount          : %s\n", txInfo.DexNativeAccount)
+	fmt.Printf("Decimals            : %d\n", txInfo.Decimals)
+	fmt.Printf("QuoteSOLPrice       : %v\n", txInfo.QuoteSOLPrice)
+	fmt.Printf("TotalRewardAmount   : %v\n", txInfo.TotalRewardAmount)
+	fmt.Printf("QuotedSOLAmount     : %v\n", txInfo.QuotedSOLAmount)
+	fmt.Printf("InviteCode          : %s\n", txInfo.InviteCode)
+	fmt.Printf("InviteCodeValid     : %v\n", txInfo.InviteCodeValid)
+	fmt.Printf("InviteDetermine     : %v\n", txInfo.InviteDetermine)
+	fmt.Printf("RewardInfo          : %+v\n", txInfo.RewardInfo)
+	fmt.Printf("RewardInviterInfo   : %+v\n", txInfo.RewardInviterInfo)
 }
 
 func TestTakeToken(t *testing.T) {
