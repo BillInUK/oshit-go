@@ -131,19 +131,7 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 		return nil, err
 	}
 
-	// 2. 根据邀请码是否有效决定领取奖励的金额
-	var rewardAmount uint64 = 0
-	if !codeValid {
-		rewardAmount = uint64(l.serviceConfig.Amount)
-	} else {
-		rewardAmount = uint64(l.serviceConfig.InviteAmount)
-	}
-
-	// 3. 获取领取地址的nativeAccount的tokenAccount
-	receiptTokenPubKey, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(receiptNativeAccount), solana.MPK(l.serviceConfig.TokenMintAccount))
-	receiptTokenAccount := receiptTokenPubKey.String()
-
-	// 如果确定邀请关系
+	// 2. 递归向上查询需要奖励的邀请人
 	var sortedInvites []model.InviteRelation
 	var sortedItems []types.RewardTokenItem
 	if (invited || codeValid) && directInviter != nil {
@@ -189,13 +177,39 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	sortedClaims := l.levelRatio[:minLen]
 	sortedItems = sortedItems[:minLen]
 
-	// 填写领取奖励信息
+	// 3. 根据是否确定邀请关系来决定奖励金额
+	var rewardAmount uint64 = 0
+	if !invited {
+		rewardAmount = uint64(l.serviceConfig.Amount)
+	} else {
+		rewardAmount = uint64(l.serviceConfig.InviteAmount)
+	}
+
+	// 4. 获取领取地址的nativeAccount的tokenAccount
+	receiptTokenPubKey, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(receiptNativeAccount), solana.MPK(l.serviceConfig.TokenMintAccount))
+	receiptTokenAccount := receiptTokenPubKey.String()
+
+	// 5. 填写领取奖励信息
 	rewardInfo := types.RewardTokenItem{Index: 0, NativeAccount: receiptNativeAccount, TokenAccount: receiptTokenAccount, Amount: rewardAmount}
 	// 在最小集合里面决定每个层级的邀请人领取多少金额
 	for index, claim := range sortedClaims {
 		sortedItems[index].Amount = uint64(float64(rewardAmount) * claim.Ratio)
 	}
-	// 返回领取奖励信息
+
+	// 6. 获取本次奖励的总代币量
+	totalRewardAmount := takeTxInfo.RewardInfo.Amount
+	for _, item := range takeTxInfo.RewardInviterInfo {
+		totalRewardAmount += item.Amount
+	}
+
+	// 7. 计算所有的token的价格
+	quoteSOLPrice, err := l.baseClient.GetTokenQuoteSOLPrice(ctx)
+	if err != nil {
+		log.Errorf("%s 计算奖励金额价格错误: %v", prefix, err)
+		return nil, fmt.Errorf("get toke quote sol price failed")
+	}
+
+	// 8. 填写最终需要返回的交易信息
 	takeTxInfo.RewardNativeAccount = l.serviceConfig.RewardNativeAccount
 	takeTxInfo.RewardTokenAccount = l.serviceConfig.RewardTokenAccount
 	takeTxInfo.TokenMintAccount = l.serviceConfig.TokenMintAccount
@@ -206,18 +220,6 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	takeTxInfo.InviteCode = inviteCode
 	takeTxInfo.RewardInfo = rewardInfo
 	takeTxInfo.InviteCodeValid = codeValid
-
-	// 获取本次奖励的总代币量
-	totalRewardAmount := takeTxInfo.RewardInfo.Amount
-	for _, item := range takeTxInfo.RewardInviterInfo {
-		totalRewardAmount += item.Amount
-	}
-	// 计算所有的token的价格
-	quoteSOLPrice, err := l.baseClient.GetTokenQuoteSOLPrice(ctx)
-	if err != nil {
-		log.Errorf("%s 计算奖励金额价格错误: %v", prefix, err)
-		return nil, fmt.Errorf("get toke quote sol price failed")
-	}
 	takeTxInfo.QuoteSOLPrice = quoteSOLPrice
 	takeTxInfo.TotalRewardAmount = float64(totalRewardAmount)
 	takeTxInfo.QuotedSOLAmount = quoteSOLPrice * float64(totalRewardAmount) / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL)
