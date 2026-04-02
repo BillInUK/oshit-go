@@ -2,31 +2,22 @@ package test
 
 import (
 	"bytes"
-	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
-	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
-	"github.com/gagliardetto/solana-go/programs/system"
-	"github.com/gagliardetto/solana-go/programs/token"
 	"net/http"
 	"net/url"
-	"oshit-go/common/utils"
 	"testing"
 	"time"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"oshit-go/app/reward/api/types"
 	"oshit-go/common/pkg/entity"
 )
 
 const (
-	systemTransferCU uint64 = 500 // System Transfer 固定预留
-	Brand                   = "OShit"
-	Symbol                  = "OShit"
-	SOLLoginSignMsg         = "I am login %s for token %s with my address %s with nonce %d"
+	Brand           = "OShit"
+	Symbol          = "OShit"
+	SOLLoginSignMsg = "I am login %s for token %s with my address %s with nonce %d"
 
 	// mainnet:
 	//RpcUrl           = "https://radial-purple-sailboat.solana-mainnet.quiknode.pro/0afcb192bb26b0dbcba3d49df6ad2ee2829c529b/"
@@ -56,12 +47,13 @@ const (
 
 var rpcClient = rpc.New(RpcUrl)
 
+// ---- 公共数据类型 ----
+
 type JwtToken struct {
 	Access  string `json:"Access"`
 	Refresh string `json:"Refresh"`
 }
 
-// ApiResponse represents a generic API response structure.
 type ApiResponse[T any] struct {
 	Code  int    `json:"code"`
 	Count int    `json:"count"`
@@ -97,7 +89,8 @@ type loginRspData struct {
 	Token JwtToken `json:"token"`
 }
 
-// postJsonRequest sends a POST request with a JSON body and parses the response.
+// ---- HTTP 工具函数 ----
+
 func postJsonRequest[T any](reqURL string, body any, headers map[string]string) (*ApiResponse[T], error) {
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
@@ -133,7 +126,6 @@ func postJsonRequest[T any](reqURL string, body any, headers map[string]string) 
 	return &apiResponse, nil
 }
 
-// postFormRequest sends a POST request with form data and parses the response.
 func postFormRequest[T any](url string, formData url.Values, headers map[string]string) (*ApiResponse[T], error) {
 	req, err := http.NewRequest("POST", url, bytes.NewBufferString(formData.Encode()))
 	if err != nil {
@@ -141,10 +133,8 @@ func postFormRequest[T any](url string, formData url.Values, headers map[string]
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	if len(headers) > 0 {
-		for key, value := range headers {
-			req.Header.Set(key, value)
-		}
+	for key, value := range headers {
+		req.Header.Set(key, value)
 	}
 
 	client := &http.Client{}
@@ -159,38 +149,13 @@ func postFormRequest[T any](url string, formData url.Values, headers map[string]
 	}
 
 	var apiResponse ApiResponse[T]
-	err = json.NewDecoder(resp.Body).Decode(&apiResponse)
-	if err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
 		return nil, fmt.Errorf("error decoding JSON response: %w", err)
 	}
 
 	return &apiResponse, nil
 }
 
-func loginForToken(brand, symbol string, nativeAccount solana.PublicKey, privKey solana.PrivateKey) (*JwtToken, error) {
-	nonce := uint64(time.Now().UnixMilli())
-	msg := fmt.Sprintf(SOLLoginSignMsg, brand, symbol, nativeAccount.String(), nonce)
-	sign, err := privKey.Sign([]byte(msg))
-	if err != nil {
-		return nil, fmt.Errorf("sign message error: %w", err)
-	}
-
-	body := loginReqBody{
-		Brand:   brand,
-		Symbol:  symbol,
-		Account: nativeAccount.String(),
-		Sign:    sign.String(),
-		Nonce:   nonce,
-	}
-
-	rsp, err := postJsonRequest[loginRspData](BaseURL+"/auth/login", body, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &rsp.Data.Token, nil
-}
-
-// getJsonRequest sends a GET request and parses the response.
 func getJsonRequest[T any](reqURL string, headers map[string]string) (*ApiResponse[T], error) {
 	req, err := http.NewRequest("GET", reqURL, nil)
 	if err != nil {
@@ -217,6 +182,31 @@ func getJsonRequest[T any](reqURL string, headers map[string]string) (*ApiRespon
 	return &apiResponse, nil
 }
 
+// ---- 通用业务函数 ----
+
+func loginForToken(brand, symbol string, nativeAccount solana.PublicKey, privKey solana.PrivateKey) (*JwtToken, error) {
+	nonce := uint64(time.Now().UnixMilli())
+	msg := fmt.Sprintf(SOLLoginSignMsg, brand, symbol, nativeAccount.String(), nonce)
+	sign, err := privKey.Sign([]byte(msg))
+	if err != nil {
+		return nil, fmt.Errorf("sign message error: %w", err)
+	}
+
+	body := loginReqBody{
+		Brand:   brand,
+		Symbol:  symbol,
+		Account: nativeAccount.String(),
+		Sign:    sign.String(),
+		Nonce:   nonce,
+	}
+
+	rsp, err := postJsonRequest[loginRspData](BaseURL+"/auth/login", body, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &rsp.Data.Token, nil
+}
+
 func getPriorityFee() (*entity.PriorityFee, error) {
 	rsp, err := getJsonRequest[entity.PriorityFee](BaseURL+"/fee/priority", nil)
 	if err != nil {
@@ -233,154 +223,7 @@ func getInstUnits() (*InstUnitsRsp, error) {
 	return &rsp.Data, nil
 }
 
-func commitTakeTokenTx(req types.CommitTakeTokenTxInfoReq) (string, error) {
-	//headers := map[string]string{
-	//	"Authorization": fmt.Sprintf("Bearer %s", jwtToken.Access),
-	//}
-	headers := map[string]string{}
-	rsp, err := postJsonRequest[string](RewardURL+"/take/commit-tx", req, headers)
-	if err != nil {
-		return "", err
-	}
-	return rsp.Data, nil
-}
-
-func getTakeTokenTxInfo(req types.GetTakeTokenTxInfoReq) (*types.TakeTokenTxInfo, error) {
-	//headers := map[string]string{
-	//	"Authorization": fmt.Sprintf("Bearer %s", jwtToken.Access),
-	//}
-	headers := map[string]string{}
-	rsp, err := postJsonRequest[types.TakeTokenTxInfo](RewardURL+"/take/tx-info", req, headers)
-	if err != nil {
-		return nil, err
-	}
-	return &rsp.Data, nil
-}
-
-func createHexEncodedTx(ctx context.Context, privKey solana.PrivateKey, inviteCode string) (string, error) {
-	receiptPubKey := privKey.PublicKey()
-
-	req := types.GetTakeTokenTxInfoReq{
-		ReceiptAccount: receiptPubKey.String(),
-		InviteCode:     inviteCode,
-	}
-	fmt.Printf("receipt native account %v: \n", receiptPubKey)
-	txInfo, err := getTakeTokenTxInfo(req)
-	if err != nil {
-		panic(err)
-	}
-	priorityFee, err := getPriorityFee()
-	if err != nil {
-		panic(err)
-	}
-	// 用 instUnits API 计算 computeUnitLimit：
-	//   每条 TransferChecked 按 instUnits.TransferChecked 计，
-	//   加上 System Transfer 的固定预留（500 CU），再留 20% buffer。
-	// 注意：不使用模拟交易方式，原因是模拟时需要放入假签名，
-	//       Solana 节点对假签名的模拟结果不可信，会严重低估实际消耗。
-	instUnits, err := getInstUnits()
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("take token tx info %v \n", txInfo)
-	fmt.Printf("total reward amount %v \n", txInfo.TotalRewardAmount)
-	fmt.Printf("quote sol price %v \n", txInfo.QuoteSOLPrice)
-	fmt.Printf("quoted sol amount %v \n", txInfo.QuotedSOLAmount)
-
-	var receiptPDAExist = true
-	rewardNativeAccount := solana.MPK(txInfo.RewardNativeAccount)
-	rewardTokenAccount := solana.MPK(txInfo.RewardTokenAccount)
-	tokenMintAccount := solana.MPK(txInfo.TokenMintAccount)
-	dexNativeAccount := solana.MPK(txInfo.DexNativeAccount)
-	decimals := uint8(txInfo.Decimals)
-
-	receiptTokenAccount, err := utils.GetSPLTokenAccountByNative(rpcClient, receiptPubKey, solana.MPK(txInfo.TokenMintAccount))
-
-	computePrice := priorityFee.PerComputeUnit.Medium
-	computeBudgetPriceInst := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(computePrice).Build()
-
-	fmt.Printf("compute price is %d\n", computePrice)
-
-	// 奖励领取人token指令
-	receiptInst := token.NewTransferCheckedInstructionBuilder().
-		SetAmount(txInfo.RewardInfo.Amount).
-		SetDecimals(decimals).
-		SetSourceAccount(rewardTokenAccount).
-		SetMintAccount(tokenMintAccount).
-		SetDestinationAccount(*receiptTokenAccount).
-		SetOwnerAccount(rewardNativeAccount).
-		Build()
-
-	// 奖励邀请人指令
-	var inviterInsts []solana.Instruction
-	for _, rewardInfo := range txInfo.RewardInviterInfo {
-		inst := token.NewTransferCheckedInstructionBuilder().
-			SetAmount(rewardInfo.Amount).
-			SetDecimals(decimals).
-			SetSourceAccount(rewardTokenAccount).
-			SetMintAccount(tokenMintAccount).
-			SetDestinationAccount(solana.MPK(rewardInfo.TokenAccount)).
-			SetOwnerAccount(rewardNativeAccount).
-			Build()
-		inviterInsts = append(inviterInsts, inst)
-	}
-
-	// 发送给dex的sol
-	toDexInst := system.NewTransferInstructionBuilder().
-		SetLamports(uint64(txInfo.QuotedSOLAmount)).
-		SetFundingAccount(receiptPubKey).
-		SetRecipientAccount(dexNativeAccount).
-		Build()
-
-	transferCheckedCount := 1 + len(inviterInsts)
-	computeUnitLimit := uint32(float64(uint64(transferCheckedCount)*instUnits.TransferChecked+systemTransferCU) * 1.2)
-	computeBudgetLimitInst := computebudget.NewSetComputeUnitLimitInstructionBuilder().SetUnits(computeUnitLimit).Build()
-	fmt.Printf("computeUnitLimit: %d (transferCheckedCount=%d, perTC=%d)\n", computeUnitLimit, transferCheckedCount, instUnits.TransferChecked)
-
-	var instructions1 []solana.Instruction
-	instructions1 = append(instructions1, computeBudgetPriceInst)
-	instructions1 = append(instructions1, computeBudgetLimitInst)
-	if !receiptPDAExist {
-		associated := associatedtokenaccount.NewCreateInstruction(receiptPubKey, receiptPubKey, tokenMintAccount).Build()
-		instructions1 = append(instructions1, associated)
-	}
-	instructions1 = append(instructions1, receiptInst)
-	instructions1 = append(instructions1, toDexInst)
-	if len(inviterInsts) > 0 {
-		instructions1 = append(instructions1, inviterInsts...)
-	}
-
-	recent, err := rpcClient.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
-	if err != nil {
-		panic(err)
-	}
-
-	// 构造最终要发送的交易
-	tx, err := solana.NewTransaction(
-		instructions1,
-		recent.Value.Blockhash,
-		solana.TransactionPayer(receiptPubKey),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	messageContent1, err := tx.Message.MarshalBinary()
-	if err != nil {
-		panic(err)
-	}
-
-	fromSign, err := privKey.Sign(messageContent1)
-	if err != nil {
-		panic(err)
-	}
-	tx.Signatures = append(tx.Signatures, fromSign)
-
-	txBytes, _ := tx.MarshalBinary()
-	hexEncodedTx := hex.EncodeToString(txBytes)
-	return hexEncodedTx, nil
-}
+// ---- 通用测试用例 ----
 
 func TestLogin(t *testing.T) {
 	privKey, err := solana.PrivateKeyFromBase58(BobPrivate)
@@ -398,45 +241,4 @@ func TestLogin(t *testing.T) {
 	fmt.Println("=== JWT Token ===")
 	fmt.Println("Access :", token.Access)
 	fmt.Println("Refresh:", token.Refresh)
-}
-
-func TestGetTakeTokenTxInfo(t *testing.T) {
-	txInfo, err := getTakeTokenTxInfo(types.GetTakeTokenTxInfoReq{
-		ReceiptAccount: AliceNativePubKey,
-	})
-	if err != nil {
-		t.Fatalf("getTakeTokenTxInfo failed: %v", err)
-	}
-
-	fmt.Printf("=== TakeToken TxInfo ===\n")
-	fmt.Printf("RewardNativeAccount : %s\n", txInfo.RewardNativeAccount)
-	fmt.Printf("RewardTokenAccount  : %s\n", txInfo.RewardTokenAccount)
-	fmt.Printf("TokenMintAccount    : %s\n", txInfo.TokenMintAccount)
-	fmt.Printf("DexAccount          : %s\n", txInfo.DexNativeAccount)
-	fmt.Printf("Decimals            : %d\n", txInfo.Decimals)
-	fmt.Printf("QuoteSOLPrice       : %v\n", txInfo.QuoteSOLPrice)
-	fmt.Printf("TotalRewardAmount   : %v\n", txInfo.TotalRewardAmount)
-	fmt.Printf("QuotedSOLAmount     : %v\n", txInfo.QuotedSOLAmount)
-	fmt.Printf("InviteCode          : %s\n", txInfo.InviteCode)
-	fmt.Printf("InviteCodeValid     : %v\n", txInfo.InviteCodeValid)
-	fmt.Printf("InviteDetermine     : %v\n", txInfo.InviteDetermine)
-	fmt.Printf("RewardInfo          : %+v\n", txInfo.RewardInfo)
-	fmt.Printf("RewardInviterInfo   : %+v\n", txInfo.RewardInviterInfo)
-}
-
-func TestTakeToken(t *testing.T) {
-	inviteCode := "ogG0W1OK"
-	privateKey, _ := solana.PrivateKeyFromBase58(DavidPrivate)
-	encodedTx, err := createHexEncodedTx(context.Background(), privateKey, inviteCode)
-	if err != nil {
-		panic(err)
-	}
-	// 调用 officialGiveToken
-	txId, err := commitTakeTokenTx(
-		types.CommitTakeTokenTxInfoReq{
-			EncodedTx:  encodedTx,
-			InviteCode: inviteCode,
-		},
-	)
-	fmt.Printf("请求成功: https://solscan.io/tx/%s?cluster=devnet\n", txId)
 }

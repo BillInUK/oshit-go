@@ -9,7 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gagliardetto/solana-go"
-	basepb "oshit-go/app/pb/base"
+	basepb "oshit-go/common/pkg/pb/base"
 )
 
 // BaseClient 封装 base 模块的 Dubbo RPC 客户端

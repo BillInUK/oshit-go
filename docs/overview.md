@@ -36,13 +36,13 @@ oshit-go/
 ├── app/
 │   ├── base/api/         # Base 服务（端口 1100 HTTP + 20880 Dubbo）
 │   ├── reward/api/       # Reward 服务（端口 1200 HTTP）
-│   ├── pb/base/          # Protobuf 定义（Dubbo Triple 协议用）
 │   └── utils/            # 应用层工具（tx.go, rpc.go）
 ├── common/
 │   ├── constants/        # 业务常量（交易状态、资金流向类型等）
 │   ├── pkg/
 │   │   ├── dal/          # GORM 自动生成的 model + query
 │   │   ├── entity/       # 跨服务共享数据结构（Kafka 消息、解码后交易）
+│   │   ├── pb/base/      # Protobuf 生成代码（Dubbo Triple 协议，base 服务 RPC 接口）
 │   │   └── response/     # HTTP 响应结构
 │   └── utils/            # 通用工具（amount, jwt, jasypt, solana_util）
 ├── repositories/

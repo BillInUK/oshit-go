@@ -6,7 +6,7 @@ import (
 	"oshit-go/app/base/api/internal/logic"
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
-	basepb "oshit-go/app/pb/base"
+	basepb "oshit-go/common/pkg/pb/base"
 	"oshit-go/common/pkg/entity"
 )
 

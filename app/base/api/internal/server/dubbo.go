@@ -10,7 +10,7 @@ import (
 	"dubbo.apache.org/dubbo-go/v3/registry"
 	"github.com/gofiber/fiber/v2/log"
 	"oshit-go/app/base/api/internal/svc"
-	basepb "oshit-go/app/pb/base"
+	basepb "oshit-go/common/pkg/pb/base"
 )
 
 // StartDubboServer 启动 Dubbo Triple 服务，作为独立 goroutine 运行
