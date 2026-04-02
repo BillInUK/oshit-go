@@ -176,16 +176,16 @@ func (t *FeeTask) readPriorityFee() {
 		// 创建SolFeeStatistic实例并填充数据
 		if computeUnitPrice != 0 {
 			stat := model.FeeStatistics{
-				Slot:             int64(currentSlot),
-				TransactionIndex: int32(i),
-				BlockHash:        blockResponse.Result.Blockhash,
-				TransactionID:    tx.Transaction.Signatures[0],
-				ComputeUnitPrice: computeUnitPrice,
-				ComputeUnitLimit: computeUnitLimit,
-				UnitsConsumed:    float64(tx.Meta.ComputeUnitsConsumed),
-				Fee:              float64(tx.Meta.Fee),
-				CreatedAt:        time.Now(),
-				UpdatedAt:        time.Now(),
+				Slot:          int64(currentSlot),
+				TxIndex:       int32(i),
+				BlockHash:     blockResponse.Result.Blockhash,
+				TxID:          tx.Transaction.Signatures[0],
+				Price:         computeUnitPrice,
+				UnitLimit:     computeUnitLimit,
+				UnitsConsumed: float64(tx.Meta.ComputeUnitsConsumed),
+				Fee:           float64(tx.Meta.Fee),
+				CreatedAt:     time.Now(),
+				UpdatedAt:     time.Now(),
 			}
 
 			// 将统计数据添加到数组中
@@ -205,8 +205,8 @@ func (t *FeeTask) readPriorityFee() {
 		// 如果记录数小于10000
 		if recordCount <= 10000 {
 			if err := table.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "slot"}, {Name: "transaction_index"}},
-				DoUpdates: clause.AssignmentColumns([]string{"compute_unit_price", "compute_unit_limit", "units_consumed", "fee", "updated_at"}),
+				Columns:   []clause.Column{{Name: "slot"}, {Name: "tx_index"}},
+				DoUpdates: clause.AssignmentColumns([]string{"price", "unit_limit", "units_consumed", "fee", "updated_at"}),
 			}).Create(&statistics).Error; err != nil {
 				log.Errorf("%s 写入数据库错误: %v", prefix, err)
 				return
@@ -216,7 +216,7 @@ func (t *FeeTask) readPriorityFee() {
 			var oldRecords []model.FeeStatistics
 
 			// 查询 Slot 和 TransactionIndex 最小的 n 条记录
-			table.Order("slot ASC, transaction_index ASC").Limit(len(statistics)).Find(&oldRecords)
+			table.Order("slot ASC, tx_index ASC").Limit(len(statistics)).Find(&oldRecords)
 
 			// 创建一个需要更新的 map 列表
 			var updates []map[string]interface{}
@@ -224,15 +224,15 @@ func (t *FeeTask) readPriorityFee() {
 			for i := range oldRecords {
 				// 复制除 RecordId 外的字段
 				updates = append(updates, map[string]interface{}{
-					"slot":               statistics[i].Slot,
-					"transaction_index":  statistics[i].TransactionIndex,
-					"block_hash":         statistics[i].BlockHash,
-					"transaction_id":     statistics[i].TransactionID,
-					"compute_unit_price": statistics[i].ComputeUnitPrice,
-					"compute_unit_limit": statistics[i].ComputeUnitLimit,
-					"units_consumed":     statistics[i].UnitsConsumed,
-					"fee":                statistics[i].Fee,
-					"updated_at":         time.Now(),
+					"slot":           statistics[i].Slot,
+					"tx_index":       statistics[i].TxIndex,
+					"block_hash":     statistics[i].BlockHash,
+					"tx_id":          statistics[i].TxID,
+					"price":          statistics[i].Price,
+					"unit_limit":     statistics[i].UnitLimit,
+					"units_consumed": statistics[i].UnitsConsumed,
+					"fee":            statistics[i].Fee,
+					"updated_at":     time.Now(),
 				})
 			}
 
@@ -260,12 +260,12 @@ func (t *FeeTask) updatePerUnitFee() {
 		WITH RankedData AS (
 			SELECT
 				*,
-				NTILE(4) OVER (ORDER BY compute_unit_price) AS price_group
+				NTILE(4) OVER (ORDER BY price) AS price_group
 			FROM public.t_fee_statistics
 		)
 		SELECT
 			price_group,
-			ROUND(SUM(compute_unit_price * units_consumed)::NUMERIC / SUM(units_consumed))::NUMERIC AS weighted_avg_price
+			ROUND(SUM(price * units_consumed)::NUMERIC / SUM(units_consumed))::NUMERIC AS weighted_avg_price
 		FROM RankedData
 		GROUP BY price_group
 		ORDER BY price_group;
@@ -314,7 +314,7 @@ func (t *FeeTask) updatePerTxFee() {
 	WITH FilteredData AS (
 		SELECT
 			*,
-			PERCENT_RANK() OVER (ORDER BY compute_unit_price) AS rank
+			PERCENT_RANK() OVER (ORDER BY price) AS rank
 		FROM
 			public.t_fee_statistics
 	),
@@ -341,7 +341,7 @@ func (t *FeeTask) updatePerTxFee() {
 	)
 	SELECT
 		price_group,
-		PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY compute_unit_price) AS weighted_avg_price
+		PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY price) AS weighted_avg_price
 	FROM
 		RankedData
 	GROUP BY

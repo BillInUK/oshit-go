@@ -16,7 +16,7 @@ import (
 // decodeSOLTx 解析solana交易
 func (l *TakeTokenLogic) decodeSOLTx(givenTokenInfo *types.TakeTokenTxInfo, tx *solana.Transaction) (*entity.DecodedSolanaTransaction, error) {
 	var decodedTx entity.DecodedSolanaTransaction
-	tokenMintAccount, _ := solana.PublicKeyFromBase58(givenTokenInfo.TokenMintAccount)
+	tokenMintAccount, _ := solana.PublicKeyFromBase58(givenTokenInfo.Mint)
 	decodedTx.FromNativeAccount = tx.Message.AccountKeys[0]
 	decodedTx.Signatures = tx.Signatures
 	fromTokenAccount, _, err := solana.FindAssociatedTokenAddress(decodedTx.FromNativeAccount, tokenMintAccount)
@@ -28,10 +28,10 @@ func (l *TakeTokenLogic) decodeSOLTx(givenTokenInfo *types.TakeTokenTxInfo, tx *
 
 	// 将邀请人信息和被奖励的人的信息放到map里面 key-TokenAccount value-RewardItem
 	var rewardItemMap = map[string]types.RewardTokenItem{}
-	rewardTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(givenTokenInfo.RewardInfo.NativeAccount), tokenMintAccount)
+	rewardTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(givenTokenInfo.RewardInfo.ReceiptAccount), tokenMintAccount)
 	rewardItemMap[rewardTA.String()] = givenTokenInfo.RewardInfo
 	for _, item := range givenTokenInfo.RewardInviterInfo {
-		itemTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(item.NativeAccount), tokenMintAccount)
+		itemTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(item.ReceiptAccount), tokenMintAccount)
 		rewardItemMap[itemTA.String()] = item
 	}
 
@@ -77,7 +77,7 @@ func (l *TakeTokenLogic) decodeSOLTx(givenTokenInfo *types.TakeTokenTxInfo, tx *
 					// 如果存在于give token info 里面的reward item
 					rewardItem, exist := rewardItemMap[account.String()]
 					if exist {
-						toNativeAccount0, _ := solana.PublicKeyFromBase58(rewardItem.NativeAccount)
+						toNativeAccount0, _ := solana.PublicKeyFromBase58(rewardItem.ReceiptAccount)
 						toNativeAccount = &toNativeAccount0
 					} else {
 						return nil, fmt.Errorf("decode transaction failed,can not get native account of to token account[%v],error:%v", account, err)
@@ -149,8 +149,8 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 
 	// 检查发送SOL到DEX地址的Transfer的地址和金额
 	transferInst := decodedTx.TransferInstructions[0]
-	if transferInst.ToNativeAccount.String() != txInfo.DexNativeAccount {
-		log.Errorf("%s 解析交易错误: solana收款地址[%v]不是规则要求的地址[%v]", prefix, transferInst.ToNativeAccount, l.serviceConfig.DexNativeAccount)
+	if transferInst.ToNativeAccount.String() != txInfo.CostAccount {
+		log.Errorf("%s 解析交易错误: solana收款地址[%v]不是规则要求的地址[%v]", prefix, transferInst.ToNativeAccount, l.serviceConfig.CostAccount)
 		return nil, errors.New("transfer receipt account must be dex account")
 	}
 	if transferInst.FromNativeAccount != decodedTx.FromNativeAccount {
@@ -165,7 +165,7 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 		return nil, errors.New("transfer funding less than config required")
 	}
 	// 检查TransferChecked指令的地址和金额
-	tokenMintPubKey, _ := solana.PublicKeyFromBase58(txInfo.TokenMintAccount)
+	tokenMintPubKey, _ := solana.PublicKeyFromBase58(txInfo.Mint)
 	transferCheckedMap := make(map[solana.PublicKey]entity.DecodedSolTransferCheckedInst)
 	inviterRewardMap := make(map[string]types.RewardTokenItem)
 	inviterClaimMap := make(map[string]uint64)
@@ -176,7 +176,7 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 	}
 	// 所有的邀请人记录存放到map里面,key-TokenAccount value-RewardTokenItem
 	for _, record := range txInfo.RewardInviterInfo {
-		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(record.NativeAccount), tokenMintPubKey)
+		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(record.ReceiptAccount), tokenMintPubKey)
 		inviterRewardMap[inviterTA.String()] = record
 	}
 
@@ -207,7 +207,7 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 	// 计算出来每个级别的上级应该拿到的奖励
 	for index, inviteRecord := range txInfo.RewardInviterInfo {
 		rewardInviterAmount := uint64(float64(rewardTxFromAmount) * rewardClaims[index].Ratio)
-		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(inviteRecord.NativeAccount), tokenMintPubKey)
+		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(inviteRecord.ReceiptAccount), tokenMintPubKey)
 		inviterClaimMap[inviterTA.String()] = rewardInviterAmount
 	}
 
@@ -245,14 +245,21 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 func (l *TakeTokenLogic) checkRewardInst(decodedInst entity.DecodedSolTransferCheckedInst, txFromNativeAccount solana.PublicKey, inviteCodeValid bool) error {
 	prefix := fmt.Sprintf("%s 检查奖励领取人指令 -", l.prefix)
 
+	rewardTokenAccount, _, _ := solana.FindAssociatedTokenAddress(
+		solana.MPK(l.serviceConfig.RewardAccount),
+		solana.MPK(l.srvCtx.TokenConfig.Mint),
+	)
+	tokenMint := l.srvCtx.TokenConfig.Mint
+	decimals := uint8(l.srvCtx.TokenConfig.Decimals)
+
 	// 发放token的地址是否是官方指定的地址
-	if decodedInst.FromTokenAccount.String() != l.serviceConfig.RewardTokenAccount {
-		log.Errorf("%s 错误: token account [%v]  与规则 [%v] 不一致", prefix, decodedInst.FromTokenAccount, l.serviceConfig.RewardTokenAccount)
+	if decodedInst.FromTokenAccount.String() != rewardTokenAccount.String() {
+		log.Errorf("%s 错误: token account [%v]  与规则 [%v] 不一致", prefix, decodedInst.FromTokenAccount, rewardTokenAccount)
 		return errors.New("reward instruction error: send reward token account not match service config")
 	}
 	// token地址是否相同
-	if decodedInst.TokenMintAccount.String() != l.serviceConfig.TokenMintAccount {
-		log.Errorf("%s 错误: token mint account [%v]  与规则 [%v] 不一致", prefix, decodedInst.TokenMintAccount, l.serviceConfig.TokenMintAccount)
+	if decodedInst.TokenMintAccount.String() != tokenMint {
+		log.Errorf("%s 错误: token mint account [%v]  与规则 [%v] 不一致", prefix, decodedInst.TokenMintAccount, tokenMint)
 		return errors.New("reward instruction error: send reward token mint account not match service config")
 	}
 	// to地址必须是支付了手续费和dex费的地址
@@ -274,8 +281,8 @@ func (l *TakeTokenLogic) checkRewardInst(decodedInst entity.DecodedSolTransferCh
 	}
 
 	// 进制是否跟规则规定的一样
-	if decodedInst.Decimals != uint8(l.serviceConfig.Decimals) {
-		log.Errorf("%s 错误: 奖励金额进制[%d]和规则规定的金额进制[%d]不一致", prefix, decodedInst.Decimals, uint8(l.serviceConfig.Decimals))
+	if decodedInst.Decimals != decimals {
+		log.Errorf("%s 错误: 奖励金额进制[%d]和规则规定的金额进制[%d]不一致", prefix, decodedInst.Decimals, decimals)
 		return errors.New("token decimal not equal  officially rule")
 	}
 
@@ -286,20 +293,27 @@ func (l *TakeTokenLogic) checkRewardInst(decodedInst entity.DecodedSolTransferCh
 func (l *TakeTokenLogic) checkRewardInviterInst(decodedInst entity.DecodedSolTransferCheckedInst, rewardAmount uint64) error {
 	prefix := fmt.Sprintf("%s 检查奖励邀请人指令 -", l.prefix)
 
+	rewardTokenAccount, _, _ := solana.FindAssociatedTokenAddress(
+		solana.MPK(l.serviceConfig.RewardAccount),
+		solana.MPK(l.srvCtx.TokenConfig.Mint),
+	)
+	tokenMint := l.srvCtx.TokenConfig.Mint
+	decimals := uint8(l.srvCtx.TokenConfig.Decimals)
+
 	// from地址必须是规则规定的奖励地址
-	if decodedInst.FromTokenAccount.String() != l.serviceConfig.RewardTokenAccount {
-		log.Errorf("%s 错误: token account [%v]  与规则 [%v] 不一致", prefix, decodedInst.FromTokenAccount, l.serviceConfig.RewardTokenAccount)
+	if decodedInst.FromTokenAccount.String() != rewardTokenAccount.String() {
+		log.Errorf("%s 错误: token account [%v]  与规则 [%v] 不一致", prefix, decodedInst.FromTokenAccount, rewardTokenAccount)
 		return errors.New("reward inviter instruction error: send reward token account not match service config")
 	}
 	// token地址必须与规则规定的相同
-	if decodedInst.TokenMintAccount.String() != l.serviceConfig.TokenMintAccount {
-		log.Errorf("%s 错误: token mint account [%v]  与规则 [%v] 不一致", prefix, decodedInst.TokenMintAccount, l.serviceConfig.TokenMintAccount)
+	if decodedInst.TokenMintAccount.String() != tokenMint {
+		log.Errorf("%s 错误: token mint account [%v]  与规则 [%v] 不一致", prefix, decodedInst.TokenMintAccount, tokenMint)
 		return errors.New("reward inviter instruction error: send reward token mint account not match service config")
 	}
 	// owner address必须跟转账地址的native account一样
-	if decodedInst.OwnerNativeAccount.String() != l.serviceConfig.RewardNativeAccount {
+	if decodedInst.OwnerNativeAccount.String() != l.serviceConfig.RewardAccount {
 		log.Error("%s 解析从官方转token交易指令,错误:", prefix)
-		return fmt.Errorf("token transfer owner address [%s]not equal from native address[%s]", decodedInst.OwnerNativeAccount.String(), l.serviceConfig.RewardNativeAccount)
+		return fmt.Errorf("token transfer owner address [%s]not equal from native address[%s]", decodedInst.OwnerNativeAccount.String(), l.serviceConfig.RewardAccount)
 	}
 	// 金额必须一样
 	if decodedInst.Amount != rewardAmount {
@@ -308,7 +322,7 @@ func (l *TakeTokenLogic) checkRewardInviterInst(decodedInst entity.DecodedSolTra
 		return fmt.Errorf("the reward amount [%d] is inconsistent with the rules specified [%d]", decodedInst.Amount, rewardAmount)
 	}
 	// 进制是否跟规则规定的一样
-	if decodedInst.Decimals != uint8(l.serviceConfig.Decimals) {
+	if decodedInst.Decimals != decimals {
 		log.Error("[sol] 解析从官方转token交易指令,错误:")
 		return errors.New("token decimal not equal  officially serviceConfig")
 	}

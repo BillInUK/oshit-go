@@ -30,11 +30,8 @@ func newTakeTokenConfig(db *gorm.DB, opts ...gen.DOOption) takeTokenConfig {
 	_takeTokenConfig.ALL = field.NewAsterisk(tableName)
 	_takeTokenConfig.RecordID = field.NewString(tableName, "record_id")
 	_takeTokenConfig.InviteCode = field.NewString(tableName, "invite_code")
-	_takeTokenConfig.Decimals = field.NewInt32(tableName, "decimals")
-	_takeTokenConfig.TokenMintAccount = field.NewString(tableName, "token_mint_account")
-	_takeTokenConfig.RewardTokenAccount = field.NewString(tableName, "reward_token_account")
-	_takeTokenConfig.RewardNativeAccount = field.NewString(tableName, "reward_native_account")
-	_takeTokenConfig.DexNativeAccount = field.NewString(tableName, "dex_native_account")
+	_takeTokenConfig.RewardAccount = field.NewString(tableName, "reward_account")
+	_takeTokenConfig.CostAccount = field.NewString(tableName, "cost_account")
 	_takeTokenConfig.Amount = field.NewFloat64(tableName, "amount")
 	_takeTokenConfig.InviteAmount = field.NewFloat64(tableName, "invite_amount")
 	_takeTokenConfig.DexFeeRate = field.NewFloat64(tableName, "dex_fee_rate")
@@ -54,24 +51,21 @@ func newTakeTokenConfig(db *gorm.DB, opts ...gen.DOOption) takeTokenConfig {
 type takeTokenConfig struct {
 	takeTokenConfigDo takeTokenConfigDo
 
-	ALL                 field.Asterisk
-	RecordID            field.String
-	InviteCode          field.String
-	Decimals            field.Int32
-	TokenMintAccount    field.String
-	RewardTokenAccount  field.String
-	RewardNativeAccount field.String
-	DexNativeAccount    field.String
-	Amount              field.Float64
-	InviteAmount        field.Float64
-	DexFeeRate          field.Float64
-	MaxDexFee           field.Float64
-	Interval            field.Int32
-	IsDefault           field.Bool
-	RewardInviter       field.Bool
-	Invited             field.Bool
-	CreatedAt           field.Time
-	UpdatedAt           field.Time
+	ALL           field.Asterisk
+	RecordID      field.String
+	InviteCode    field.String
+	RewardAccount field.String
+	CostAccount   field.String
+	Amount        field.Float64
+	InviteAmount  field.Float64
+	DexFeeRate    field.Float64
+	MaxDexFee     field.Float64
+	Interval      field.Int32
+	IsDefault     field.Bool
+	RewardInviter field.Bool
+	Invited       field.Bool
+	CreatedAt     field.Time
+	UpdatedAt     field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -90,11 +84,8 @@ func (t *takeTokenConfig) updateTableName(table string) *takeTokenConfig {
 	t.ALL = field.NewAsterisk(table)
 	t.RecordID = field.NewString(table, "record_id")
 	t.InviteCode = field.NewString(table, "invite_code")
-	t.Decimals = field.NewInt32(table, "decimals")
-	t.TokenMintAccount = field.NewString(table, "token_mint_account")
-	t.RewardTokenAccount = field.NewString(table, "reward_token_account")
-	t.RewardNativeAccount = field.NewString(table, "reward_native_account")
-	t.DexNativeAccount = field.NewString(table, "dex_native_account")
+	t.RewardAccount = field.NewString(table, "reward_account")
+	t.CostAccount = field.NewString(table, "cost_account")
 	t.Amount = field.NewFloat64(table, "amount")
 	t.InviteAmount = field.NewFloat64(table, "invite_amount")
 	t.DexFeeRate = field.NewFloat64(table, "dex_fee_rate")
@@ -133,14 +124,11 @@ func (t *takeTokenConfig) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (t *takeTokenConfig) fillFieldMap() {
-	t.fieldMap = make(map[string]field.Expr, 17)
+	t.fieldMap = make(map[string]field.Expr, 14)
 	t.fieldMap["record_id"] = t.RecordID
 	t.fieldMap["invite_code"] = t.InviteCode
-	t.fieldMap["decimals"] = t.Decimals
-	t.fieldMap["token_mint_account"] = t.TokenMintAccount
-	t.fieldMap["reward_token_account"] = t.RewardTokenAccount
-	t.fieldMap["reward_native_account"] = t.RewardNativeAccount
-	t.fieldMap["dex_native_account"] = t.DexNativeAccount
+	t.fieldMap["reward_account"] = t.RewardAccount
+	t.fieldMap["cost_account"] = t.CostAccount
 	t.fieldMap["amount"] = t.Amount
 	t.fieldMap["invite_amount"] = t.InviteAmount
 	t.fieldMap["dex_fee_rate"] = t.DexFeeRate

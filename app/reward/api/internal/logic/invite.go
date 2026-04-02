@@ -248,17 +248,17 @@ func (l *RewardInviteLogic) BuildSortedInviterItems(
 	var sortedItems []types.RewardTokenItem
 	for index, record := range sortedInvites {
 		sortedItems = append(sortedItems, types.RewardTokenItem{
-			Index:         index + 1,
-			NativeAccount: record.Inviter,
-			Amount:        0,
+			Index:          index + 1,
+			ReceiptAccount: record.Inviter,
+			Amount:         0,
 		})
 	}
 
 	if directInviter != nil {
 		directItem := types.RewardTokenItem{
-			Index:         0,
-			NativeAccount: directInviter.NativeAccount,
-			Amount:        0,
+			Index:          0,
+			ReceiptAccount: directInviter.NativeAccount,
+			Amount:         0,
 		}
 		sortedItems = append([]types.RewardTokenItem{directItem}, sortedItems...)
 	}

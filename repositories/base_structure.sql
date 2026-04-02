@@ -63,23 +63,21 @@ CREATE TABLE public.t_fee_tolerance
 DROP TABLE IF EXISTS public.t_fee_statistics;
 CREATE TABLE public.t_fee_statistics
 (
-    record_id          public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    slot               bigint,
-    transaction_index  integer,
-    block_hash         character varying(64),
-    transaction_id     character varying(128),
-    compute_unit_price numeric(78, 0),
-    compute_unit_limit numeric(78, 0),
-    units_consumed     numeric(78, 0),
-    fee                numeric(78, 0),
-    created_at         timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at         timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    record_id  public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    slot       bigint,
+    tx_index   integer,
+    block_hash character varying(64),
+    tx_id      character varying(128),
+    price          numeric(78, 0),
+    unit_limit     numeric(78, 0),
+    units_consumed numeric(78, 0),
+    fee        numeric(78, 0),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE ONLY public.t_fee_statistics
-    ADD CONSTRAINT fee_slot_tx_index UNIQUE (slot, transaction_index);
-ALTER TABLE ONLY public.t_fee_statistics
-    ADD CONSTRAINT fee_transaction_id UNIQUE (transaction_id);
+ALTER TABLE ONLY public.t_fee_statistics ADD CONSTRAINT fee_slot_tx_index UNIQUE (slot, tx_index);
+ALTER TABLE ONLY public.t_fee_statistics ADD CONSTRAINT fee_tx_id UNIQUE (tx_id);
 
 DROP TABLE IF EXISTS public.t_qn_fee;
 CREATE TABLE public.t_qn_fee
@@ -176,24 +174,24 @@ CREATE TABLE public.t_service_tx
 
 -- 旧工程 t_sol_fund_flow
 -- 需要导入并且搞分表
-CREATE TABLE public.t_sol_fund_flow
+CREATE TABLE public.t_fund_flow
 (
-    record_id           public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    brand               character varying(64)                                 NOT NULL,
-    token_symbol        character varying(64)                                 NOT NULL,
-    is_token            boolean                                               NOT NULL,
-    from_native_account character varying(64)                                 NOT NULL,
-    to_native_account   character varying(64)                                 NOT NULL,
-    tx_id               character varying(128)                                NOT NULL,
-    direction           smallint                                              NOT NULL,
-    service_type        smallint                                              NOT NULL,
-    flow_type           smallint                                              NOT NULL,
-    decimals            smallint                                              NOT NULL,
-    amount              numeric(78, 0)                                        NOT NULL,
-    created_at          timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at          timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    record_id    public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    brand        character varying(64)                                 NOT NULL,
+    token_symbol character varying(64)                                 NOT NULL,
+    is_token     boolean                                               NOT NULL,
+    from_account character varying(64)                                 NOT NULL,
+    to_account   character varying(64)                                 NOT NULL,
+    tx_id        character varying(128)                                NOT NULL,
+    direction    smallint                                              NOT NULL,
+    service_type smallint                                              NOT NULL,
+    flow_type    smallint                                              NOT NULL,
+    decimals     smallint                                              NOT NULL,
+    amount       numeric(78, 0)                                        NOT NULL,
+    created_at   timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at   timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
-CREATE UNIQUE INDEX uq_sol_fund_flow_tx_to_flow ON public.t_sol_fund_flow (tx_id, to_native_account, flow_type);
+CREATE UNIQUE INDEX uq_fund_flow_tx_to_flow ON public.t_fund_flow (tx_id, to_account, flow_type);
 
 DROP TABLE IF EXISTS public.t_hacker_account;
 CREATE TABLE public.t_hacker_account

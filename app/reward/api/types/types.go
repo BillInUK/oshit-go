@@ -46,19 +46,18 @@ type CommitTakeTokenTxInfoReq struct {
 }
 
 type TakeTokenTxInfo struct {
-	RewardNativeAccount string  `json:"rewardNativeAccount"`
-	RewardTokenAccount  string  `json:"rewardTokenAccount"`
-	TokenMintAccount    string  `json:"tokenMintAccount"`
-	DexNativeAccount    string  `json:"dexAccount"`
-	DexFeeRate          float64 `json:"dexFeeRate"`
-	MaxDexFee           float64 `json:"maxDexFee"`
-	Decimals            int32   `json:"decimals"`
-	InviteCode          string  `json:"inviteCode"`
-	InviteCodeValid     bool    `json:"inviteCodeValid"`
-	InviteDetermine     bool    `json:"inviteDetermine"`
-	QuoteSOLPrice       float64 `json:"quoteSOLPrice"`
+	RewardAccount   string  `json:"rewardAccount"`
+	Mint            string  `json:"mint"`
+	CostAccount     string  `json:"costAccount"`
+	DexFeeRate      float64 `json:"dexFeeRate"`
+	MaxDexFee       float64 `json:"maxDexFee"`
+	Decimals        int32   `json:"decimals"`
+	InviteCode      string  `json:"inviteCode"`
+	InviteCodeValid bool    `json:"inviteCodeValid"`
+	Invited         bool    `json:"invited"`
+	QuoteSOLPrice   float64 `json:"quoteSOLPrice"`
 
-	TotalRewardAmount float64            `json:"totalRewardAmount"`
+	TotalReward       float64            `json:"totalReward"`
 	QuotedSOLAmount   float64            `json:"quotedSOLAmount"`
 	Claims            []model.LevelRatio `json:"claims"`
 	RewardInfo        RewardTokenItem    `json:"rewardInfo"`
@@ -66,7 +65,7 @@ type TakeTokenTxInfo struct {
 }
 
 type RewardTokenItem struct {
-	Index         int    `json:"index"`
-	NativeAccount string `json:"nativeAccount"`
-	Amount        uint64 `json:"amount"`
+	Index          int    `json:"index"`
+	ReceiptAccount string `json:"receiptAccount"`
+	Amount         uint64 `json:"amount"`
 }

@@ -24,6 +24,7 @@ var (
 	ExcludeAccount      *excludeAccount
 	FeeStatistics       *feeStatistics
 	FeeTolerance        *feeTolerance
+	FundFlow            *fundFlow
 	GiveTokenConfig     *giveTokenConfig
 	GiveTokenRecord     *giveTokenRecord
 	HackerAccount       *hackerAccount
@@ -38,7 +39,6 @@ var (
 	ServiceInfo         *serviceInfo
 	ServiceKey          *serviceKey
 	ServiceTx           *serviceTx
-	SolFundFlow         *solFundFlow
 	SystemConfig        *systemConfig
 	TakeTokenConfig     *takeTokenConfig
 	TakeTokenRecord     *takeTokenRecord
@@ -56,6 +56,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	ExcludeAccount = &Q.ExcludeAccount
 	FeeStatistics = &Q.FeeStatistics
 	FeeTolerance = &Q.FeeTolerance
+	FundFlow = &Q.FundFlow
 	GiveTokenConfig = &Q.GiveTokenConfig
 	GiveTokenRecord = &Q.GiveTokenRecord
 	HackerAccount = &Q.HackerAccount
@@ -70,7 +71,6 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	ServiceInfo = &Q.ServiceInfo
 	ServiceKey = &Q.ServiceKey
 	ServiceTx = &Q.ServiceTx
-	SolFundFlow = &Q.SolFundFlow
 	SystemConfig = &Q.SystemConfig
 	TakeTokenConfig = &Q.TakeTokenConfig
 	TakeTokenRecord = &Q.TakeTokenRecord
@@ -89,6 +89,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		ExcludeAccount:      newExcludeAccount(db, opts...),
 		FeeStatistics:       newFeeStatistics(db, opts...),
 		FeeTolerance:        newFeeTolerance(db, opts...),
+		FundFlow:            newFundFlow(db, opts...),
 		GiveTokenConfig:     newGiveTokenConfig(db, opts...),
 		GiveTokenRecord:     newGiveTokenRecord(db, opts...),
 		HackerAccount:       newHackerAccount(db, opts...),
@@ -103,7 +104,6 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		ServiceInfo:         newServiceInfo(db, opts...),
 		ServiceKey:          newServiceKey(db, opts...),
 		ServiceTx:           newServiceTx(db, opts...),
-		SolFundFlow:         newSolFundFlow(db, opts...),
 		SystemConfig:        newSystemConfig(db, opts...),
 		TakeTokenConfig:     newTakeTokenConfig(db, opts...),
 		TakeTokenRecord:     newTakeTokenRecord(db, opts...),
@@ -123,6 +123,7 @@ type Query struct {
 	ExcludeAccount      excludeAccount
 	FeeStatistics       feeStatistics
 	FeeTolerance        feeTolerance
+	FundFlow            fundFlow
 	GiveTokenConfig     giveTokenConfig
 	GiveTokenRecord     giveTokenRecord
 	HackerAccount       hackerAccount
@@ -137,7 +138,6 @@ type Query struct {
 	ServiceInfo         serviceInfo
 	ServiceKey          serviceKey
 	ServiceTx           serviceTx
-	SolFundFlow         solFundFlow
 	SystemConfig        systemConfig
 	TakeTokenConfig     takeTokenConfig
 	TakeTokenRecord     takeTokenRecord
@@ -158,6 +158,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		ExcludeAccount:      q.ExcludeAccount.clone(db),
 		FeeStatistics:       q.FeeStatistics.clone(db),
 		FeeTolerance:        q.FeeTolerance.clone(db),
+		FundFlow:            q.FundFlow.clone(db),
 		GiveTokenConfig:     q.GiveTokenConfig.clone(db),
 		GiveTokenRecord:     q.GiveTokenRecord.clone(db),
 		HackerAccount:       q.HackerAccount.clone(db),
@@ -172,7 +173,6 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		ServiceInfo:         q.ServiceInfo.clone(db),
 		ServiceKey:          q.ServiceKey.clone(db),
 		ServiceTx:           q.ServiceTx.clone(db),
-		SolFundFlow:         q.SolFundFlow.clone(db),
 		SystemConfig:        q.SystemConfig.clone(db),
 		TakeTokenConfig:     q.TakeTokenConfig.clone(db),
 		TakeTokenRecord:     q.TakeTokenRecord.clone(db),
@@ -200,6 +200,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		ExcludeAccount:      q.ExcludeAccount.replaceDB(db),
 		FeeStatistics:       q.FeeStatistics.replaceDB(db),
 		FeeTolerance:        q.FeeTolerance.replaceDB(db),
+		FundFlow:            q.FundFlow.replaceDB(db),
 		GiveTokenConfig:     q.GiveTokenConfig.replaceDB(db),
 		GiveTokenRecord:     q.GiveTokenRecord.replaceDB(db),
 		HackerAccount:       q.HackerAccount.replaceDB(db),
@@ -214,7 +215,6 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		ServiceInfo:         q.ServiceInfo.replaceDB(db),
 		ServiceKey:          q.ServiceKey.replaceDB(db),
 		ServiceTx:           q.ServiceTx.replaceDB(db),
-		SolFundFlow:         q.SolFundFlow.replaceDB(db),
 		SystemConfig:        q.SystemConfig.replaceDB(db),
 		TakeTokenConfig:     q.TakeTokenConfig.replaceDB(db),
 		TakeTokenRecord:     q.TakeTokenRecord.replaceDB(db),
@@ -232,6 +232,7 @@ type queryCtx struct {
 	ExcludeAccount      IExcludeAccountDo
 	FeeStatistics       IFeeStatisticsDo
 	FeeTolerance        IFeeToleranceDo
+	FundFlow            IFundFlowDo
 	GiveTokenConfig     IGiveTokenConfigDo
 	GiveTokenRecord     IGiveTokenRecordDo
 	HackerAccount       IHackerAccountDo
@@ -246,7 +247,6 @@ type queryCtx struct {
 	ServiceInfo         IServiceInfoDo
 	ServiceKey          IServiceKeyDo
 	ServiceTx           IServiceTxDo
-	SolFundFlow         ISolFundFlowDo
 	SystemConfig        ISystemConfigDo
 	TakeTokenConfig     ITakeTokenConfigDo
 	TakeTokenRecord     ITakeTokenRecordDo
@@ -264,6 +264,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		ExcludeAccount:      q.ExcludeAccount.WithContext(ctx),
 		FeeStatistics:       q.FeeStatistics.WithContext(ctx),
 		FeeTolerance:        q.FeeTolerance.WithContext(ctx),
+		FundFlow:            q.FundFlow.WithContext(ctx),
 		GiveTokenConfig:     q.GiveTokenConfig.WithContext(ctx),
 		GiveTokenRecord:     q.GiveTokenRecord.WithContext(ctx),
 		HackerAccount:       q.HackerAccount.WithContext(ctx),
@@ -278,7 +279,6 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		ServiceInfo:         q.ServiceInfo.WithContext(ctx),
 		ServiceKey:          q.ServiceKey.WithContext(ctx),
 		ServiceTx:           q.ServiceTx.WithContext(ctx),
-		SolFundFlow:         q.SolFundFlow.WithContext(ctx),
 		SystemConfig:        q.SystemConfig.WithContext(ctx),
 		TakeTokenConfig:     q.TakeTokenConfig.WithContext(ctx),
 		TakeTokenRecord:     q.TakeTokenRecord.WithContext(ctx),

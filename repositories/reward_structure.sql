@@ -25,39 +25,31 @@ CREATE TABLE public.t_discount_rate
 DROP TABLE IF EXISTS public.t_take_token_config;
 CREATE TABLE public.t_take_token_config
 (
-    record_id             public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    invite_code           character varying(16)       DEFAULT NULL::character varying,
-    decimals              integer                                               NOT NULL,
-    token_mint_account    character varying(64)                                 NOT NULL,
-    reward_token_account  character varying(64)                                 NOT NULL,
-    reward_native_account character varying(64)                                 NOT NULL,
-    dex_native_account    character varying(64)                                 NOT NULL,
-    amount                numeric(78, 0)                                        NOT NULL,
-    invite_amount         numeric(78, 0)                                        NOT NULL,
-    dex_fee_rate          numeric(78, 0)                                        NOT NULL,
-    max_dex_fee           numeric(78, 0)                                        NOT NULL,
-    interval              integer                                               NOT NULL,
-    is_default            boolean                     DEFAULT false,
-    reward_inviter        boolean                     DEFAULT true,
-    invited               boolean                     DEFAULT true,
-    created_at            timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at            timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    record_id      public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    invite_code    character varying(16)       DEFAULT NULL::character varying,
+    reward_account character varying(64)                                 NOT NULL,
+    cost_account   character varying(64)                                 NOT NULL,
+    amount         numeric(78, 0)                                        NOT NULL,
+    invite_amount  numeric(78, 0)                                        NOT NULL,
+    dex_fee_rate   numeric(78, 0)                                        NOT NULL,
+    max_dex_fee    numeric(78, 0)                                        NOT NULL,
+    interval       integer                                               NOT NULL,
+    is_default     boolean                     DEFAULT false,
+    reward_inviter boolean                     DEFAULT true,
+    invited        boolean                     DEFAULT true,
+    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 旧工程 t_sol_official_give_token_record
 DROP TABLE IF EXISTS public.t_take_token_record;
 CREATE TABLE public.t_take_token_record
 (
-    record_id              public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    brand                  character varying(64)                                 NOT NULL,
-    token_symbol           character varying(64)                                 NOT NULL,
-    token_mint_account     character varying(64)                                 NOT NULL,
-    reward_token_account   character varying(64)                                 NOT NULL,
-    reward_native_account  character varying(64)                                 NOT NULL,
-    receipt_token_account  character varying(64)                                 NOT NULL,
-    receipt_native_account character varying(64)                                 NOT NULL,
-    dex_native_account     character varying(64)                                 NOT NULL,
-    reward_tx_id           character varying(128)                                NOT NULL,
+    record_id       public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    reward_account  character varying(64)                                 NOT NULL,
+    receipt_account character varying(64)                                 NOT NULL,
+    cost_account    character varying(64)                                 NOT NULL,
+    tx_id           character varying(128)                                NOT NULL,
     amount                 numeric(78, 0)                                        NOT NULL,
     dex_fee                numeric(78, 0)                                        NOT NULL,
     use_invite_code        boolean                                               NOT NULL,
@@ -113,7 +105,6 @@ CREATE TABLE public.t_lottery_claim_record
 );
 
 
-
 -- 旧工程 t_sol_transfer_token_reward_rule
 DROP TABLE IF EXISTS public.t_give_token_config;
 CREATE TABLE public.t_give_token_config
@@ -155,13 +146,3 @@ CREATE TABLE public.t_reward_key_config
     created_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
-
-
-
-
-
-
-
-
-

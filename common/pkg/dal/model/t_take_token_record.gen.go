@@ -12,24 +12,19 @@ const TableNameTakeTokenRecord = "t_take_token_record"
 
 // TakeTokenRecord mapped from table <t_take_token_record>
 type TakeTokenRecord struct {
-	RecordID             string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	Brand                string    `gorm:"column:brand;not null" json:"brand"`
-	TokenSymbol          string    `gorm:"column:token_symbol;not null" json:"token_symbol"`
-	TokenMintAccount     string    `gorm:"column:token_mint_account;not null" json:"token_mint_account"`
-	RewardTokenAccount   string    `gorm:"column:reward_token_account;not null" json:"reward_token_account"`
-	RewardNativeAccount  string    `gorm:"column:reward_native_account;not null" json:"reward_native_account"`
-	ReceiptTokenAccount  string    `gorm:"column:receipt_token_account;not null" json:"receipt_token_account"`
-	ReceiptNativeAccount string    `gorm:"column:receipt_native_account;not null" json:"receipt_native_account"`
-	DexNativeAccount     string    `gorm:"column:dex_native_account;not null" json:"dex_native_account"`
-	RewardTxID           string    `gorm:"column:reward_tx_id;not null" json:"reward_tx_id"`
-	Amount               float64   `gorm:"column:amount;not null" json:"amount"`
-	DexFee               float64   `gorm:"column:dex_fee;not null" json:"dex_fee"`
-	UseInviteCode        bool      `gorm:"column:use_invite_code;not null" json:"use_invite_code"`
-	InviteCode           string    `gorm:"column:invite_code" json:"invite_code"`
-	State                int32     `gorm:"column:state" json:"state"`
-	Invited              bool      `gorm:"column:invited" json:"invited"`
-	CreatedAt            time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt            time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID       string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
+	RewardAccount  string    `gorm:"column:reward_account;not null" json:"reward_account"`
+	ReceiptAccount string    `gorm:"column:receipt_account;not null" json:"receipt_account"`
+	CostAccount    string    `gorm:"column:cost_account;not null" json:"cost_account"`
+	TxID           string    `gorm:"column:tx_id;not null" json:"tx_id"`
+	Amount         float64   `gorm:"column:amount;not null" json:"amount"`
+	DexFee         float64   `gorm:"column:dex_fee;not null" json:"dex_fee"`
+	UseInviteCode  bool      `gorm:"column:use_invite_code;not null" json:"use_invite_code"`
+	InviteCode     string    `gorm:"column:invite_code" json:"invite_code"`
+	State          int32     `gorm:"column:state" json:"state"`
+	Invited        bool      `gorm:"column:invited" json:"invited"`
+	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
 // TableName TakeTokenRecord's table name

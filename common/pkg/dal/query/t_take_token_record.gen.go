@@ -29,15 +29,10 @@ func newTakeTokenRecord(db *gorm.DB, opts ...gen.DOOption) takeTokenRecord {
 	tableName := _takeTokenRecord.takeTokenRecordDo.TableName()
 	_takeTokenRecord.ALL = field.NewAsterisk(tableName)
 	_takeTokenRecord.RecordID = field.NewString(tableName, "record_id")
-	_takeTokenRecord.Brand = field.NewString(tableName, "brand")
-	_takeTokenRecord.TokenSymbol = field.NewString(tableName, "token_symbol")
-	_takeTokenRecord.TokenMintAccount = field.NewString(tableName, "token_mint_account")
-	_takeTokenRecord.RewardTokenAccount = field.NewString(tableName, "reward_token_account")
-	_takeTokenRecord.RewardNativeAccount = field.NewString(tableName, "reward_native_account")
-	_takeTokenRecord.ReceiptTokenAccount = field.NewString(tableName, "receipt_token_account")
-	_takeTokenRecord.ReceiptNativeAccount = field.NewString(tableName, "receipt_native_account")
-	_takeTokenRecord.DexNativeAccount = field.NewString(tableName, "dex_native_account")
-	_takeTokenRecord.RewardTxID = field.NewString(tableName, "reward_tx_id")
+	_takeTokenRecord.RewardAccount = field.NewString(tableName, "reward_account")
+	_takeTokenRecord.ReceiptAccount = field.NewString(tableName, "receipt_account")
+	_takeTokenRecord.CostAccount = field.NewString(tableName, "cost_account")
+	_takeTokenRecord.TxID = field.NewString(tableName, "tx_id")
 	_takeTokenRecord.Amount = field.NewFloat64(tableName, "amount")
 	_takeTokenRecord.DexFee = field.NewFloat64(tableName, "dex_fee")
 	_takeTokenRecord.UseInviteCode = field.NewBool(tableName, "use_invite_code")
@@ -55,25 +50,20 @@ func newTakeTokenRecord(db *gorm.DB, opts ...gen.DOOption) takeTokenRecord {
 type takeTokenRecord struct {
 	takeTokenRecordDo takeTokenRecordDo
 
-	ALL                  field.Asterisk
-	RecordID             field.String
-	Brand                field.String
-	TokenSymbol          field.String
-	TokenMintAccount     field.String
-	RewardTokenAccount   field.String
-	RewardNativeAccount  field.String
-	ReceiptTokenAccount  field.String
-	ReceiptNativeAccount field.String
-	DexNativeAccount     field.String
-	RewardTxID           field.String
-	Amount               field.Float64
-	DexFee               field.Float64
-	UseInviteCode        field.Bool
-	InviteCode           field.String
-	State                field.Int32
-	Invited              field.Bool
-	CreatedAt            field.Time
-	UpdatedAt            field.Time
+	ALL            field.Asterisk
+	RecordID       field.String
+	RewardAccount  field.String
+	ReceiptAccount field.String
+	CostAccount    field.String
+	TxID           field.String
+	Amount         field.Float64
+	DexFee         field.Float64
+	UseInviteCode  field.Bool
+	InviteCode     field.String
+	State          field.Int32
+	Invited        field.Bool
+	CreatedAt      field.Time
+	UpdatedAt      field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -91,15 +81,10 @@ func (t takeTokenRecord) As(alias string) *takeTokenRecord {
 func (t *takeTokenRecord) updateTableName(table string) *takeTokenRecord {
 	t.ALL = field.NewAsterisk(table)
 	t.RecordID = field.NewString(table, "record_id")
-	t.Brand = field.NewString(table, "brand")
-	t.TokenSymbol = field.NewString(table, "token_symbol")
-	t.TokenMintAccount = field.NewString(table, "token_mint_account")
-	t.RewardTokenAccount = field.NewString(table, "reward_token_account")
-	t.RewardNativeAccount = field.NewString(table, "reward_native_account")
-	t.ReceiptTokenAccount = field.NewString(table, "receipt_token_account")
-	t.ReceiptNativeAccount = field.NewString(table, "receipt_native_account")
-	t.DexNativeAccount = field.NewString(table, "dex_native_account")
-	t.RewardTxID = field.NewString(table, "reward_tx_id")
+	t.RewardAccount = field.NewString(table, "reward_account")
+	t.ReceiptAccount = field.NewString(table, "receipt_account")
+	t.CostAccount = field.NewString(table, "cost_account")
+	t.TxID = field.NewString(table, "tx_id")
 	t.Amount = field.NewFloat64(table, "amount")
 	t.DexFee = field.NewFloat64(table, "dex_fee")
 	t.UseInviteCode = field.NewBool(table, "use_invite_code")
@@ -136,17 +121,12 @@ func (t *takeTokenRecord) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (t *takeTokenRecord) fillFieldMap() {
-	t.fieldMap = make(map[string]field.Expr, 18)
+	t.fieldMap = make(map[string]field.Expr, 13)
 	t.fieldMap["record_id"] = t.RecordID
-	t.fieldMap["brand"] = t.Brand
-	t.fieldMap["token_symbol"] = t.TokenSymbol
-	t.fieldMap["token_mint_account"] = t.TokenMintAccount
-	t.fieldMap["reward_token_account"] = t.RewardTokenAccount
-	t.fieldMap["reward_native_account"] = t.RewardNativeAccount
-	t.fieldMap["receipt_token_account"] = t.ReceiptTokenAccount
-	t.fieldMap["receipt_native_account"] = t.ReceiptNativeAccount
-	t.fieldMap["dex_native_account"] = t.DexNativeAccount
-	t.fieldMap["reward_tx_id"] = t.RewardTxID
+	t.fieldMap["reward_account"] = t.RewardAccount
+	t.fieldMap["receipt_account"] = t.ReceiptAccount
+	t.fieldMap["cost_account"] = t.CostAccount
+	t.fieldMap["tx_id"] = t.TxID
 	t.fieldMap["amount"] = t.Amount
 	t.fieldMap["dex_fee"] = t.DexFee
 	t.fieldMap["use_invite_code"] = t.UseInviteCode

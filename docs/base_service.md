@@ -346,7 +346,7 @@ SQL 定义：`repositories/base_structure.sql`
 | `t_user_wallet_rpc_config` | ULID | `chain`,`rpc_url`,`wss_url` | 给前端/APP 的 RPC |
 | `t_token_config` | — | `name`,`symbol`,`decimals`,`mint` | 单 token 配置 |
 | `t_fee_tolerance` | — | `max_less_rate` | 成本费容错比例 |
-| `t_fee_statistics` | ULID | `slot`,`transaction_index`,`compute_unit_price`,`compute_unit_limit`,`units_consumed`,`fee` | 链上手续费统计（上限 10000 条，滚动覆盖） |
+| `t_fee_statistics` | ULID | `slot`,`tx_index`,`tx_id`,`price`,`unit_limit`,`units_consumed`,`fee` | 链上手续费统计（上限 10000 条，滚动覆盖） |
 | `t_qn_fee` | `id`(int) | `slot`,`low_avg`,`medium_avg`,`high_avg` | QuickNode 费用估算（滚动 20 条，id=slot%20+1） |
 | `t_native_account_info` | ULID | `native_account`,`token_account`,`invite_code` | 用户地址注册信息 |
 | `t_invite_relation` | ULID | `inviter`,`invitee`,`channel`,`level`,`tx_id` | 邀请关系链（level 由登录时自动推算） |
@@ -354,7 +354,7 @@ SQL 定义：`repositories/base_structure.sql`
 | `t_service_key` | — | `service`,`sub_service`,`encrypted_key` | 业务服务私钥（jasypt 加密） |
 | `t_tx_scan_info` | — | `service`,`sub_service`,`pda_account`,`until_tx_id`,`slot` | 扫描游标（每个业务一行） |
 | `t_service_tx` | ULID | `service`,`sub_service`,`tx_id`,`state`(0/1/-1),`retry_count`,`max_retries` | 业务交易生命周期跟踪 |
-| `t_sol_fund_flow` | ULID | `is_token`,`from_native_account`,`to_native_account`,`tx_id`,`direction`,`service_type`,`flow_type`,`amount` | 资金流水账（唯一索引：tx_id+to+flow_type） |
+| `t_fund_flow` | ULID | `is_token`,`from_account`,`to_account`,`tx_id`,`direction`,`service_type`,`flow_type`,`amount` | 资金流水账（唯一索引：tx_id+to_account+flow_type） |
 
 **t_service_tx state 含义**：
 - `0` = 初始化（已提交，待链上确认）

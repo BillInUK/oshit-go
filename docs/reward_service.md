@@ -233,9 +233,8 @@ SQL 定义：`repositories/reward_structure.sql`
 
 | 字段 | 说明 |
 |---|---|
-| `reward_token_account` | 发放奖励的 token account（TransferChecked from） |
-| `reward_native_account` | 发放奖励的 native account（TransferChecked owner） |
-| `dex_native_account` | 收取 SOL 成本费的地址 |
+| `reward_account` | 发放奖励的 native account（token account 由此动态推导） |
+| `cost_account` | 收取 SOL 成本费的地址 |
 | `amount` | 无邀请码奖励数量（含 decimals） |
 | `invite_amount` | 有邀请码奖励数量（含 decimals，通常更多） |
 | `dex_fee_rate` | SOL 成本费率 |
@@ -243,11 +242,16 @@ SQL 定义：`repositories/reward_structure.sql`
 | `reward_inviter` | 是否奖励邀请人（当前 true） |
 | `invited` | 是否确定邀请关系（当前 true） |
 
+> `decimals`/`token_mint_account` 统一从 `t_token_config` 读取；`reward_token_account` 由 `reward_account` + mint 动态推导 ATA。
+
 ### t_take_token_record 关键字段
 
 | 字段 | 说明 |
 |---|---|
-| `reward_tx_id` | Solana 交易 ID（主查询键） |
+| `tx_id` | Solana 交易 ID（主查询键） |
+| `reward_account` | 发放奖励的 native account |
+| `receipt_account` | 收款人 native account |
+| `cost_account` | 收取 SOL 成本费的地址 |
 | `state` | 0=初始化，1=成功，-1=失败 |
 | `use_invite_code` | 是否使用了邀请码 |
 | `invite_code` | 使用的邀请码 |

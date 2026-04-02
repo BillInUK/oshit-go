@@ -75,17 +75,17 @@ func createHexEncodedTx(ctx context.Context, privKey solana.PrivateKey, inviteCo
 	}
 
 	fmt.Printf("receipt native account: %v\n", receiptPubKey)
-	fmt.Printf("total reward amount: %v\n", txInfo.TotalRewardAmount)
+	fmt.Printf("total reward amount: %v\n", txInfo.TotalReward)
 	fmt.Printf("quote sol price: %v\n", txInfo.QuoteSOLPrice)
 	fmt.Printf("quoted sol amount: %v\n", txInfo.QuotedSOLAmount)
 
-	rewardNativeAccount := solana.MPK(txInfo.RewardNativeAccount)
-	rewardTokenAccount := solana.MPK(txInfo.RewardTokenAccount)
-	tokenMintAccount := solana.MPK(txInfo.TokenMintAccount)
-	dexNativeAccount := solana.MPK(txInfo.DexNativeAccount)
+	rewardNativeAccount := solana.MPK(txInfo.RewardAccount)
+	tokenMintAccount := solana.MPK(txInfo.Mint)
+	rewardTokenAccount, _, _ := solana.FindAssociatedTokenAddress(rewardNativeAccount, tokenMintAccount)
+	dexNativeAccount := solana.MPK(txInfo.CostAccount)
 	decimals := uint8(txInfo.Decimals)
 
-	receiptTokenAccount, err := utils.GetSPLTokenAccountByNative(rpcClient, receiptPubKey, solana.MPK(txInfo.TokenMintAccount))
+	receiptTokenAccount, err := utils.GetSPLTokenAccountByNative(rpcClient, receiptPubKey, tokenMintAccount)
 	if err != nil {
 		return "", fmt.Errorf("GetSPLTokenAccountByNative failed: %w", err)
 	}
@@ -97,7 +97,7 @@ func createHexEncodedTx(ctx context.Context, privKey solana.PrivateKey, inviteCo
 	// 奖励邀请人指令
 	var inviterInsts []solana.Instruction
 	for _, rewardInfo := range txInfo.RewardInviterInfo {
-		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(rewardInfo.NativeAccount), tokenMintAccount)
+		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(rewardInfo.ReceiptAccount), tokenMintAccount)
 		inst := token.NewTransferCheckedInstructionBuilder().
 			SetAmount(rewardInfo.Amount).
 			SetDecimals(decimals).
@@ -179,17 +179,16 @@ func TestGetTakeTokenTxInfo(t *testing.T) {
 	}
 
 	fmt.Printf("=== TakeToken TxInfo ===\n")
-	fmt.Printf("RewardNativeAccount : %s\n", txInfo.RewardNativeAccount)
-	fmt.Printf("RewardTokenAccount  : %s\n", txInfo.RewardTokenAccount)
-	fmt.Printf("TokenMintAccount    : %s\n", txInfo.TokenMintAccount)
-	fmt.Printf("DexAccount          : %s\n", txInfo.DexNativeAccount)
+	fmt.Printf("RewardAccount       : %s\n", txInfo.RewardAccount)
+	fmt.Printf("Mint                : %s\n", txInfo.Mint)
+	fmt.Printf("CostAccount         : %s\n", txInfo.CostAccount)
 	fmt.Printf("Decimals            : %d\n", txInfo.Decimals)
 	fmt.Printf("QuoteSOLPrice       : %v\n", txInfo.QuoteSOLPrice)
-	fmt.Printf("TotalRewardAmount   : %v\n", txInfo.TotalRewardAmount)
+	fmt.Printf("TotalReward         : %v\n", txInfo.TotalReward)
 	fmt.Printf("QuotedSOLAmount     : %v\n", txInfo.QuotedSOLAmount)
 	fmt.Printf("InviteCode          : %s\n", txInfo.InviteCode)
 	fmt.Printf("InviteCodeValid     : %v\n", txInfo.InviteCodeValid)
-	fmt.Printf("InviteDetermine     : %v\n", txInfo.InviteDetermine)
+	fmt.Printf("Invited             : %v\n", txInfo.Invited)
 	fmt.Printf("RewardInfo          : %+v\n", txInfo.RewardInfo)
 	fmt.Printf("RewardInviterInfo   : %+v\n", txInfo.RewardInviterInfo)
 }

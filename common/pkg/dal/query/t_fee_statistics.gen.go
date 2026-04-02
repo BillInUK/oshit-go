@@ -30,11 +30,11 @@ func newFeeStatistics(db *gorm.DB, opts ...gen.DOOption) feeStatistics {
 	_feeStatistics.ALL = field.NewAsterisk(tableName)
 	_feeStatistics.RecordID = field.NewString(tableName, "record_id")
 	_feeStatistics.Slot = field.NewInt64(tableName, "slot")
-	_feeStatistics.TransactionIndex = field.NewInt32(tableName, "transaction_index")
+	_feeStatistics.TxIndex = field.NewInt32(tableName, "tx_index")
 	_feeStatistics.BlockHash = field.NewString(tableName, "block_hash")
-	_feeStatistics.TransactionID = field.NewString(tableName, "transaction_id")
-	_feeStatistics.ComputeUnitPrice = field.NewFloat64(tableName, "compute_unit_price")
-	_feeStatistics.ComputeUnitLimit = field.NewFloat64(tableName, "compute_unit_limit")
+	_feeStatistics.TxID = field.NewString(tableName, "tx_id")
+	_feeStatistics.Price = field.NewFloat64(tableName, "price")
+	_feeStatistics.UnitLimit = field.NewFloat64(tableName, "unit_limit")
 	_feeStatistics.UnitsConsumed = field.NewFloat64(tableName, "units_consumed")
 	_feeStatistics.Fee = field.NewFloat64(tableName, "fee")
 	_feeStatistics.CreatedAt = field.NewTime(tableName, "created_at")
@@ -48,18 +48,18 @@ func newFeeStatistics(db *gorm.DB, opts ...gen.DOOption) feeStatistics {
 type feeStatistics struct {
 	feeStatisticsDo feeStatisticsDo
 
-	ALL              field.Asterisk
-	RecordID         field.String
-	Slot             field.Int64
-	TransactionIndex field.Int32
-	BlockHash        field.String
-	TransactionID    field.String
-	ComputeUnitPrice field.Float64
-	ComputeUnitLimit field.Float64
-	UnitsConsumed    field.Float64
-	Fee              field.Float64
-	CreatedAt        field.Time
-	UpdatedAt        field.Time
+	ALL           field.Asterisk
+	RecordID      field.String
+	Slot          field.Int64
+	TxIndex       field.Int32
+	BlockHash     field.String
+	TxID          field.String
+	Price         field.Float64
+	UnitLimit     field.Float64
+	UnitsConsumed field.Float64
+	Fee           field.Float64
+	CreatedAt     field.Time
+	UpdatedAt     field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -78,11 +78,11 @@ func (f *feeStatistics) updateTableName(table string) *feeStatistics {
 	f.ALL = field.NewAsterisk(table)
 	f.RecordID = field.NewString(table, "record_id")
 	f.Slot = field.NewInt64(table, "slot")
-	f.TransactionIndex = field.NewInt32(table, "transaction_index")
+	f.TxIndex = field.NewInt32(table, "tx_index")
 	f.BlockHash = field.NewString(table, "block_hash")
-	f.TransactionID = field.NewString(table, "transaction_id")
-	f.ComputeUnitPrice = field.NewFloat64(table, "compute_unit_price")
-	f.ComputeUnitLimit = field.NewFloat64(table, "compute_unit_limit")
+	f.TxID = field.NewString(table, "tx_id")
+	f.Price = field.NewFloat64(table, "price")
+	f.UnitLimit = field.NewFloat64(table, "unit_limit")
 	f.UnitsConsumed = field.NewFloat64(table, "units_consumed")
 	f.Fee = field.NewFloat64(table, "fee")
 	f.CreatedAt = field.NewTime(table, "created_at")
@@ -118,11 +118,11 @@ func (f *feeStatistics) fillFieldMap() {
 	f.fieldMap = make(map[string]field.Expr, 11)
 	f.fieldMap["record_id"] = f.RecordID
 	f.fieldMap["slot"] = f.Slot
-	f.fieldMap["transaction_index"] = f.TransactionIndex
+	f.fieldMap["tx_index"] = f.TxIndex
 	f.fieldMap["block_hash"] = f.BlockHash
-	f.fieldMap["transaction_id"] = f.TransactionID
-	f.fieldMap["compute_unit_price"] = f.ComputeUnitPrice
-	f.fieldMap["compute_unit_limit"] = f.ComputeUnitLimit
+	f.fieldMap["tx_id"] = f.TxID
+	f.fieldMap["price"] = f.Price
+	f.fieldMap["unit_limit"] = f.UnitLimit
 	f.fieldMap["units_consumed"] = f.UnitsConsumed
 	f.fieldMap["fee"] = f.Fee
 	f.fieldMap["created_at"] = f.CreatedAt

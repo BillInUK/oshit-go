@@ -151,7 +151,7 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	}
 
 	// 5. 填写领取奖励信息
-	rewardInfo := types.RewardTokenItem{Index: 0, NativeAccount: receiptNativeAccount, Amount: rewardAmount}
+	rewardInfo := types.RewardTokenItem{Index: 0, ReceiptAccount: receiptNativeAccount, Amount: rewardAmount}
 	// 在最小集合里面决定每个层级的邀请人领取多少金额
 	for index, claim := range sortedClaims {
 		sortedItems[index].Amount = uint64(float64(rewardAmount) * claim.Ratio)
@@ -171,20 +171,19 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	}
 
 	// 8. 填写最终需要返回的交易信息
-	takeTxInfo.RewardNativeAccount = l.serviceConfig.RewardNativeAccount
-	takeTxInfo.RewardTokenAccount = l.serviceConfig.RewardTokenAccount
-	takeTxInfo.TokenMintAccount = l.serviceConfig.TokenMintAccount
-	takeTxInfo.DexNativeAccount = l.serviceConfig.DexNativeAccount
+	takeTxInfo.RewardAccount = l.serviceConfig.RewardAccount
+	takeTxInfo.Mint = l.srvCtx.TokenConfig.Mint
+	takeTxInfo.CostAccount = l.serviceConfig.CostAccount
 	takeTxInfo.DexFeeRate = l.serviceConfig.DexFeeRate
 	takeTxInfo.MaxDexFee = l.serviceConfig.MaxDexFee
-	takeTxInfo.Decimals = l.serviceConfig.Decimals
+	takeTxInfo.Decimals = int32(l.srvCtx.TokenConfig.Decimals)
 	takeTxInfo.InviteCode = inviteCode
 	takeTxInfo.RewardInfo = rewardInfo
 	takeTxInfo.InviteCodeValid = codeValid
 	takeTxInfo.QuoteSOLPrice = quoteSOLPrice
-	takeTxInfo.TotalRewardAmount = float64(totalRewardAmount)
+	takeTxInfo.TotalReward = float64(totalRewardAmount)
 	takeTxInfo.QuotedSOLAmount = quoteSOLPrice * float64(totalRewardAmount) / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL)
-	takeTxInfo.InviteDetermine = invited
+	takeTxInfo.Invited = invited
 	takeTxInfo.Claims = sortedClaims
 	takeTxInfo.RewardInviterInfo = sortedItems
 
@@ -201,7 +200,7 @@ func (l *TakeTokenLogic) GetRecordByInviteCode(nativeAccount string) (*model.Tak
 	var err error
 	var record model.TakeTokenRecord
 	table := l.db.Table(model.TableNameTakeTokenRecord)
-	err = table.Where("receipt_native_account = ? and use_invite_code = ? and state = ?", nativeAccount, true, 1).First(&record).Error
+	err = table.Where("receipt_account = ? and use_invite_code = ? and state = ?", nativeAccount, true, 1).First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -232,13 +231,10 @@ func (l *TakeTokenLogic) recordTakeToken(takeTokenTxInfo *types.TakeTokenTxInfo,
 
 	// 记录领取奖励记录
 	takeTokenRecord := model.TakeTokenRecord{
-		TokenMintAccount:     decodedServiceTx.RewardInst.TokenMintAccount,
-		RewardTokenAccount:   decodedServiceTx.RewardInst.FromTokenAccount,
-		RewardNativeAccount:  decodedServiceTx.RewardInst.FromNativeAccount,
-		ReceiptTokenAccount:  decodedServiceTx.RewardInst.ToTokenAccount,
-		ReceiptNativeAccount: decodedServiceTx.RewardInst.ToNativeAccount,
-		DexNativeAccount:     decodedServiceTx.ToDexInst.ToNativeAccount,
-		RewardTxID:           decodedServiceTx.TxID,
+		RewardAccount:  decodedServiceTx.RewardInst.FromNativeAccount,
+		ReceiptAccount: decodedServiceTx.RewardInst.ToNativeAccount,
+		CostAccount:    decodedServiceTx.ToDexInst.ToNativeAccount,
+		TxID:                 decodedServiceTx.TxID,
 		Amount:               l.serviceConfig.Amount,
 		DexFee:               decodedServiceTx.ToDexInst.Amount,
 		UseInviteCode:        takeTokenTxInfo.InviteCodeValid,
@@ -293,7 +289,7 @@ func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 
 	// 记录领取记录到数据库
 	decodedServiceTx.TxID = txIdStr
-	if err = l.recordTakeToken(takeTxInfo, decodedServiceTx, takeTxInfo.InviteDetermine); err != nil {
+	if err = l.recordTakeToken(takeTxInfo, decodedServiceTx, takeTxInfo.Invited); err != nil {
 		log.Errorf("%s 记录交易信息,错误: %v", l.prefix, err)
 		return &txId, errors.New("record official transfer token error")
 	}

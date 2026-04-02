@@ -207,7 +207,7 @@ DB 事务：
         → UPDATE t_take_token_record SET state=1
         → DecodeServiceTransaction(msg.DecodedTx)
         → recordFundFlow("OShit", "OShit", decodedServiceTx)
-             写 t_sol_fund_flow（批量 upsert，唯一键=tx_id+to+flow_type）：
+             写 t_fund_flow（批量 upsert，唯一键=tx_id+to_account+flow_type）：
              ① SOL 入账（dex fee）: is_token=false, direction=FlowInput, flow_type=FlowTakTokenCost
              ② token 出账（奖励领取人）: is_token=true, direction=FlowOutput, flow_type=FlowTakeTokenReceipt
              ③ token 出账（奖励各邀请人，循环）: flow_type=FlowTakeTokenInviter
@@ -322,7 +322,7 @@ reward.KafkaConsumerTask
   └─⑧─ handleScannedTx → TakeTokenLogic.HandleScannedTx
          TxSig.Err==nil：
            t_take_token_record state→1
-           recordFundFlow → t_sol_fund_flow
+           recordFundFlow → t_fund_flow
            Invited==true → t_invite_relation（确定邀请层级）
          TxSig.Err!=nil：
            t_take_token_record state→-1
@@ -398,7 +398,7 @@ sequenceDiagram
     K->>R: consume "NewScannedTransaction"
     alt TxSig.Err == nil（链上执行成功）
         R->>DB: UPDATE t_take_token_record state=1
-        R->>DB: INSERT t_sol_fund_flow<br/>（dex入账 + token出账×N）
+        R->>DB: INSERT t_fund_flow<br/>（dex入账 + token出账×N）
         opt takeTokenRecord.Invited == true
             R->>DB: INSERT t_invite_relation<br/>（确定邀请层级关系）
         end

@@ -35,7 +35,7 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 
 	// 根据交易 Id 找到记录
 	table := dbTx.Table(model.TableNameTakeTokenRecord)
-	if err = table.Where("reward_tx_id = ?", txId).First(&takeTokenRecord).Error; err != nil {
+	if err = table.Where("tx_id = ?", txId).First(&takeTokenRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			dbTx.Rollback()
 			return err
@@ -86,8 +86,8 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 			if inviterInfo != nil {
 				_, err = l.inviteLogic.RecordDetermineInvitationHierarchy(
 					inviterInfo.NativeAccount,
-					takeTokenRecord.ReceiptNativeAccount,
-					takeTokenRecord.RewardTxID,
+					takeTokenRecord.ReceiptAccount,
+					takeTokenRecord.TxID,
 					"InviteCode",
 				)
 				if err != nil {
@@ -129,7 +129,7 @@ func (l *TakeTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 
 	// 根据交易 Id 找到记录
 	table := dbTx.Table(model.TableNameTakeTokenRecord)
-	if err = table.Where("reward_tx_id = ?", txId).First(&takeTokenRecord).Error; err != nil {
+	if err = table.Where("tx_id = ?", txId).First(&takeTokenRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			dbTx.Rollback()
 			return err
@@ -138,7 +138,7 @@ func (l *TakeTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		dbTx.Rollback()
 		return err
 	}
-	if err = table.Where("reward_tx_id = ?", txId).Update("state", -1).Error; err != nil {
+	if err = table.Where("tx_id = ?", txId).Update("state", -1).Error; err != nil {
 		log.Errorf("%s 更新领取交易状态为失败，错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
@@ -155,27 +155,27 @@ func (l *TakeTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 // recordFundFlow 记录领取 token 的资金流水
 func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServiceTx *entity.DecodedServiceTransaction) error {
 	var err error
-	var fundFlows []model.SolFundFlow
+	var fundFlows []model.FundFlow
 
-	table := l.db.Table(model.TableNameSolFundFlow)
+	table := l.db.Table(model.TableNameFundFlow)
 
 	// 1.记录dex入账sol流水
 	log.Infof("记录官网领取token流水 - 记录dex入账sol流水 from %v to %v", decodedServiceTx.ToDexInst.FromNativeAccount, decodedServiceTx.ToDexInst.ToNativeAccount)
 
-	dexInputFlow := model.SolFundFlow{
-		Brand:             brand,
-		TokenSymbol:       tokenSymbol,
-		IsToken:           false,
-		FromNativeAccount: decodedServiceTx.FromNativeAccount,
-		ToNativeAccount:   decodedServiceTx.ToDexInst.ToNativeAccount,
-		TxID:              decodedServiceTx.TxID,
-		Direction:         constants.FlowInput,
-		ServiceType:       constants.ServiceTakeToken,
-		FlowType:          constants.FlowTakTokenCost,
-		Decimals:          9,
-		Amount:            float64(decodedServiceTx.ToDexInst.Amount),
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
+	dexInputFlow := model.FundFlow{
+		Brand:       brand,
+		TokenSymbol: tokenSymbol,
+		IsToken:     false,
+		FromAccount: decodedServiceTx.FromNativeAccount,
+		ToAccount:   decodedServiceTx.ToDexInst.ToNativeAccount,
+		TxID:        decodedServiceTx.TxID,
+		Direction:   constants.FlowInput,
+		ServiceType: constants.ServiceTakeToken,
+		FlowType:    constants.FlowTakTokenCost,
+		Decimals:    9,
+		Amount:      float64(decodedServiceTx.ToDexInst.Amount),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	fundFlows = append(fundFlows, dexInputFlow)
 
@@ -184,20 +184,20 @@ func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 		decodedServiceTx.RewardInst.FromNativeAccount, decodedServiceTx.RewardInst.ToNativeAccount,
 		decodedServiceTx.RewardInst.Amount)
 
-	rewardOutputFlow := model.SolFundFlow{
-		Brand:             brand,
-		TokenSymbol:       tokenSymbol,
-		IsToken:           true,
-		FromNativeAccount: decodedServiceTx.RewardInst.FromNativeAccount,
-		ToNativeAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
-		TxID:              decodedServiceTx.TxID,
-		Direction:         constants.FlowOutput,
-		ServiceType:       constants.ServiceTakeToken,
-		FlowType:          constants.FlowTakeTokenReceipt,
-		Decimals:          int16(decodedServiceTx.RewardInst.Decimals),
-		Amount:            decodedServiceTx.RewardInst.Amount,
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
+	rewardOutputFlow := model.FundFlow{
+		Brand:       brand,
+		TokenSymbol: tokenSymbol,
+		IsToken:     true,
+		FromAccount: decodedServiceTx.RewardInst.FromNativeAccount,
+		ToAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
+		TxID:        decodedServiceTx.TxID,
+		Direction:   constants.FlowOutput,
+		ServiceType: constants.ServiceTakeToken,
+		FlowType:    constants.FlowTakeTokenReceipt,
+		Decimals:    int16(decodedServiceTx.RewardInst.Decimals),
+		Amount:      decodedServiceTx.RewardInst.Amount,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	fundFlows = append(fundFlows, rewardOutputFlow)
 
@@ -206,20 +206,20 @@ func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 		log.Infof("记录官网领取token流水 - 记录奖励转账人上级邀请人出账流水 from %v to %v amount %v",
 			inst.FromNativeAccount, inst.ToNativeAccount, inst.Amount)
 
-		outputFlow := model.SolFundFlow{
-			Brand:             brand,
-			TokenSymbol:       tokenSymbol,
-			IsToken:           true,
-			FromNativeAccount: inst.FromNativeAccount,
-			ToNativeAccount:   inst.ToNativeAccount,
-			TxID:              decodedServiceTx.TxID,
-			Direction:         constants.FlowOutput,
-			ServiceType:       constants.ServiceTakeToken,
-			FlowType:          constants.FlowTakeTokenInviter,
-			Decimals:          int16(inst.Decimals),
-			Amount:            inst.Amount,
-			CreatedAt:         time.Now(),
-			UpdatedAt:         time.Now(),
+		outputFlow := model.FundFlow{
+			Brand:       brand,
+			TokenSymbol: tokenSymbol,
+			IsToken:     true,
+			FromAccount: inst.FromNativeAccount,
+			ToAccount:   inst.ToNativeAccount,
+			TxID:        decodedServiceTx.TxID,
+			Direction:   constants.FlowOutput,
+			ServiceType: constants.ServiceTakeToken,
+			FlowType:    constants.FlowTakeTokenInviter,
+			Decimals:    int16(inst.Decimals),
+			Amount:      inst.Amount,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		}
 		fundFlows = append(fundFlows, outputFlow)
 	}
@@ -229,7 +229,7 @@ func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 	if err = table.Omit("record_id").Clauses(clause.OnConflict{
 		Columns: []clause.Column{
 			{Name: "tx_id"},
-			{Name: "to_native_account"},
+			{Name: "to_account"},
 			{Name: "flow_type"},
 		},
 		DoUpdates: clause.Assignments(map[string]interface{}{

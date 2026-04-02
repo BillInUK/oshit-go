@@ -12,14 +12,14 @@ const TableNameInviteRelation = "t_invite_relation"
 
 // InviteRelation mapped from table <t_invite_relation>
 type InviteRelation struct {
-	RecordID string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	Inviter  string    `gorm:"column:inviter;not null" json:"inviter"`
-	Invitee  string    `gorm:"column:invitee;not null" json:"invitee"`
-	Channel              string    `gorm:"column:channel;not null" json:"channel"`
-	Level                int32     `gorm:"column:level;not null;default:1" json:"level"`
-	TxID                 string    `gorm:"column:tx_id;not null" json:"tx_id"`
-	CreatedAt            time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt            time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID  string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
+	Inviter   string    `gorm:"column:inviter;not null" json:"inviter"`
+	Invitee   string    `gorm:"column:invitee;not null" json:"invitee"`
+	Channel   string    `gorm:"column:channel;not null" json:"channel"`
+	Level     int32     `gorm:"column:level;not null;default:1" json:"level"`
+	TxID      string    `gorm:"column:tx_id;not null" json:"tx_id"`
+	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
 // TableName InviteRelation's table name

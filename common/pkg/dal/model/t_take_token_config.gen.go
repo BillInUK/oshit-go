@@ -12,23 +12,20 @@ const TableNameTakeTokenConfig = "t_take_token_config"
 
 // TakeTokenConfig mapped from table <t_take_token_config>
 type TakeTokenConfig struct {
-	RecordID            string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	InviteCode          string    `gorm:"column:invite_code;default:NULL" json:"invite_code"`
-	Decimals            int32     `gorm:"column:decimals;not null" json:"decimals"`
-	TokenMintAccount    string    `gorm:"column:token_mint_account;not null" json:"token_mint_account"`
-	RewardTokenAccount  string    `gorm:"column:reward_token_account;not null" json:"reward_token_account"`
-	RewardNativeAccount string    `gorm:"column:reward_native_account;not null" json:"reward_native_account"`
-	DexNativeAccount    string    `gorm:"column:dex_native_account;not null" json:"dex_native_account"`
-	Amount              float64   `gorm:"column:amount;not null" json:"amount"`
-	InviteAmount        float64   `gorm:"column:invite_amount;not null" json:"invite_amount"`
-	DexFeeRate          float64   `gorm:"column:dex_fee_rate;not null" json:"dex_fee_rate"`
-	MaxDexFee           float64   `gorm:"column:max_dex_fee;not null" json:"max_dex_fee"`
-	Interval            int32     `gorm:"column:interval;not null" json:"interval"`
-	IsDefault           bool      `gorm:"column:is_default" json:"is_default"`
-	RewardInviter       bool      `gorm:"column:reward_inviter;default:true" json:"reward_inviter"`
-	Invited             bool      `gorm:"column:invited;default:true" json:"invited"`
-	CreatedAt           time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt           time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
+	InviteCode    string    `gorm:"column:invite_code;default:NULL" json:"invite_code"`
+	RewardAccount string    `gorm:"column:reward_account;not null" json:"reward_account"`
+	CostAccount   string    `gorm:"column:cost_account;not null" json:"cost_account"`
+	Amount        float64   `gorm:"column:amount;not null" json:"amount"`
+	InviteAmount  float64   `gorm:"column:invite_amount;not null" json:"invite_amount"`
+	DexFeeRate    float64   `gorm:"column:dex_fee_rate;not null" json:"dex_fee_rate"`
+	MaxDexFee     float64   `gorm:"column:max_dex_fee;not null" json:"max_dex_fee"`
+	Interval      int32     `gorm:"column:interval;not null" json:"interval"`
+	IsDefault     bool      `gorm:"column:is_default" json:"is_default"`
+	RewardInviter bool      `gorm:"column:reward_inviter;default:true" json:"reward_inviter"`
+	Invited       bool      `gorm:"column:invited;default:true" json:"invited"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
 // TableName TakeTokenConfig's table name
