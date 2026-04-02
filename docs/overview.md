@@ -46,8 +46,8 @@ oshit-go/
 │   │   └── response/     # HTTP 响应结构
 │   └── utils/            # 通用工具（amount, jwt, jasypt, solana_util）
 ├── repositories/
-│   ├── base.sql          # Base 服务所有表的 DDL
-│   └── reward.sql        # Reward 服务所有表的 DDL
+│   ├── base_structure.sql          # Base 服务所有表的 DDL
+│   └── reward_structure.sql        # Reward 服务所有表的 DDL
 └── docs/                 # 参考文档（本文件所在目录）
 ```
 

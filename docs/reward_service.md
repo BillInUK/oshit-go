@@ -213,7 +213,7 @@ type TaskContext struct {
 
 ## 8. 数据库表（reward 服务）
 
-SQL 定义：`repositories/reward.sql`
+SQL 定义：`repositories/reward_structure.sql`
 
 | 表名 | 主键 | 核心字段 | 用途 |
 |---|---|---|---|

@@ -337,7 +337,7 @@ Kafka topic：`ServiceTransaction`
 
 ## 9. 数据库表（base 服务）
 
-SQL 定义：`repositories/base.sql`
+SQL 定义：`repositories/base_structure.sql`
 
 | 表名 | 主键 | 核心字段 | 用途 |
 |---|---|---|---|
