@@ -30,8 +30,8 @@ func newDailyClaimStats(db *gorm.DB, opts ...gen.DOOption) dailyClaimStats {
 	_dailyClaimStats.ALL = field.NewAsterisk(tableName)
 	_dailyClaimStats.RecordID = field.NewString(tableName, "record_id")
 	_dailyClaimStats.NativeAccount = field.NewString(tableName, "native_account")
-	_dailyClaimStats.TakeShitDate = field.NewTime(tableName, "take_shit_date")
-	_dailyClaimStats.TakeShitCount = field.NewInt32(tableName, "take_shit_count")
+	_dailyClaimStats.TakeDate = field.NewTime(tableName, "take_date")
+	_dailyClaimStats.TakeCount = field.NewInt32(tableName, "take_count")
 	_dailyClaimStats.NeedLottery = field.NewBool(tableName, "need_lottery")
 	_dailyClaimStats.LastTakeTime = field.NewTime(tableName, "last_take_time")
 	_dailyClaimStats.TotalLottery = field.NewFloat64(tableName, "total_lottery")
@@ -51,8 +51,8 @@ type dailyClaimStats struct {
 	ALL           field.Asterisk
 	RecordID      field.String
 	NativeAccount field.String
-	TakeShitDate  field.Time
-	TakeShitCount field.Int32
+	TakeDate      field.Time
+	TakeCount     field.Int32
 	NeedLottery   field.Bool
 	LastTakeTime  field.Time
 	TotalLottery  field.Float64
@@ -78,8 +78,8 @@ func (d *dailyClaimStats) updateTableName(table string) *dailyClaimStats {
 	d.ALL = field.NewAsterisk(table)
 	d.RecordID = field.NewString(table, "record_id")
 	d.NativeAccount = field.NewString(table, "native_account")
-	d.TakeShitDate = field.NewTime(table, "take_shit_date")
-	d.TakeShitCount = field.NewInt32(table, "take_shit_count")
+	d.TakeDate = field.NewTime(table, "take_date")
+	d.TakeCount = field.NewInt32(table, "take_count")
 	d.NeedLottery = field.NewBool(table, "need_lottery")
 	d.LastTakeTime = field.NewTime(table, "last_take_time")
 	d.TotalLottery = field.NewFloat64(table, "total_lottery")
@@ -118,8 +118,8 @@ func (d *dailyClaimStats) fillFieldMap() {
 	d.fieldMap = make(map[string]field.Expr, 11)
 	d.fieldMap["record_id"] = d.RecordID
 	d.fieldMap["native_account"] = d.NativeAccount
-	d.fieldMap["take_shit_date"] = d.TakeShitDate
-	d.fieldMap["take_shit_count"] = d.TakeShitCount
+	d.fieldMap["take_date"] = d.TakeDate
+	d.fieldMap["take_count"] = d.TakeCount
 	d.fieldMap["need_lottery"] = d.NeedLottery
 	d.fieldMap["last_take_time"] = d.LastTakeTime
 	d.fieldMap["total_lottery"] = d.TotalLottery

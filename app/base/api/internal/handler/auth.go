@@ -43,7 +43,7 @@ func (auth *AuthHandler) QueryNativeAccountInfo(fiberCtx *fiber.Ctx) error {
 	if err != nil {
 		return response.UnAuthorizedError(fiberCtx, "unauthorized")
 	}
-	fromAccount := claims.Credentials["nativeAccount"].(string)
+	fromAccount := claims.Credentials["account"].(string)
 
 	l := logic.NewAuthLogic(fiberCtx.Context(), auth.srvCtx)
 	rsp, err := l.QueryNativeAccountInfo(fromAccount)

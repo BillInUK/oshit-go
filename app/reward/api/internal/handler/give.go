@@ -59,7 +59,7 @@ func (h *GiveTokenHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 	if err != nil {
 		return response.UnAuthorizedError(fiberCtx, "unauthorized")
 	}
-	fromAccount := claims.Credentials["nativeAccount"].(string)
+	fromAccount := claims.Credentials["account"].(string)
 	if _, err := solana.PublicKeyFromBase58(fromAccount); err != nil {
 		return response.FailWithError(fiberCtx, "malformed from account", err)
 	}

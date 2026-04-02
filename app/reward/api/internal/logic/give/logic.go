@@ -17,6 +17,7 @@ import (
 	app_utils "oshit-go/app/utils"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
+	"oshit-go/common/utils"
 	"time"
 )
 
@@ -30,7 +31,7 @@ type GiveTokenLogic struct {
 	rpcClient     *rpc.Client
 	baseClient    *rewardrpc.BaseClient
 	serviceConfig *model.GiveTokenConfig
-	mint          solana.PublicKey
+	inviteLogic   *logic.RewardInviteLogic
 }
 
 func NewGiveTokenLogic(ctx context.Context, srvCtx *svc.ServiceContext) *GiveTokenLogic {
@@ -44,6 +45,7 @@ func NewGiveTokenLogic(ctx context.Context, srvCtx *svc.ServiceContext) *GiveTok
 		rpcClient:     srvCtx.RpcClient,
 		baseClient:    srvCtx.BaseClient,
 		serviceConfig: srvCtx.GiveTokenConfig,
+		inviteLogic:   logic.NewRewardInviteLogic(ctx, srvCtx.DB),
 	}
 }
 
@@ -65,54 +67,71 @@ func (l *GiveTokenLogic) GetRecord(ctx context.Context, txId string) (*model.Giv
 	return &record, nil
 }
 
+// GetTxInfo 获取 give token 的交易参数
 func (l *GiveTokenLogic) GetTxInfo(ctx context.Context, from, to string, amountUI float64) (*types.GiveTokenTxInfo, error) {
-	//levelDist := l.srvCtx.LevelDist.Level
-	//levelRatio := l.srvCtx.LevelRatio
-	//// 转换金额
-	//amoutInst := uint64(amountUI * l.srvCtx.TokenDecimal)
-	//// 获取token兑换sol的价格
-	//quoteSOLPrice := l.baseClient.GetTokenQuoteSOLPrice(ctx)
-	//// 先查询上级邀请人
-	//upInviters, err := l.baseClient.GetUpInviterRecords(ctx, from, levelDist)
-	//if err != nil {
-	//	log.Errorf("%s 查询地址 %s 上级邀请人错误: %v", l.prefix, from, err)
-	//	return nil, fmt.Errorf("get from up inviters error: %v", err)
-	//}
-	//inviteRecords := upInviters.Records
-	//// 检查地址是否是有效地址
-	//valid := l.accountValid(to)
-	//
-	//// 根据奖励规则生成指令
-	//rewardTokenItem := RewardTokenItem
-	// 计算总的奖励金额
+	prefix := fmt.Sprintf("%s GetTxInfo from=%s to=%s -", l.prefix, from, to)
 
-	// 计算成本费
+	// 1. 确定 to 地址的 token account 是否存在，决定奖励费率
+	toNativeKey, _ := solana.PublicKeyFromBase58(to)
+	tokenMintKey, _ := solana.PublicKeyFromBase58(l.srvCtx.TokenConfig.Mint)
+	toTokenAccount, _, _ := solana.FindAssociatedTokenAddress(toNativeKey, tokenMintKey)
+	accountInfo, _ := l.rpcClient.GetAccountInfo(ctx, toTokenAccount)
+	toTokenAccountExists := accountInfo != nil && accountInfo.Value != nil
 
-	// 返回最终的指令
-	//type GiveTokenTxInfo struct {
-	//	RewardNativeAccount string  `json:"rewardNativeAccount"`
-	//	RewardTokenAccount  string  `json:"rewardTokenAccount"`
-	//	TokenMintAccount    string  `json:"tokenMintAccount"`
-	//	DexNativeAccount    string  `json:"dexAccount"`
-	//	DexFeeRate          float64 `json:"dexFeeRate"`
-	//	MaxDexFee           float64 `json:"maxDexFee"`
-	//	Decimals            int32   `json:"decimals"`
-	//	QuoteSOLPrice       float64 `json:"quoteSOLPrice"`
-	//
-	//	TotalRewardAmount float64            `json:"totalRewardAmount"`
-	//	QuotedSOLAmount   float64            `json:"quotedSOLAmount"`
-	//	Claims            []model.LevelRatio `json:"claims"`
-	//	RewardInfo        RewardTokenItem    `json:"rewardInfo"`
-	//	RewardInviterInfo []RewardTokenItem  `json:"rewardInviterInfo"`
-	//}
+	// 2. 计算 from 的奖励金额（原始单位）
+	amountRaw := uint64(amountUI * l.srvCtx.TokenDecimal)
+	var rewardAmount float64
+	if toTokenAccountExists {
+		rewardAmount = min(l.serviceConfig.MaxValidReward, float64(amountRaw)*l.serviceConfig.RewardRate)
+	} else {
+		rewardAmount = min(l.serviceConfig.MaxValidReward, float64(amountRaw)*l.serviceConfig.ValidRate)
+	}
+
+	// 3. 递归向上查询需要奖励的邀请人
+	sortedItems, sortedClaims, err := l.inviteLogic.BuildSortedInviterItems(
+		from, l.srvCtx.LevelDist.Level, l.srvCtx.LevelRatio, nil,
+	)
+	if err != nil {
+		log.Errorf("%s 递归向上查询邀请人错误: %v", prefix, err)
+		return nil, fmt.Errorf("recursive query up inviter records error")
+	}
+
+	// 4. 确定每个邀请人的奖励金额
+	for index, claim := range sortedClaims {
+		sortedItems[index].Amount = uint64(rewardAmount * claim.Ratio)
+	}
+
+	// 5. 计算总奖励金额
+	totalReward := rewardAmount
+	for _, item := range sortedItems {
+		totalReward += float64(item.Amount)
+	}
+
+	// 6. 获取 token/SOL 价格
+	quoteSOLPrice, err := l.baseClient.GetTokenQuoteSOLPrice(ctx)
+	if err != nil {
+		log.Errorf("%s 获取 token/SOL 价格失败: %v", prefix, err)
+		return nil, fmt.Errorf("get token quote sol price failed")
+	}
+
+	// 7. 构造返回值
+	giveInfo := types.RewardTokenItem{Index: 0, ReceiptAccount: to, Amount: amountRaw}
+	rewardInfo := types.RewardTokenItem{Index: 0, ReceiptAccount: from, Amount: uint64(rewardAmount)}
+
 	txInfo := &types.GiveTokenTxInfo{
-		RewardNativeAccount: l.serviceConfig.RewardNativeAccount,
-		RewardTokenAccount:  l.serviceConfig.RewardTokenAccount,
-		TokenMintAccount:    l.serviceConfig.TokenMintAccount,
-		DexNativeAccount:    l.serviceConfig.DexNativeAccount,
-		DexFeeRate:          l.serviceConfig.RewardRate,
-		MaxDexFee:           l.serviceConfig.MaxValidReward,
-		Decimals:            l.serviceConfig.Decimal,
+		RewardAccount:     l.serviceConfig.RewardAccount,
+		Mint:              l.srvCtx.TokenConfig.Mint,
+		CostAccount:       l.serviceConfig.CostAccount,
+		DexFeeRate:        l.serviceConfig.RewardRate,
+		MaxDexFee:         l.serviceConfig.MaxValidReward,
+		Decimals:          int32(l.srvCtx.TokenConfig.Decimals),
+		QuoteSOLPrice:     quoteSOLPrice,
+		TotalReward:       totalReward,
+		QuotedSOLAmount:   quoteSOLPrice * totalReward / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL),
+		GiveInfo:          giveInfo,
+		RewardInfo:        rewardInfo,
+		Claims:            sortedClaims,
+		RewardInviterInfo: sortedItems,
 	}
 
 	return txInfo, nil
@@ -122,7 +141,7 @@ func (l *GiveTokenLogic) GetTxInfo(ctx context.Context, from, to string, amountU
 func (l *GiveTokenLogic) getLatestRecord(nativeAccount string) (*model.GiveTokenRecord, error) {
 	var record model.GiveTokenRecord
 	table := l.db.Table(model.TableNameGiveTokenRecord)
-	err := table.Where("from_native_account = ?", nativeAccount).Order("created_at desc").First(&record).Error
+	err := table.Where("from_account = ?", nativeAccount).Order("created_at desc").First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -133,10 +152,8 @@ func (l *GiveTokenLogic) getLatestRecord(nativeAccount string) (*model.GiveToken
 func (l *GiveTokenLogic) getDailyRecords(nativeAccount string) ([]model.GiveTokenRecord, error) {
 	var records []model.GiveTokenRecord
 	table := l.db.Table(model.TableNameGiveTokenRecord)
-	// 将当前时间的时间部分截断，只保留日期部分
 	currentDate := time.Now().Truncate(24 * time.Hour)
-	// 查询当天的记录
-	if err := table.Where(" from_native_account =  ? and created_at >= ? AND created_at < ?",
+	if err := table.Where(" from_account =  ? and created_at >= ? AND created_at < ?",
 		nativeAccount, currentDate, currentDate.Add(24*time.Hour)).Find(&records).Error; err != nil {
 		return nil, err
 	}
@@ -147,7 +164,7 @@ func (l *GiveTokenLogic) getDailyRecords(nativeAccount string) ([]model.GiveToke
 func (l *GiveTokenLogic) takeTokenRecordExist(nativeAccount string) (bool, error) {
 	var record model.TakeTokenRecord
 	table := l.db.Table(model.TableNameTakeTokenRecord)
-	if err := table.Where("receipt_native_account = ? and state >= 0", nativeAccount).First(&record).Error; err != nil {
+	if err := table.Where("receipt_account = ? and state >= 0", nativeAccount).First(&record).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
 		}
@@ -160,7 +177,7 @@ func (l *GiveTokenLogic) takeTokenRecordExist(nativeAccount string) (bool, error
 func (l *GiveTokenLogic) giveTokenRecordExist(nativeAccount string) (bool, error) {
 	var record model.GiveTokenRecord
 	table := l.db.Table(model.TableNameGiveTokenRecord)
-	if err := table.Where("receipt_native_account = ? and state >= 0", nativeAccount).First(&record).Error; err != nil {
+	if err := table.Where("receipt_account = ? and state >= 0", nativeAccount).First(&record).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
 		}
@@ -175,15 +192,12 @@ func (l *GiveTokenLogic) accountValid(account string) (bool, error) {
 	if err != nil {
 		return false, errors.New("can not convert account to solana public key")
 	}
-	// 查看有没有过token的转账记录
 	if exist, err := l.takeTokenRecordExist(nativeAccount.String()); err != nil || exist {
 		return false, err
 	}
-	// 查看是否有过官网转账记录
 	if exist, err := l.giveTokenRecordExist(nativeAccount.String()); err != nil || exist {
 		return false, err
 	}
-	// 如果都没有记录，则再判断token account是否存在
 	tokenMintAccount, err := solana.PublicKeyFromBase58(l.srvCtx.TokenConfig.Mint)
 	if err != nil {
 		return false, err
@@ -197,7 +211,6 @@ func (l *GiveTokenLogic) accountValid(account string) (bool, error) {
 		},
 	)
 	if err != nil {
-		// 如果token account不存在则是有效地址
 		if err.Error() == "not found" {
 			return true, nil
 		}
@@ -206,44 +219,24 @@ func (l *GiveTokenLogic) accountValid(account string) (bool, error) {
 	return false, nil
 }
 
-// sendTransaction 签名并广播用户提交上来的交易
-func (l *GiveTokenLogic) sendTransaction(ctx context.Context, tx *solana.Transaction, service string) (*solana.Signature, error) {
-	messageContent, err := tx.Message.MarshalBinary()
+// getUpInviters 查询上级邀请人的以及每个上级邀请人所能拿到的奖励费率
+func (l *GiveTokenLogic) getUpInviters(nativeAccount string) ([]model.InviteRelation, error) {
+	inviteRecords, err := l.inviteLogic.GetUpInviterRecords(nativeAccount, l.srvCtx.LevelDist.Level)
 	if err != nil {
-		return nil, fmt.Errorf("encode transaction message for signing error:%v", err)
+		return nil, err
 	}
-	privateKey, exist := l.srvCtx.RewardKeyMap[service]
-	if !exist {
-		return nil, fmt.Errorf("sign tx error can not find %s private key", service)
-	}
-	rewardSign, err := privateKey.Sign(messageContent)
-	if err != nil {
-		return nil, fmt.Errorf("failed to signed with reward error:%v", err)
-	}
-	if len(tx.Signatures) == 2 {
-		tx.Signatures[1] = rewardSign
-	}
-	if len(tx.Signatures) == 1 {
-		tx.Signatures = append(tx.Signatures, rewardSign)
-	}
-	// 广播交易
-	txId, err := l.rpcClient.SendTransaction(ctx, tx)
-	if err != nil {
-		return nil, fmt.Errorf("send transaction error:%v", err)
-	}
-	return &txId, nil
+	minLength := min(len(l.srvCtx.LevelRatio), len(inviteRecords))
+	return inviteRecords[:minLength], nil
 }
 
 // recordGiveToken 记录官网转token记录
 func (l *GiveTokenLogic) recordGiveToken(serviceTx *entity.DecodedServiceTransaction) error {
-	// 开启事务
 	dbTx := l.db.Begin()
 	if dbTx.Error != nil {
 		log.Errorf("官网转账流程 - 开启事务错误: %v", dbTx.Error)
 		return dbTx.Error
 	}
 
-	// 记录领取的交易ID
 	txRecord := model.ServiceTx{
 		Service:    "Reward",
 		SubService: "GiveToken",
@@ -251,75 +244,36 @@ func (l *GiveTokenLogic) recordGiveToken(serviceTx *entity.DecodedServiceTransac
 		CreatedAt:  time.Now(),
 	}
 	if err := dbTx.Table(model.TableNameServiceTx).Create(&txRecord).Error; err != nil {
-		dbTx.Rollback() // 回滚事务
+		dbTx.Rollback()
 		log.Errorf("官网转账流程 - 插入交易业务类型表错误: %v", err)
 		return err
 	}
 
 	inst := serviceTx.TransferTokenInst
 	record := model.GiveTokenRecord{
-		FromNativeAccount:    serviceTx.FromNativeAccount,
-		FromTokenAccount:     serviceTx.FromTokenAccount,
-		ReceiptTokenAccount:  inst.ToTokenAccount,
-		ReceiptNativeAccount: inst.ToNativeAccount,
-		TxID:                 serviceTx.TxID,
-		Amount:               inst.Amount,
-		State:                0,
-		CreatedAt:            time.Now(),
-		UpdatedAt:            time.Now(),
+		FromAccount:    serviceTx.FromNativeAccount,
+		ReceiptAccount: inst.ToNativeAccount,
+		TxID:           serviceTx.TxID,
+		Amount:         inst.Amount,
+		State:          0,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 	if err := dbTx.Table(model.TableNameGiveTokenRecord).Create(&record).Error; err != nil {
-		dbTx.Rollback() // 回滚事务
+		dbTx.Rollback()
 		log.Errorf("官网转账流程 - 插入转账记录表错误: %v", err)
 		return err
 	}
 
-	// 提交事务
 	if err := dbTx.Commit().Error; err != nil {
 		log.Errorf("官网转账流程 - 提交事务错误: %v", err)
 		return err
 	}
-
 	return nil
 }
 
 func (l *GiveTokenLogic) limitExceed() (bool, error) {
-	// 查询最近是否有过领取奖励记录
-	//transferRecord, err := l.getLatestRecord(preCheckedTx.From.String())
-	//if err != nil {
-	//	log.Errorf("官方转账获取奖励 - 查询领取奖励记录错误:%v", err)
-	//	return nil,errors.New("query official give token record error")
-	//}
-	//if transferRecord != nil {
-	//	// 同1地址两次领取之间不能超过5分钟
-	//	if isTimeDifferenceLessThan(transferRecord.CreatedAt, removeTz(time.Now()), time.Duration(serviceConfig.Interval)*time.Minute) {
-	//		log.Errorf("官方转账获取奖励 - 转账过于频繁")
-	//		return nil,fmt.Errorf("transfer is too frequent. please try again after %d minutes", serviceConfig.Interval)
-	//	}
-	//	// 同1地址1天内领取次数不能超过20次
-	//	recentRecords, err := l.getDailyRecords(preCheckedTx.From.String())
-	//	if err != nil {
-	//		log.Errorf("官方转账获取奖励 - 查询当日转账记录记录错误: %v", err)
-	//		return nil, errors.New("query daily transfer token records error")
-	//	}
-	//	if len(recentRecords) >= 20 {
-	//		log.Errorf("官方转账获取奖励 - 地址 %v 在当日转账的次数超过限制: %v", preCheckedTx.From.String(), err)
-	//		return nil,errors.New("limit exceeded: Max 20 transfer per wallet per day."))
-	//	}
-	//}
 	return true, nil
-}
-
-// getUpInviters 查询上级邀请人的以及每个上级邀请人所能拿到的奖励费率
-func (l *GiveTokenLogic) getUpInviters(nativeAccount string) ([]model.InviteRelation, error) {
-	inviteRecords, err := logic.NewRewardInviteLogic(l.ctx, l.srvCtx.DB).GetUpInviterRecords(nativeAccount, l.srvCtx.LevelDist.Level)
-	if err != nil {
-		return nil, err
-	}
-	// 获取两个数组的最小长度
-	minLength := min(len(l.srvCtx.LevelRatio), len(inviteRecords))
-	// 返回截取后的数组
-	return inviteRecords[:minLength], nil
 }
 
 // ProcessCommitTx 处理前端提交的 give token 交易
@@ -328,7 +282,7 @@ func (l *GiveTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 
 	// TODO: 调用 limitExceed 检查是否超过限制
 
-	// 分布式锁，防止重复的对有效地址转账，重复领取有效地址奖励
+	// 分布式锁，防止重复处理同一地址的转账
 	mutex := l.rs.NewMutex("give-token:process:commit-tx:"+preCheckedTx.From.String(), redsync.WithExpiry(1*time.Hour))
 	if err := mutex.Lock(); err != nil {
 		var errTaken *redsync.ErrTaken
@@ -346,41 +300,45 @@ func (l *GiveTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 		log.Errorf("%s 查询地址是否是有效地址错误:[%v]", prefix, err)
 		return nil, errors.New("query receipt account match reward rule error")
 	}
-	// 查询转账用户的邀请上级以及每层上级领取的费率
+
+	// 查询转账用户的邀请上级
 	upInvitersInfo, err := l.getUpInviters(preCheckedTx.From.String())
 	if err != nil {
-		log.Errorf("%s 查找转账地址[%v]的邀请上级和邀请上级奖励费率失败", prefix, preCheckedTx.From.String())
+		log.Errorf("%s 查找转账地址[%v]的邀请上级失败", prefix, preCheckedTx.From.String())
 		return nil, errors.New("query claims and inviter error")
 	}
-	tokenMintAccount, _ := solana.PublicKeyFromBase58(l.serviceConfig.TokenMintAccount)
+
+	tokenMintAccount, _ := solana.PublicKeyFromBase58(l.srvCtx.TokenConfig.Mint)
 	transferToTokenAccount, _, _ := solana.FindAssociatedTokenAddress(toNativeAccount, tokenMintAccount)
-	// 解析出来交易里面的transfer checked和transfer指令集合
-	// TODO: 考虑一下是否需要创建 token account的情况
+
+	// 解析交易
 	decodedTx, err := l.decodeSOLTx(l.rpcClient, tokenMintAccount, toNativeAccount, true, &preCheckedTx.SOLTx)
 	if err != nil {
 		log.Errorf("%s 解析solana交易失败，错误: %v", prefix, err)
 		return nil, errors.New("decode solana transaction error")
 	}
-	// 检查transfer checked指令和transfer指令是否符合奖励要求
+
+	// 检查交易指令是否符合规则
 	decodedServiceTx, err := l.checkSOLTx(decodedTx, upInvitersInfo, transferToTokenAccount, valid)
 	if err != nil {
 		log.Errorf("%s 检查交易当中的指令失败，错误: %v", prefix, err)
 		return nil, err
 	}
-	// 实际发送交易
-	go func() {
-		// TODO: 异步的调用dubbo发送交易
-		if _, err := l.sendTransaction(ctx, &preCheckedTx.SOLTx, "GiveToken"); err != nil {
-			log.Errorf("%s 签名并发送交易错误: %v", prefix, err)
-		}
-	}()
 
-	// 记录交易信息到数据库
-	decodedServiceTx.TxID = preCheckedTx.TxId.String()
-	if err := l.recordGiveToken(decodedServiceTx); err != nil {
-		log.Errorf("%s 记录交易信息到数据库错误: %v", prefix, err)
-		return nil, errors.New("record give token error")
+	// 通过 base 模块签名并异步广播
+	txIdStr, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "GiveToken")
+	if err != nil {
+		log.Errorf("%s 发送交易失败,错误: %v", prefix, err)
+		return nil, errors.New(utils.FilterAndTranslateSOLError(err))
+	}
+	txId := solana.MustSignatureFromBase58(txIdStr)
+
+	// 记录领取记录到数据库
+	decodedServiceTx.TxID = txIdStr
+	if err = l.recordGiveToken(decodedServiceTx); err != nil {
+		log.Errorf("%s 记录交易信息,错误: %v", prefix, err)
+		return &txId, errors.New("record give token error")
 	}
 
-	return &preCheckedTx.TxId, nil
+	return &txId, nil
 }

@@ -25,6 +25,6 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 		give.Post("/config", giveTokenHandler.GetConfig)
 		give.Post("/record", giveTokenHandler.GetRecord)
 		give.Post("/tx-info", giveTokenHandler.GetTxInfo)
-		//give.Post("/commit-tx", giveTokenHandler.CommitTx)
+		give.Post("/commit-tx", giveTokenHandler.CommitTx)
 	}
 }

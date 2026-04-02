@@ -12,16 +12,14 @@ const TableNameGiveTokenRecord = "t_give_token_record"
 
 // GiveTokenRecord mapped from table <t_give_token_record>
 type GiveTokenRecord struct {
-	RecordID             string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	FromTokenAccount     string    `gorm:"column:from_token_account;not null" json:"from_token_account"`
-	FromNativeAccount    string    `gorm:"column:from_native_account;not null" json:"from_native_account"`
-	ReceiptTokenAccount  string    `gorm:"column:receipt_token_account;not null" json:"receipt_token_account"`
-	ReceiptNativeAccount string    `gorm:"column:receipt_native_account;not null" json:"receipt_native_account"`
-	TxID                 string    `gorm:"column:tx_id;not null" json:"tx_id"`
-	Amount               float64   `gorm:"column:amount;not null" json:"amount"`
-	State                int32     `gorm:"column:state" json:"state"`
-	CreatedAt            time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt            time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID       string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
+	FromAccount    string    `gorm:"column:from_account;not null" json:"from_account"`
+	ReceiptAccount string    `gorm:"column:receipt_account;not null" json:"receipt_account"`
+	TxID           string    `gorm:"column:tx_id;not null" json:"tx_id"`
+	Amount         float64   `gorm:"column:amount;not null" json:"amount"`
+	State          int32     `gorm:"column:state" json:"state"`
+	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
 // TableName GiveTokenRecord's table name

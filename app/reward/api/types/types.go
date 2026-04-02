@@ -17,18 +17,18 @@ type CommitGiveTokenTxInfoReq struct {
 }
 
 type GiveTokenTxInfo struct {
-	RewardNativeAccount string  `json:"rewardNativeAccount"`
-	RewardTokenAccount  string  `json:"rewardTokenAccount"`
-	TokenMintAccount    string  `json:"tokenMintAccount"`
-	DexNativeAccount    string  `json:"dexAccount"`
-	DexFeeRate          float64 `json:"dexFeeRate"`
-	MaxDexFee           float64 `json:"maxDexFee"`
-	Decimals            int32   `json:"decimals"`
-	QuoteSOLPrice       float64 `json:"quoteSOLPrice"`
+	RewardAccount string  `json:"rewardAccount"`
+	Mint          string  `json:"mint"`
+	CostAccount   string  `json:"costAccount"`
+	DexFeeRate    float64 `json:"dexFeeRate"`
+	MaxDexFee     float64 `json:"maxDexFee"`
+	Decimals      int32   `json:"decimals"`
+	QuoteSOLPrice float64 `json:"quoteSOLPrice"`
 
-	TotalRewardAmount float64            `json:"totalRewardAmount"`
+	TotalReward       float64            `json:"totalReward"`
 	QuotedSOLAmount   float64            `json:"quotedSOLAmount"`
 	Claims            []model.LevelRatio `json:"claims"`
+	GiveInfo          RewardTokenItem    `json:"giveInfo"`
 	RewardInfo        RewardTokenItem    `json:"rewardInfo"`
 	RewardInviterInfo []RewardTokenItem  `json:"rewardInviterInfo"`
 }

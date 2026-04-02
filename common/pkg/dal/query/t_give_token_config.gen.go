@@ -28,11 +28,8 @@ func newGiveTokenConfig(db *gorm.DB, opts ...gen.DOOption) giveTokenConfig {
 
 	tableName := _giveTokenConfig.giveTokenConfigDo.TableName()
 	_giveTokenConfig.ALL = field.NewAsterisk(tableName)
-	_giveTokenConfig.TokenMintAccount = field.NewString(tableName, "token_mint_account")
-	_giveTokenConfig.Decimal = field.NewInt32(tableName, "decimal")
-	_giveTokenConfig.RewardTokenAccount = field.NewString(tableName, "reward_token_account")
-	_giveTokenConfig.RewardNativeAccount = field.NewString(tableName, "reward_native_account")
-	_giveTokenConfig.DexNativeAccount = field.NewString(tableName, "dex_native_account")
+	_giveTokenConfig.RewardAccount = field.NewString(tableName, "reward_account")
+	_giveTokenConfig.CostAccount = field.NewString(tableName, "cost_account")
 	_giveTokenConfig.RewardRate = field.NewFloat64(tableName, "reward_rate")
 	_giveTokenConfig.MaxValidReward = field.NewFloat64(tableName, "max_valid_reward")
 	_giveTokenConfig.ValidRate = field.NewFloat64(tableName, "valid_rate")
@@ -47,17 +44,14 @@ func newGiveTokenConfig(db *gorm.DB, opts ...gen.DOOption) giveTokenConfig {
 type giveTokenConfig struct {
 	giveTokenConfigDo giveTokenConfigDo
 
-	ALL                 field.Asterisk
-	TokenMintAccount    field.String
-	Decimal             field.Int32
-	RewardTokenAccount  field.String
-	RewardNativeAccount field.String
-	DexNativeAccount    field.String
-	RewardRate          field.Float64
-	MaxValidReward      field.Float64
-	ValidRate           field.Float64
-	CreatedAt           field.Time
-	UpdatedAt           field.Time
+	ALL            field.Asterisk
+	RewardAccount  field.String
+	CostAccount    field.String
+	RewardRate     field.Float64
+	MaxValidReward field.Float64
+	ValidRate      field.Float64
+	CreatedAt      field.Time
+	UpdatedAt      field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -74,11 +68,8 @@ func (g giveTokenConfig) As(alias string) *giveTokenConfig {
 
 func (g *giveTokenConfig) updateTableName(table string) *giveTokenConfig {
 	g.ALL = field.NewAsterisk(table)
-	g.TokenMintAccount = field.NewString(table, "token_mint_account")
-	g.Decimal = field.NewInt32(table, "decimal")
-	g.RewardTokenAccount = field.NewString(table, "reward_token_account")
-	g.RewardNativeAccount = field.NewString(table, "reward_native_account")
-	g.DexNativeAccount = field.NewString(table, "dex_native_account")
+	g.RewardAccount = field.NewString(table, "reward_account")
+	g.CostAccount = field.NewString(table, "cost_account")
 	g.RewardRate = field.NewFloat64(table, "reward_rate")
 	g.MaxValidReward = field.NewFloat64(table, "max_valid_reward")
 	g.ValidRate = field.NewFloat64(table, "valid_rate")
@@ -112,12 +103,9 @@ func (g *giveTokenConfig) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (g *giveTokenConfig) fillFieldMap() {
-	g.fieldMap = make(map[string]field.Expr, 10)
-	g.fieldMap["token_mint_account"] = g.TokenMintAccount
-	g.fieldMap["decimal"] = g.Decimal
-	g.fieldMap["reward_token_account"] = g.RewardTokenAccount
-	g.fieldMap["reward_native_account"] = g.RewardNativeAccount
-	g.fieldMap["dex_native_account"] = g.DexNativeAccount
+	g.fieldMap = make(map[string]field.Expr, 7)
+	g.fieldMap["reward_account"] = g.RewardAccount
+	g.fieldMap["cost_account"] = g.CostAccount
 	g.fieldMap["reward_rate"] = g.RewardRate
 	g.fieldMap["max_valid_reward"] = g.MaxValidReward
 	g.fieldMap["valid_rate"] = g.ValidRate

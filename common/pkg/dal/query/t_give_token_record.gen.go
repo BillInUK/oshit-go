@@ -29,10 +29,8 @@ func newGiveTokenRecord(db *gorm.DB, opts ...gen.DOOption) giveTokenRecord {
 	tableName := _giveTokenRecord.giveTokenRecordDo.TableName()
 	_giveTokenRecord.ALL = field.NewAsterisk(tableName)
 	_giveTokenRecord.RecordID = field.NewString(tableName, "record_id")
-	_giveTokenRecord.FromTokenAccount = field.NewString(tableName, "from_token_account")
-	_giveTokenRecord.FromNativeAccount = field.NewString(tableName, "from_native_account")
-	_giveTokenRecord.ReceiptTokenAccount = field.NewString(tableName, "receipt_token_account")
-	_giveTokenRecord.ReceiptNativeAccount = field.NewString(tableName, "receipt_native_account")
+	_giveTokenRecord.FromAccount = field.NewString(tableName, "from_account")
+	_giveTokenRecord.ReceiptAccount = field.NewString(tableName, "receipt_account")
 	_giveTokenRecord.TxID = field.NewString(tableName, "tx_id")
 	_giveTokenRecord.Amount = field.NewFloat64(tableName, "amount")
 	_giveTokenRecord.State = field.NewInt32(tableName, "state")
@@ -47,17 +45,15 @@ func newGiveTokenRecord(db *gorm.DB, opts ...gen.DOOption) giveTokenRecord {
 type giveTokenRecord struct {
 	giveTokenRecordDo giveTokenRecordDo
 
-	ALL                  field.Asterisk
-	RecordID             field.String
-	FromTokenAccount     field.String
-	FromNativeAccount    field.String
-	ReceiptTokenAccount  field.String
-	ReceiptNativeAccount field.String
-	TxID                 field.String
-	Amount               field.Float64
-	State                field.Int32
-	CreatedAt            field.Time
-	UpdatedAt            field.Time
+	ALL            field.Asterisk
+	RecordID       field.String
+	FromAccount    field.String
+	ReceiptAccount field.String
+	TxID           field.String
+	Amount         field.Float64
+	State          field.Int32
+	CreatedAt      field.Time
+	UpdatedAt      field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -75,10 +71,8 @@ func (g giveTokenRecord) As(alias string) *giveTokenRecord {
 func (g *giveTokenRecord) updateTableName(table string) *giveTokenRecord {
 	g.ALL = field.NewAsterisk(table)
 	g.RecordID = field.NewString(table, "record_id")
-	g.FromTokenAccount = field.NewString(table, "from_token_account")
-	g.FromNativeAccount = field.NewString(table, "from_native_account")
-	g.ReceiptTokenAccount = field.NewString(table, "receipt_token_account")
-	g.ReceiptNativeAccount = field.NewString(table, "receipt_native_account")
+	g.FromAccount = field.NewString(table, "from_account")
+	g.ReceiptAccount = field.NewString(table, "receipt_account")
 	g.TxID = field.NewString(table, "tx_id")
 	g.Amount = field.NewFloat64(table, "amount")
 	g.State = field.NewInt32(table, "state")
@@ -112,12 +106,10 @@ func (g *giveTokenRecord) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (g *giveTokenRecord) fillFieldMap() {
-	g.fieldMap = make(map[string]field.Expr, 10)
+	g.fieldMap = make(map[string]field.Expr, 8)
 	g.fieldMap["record_id"] = g.RecordID
-	g.fieldMap["from_token_account"] = g.FromTokenAccount
-	g.fieldMap["from_native_account"] = g.FromNativeAccount
-	g.fieldMap["receipt_token_account"] = g.ReceiptTokenAccount
-	g.fieldMap["receipt_native_account"] = g.ReceiptNativeAccount
+	g.fieldMap["from_account"] = g.FromAccount
+	g.fieldMap["receipt_account"] = g.ReceiptAccount
 	g.fieldMap["tx_id"] = g.TxID
 	g.fieldMap["amount"] = g.Amount
 	g.fieldMap["state"] = g.State

@@ -14,8 +14,8 @@ const TableNameDailyClaimStats = "t_daily_claim_stats"
 type DailyClaimStats struct {
 	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
 	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
-	TakeShitDate  time.Time `gorm:"column:take_shit_date;not null" json:"take_shit_date"`
-	TakeShitCount int32     `gorm:"column:take_shit_count;not null" json:"take_shit_count"`
+	TakeDate      time.Time `gorm:"column:take_date;not null" json:"take_date"`
+	TakeCount     int32     `gorm:"column:take_count;not null" json:"take_count"`
 	NeedLottery   bool      `gorm:"column:need_lottery;not null" json:"need_lottery"`
 	LastTakeTime  time.Time `gorm:"column:last_take_time" json:"last_take_time"`
 	TotalLottery  float64   `gorm:"column:total_lottery;not null" json:"total_lottery"`
