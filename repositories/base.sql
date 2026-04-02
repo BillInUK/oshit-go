@@ -110,16 +110,14 @@ CREATE TABLE public.t_native_account_info
 DROP TABLE IF EXISTS public.t_invite_relation;
 CREATE TABLE public.t_invite_relation
 (
-    record_id              public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    inviter_native_account character varying(64)                                 NOT NULL,
-    inviter_token_account  character varying(64)                                 NOT NULL,
-    invitee_native_account character varying(64)                                 NOT NULL,
-    invitee_token_account  character varying(64)                                 NOT NULL,
-    channel                character varying(64)                                 NOT NULL,
-    level                  integer                     DEFAULT 1                 NOT NULL,
-    tx_id                  character varying(128)                                 NOT NULL,
-    created_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    record_id  public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    inviter    character varying(64)                                 NOT NULL,
+    invitee    character varying(64)                                 NOT NULL,
+    channel    character varying(64)                                 NOT NULL,
+    level      integer                     DEFAULT 1                 NOT NULL,
+    tx_id      character varying(128)                                NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 DROP TABLE IF EXISTS public.t_service_info;

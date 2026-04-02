@@ -97,12 +97,13 @@ func createHexEncodedTx(ctx context.Context, privKey solana.PrivateKey, inviteCo
 	// 奖励邀请人指令
 	var inviterInsts []solana.Instruction
 	for _, rewardInfo := range txInfo.RewardInviterInfo {
+		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(rewardInfo.NativeAccount), tokenMintAccount)
 		inst := token.NewTransferCheckedInstructionBuilder().
 			SetAmount(rewardInfo.Amount).
 			SetDecimals(decimals).
 			SetSourceAccount(rewardTokenAccount).
 			SetMintAccount(tokenMintAccount).
-			SetDestinationAccount(solana.MPK(rewardInfo.TokenAccount)).
+			SetDestinationAccount(inviterTA).
 			SetOwnerAccount(rewardNativeAccount).
 			Build()
 		inviterInsts = append(inviterInsts, inst)

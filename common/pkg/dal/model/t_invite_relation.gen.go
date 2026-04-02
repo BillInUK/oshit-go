@@ -12,11 +12,9 @@ const TableNameInviteRelation = "t_invite_relation"
 
 // InviteRelation mapped from table <t_invite_relation>
 type InviteRelation struct {
-	RecordID             string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	InviterNativeAccount string    `gorm:"column:inviter_native_account;not null" json:"inviter_native_account"`
-	InviterTokenAccount  string    `gorm:"column:inviter_token_account;not null" json:"inviter_token_account"`
-	InviteeNativeAccount string    `gorm:"column:invitee_native_account;not null" json:"invitee_native_account"`
-	InviteeTokenAccount  string    `gorm:"column:invitee_token_account;not null" json:"invitee_token_account"`
+	RecordID string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
+	Inviter  string    `gorm:"column:inviter;not null" json:"inviter"`
+	Invitee  string    `gorm:"column:invitee;not null" json:"invitee"`
 	Channel              string    `gorm:"column:channel;not null" json:"channel"`
 	Level                int32     `gorm:"column:level;not null;default:1" json:"level"`
 	TxID                 string    `gorm:"column:tx_id;not null" json:"tx_id"`

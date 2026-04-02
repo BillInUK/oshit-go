@@ -85,9 +85,7 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 			}
 			if inviterInfo != nil {
 				_, err = l.inviteLogic.RecordDetermineInvitationHierarchy(
-					inviterInfo.TokenAccount,
 					inviterInfo.NativeAccount,
-					takeTokenRecord.ReceiptTokenAccount,
 					takeTokenRecord.ReceiptNativeAccount,
 					takeTokenRecord.RewardTxID,
 					"InviteCode",

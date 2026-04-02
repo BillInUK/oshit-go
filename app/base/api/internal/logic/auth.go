@@ -197,8 +197,8 @@ func (l *AuthLogic) RegisterNativeAccount(brand, symbol, nativeAccount, inviteCo
 		}
 
 		inviteRelation := model.InviteRelation{
-			InviterNativeAccount: inviterRecord.NativeAccount,
-			InviteeNativeAccount: nativeAccount,
+			Inviter: inviterRecord.NativeAccount,
+			Invitee: nativeAccount,
 			Channel:              "InviteCode",
 			Level:                int32(level),
 			CreatedAt:            time.Now(),

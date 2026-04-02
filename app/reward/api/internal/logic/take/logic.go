@@ -150,12 +150,8 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 		rewardAmount = uint64(l.serviceConfig.InviteAmount)
 	}
 
-	// 4. 获取领取地址的nativeAccount的tokenAccount
-	receiptTokenPubKey, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(receiptNativeAccount), solana.MPK(l.serviceConfig.TokenMintAccount))
-	receiptTokenAccount := receiptTokenPubKey.String()
-
 	// 5. 填写领取奖励信息
-	rewardInfo := types.RewardTokenItem{Index: 0, NativeAccount: receiptNativeAccount, TokenAccount: receiptTokenAccount, Amount: rewardAmount}
+	rewardInfo := types.RewardTokenItem{Index: 0, NativeAccount: receiptNativeAccount, Amount: rewardAmount}
 	// 在最小集合里面决定每个层级的邀请人领取多少金额
 	for index, claim := range sortedClaims {
 		sortedItems[index].Amount = uint64(float64(rewardAmount) * claim.Ratio)

@@ -29,10 +29,8 @@ func newInviteRelation(db *gorm.DB, opts ...gen.DOOption) inviteRelation {
 	tableName := _inviteRelation.inviteRelationDo.TableName()
 	_inviteRelation.ALL = field.NewAsterisk(tableName)
 	_inviteRelation.RecordID = field.NewString(tableName, "record_id")
-	_inviteRelation.InviterNativeAccount = field.NewString(tableName, "inviter_native_account")
-	_inviteRelation.InviterTokenAccount = field.NewString(tableName, "inviter_token_account")
-	_inviteRelation.InviteeNativeAccount = field.NewString(tableName, "invitee_native_account")
-	_inviteRelation.InviteeTokenAccount = field.NewString(tableName, "invitee_token_account")
+	_inviteRelation.Inviter = field.NewString(tableName, "inviter")
+	_inviteRelation.Invitee = field.NewString(tableName, "invitee")
 	_inviteRelation.Channel = field.NewString(tableName, "channel")
 	_inviteRelation.Level = field.NewInt32(tableName, "level")
 	_inviteRelation.TxID = field.NewString(tableName, "tx_id")
@@ -49,10 +47,8 @@ type inviteRelation struct {
 
 	ALL                  field.Asterisk
 	RecordID             field.String
-	InviterNativeAccount field.String
-	InviterTokenAccount  field.String
-	InviteeNativeAccount field.String
-	InviteeTokenAccount  field.String
+	Inviter field.String
+	Invitee field.String
 	Channel              field.String
 	Level                field.Int32
 	TxID                 field.String
@@ -75,10 +71,8 @@ func (i inviteRelation) As(alias string) *inviteRelation {
 func (i *inviteRelation) updateTableName(table string) *inviteRelation {
 	i.ALL = field.NewAsterisk(table)
 	i.RecordID = field.NewString(table, "record_id")
-	i.InviterNativeAccount = field.NewString(table, "inviter_native_account")
-	i.InviterTokenAccount = field.NewString(table, "inviter_token_account")
-	i.InviteeNativeAccount = field.NewString(table, "invitee_native_account")
-	i.InviteeTokenAccount = field.NewString(table, "invitee_token_account")
+	i.Inviter = field.NewString(table, "inviter")
+	i.Invitee = field.NewString(table, "invitee")
 	i.Channel = field.NewString(table, "channel")
 	i.Level = field.NewInt32(table, "level")
 	i.TxID = field.NewString(table, "tx_id")
@@ -112,12 +106,10 @@ func (i *inviteRelation) GetFieldByName(fieldName string) (field.OrderExpr, bool
 }
 
 func (i *inviteRelation) fillFieldMap() {
-	i.fieldMap = make(map[string]field.Expr, 10)
+	i.fieldMap = make(map[string]field.Expr, 8)
 	i.fieldMap["record_id"] = i.RecordID
-	i.fieldMap["inviter_native_account"] = i.InviterNativeAccount
-	i.fieldMap["inviter_token_account"] = i.InviterTokenAccount
-	i.fieldMap["invitee_native_account"] = i.InviteeNativeAccount
-	i.fieldMap["invitee_token_account"] = i.InviteeTokenAccount
+	i.fieldMap["inviter"] = i.Inviter
+	i.fieldMap["invitee"] = i.Invitee
 	i.fieldMap["channel"] = i.Channel
 	i.fieldMap["level"] = i.Level
 	i.fieldMap["tx_id"] = i.TxID

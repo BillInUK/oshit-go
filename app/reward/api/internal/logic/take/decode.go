@@ -28,9 +28,11 @@ func (l *TakeTokenLogic) decodeSOLTx(givenTokenInfo *types.TakeTokenTxInfo, tx *
 
 	// 将邀请人信息和被奖励的人的信息放到map里面 key-TokenAccount value-RewardItem
 	var rewardItemMap = map[string]types.RewardTokenItem{}
-	rewardItemMap[givenTokenInfo.RewardInfo.TokenAccount] = givenTokenInfo.RewardInfo
+	rewardTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(givenTokenInfo.RewardInfo.NativeAccount), tokenMintAccount)
+	rewardItemMap[rewardTA.String()] = givenTokenInfo.RewardInfo
 	for _, item := range givenTokenInfo.RewardInviterInfo {
-		rewardItemMap[item.TokenAccount] = item
+		itemTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(item.NativeAccount), tokenMintAccount)
+		rewardItemMap[itemTA.String()] = item
 	}
 
 	for index, inst := range tx.Message.Instructions {
@@ -163,6 +165,7 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 		return nil, errors.New("transfer funding less than config required")
 	}
 	// 检查TransferChecked指令的地址和金额
+	tokenMintPubKey, _ := solana.PublicKeyFromBase58(txInfo.TokenMintAccount)
 	transferCheckedMap := make(map[solana.PublicKey]entity.DecodedSolTransferCheckedInst)
 	inviterRewardMap := make(map[string]types.RewardTokenItem)
 	inviterClaimMap := make(map[string]uint64)
@@ -173,7 +176,8 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 	}
 	// 所有的邀请人记录存放到map里面,key-TokenAccount value-RewardTokenItem
 	for _, record := range txInfo.RewardInviterInfo {
-		inviterRewardMap[record.TokenAccount] = record
+		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(record.NativeAccount), tokenMintPubKey)
+		inviterRewardMap[inviterTA.String()] = record
 	}
 
 	// 校验奖励领取地址的指令里面的地址和金额是否正确
@@ -203,7 +207,8 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 	// 计算出来每个级别的上级应该拿到的奖励
 	for index, inviteRecord := range txInfo.RewardInviterInfo {
 		rewardInviterAmount := uint64(float64(rewardTxFromAmount) * rewardClaims[index].Ratio)
-		inviterClaimMap[inviteRecord.TokenAccount] = rewardInviterAmount
+		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(inviteRecord.NativeAccount), tokenMintPubKey)
+		inviterClaimMap[inviterTA.String()] = rewardInviterAmount
 	}
 
 	// 校验奖励上级邀请人的指令里面的地址和金额是否正确,检查转账指令是否正确

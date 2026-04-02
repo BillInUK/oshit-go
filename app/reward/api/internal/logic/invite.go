@@ -41,7 +41,7 @@ func (l *RewardInviteLogic) CheckInviteRecord(nativeAccount string) (bool, error
 	inviteRel := q.InviteRelation
 
 	count, err := inviteRel.WithContext(l.ctx).
-		Where(inviteRel.InviteeNativeAccount.Eq(nativeAccount)).
+		Where(inviteRel.Invitee.Eq(nativeAccount)).
 		Count()
 
 	if err != nil {
@@ -59,10 +59,8 @@ func (l *RewardInviteLogic) GetUpInviterRecords(nativeAccount string, depth int3
 	WITH RECURSIVE invite_tree AS (
 		SELECT
 			record_id,
-			inviter_native_account,
-			inviter_token_account,
-			invitee_native_account,
-			invitee_token_account,
+			inviter,
+			invitee,
 			channel,
 			level,
 			tx_id,
@@ -72,16 +70,14 @@ func (l *RewardInviteLogic) GetUpInviterRecords(nativeAccount string, depth int3
 		FROM
 			public.t_invite_relation
 		WHERE
-			invitee_native_account = ?
+			invitee = ?
 
 		UNION ALL
 
 		SELECT
 			t.record_id,
-			t.inviter_native_account,
-			t.inviter_token_account,
-			t.invitee_native_account,
-			t.invitee_token_account,
+			t.inviter,
+			t.invitee,
 			t.channel,
 			t.level,
 			t.tx_id,
@@ -91,7 +87,7 @@ func (l *RewardInviteLogic) GetUpInviterRecords(nativeAccount string, depth int3
 		FROM
 			public.t_invite_relation t
 		INNER JOIN
-			invite_tree it ON t.invitee_native_account = it.inviter_native_account
+			invite_tree it ON t.invitee = it.inviter
 		WHERE
 			it.depth < ?
 	)
@@ -114,10 +110,8 @@ func (l *RewardInviteLogic) GetDownInviteeRecords(nativeAccount string, depth in
 	WITH RECURSIVE invite_tree AS (
 		SELECT
 			record_id,
-			inviter_native_account,
-			inviter_token_account,
-			invitee_native_account,
-			invitee_token_account,
+			inviter,
+			invitee,
 			channel,
 			level,
 			tx_id,
@@ -127,16 +121,14 @@ func (l *RewardInviteLogic) GetDownInviteeRecords(nativeAccount string, depth in
 		FROM
 			public.t_invite_relation
 		WHERE
-			inviter_native_account = ?
+			inviter = ?
 
 		UNION ALL
 
 		SELECT
 			t.record_id,
-			t.inviter_native_account,
-			t.inviter_token_account,
-			t.invitee_native_account,
-			t.invitee_token_account,
+			t.inviter,
+			t.invitee,
 			t.channel,
 			t.level,
 			t.tx_id,
@@ -146,7 +138,7 @@ func (l *RewardInviteLogic) GetDownInviteeRecords(nativeAccount string, depth in
 		FROM
 			public.t_invite_relation t
 		INNER JOIN
-			invite_tree it ON t.inviter_native_account = it.invitee_native_account
+			invite_tree it ON t.inviter = it.invitee
 		WHERE
 			it.depth < ?
 	)
@@ -165,8 +157,8 @@ func (l *RewardInviteLogic) FindInviteRelationByAccount(nativeAccount string) (*
 	inviteRel := q.InviteRelation
 
 	record, err := inviteRel.WithContext(l.ctx).
-		Where(inviteRel.InviterNativeAccount.Eq(nativeAccount)).
-		Or(inviteRel.InviteeNativeAccount.Eq(nativeAccount)).
+		Where(inviteRel.Inviter.Eq(nativeAccount)).
+		Or(inviteRel.Invitee.Eq(nativeAccount)).
 		First()
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -182,7 +174,7 @@ func (l *RewardInviteLogic) FindInviteRelationByAccount(nativeAccount string) (*
 func (l *RewardInviteLogic) InviteRelationExist(nativeAccount string) (*model.InviteRelation, error) {
 	var record model.InviteRelation
 	table := l.db.Table(model.TableNameInviteRelation)
-	err := table.Where("inviter_native_account = ? or invitee_native_account = ?", nativeAccount, nativeAccount).First(&record).Error
+	err := table.Where("inviter = ? or invitee = ?", nativeAccount, nativeAccount).First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -193,7 +185,7 @@ func (l *RewardInviteLogic) InviteRelationExist(nativeAccount string) (*model.In
 func (l *RewardInviteLogic) QueryInviterRecordByNativeAccount(nativeAccount string) (*model.InviteRelation, error) {
 	var record model.InviteRelation
 	table := l.db.Table(model.TableNameInviteRelation)
-	err := table.Where("inviter_native_account = ?", nativeAccount).First(&record).Error
+	err := table.Where("inviter = ?", nativeAccount).First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -202,9 +194,7 @@ func (l *RewardInviteLogic) QueryInviterRecordByNativeAccount(nativeAccount stri
 
 // RecordDetermineInvitationHierarchy 记录层级关系的确定信息
 func (l *RewardInviteLogic) RecordDetermineInvitationHierarchy(
-	inviterTokenAccount,
 	inviterNativeAccount,
-	inviteeTokenAccount,
 	inviteeNativeAccount,
 	transferTxId,
 	inviteChannel string) (*model.InviteRelation, error) {
@@ -231,10 +221,8 @@ func (l *RewardInviteLogic) RecordDetermineInvitationHierarchy(
 		level = inviterRecord.Level + 1
 	}
 	determineInviteRecord := model.InviteRelation{
-		InviterTokenAccount:  inviterTokenAccount,
-		InviterNativeAccount: inviterNativeAccount,
-		InviteeTokenAccount:  inviteeTokenAccount,
-		InviteeNativeAccount: inviteeNativeAccount,
+		Inviter: inviterNativeAccount,
+		Invitee: inviteeNativeAccount,
 		TxID:                 transferTxId,
 		Channel:              inviteChannel,
 		Level:                level,
@@ -261,8 +249,7 @@ func (l *RewardInviteLogic) BuildSortedInviterItems(
 	for index, record := range sortedInvites {
 		sortedItems = append(sortedItems, types.RewardTokenItem{
 			Index:         index + 1,
-			NativeAccount: record.InviterNativeAccount,
-			TokenAccount:  record.InviterTokenAccount,
+			NativeAccount: record.Inviter,
 			Amount:        0,
 		})
 	}
@@ -271,7 +258,6 @@ func (l *RewardInviteLogic) BuildSortedInviterItems(
 		directItem := types.RewardTokenItem{
 			Index:         0,
 			NativeAccount: directInviter.NativeAccount,
-			TokenAccount:  directInviter.TokenAccount,
 			Amount:        0,
 		}
 		sortedItems = append([]types.RewardTokenItem{directItem}, sortedItems...)

@@ -287,8 +287,10 @@ func (l *GiveTokenLogic) checkSOLTx(
 		transferCheckedMap[transfer.ToTokenAccount] = transfer
 	}
 	// 所有的邀请人记录存放到map里面,key-InviterTokenAccount value=SolDetermineInviteRecord
+	tokenMintPubKey, _ := solana.PublicKeyFromBase58(l.serviceConfig.TokenMintAccount)
 	for _, record := range upInvitersInfo {
-		inviterRecordMap[record.InviterTokenAccount] = record
+		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(record.Inviter), tokenMintPubKey)
+		inviterRecordMap[inviterTA.String()] = record
 	}
 
 	// 解析转账地址转出token的指令
@@ -343,7 +345,8 @@ func (l *GiveTokenLogic) checkSOLTx(
 	// 计算出来每个级别的上级应该拿到的奖励
 	for index, inviteRecord := range upInvitersInfo {
 		rewardInviterAmount := uint64(float64(rewardTxFromAmount) * l.srvCtx.LevelRatio[index].Ratio)
-		inviterClaimMap[inviteRecord.InviterTokenAccount] = rewardInviterAmount
+		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(inviteRecord.Inviter), tokenMintPubKey)
+		inviterClaimMap[inviterTA.String()] = rewardInviterAmount
 	}
 	// 校验奖励上级邀请人的指令里面的地址和金额是否正确,检查转账指令是否正确
 	for toTokenAccount, decodedInst := range transferCheckedMap {

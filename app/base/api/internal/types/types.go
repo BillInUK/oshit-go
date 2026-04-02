@@ -94,10 +94,8 @@ type RecursiveQueryReq struct {
 
 type InviteRelation struct {
 	RecordID             string `json:"record_id"`
-	InviterNativeAccount string `json:"inviter_native_account"`
-	InviterTokenAccount  string `json:"inviter_token_account"`
-	InviteeNativeAccount string `json:"invitee_native_account"`
-	InviteeTokenAccount  string `json:"invitee_token_account"`
+	Inviter string `json:"inviter"`
+	Invitee string `json:"invitee"`
 	Channel              string `json:"channel"`
 	Level                int32  `json:"level"`
 	TxID                 string `json:"tx_id"`

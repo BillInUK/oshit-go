@@ -68,6 +68,5 @@ type TakeTokenTxInfo struct {
 type RewardTokenItem struct {
 	Index         int    `json:"index"`
 	NativeAccount string `json:"nativeAccount"`
-	TokenAccount  string `json:"tokenAccount"`
 	Amount        uint64 `json:"amount"`
 }

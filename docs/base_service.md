@@ -349,7 +349,7 @@ SQL 定义：`repositories/base.sql`
 | `t_fee_statistics` | ULID | `slot`,`transaction_index`,`compute_unit_price`,`compute_unit_limit`,`units_consumed`,`fee` | 链上手续费统计（上限 10000 条，滚动覆盖） |
 | `t_qn_fee` | `id`(int) | `slot`,`low_avg`,`medium_avg`,`high_avg` | QuickNode 费用估算（滚动 20 条，id=slot%20+1） |
 | `t_native_account_info` | ULID | `native_account`,`token_account`,`invite_code` | 用户地址注册信息 |
-| `t_invite_relation` | ULID | `inviter_native_account`,`invitee_native_account`,`channel`,`level`,`tx_id` | 邀请关系链（level 由登录时自动推算） |
+| `t_invite_relation` | ULID | `inviter`,`invitee`,`channel`,`level`,`tx_id` | 邀请关系链（level 由登录时自动推算） |
 | `t_service_info` | — | `service`,`sub_service`,`address`,`hook_type`,`mq_group`,`mq_topic` | 业务服务注册（扫描地址、Kafka 配置） |
 | `t_service_key` | — | `service`,`sub_service`,`encrypted_key` | 业务服务私钥（jasypt 加密） |
 | `t_tx_scan_info` | — | `service`,`sub_service`,`pda_account`,`until_tx_id`,`slot` | 扫描游标（每个业务一行） |

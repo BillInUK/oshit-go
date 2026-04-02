@@ -79,8 +79,8 @@ type TakeTokenTxInfo struct {
 type RewardTokenItem struct {
     Index         int    // 0=领取人，1=直接邀请人，2=二级邀请人...
     NativeAccount string
-    TokenAccount  string
     Amount        uint64 // token 数量（含精度）
+    // TokenAccount 由前端通过 solana.FindAssociatedTokenAddress(NativeAccount, mint) 自行推导
 }
 ```
 
@@ -125,8 +125,8 @@ type RewardTokenItem struct {
 ③ [可选] CreateAssociatedTokenAccount（领取人 PDA 不存在时）
 ④ TransferChecked: rewardTokenAccount → receiptTokenAccount（领取人奖励）
 ⑤ System.Transfer: receiptNativeAccount → dexNativeAccount（成本费）
-⑥ TransferChecked: rewardTokenAccount → inviter1.TokenAccount（邀请人1奖励）
-⑦ TransferChecked: rewardTokenAccount → inviter2.TokenAccount（邀请人2奖励）
+⑥ TransferChecked: rewardTokenAccount → FindATA(inviter1.NativeAccount)（邀请人1奖励）
+⑦ TransferChecked: rewardTokenAccount → FindATA(inviter2.NativeAccount)（邀请人2奖励）
 ...（按 RewardInviterInfo 顺序，最多 levelDist 条）
 ```
 
@@ -214,8 +214,8 @@ DB 事务：
         → 如果 takeTokenRecord.Invited==true：
              inviteLogic.GetAccountByInviteCode(inviteCode)
              inviteLogic.RecordDetermineInvitationHierarchy(
-               inviterTokenAccount, inviterNativeAccount,
-               receiptTokenAccount, receiptNativeAccount,
+               inviterNativeAccount,
+               receiptNativeAccount,
                txId, "InviteCode"
              )
              → 写 t_invite_relation（level = inviter.Level+1 或 1）
@@ -440,7 +440,7 @@ flowchart TD
     D -- 是 --> Z1
     D -- 否 --> E{t_take_token_record 中<br/>receiptAccount 有过<br/>use_invite_code=true<br/>且 state=1 的记录?}
     E -- 有 --> Z2([无效：codeValid=false, invited=false<br/>但仍返回 directInviter])
-    E -- 没有 --> F{t_invite_relation 中<br/>receiptAccount 已存在<br/>inviter 或 invitee?}
+    E -- 没有 --> F{t_invite_relation 中<br/>receiptAccount 已存在<br/>作为 inviter 或 invitee?}
     F -- 存在 --> Z3([有效但不确定关系：<br/>codeValid=true, invited=false])
     F -- 不存在 --> Z4([有效且确定关系：<br/>codeValid=true, invited=true])
 ```
@@ -456,7 +456,7 @@ flowchart LR
         I3["③ CreateATA (可选)\n领取人 PDA 不存在时"]
         I4["④ TransferChecked\nrewardTokenAccount → receiptTokenAccount\namount = Amount 或 InviteAmount"]
         I5["⑤ System.Transfer\nreceiptNativeAccount → dexNativeAccount\namount >= QuotedSOLAmount×(1-MaxLessRate)"]
-        I6["⑥ TransferChecked×N\nrewardTokenAccount → inviterTokenAccount[i]\namount = rewardAmount × Ratio[i]"]
+        I6["⑥ TransferChecked×N\nrewardTokenAccount → FindATA(inviter[i].NativeAccount)\namount = rewardAmount × Ratio[i]"]
     end
 
     subgraph CHECK["服务端校验要点"]

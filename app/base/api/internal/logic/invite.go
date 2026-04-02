@@ -56,7 +56,7 @@ func (l *InviteLogic) CheckInviteRecord(req *types.CheckInviteRecordReq) (*types
 	inviteRel := q.InviteRelation
 
 	count, err := inviteRel.WithContext(l.ctx).
-		Where(inviteRel.InviteeNativeAccount.Eq(req.NativeAccount)).
+		Where(inviteRel.Invitee.Eq(req.NativeAccount)).
 		Count()
 
 	if err != nil {
@@ -77,10 +77,8 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 	WITH RECURSIVE invite_tree AS (
 		SELECT
 			record_id,
-			inviter_native_account,
-			inviter_token_account,
-			invitee_native_account,
-			invitee_token_account,
+			inviter,
+			invitee,
 			channel,
 			level,
 			tx_id,
@@ -89,16 +87,14 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 		FROM
 			public.t_invite_relation
 		WHERE
-			invitee_native_account = ?
+			invitee = ?
 
 		UNION ALL
 
 		SELECT
 			t.record_id,
-			t.inviter_native_account,
-			t.inviter_token_account,
-			t.invitee_native_account,
-			t.invitee_token_account,
+			t.inviter,
+			t.invitee,
 			t.channel,
 			t.level,
 			t.tx_id,
@@ -107,7 +103,7 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 		FROM
 			public.t_invite_relation t
 		INNER JOIN
-			invite_tree it ON t.invitee_native_account = it.inviter_native_account
+			invite_tree it ON t.invitee = it.inviter
 		WHERE
 			it.depth < ?
 	)
@@ -124,10 +120,8 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 	for _, record := range records {
 		responseRecords = append(responseRecords, types.InviteRelation{
 			RecordID:             record.RecordID,
-			InviterNativeAccount: record.InviterNativeAccount,
-			InviterTokenAccount:  record.InviterTokenAccount,
-			InviteeNativeAccount: record.InviteeNativeAccount,
-			InviteeTokenAccount:  record.InviteeTokenAccount,
+			Inviter: record.Inviter,
+			Invitee: record.Invitee,
 			Channel:              record.Channel,
 			Level:                record.Level,
 			TxID:                 record.TxID,
@@ -145,8 +139,8 @@ func (l *InviteLogic) FindInviteRelationByAccount(req *types.FindInviteRelationB
 	inviteRel := q.InviteRelation
 
 	record, err := inviteRel.WithContext(l.ctx).
-		Where(inviteRel.InviterNativeAccount.Eq(req.NativeAccount)).
-		Or(inviteRel.InviteeNativeAccount.Eq(req.NativeAccount)).
+		Where(inviteRel.Inviter.Eq(req.NativeAccount)).
+		Or(inviteRel.Invitee.Eq(req.NativeAccount)).
 		First()
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -158,10 +152,8 @@ func (l *InviteLogic) FindInviteRelationByAccount(req *types.FindInviteRelationB
 
 	return &types.InviteRelation{
 		RecordID:             record.RecordID,
-		InviterNativeAccount: record.InviterNativeAccount,
-		InviterTokenAccount:  record.InviterTokenAccount,
-		InviteeNativeAccount: record.InviteeNativeAccount,
-		InviteeTokenAccount:  record.InviteeTokenAccount,
+		Inviter: record.Inviter,
+		Invitee: record.Invitee,
 		Channel:              record.Channel,
 		Level:                record.Level,
 		TxID:                 record.TxID,
@@ -178,10 +170,8 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 	WITH RECURSIVE invite_tree AS (
 		SELECT
 			record_id,
-			inviter_native_account,
-			inviter_token_account,
-			invitee_native_account,
-			invitee_token_account,
+			inviter,
+			invitee,
 			channel,
 			level,
 			tx_id,
@@ -190,16 +180,14 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 		FROM
 			public.t_invite_relation
 		WHERE
-			inviter_native_account = ?
+			inviter = ?
 
 		UNION ALL
 
 		SELECT
 			t.record_id,
-			t.inviter_native_account,
-			t.inviter_token_account,
-			t.invitee_native_account,
-			t.invitee_token_account,
+			t.inviter,
+			t.invitee,
 			t.channel,
 			t.level,
 			t.tx_id,
@@ -208,7 +196,7 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 		FROM
 			public.t_invite_relation t
 		INNER JOIN
-			invite_tree it ON t.inviter_native_account = it.invitee_native_account
+			invite_tree it ON t.inviter = it.invitee
 		WHERE
 			it.depth < ?
 	)
@@ -225,10 +213,8 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 	for _, record := range records {
 		responseRecords = append(responseRecords, types.InviteRelation{
 			RecordID:             record.RecordID,
-			InviterNativeAccount: record.InviterNativeAccount,
-			InviterTokenAccount:  record.InviterTokenAccount,
-			InviteeNativeAccount: record.InviteeNativeAccount,
-			InviteeTokenAccount:  record.InviteeTokenAccount,
+			Inviter: record.Inviter,
+			Invitee: record.Invitee,
 			Channel:              record.Channel,
 			Level:                record.Level,
 			TxID:                 record.TxID,
