@@ -21,27 +21,6 @@ CREATE TABLE public.t_discount_rate
     rate      numeric(3, 2)                         NOT NULL
 );
 
--- 旧工程 t_sol_fund_flow
--- 需要导入并且搞分表
-CREATE TABLE public.t_sol_fund_flow
-(
-    record_id           public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    brand               character varying(64)                                 NOT NULL,
-    token_symbol        character varying(64)                                 NOT NULL,
-    is_token            boolean                                               NOT NULL,
-    from_native_account character varying(64)                                 NOT NULL,
-    to_native_account   character varying(64)                                 NOT NULL,
-    tx_id               character varying(128)                                NOT NULL,
-    direction           smallint                                              NOT NULL,
-    service_type        smallint                                              NOT NULL,
-    flow_type           smallint                                              NOT NULL,
-    decimals            smallint                                              NOT NULL,
-    amount              numeric(78, 0)                                        NOT NULL,
-    created_at          timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at          timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE UNIQUE INDEX uq_sol_fund_flow_tx_to_flow ON public.t_sol_fund_flow (tx_id, to_native_account, flow_type);
-
 -- 旧工程 t_sol_official_give_token_reward_rule
 DROP TABLE IF EXISTS public.t_take_token_config;
 CREATE TABLE public.t_take_token_config
@@ -89,6 +68,23 @@ CREATE TABLE public.t_take_token_record
     updated_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 旧工程 t_daily_claim_stats
+DROP TABLE IF EXISTS public.t_daily_claim_stats;
+CREATE TABLE public.t_daily_claim_stats
+(
+    record_id       public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    native_account  character varying(64)                                 NOT NULL,
+    take_shit_date  date                                                  NOT NULL,
+    take_shit_count integer                     DEFAULT 0                 NOT NULL,
+    need_lottery    boolean                     DEFAULT false             NOT NULL,
+    last_take_time  timestamp without time zone,
+    total_lottery   numeric(78, 0)              DEFAULT 0                 NOT NULL,
+    total_take      numeric(78, 0)              DEFAULT 0                 NOT NULL,
+    lottery_count   integer                     DEFAULT 0                 NOT NULL,
+    created_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 旧工程 t_reward_lottery
 DROP TABLE IF EXISTS public.t_lottery_reward;
 CREATE TABLE public.t_lottery_reward
@@ -116,22 +112,7 @@ CREATE TABLE public.t_lottery_claim_record
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
--- 旧工程 t_daily_claim_stats
-DROP TABLE IF EXISTS public.t_daily_claim_stats;
-CREATE TABLE public.t_daily_claim_stats
-(
-    record_id       public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    native_account  character varying(64)                                 NOT NULL,
-    take_shit_date  date                                                  NOT NULL,
-    take_shit_count integer                     DEFAULT 0                 NOT NULL,
-    need_lottery    boolean                     DEFAULT false             NOT NULL,
-    last_take_time  timestamp without time zone,
-    total_lottery   numeric(78, 0)              DEFAULT 0                 NOT NULL,
-    total_take      numeric(78, 0)              DEFAULT 0                 NOT NULL,
-    lottery_count   integer                     DEFAULT 0                 NOT NULL,
-    created_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
+
 
 -- 旧工程 t_sol_transfer_token_reward_rule
 DROP TABLE IF EXISTS public.t_give_token_config;

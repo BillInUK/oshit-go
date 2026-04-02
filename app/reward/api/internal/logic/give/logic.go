@@ -1,4 +1,4 @@
-package logic
+package give
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"oshit-go/app/reward/api/internal/logic"
 	rewardrpc "oshit-go/app/reward/api/internal/rpc"
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
@@ -311,7 +312,7 @@ func (l *GiveTokenLogic) limitExceed() (bool, error) {
 
 // getUpInviters 查询上级邀请人的以及每个上级邀请人所能拿到的奖励费率
 func (l *GiveTokenLogic) getUpInviters(nativeAccount string) ([]model.InviteRelation, error) {
-	inviteRecords, err := NewRewardInviteLogic(l.ctx, l.srvCtx.DB).GetUpInviterRecords(nativeAccount, l.srvCtx.LevelDist.Level)
+	inviteRecords, err := logic.NewRewardInviteLogic(l.ctx, l.srvCtx.DB).GetUpInviterRecords(nativeAccount, l.srvCtx.LevelDist.Level)
 	if err != nil {
 		return nil, err
 	}
@@ -382,18 +383,4 @@ func (l *GiveTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 	}
 
 	return &preCheckedTx.TxId, nil
-}
-
-// HandleScannedTx 处理 base 模块推送的 GiveToken 链上已确认交易
-func (l *GiveTokenLogic) HandleScannedTx(tx entity.NewScannedTx) error {
-	// TODO: 根据链上交易信息更新 GiveToken 相关记录状态
-	log.Infof("%s - 处理扫描到的交易: %v", l.prefix, tx.TxSig.Signature)
-	return nil
-}
-
-// HandleExpiredTx 处理 base 模块推送的 GiveToken 已超时交易
-func (l *GiveTokenLogic) HandleExpiredTx(tx entity.NewExpiredTx) error {
-	// TODO: 将对应 GiveToken 记录标记为失败
-	log.Infof("%s - 处理超时的交易: %v", l.prefix, tx.TxID)
-	return nil
 }

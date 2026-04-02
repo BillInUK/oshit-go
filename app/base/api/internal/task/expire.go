@@ -182,7 +182,7 @@ func (t *TxExpireTask) processTransaction(ctx context.Context, posTxRecord model
 // markTxExpired 标记交易为失败并发送消息
 func (t *TxExpireTask) markTxExpired(ctx context.Context, posTxRecord model.ServiceTx) {
 	// 标记交易发现状态为失败
-	if err := t.MarkTxFetchState(posTxRecord.TxID, constants.TxFetchStateFailed); err != nil {
+	if err := t.MarkTxFetchState(posTxRecord.TxID, constants.TxFetchFailed); err != nil {
 		log.Errorf("%s 交易[%s] - 标记交易发现状态为失败 - 错误: %v", t.prefix, posTxRecord.TxID, err)
 		return
 	}
@@ -208,7 +208,7 @@ func (t *TxExpireTask) markTxExpired(ctx context.Context, posTxRecord model.Serv
 // markTxFetched 标记交易为已经发现
 func (t *TxExpireTask) markTxFetched(ctx context.Context, posTxRecord model.ServiceTx, txSig rpc.TransactionSignature, decodedTx *entity.DecodedSolanaTransaction) {
 	// 标记交易发现状态为成功
-	if err := t.MarkTxFetchState(posTxRecord.TxID, constants.TxFetchStateSuccess); err != nil {
+	if err := t.MarkTxFetchState(posTxRecord.TxID, constants.TxFetchSuccess); err != nil {
 		log.Errorf("%s 交易[%s] - 标记交易发现状态为成功 - 错误: %v", t.prefix, posTxRecord.TxID, err)
 		return
 	}

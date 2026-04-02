@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
-	"oshit-go/app/reward/api/internal/logic"
+	"oshit-go/app/reward/api/internal/logic/take"
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
 	app_utils "oshit-go/app/utils"
@@ -24,7 +24,7 @@ func NewTakeTokenHandler(srvCtx *svc.ServiceContext) *TakeTokenHandler {
 }
 
 func (h *TakeTokenHandler) GetConfig(fiberCtx *fiber.Ctx) error {
-	l := logic.NewTakeLogic(fiberCtx.Context(), h.srvCtx)
+	l := take.NewTakeLogic(fiberCtx.Context(), h.srvCtx)
 	config, err := l.GetConfig()
 	if err != nil {
 		return response.FailWithMsg(fiberCtx, "get take token config error")
@@ -39,7 +39,7 @@ func (h *TakeTokenHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 		return response.FailWithMsg(fiberCtx, "invalid request body")
 	}
 
-	l := logic.NewTakeLogic(fiberCtx.Context(), h.srvCtx)
+	l := take.NewTakeLogic(fiberCtx.Context(), h.srvCtx)
 	txInfo, err := l.ProcessGetTxInfo(fiberCtx.Context(), req)
 	if err != nil {
 		log.Errorf("%s 获取交易信息错误: %v", h.prefix, err)
@@ -55,7 +55,7 @@ func (h *TakeTokenHandler) GetRecord(fiberCtx *fiber.Ctx) error {
 		return response.BadRequest(fiberCtx, "invalid request body")
 	}
 
-	l := logic.NewTakeLogic(fiberCtx.Context(), h.srvCtx)
+	l := take.NewTakeLogic(fiberCtx.Context(), h.srvCtx)
 	record, err := l.GetRecordByTxId(req.TxId)
 	if err != nil {
 		return response.FailWithMsg(fiberCtx, "get record error")
@@ -85,7 +85,7 @@ func (h *TakeTokenHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 	log.Infof("%s 地址 %v 使用邀请码 %s 领取奖励", prefix, preCheckedTx.From, inviteCode)
 
 	// 处理交易主逻辑
-	l := logic.NewTakeLogic(ctx, h.srvCtx)
+	l := take.NewTakeLogic(ctx, h.srvCtx)
 	rsp, err := l.ProcessCommitTx(ctx, preCheckedTx, inviteCode)
 	if err != nil {
 		return response.FailWithError(fiberCtx, "process commit tx error", err)

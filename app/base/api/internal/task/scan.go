@@ -313,7 +313,7 @@ func (t *TxScanTask) handleServiceTx(service string, txSig rpc.TransactionSignat
 	}
 
 	// 将交易设置为已经发现
-	if err := t.MarkTxFetchState(rewardTxRecord.TxID, constants.TxFetchStateSuccess); err != nil {
+	if err := t.MarkTxFetchState(rewardTxRecord.TxID, constants.TxFetchSuccess); err != nil {
 		log.Errorf("%s 交易Id[%s],设置交易Id为已经发现错误: %v", prefix, txSig.Signature.String(), err)
 		return
 	}

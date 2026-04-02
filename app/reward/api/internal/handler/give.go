@@ -4,7 +4,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
-	"oshit-go/app/reward/api/internal/logic"
+	"oshit-go/app/reward/api/internal/logic/give"
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
 	app_utils "oshit-go/app/utils"
@@ -22,7 +22,7 @@ func NewGiveTokenHandler(srvCtx *svc.ServiceContext) *GiveTokenHandler {
 
 // GetConfig 获取 give token 配置信息
 func (h *GiveTokenHandler) GetConfig(fiberCtx *fiber.Ctx) error {
-	l := logic.NewGiveTokenLogic(fiberCtx.Context(), h.srvCtx)
+	l := give.NewGiveTokenLogic(fiberCtx.Context(), h.srvCtx)
 	rule, err := l.GetDefaultConfig()
 	if err != nil {
 		log.Errorf("获取take token配置错误: %v", err)
@@ -42,7 +42,7 @@ func (h *GiveTokenHandler) GetRecord(fiberCtx *fiber.Ctx) error {
 	if _, err := solana.SignatureFromBase58(req.TxId); err != nil {
 		return response.FailWithError(fiberCtx, "malformed tx id", err)
 	}
-	l := logic.NewGiveTokenLogic(fiberCtx.Context(), h.srvCtx)
+	l := give.NewGiveTokenLogic(fiberCtx.Context(), h.srvCtx)
 	txInfo, err := l.GetRecord(fiberCtx.Context(), req.TxId)
 	if err != nil {
 		log.Errorf("获取take token 交易信息错误: %v", err)
@@ -74,7 +74,7 @@ func (h *GiveTokenHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 	}
 
 	// 获取打包take token的交易信息
-	l := logic.NewGiveTokenLogic(fiberCtx.Context(), h.srvCtx)
+	l := give.NewGiveTokenLogic(fiberCtx.Context(), h.srvCtx)
 	txInfo, err := l.GetTxInfo(fiberCtx.Context(), fromAccount, req.To, req.Amount)
 	if err != nil {
 		log.Errorf("获取take token 交易信息错误: %v", err)
@@ -108,7 +108,7 @@ func (h *GiveTokenHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 	}
 
 	// 处理交易
-	l := logic.NewGiveTokenLogic(ctx, h.srvCtx)
+	l := give.NewGiveTokenLogic(ctx, h.srvCtx)
 	txId, err := l.ProcessCommitTx(ctx, preCheckedTx, toNativeAccount)
 	if err != nil {
 		return response.FailWithError(fiberCtx, "process transaction error:", err)

@@ -107,6 +107,21 @@ CREATE TABLE public.t_native_account_info
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS public.t_invite_relation;
+CREATE TABLE public.t_invite_relation
+(
+    record_id              public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    inviter_native_account character varying(64)                                 NOT NULL,
+    inviter_token_account  character varying(64)                                 NOT NULL,
+    invitee_native_account character varying(64)                                 NOT NULL,
+    invitee_token_account  character varying(64)                                 NOT NULL,
+    channel                character varying(64)                                 NOT NULL,
+    level                  integer                     DEFAULT 1                 NOT NULL,
+    tx_id                  character varying(128)                                 NOT NULL,
+    created_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
 DROP TABLE IF EXISTS public.t_service_info;
 CREATE TABLE public.t_service_info
 (
@@ -161,20 +176,26 @@ CREATE TABLE public.t_service_tx
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-DROP TABLE IF EXISTS public.t_invite_relation;
-CREATE TABLE public.t_invite_relation
+-- 旧工程 t_sol_fund_flow
+-- 需要导入并且搞分表
+CREATE TABLE public.t_sol_fund_flow
 (
-    record_id              public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    inviter_native_account character varying(64)                                 NOT NULL,
-    inviter_token_account  character varying(64)                                 NOT NULL,
-    invitee_native_account character varying(64)                                 NOT NULL,
-    invitee_token_account  character varying(64)                                 NOT NULL,
-    channel                character varying(64)                                 NOT NULL,
-    level                  integer                     DEFAULT 1                 NOT NULL,
-    tx_id                  character varying(128)                                 NOT NULL,
-    created_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    record_id           public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    brand               character varying(64)                                 NOT NULL,
+    token_symbol        character varying(64)                                 NOT NULL,
+    is_token            boolean                                               NOT NULL,
+    from_native_account character varying(64)                                 NOT NULL,
+    to_native_account   character varying(64)                                 NOT NULL,
+    tx_id               character varying(128)                                NOT NULL,
+    direction           smallint                                              NOT NULL,
+    service_type        smallint                                              NOT NULL,
+    flow_type           smallint                                              NOT NULL,
+    decimals            smallint                                              NOT NULL,
+    amount              numeric(78, 0)                                        NOT NULL,
+    created_at          timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at          timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
+CREATE UNIQUE INDEX uq_sol_fund_flow_tx_to_flow ON public.t_sol_fund_flow (tx_id, to_native_account, flow_type);
 
 DROP TABLE IF EXISTS public.t_hacker_account;
 CREATE TABLE public.t_hacker_account

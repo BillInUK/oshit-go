@@ -1,4 +1,4 @@
-package logic
+package take
 
 import (
 	"fmt"
@@ -172,8 +172,8 @@ func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 		ToNativeAccount:   decodedServiceTx.ToDexInst.ToNativeAccount,
 		TxID:              decodedServiceTx.TxID,
 		Direction:         constants.FlowInput,
-		ServiceType:       constants.ServiceOfficialGive,
-		FlowType:          constants.FlowOfficialGiveDexFee,
+		ServiceType:       constants.ServiceTakeToken,
+		FlowType:          constants.FlowTakTokenCost,
 		Decimals:          9,
 		Amount:            float64(decodedServiceTx.ToDexInst.Amount),
 		CreatedAt:         time.Now(),
@@ -194,8 +194,8 @@ func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 		ToNativeAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
 		TxID:              decodedServiceTx.TxID,
 		Direction:         constants.FlowOutput,
-		ServiceType:       constants.ServiceOfficialGive,
-		FlowType:          constants.FlowOfficialGiveTokenReward,
+		ServiceType:       constants.ServiceTakeToken,
+		FlowType:          constants.FlowTakeTokenReceipt,
 		Decimals:          int16(decodedServiceTx.RewardInst.Decimals),
 		Amount:            decodedServiceTx.RewardInst.Amount,
 		CreatedAt:         time.Now(),
@@ -216,8 +216,8 @@ func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 			ToNativeAccount:   inst.ToNativeAccount,
 			TxID:              decodedServiceTx.TxID,
 			Direction:         constants.FlowOutput,
-			ServiceType:       constants.ServiceOfficialGive,
-			FlowType:          constants.FlowOfficialGiveTokenRewardInviter,
+			ServiceType:       constants.ServiceTakeToken,
+			FlowType:          constants.FlowTakeTokenInviter,
 			Decimals:          int16(inst.Decimals),
 			Amount:            inst.Amount,
 			CreatedAt:         time.Now(),

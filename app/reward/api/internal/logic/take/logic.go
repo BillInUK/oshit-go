@@ -1,4 +1,4 @@
-package logic
+package take
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"oshit-go/app/reward/api/internal/logic"
 	rewardrpc "oshit-go/app/reward/api/internal/rpc"
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
@@ -35,7 +36,7 @@ type TakeTokenLogic struct {
 	serviceConfig     *model.TakeTokenConfig
 	rpcClient         *rpc.Client
 	LightHouseAddress solana.PublicKey
-	inviteLogic       *RewardInviteLogic
+	inviteLogic       *logic.RewardInviteLogic
 }
 
 func NewTakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *TakeTokenLogic {
@@ -54,7 +55,7 @@ func NewTakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *TakeTokenLog
 		serviceConfig:     srvCtx.TakeTokenConfig,
 		decimals:          uint8(srvCtx.TokenConfig.Decimals),
 		LightHouseAddress: srvCtx.LightHouseAddress,
-		inviteLogic:       NewRewardInviteLogic(ctx, srvCtx.DB),
+		inviteLogic:       logic.NewRewardInviteLogic(ctx, srvCtx.DB),
 	}
 }
 
@@ -172,7 +173,7 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 		log.Errorf("%s 计算奖励金额价格错误: %v", prefix, err)
 		return nil, fmt.Errorf("get toke quote sol price failed")
 	}
-	
+
 	// 8. 填写最终需要返回的交易信息
 	takeTxInfo.RewardNativeAccount = l.serviceConfig.RewardNativeAccount
 	takeTxInfo.RewardTokenAccount = l.serviceConfig.RewardTokenAccount
@@ -303,4 +304,3 @@ func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 
 	return &txId, nil
 }
-
