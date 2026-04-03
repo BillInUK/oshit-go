@@ -2,6 +2,12 @@ package types
 
 import "oshit-go/common/pkg/dal/model"
 
+type RewardTokenItem struct {
+	Index          int    `json:"index"`
+	ReceiptAccount string `json:"receiptAccount"`
+	Amount         uint64 `json:"amount"`
+}
+
 type GetByTxIdReq struct {
 	TxId string `json:"txId"`
 }
@@ -64,8 +70,12 @@ type TakeTokenTxInfo struct {
 	RewardInviterInfo []RewardTokenItem  `json:"rewardInviterInfo"`
 }
 
-type RewardTokenItem struct {
-	Index          int    `json:"index"`
-	ReceiptAccount string `json:"receiptAccount"`
-	Amount         uint64 `json:"amount"`
+type ClaimLotteryTxInfo struct {
+	RecordId      string  `json:"recordId"`      // 抽奖的记录id
+	RewardAccount string  `json:"rewardAccount"` // 发放抽奖记录的token
+	Mint          string  `json:"mint"`          // token地址
+	CostAccount   string  `json:"costAccount"`   // 成本费
+	Decimals      int32   `json:"decimals"`      // 币种精度
+	LotteryAmount float64 `json:"lotteryAmount"` // 奖励金额
+	CostFee       float64 `json:"CostFee"`       // 成本费
 }
