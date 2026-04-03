@@ -37,4 +37,9 @@ const (
 	FlowPosCost      = 0 // 流水类型 - 入账 - POS领取奖励时转给dex的sol
 	FlowPosReceipt   = 1 // 流水类型 - 出账 - POS领取奖励token出账给领取人
 	FlowStakeReceipt = 2 // 流水类型 - 出账 - POS领取奖励token出账给领取人
+
+	ServiceLottery = 8 // 业务类型 - 抽奖
+
+	FlowLotteryCost    = 0 // 流水类型 - 入账 - 抽奖时转给dex的sol
+	FlowLotteryReceipt = 1 // 流水类型 - 出账 - 抽奖奖励token出账给用户
 )

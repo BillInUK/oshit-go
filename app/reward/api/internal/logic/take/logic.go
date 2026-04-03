@@ -258,8 +258,33 @@ func (l *TakeTokenLogic) recordTakeToken(takeTokenTxInfo *types.TakeTokenTxInfo,
 	return nil
 }
 
+// checkNeedLottery 检查用户是否需要完成抽奖才能继续领取
+func (l *TakeTokenLogic) checkNeedLottery(ctx context.Context, nativeAccount string) error {
+	today := time.Now().Truncate(24 * time.Hour)
+	var stats model.DailyClaimStats
+	err := l.db.Table(model.TableNameDailyClaimStats).
+		Where("native_account = ? AND take_date = ?", nativeAccount, today).
+		First(&stats).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// 今天没有记录，不需要抽奖
+			return nil
+		}
+		return err
+	}
+	if stats.NeedLottery {
+		return errors.New("you must complete lottery before taking token again")
+	}
+	return nil
+}
+
 // ProcessCommitTx 处理提交上来的交易
 func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, inviteCode string) (*solana.Signature, error) {
+	// Check if user must complete lottery before taking again
+	if err := l.checkNeedLottery(ctx, preCheckedTx.From.String()); err != nil {
+		return nil, err
+	}
+
 	takeTxInfo, err := l.getTxInfo(ctx, preCheckedTx.From.String(), inviteCode)
 	if err != nil {
 		return nil, fmt.Errorf("get take token transaction info error: %v", err)

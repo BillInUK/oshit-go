@@ -14,6 +14,42 @@ import (
 	"time"
 )
 
+// updateDailyClaimStats 在 dbTx 事务内更新每日领取统计，并在 take_count 达到阈值时设置 need_lottery=true
+func (l *TakeTokenLogic) updateDailyClaimStats(dbTx *gorm.DB, nativeAccount string) error {
+	today := time.Now().Truncate(24 * time.Hour)
+	now := time.Now()
+
+	// 使用 raw SQL upsert，RETURNING take_count 获取更新后的值
+	type result struct {
+		TakeCount int32 `gorm:"column:take_count"`
+	}
+	var res result
+	rawSQL := `
+		INSERT INTO t_daily_claim_stats (native_account, take_date, take_count, need_lottery, last_take_time)
+		VALUES (?, ?, 1, false, ?)
+		ON CONFLICT (native_account, take_date)
+		DO UPDATE SET take_count = t_daily_claim_stats.take_count + 1, last_take_time = ?
+		RETURNING take_count
+	`
+	if err := dbTx.Raw(rawSQL, nativeAccount, today, now, now).Scan(&res).Error; err != nil {
+		log.Errorf("TakeToken - 更新每日领取统计错误: %v", err)
+		return err
+	}
+
+	// 如果 take_count 达到阈值，设置 need_lottery=true
+	if res.TakeCount == 5 || res.TakeCount == 10 || res.TakeCount == 20 {
+		if err := dbTx.Table(model.TableNameDailyClaimStats).
+			Where("native_account = ? AND take_date = ?", nativeAccount, today).
+			Updates(map[string]interface{}{"need_lottery": true, "updated_at": now}).Error; err != nil {
+			log.Errorf("TakeToken - 设置 need_lottery=true 错误: %v", err)
+			return err
+		}
+		log.Infof("TakeToken - 地址 %v 的 take_count 达到 %d，设置 need_lottery=true", nativeAccount, res.TakeCount)
+	}
+
+	return nil
+}
+
 // HandleScannedTx 处理 base 模块推送的 TakeToken 链上已确认交易
 func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	txId := msg.TxSig.Signature.String()
@@ -74,6 +110,13 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		}
 
 		log.Infof("%s 更新记录为成功，邀请码 %v，确定邀请关系 %v", prefix, takeTokenRecord.InviteCode, takeTokenRecord.Invited)
+
+		// 更新每日领取统计
+		if err = l.updateDailyClaimStats(dbTx, takeTokenRecord.ReceiptAccount); err != nil {
+			log.Errorf("%s 更新每日领取统计错误: %v", prefix, err)
+			dbTx.Rollback()
+			return err
+		}
 
 		// 如果需要确定邀请层级关系
 		if takeTokenRecord.Invited {

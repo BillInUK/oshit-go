@@ -70,6 +70,27 @@ type TakeTokenTxInfo struct {
 	RewardInviterInfo []RewardTokenItem  `json:"rewardInviterInfo"`
 }
 
+type GetLotteryStatusReq struct {
+	NativeAccount string `json:"nativeAccount"`
+}
+
+type ExecuteLotteryReq struct {
+	// native account comes from JWT
+}
+
+type GetUnclaimedLotteryReq struct {
+	NativeAccount string `json:"nativeAccount"`
+}
+
+type GetLotteryTxInfoReq struct {
+	RecordId string `json:"recordId"`
+}
+
+type CommitLotteryTxReq struct {
+	EncodedTx string `json:"encodedTx"`
+	RewardId  string `json:"rewardId"` // t_lottery_reward.record_id
+}
+
 type ClaimLotteryTxInfo struct {
 	RecordId      string  `json:"recordId"`      // 抽奖的记录id
 	RewardAccount string  `json:"rewardAccount"` // 发放抽奖记录的token

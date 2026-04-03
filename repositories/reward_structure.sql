@@ -77,6 +77,9 @@ CREATE TABLE public.t_daily_claim_stats
     updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE t_daily_claim_stats
+    ADD CONSTRAINT uq_daily_claim_stats_account_date UNIQUE (native_account, take_date);
+
 -- 旧工程 t_reward_lottery
 DROP TABLE IF EXISTS public.t_lottery_reward;
 CREATE TABLE public.t_lottery_reward
