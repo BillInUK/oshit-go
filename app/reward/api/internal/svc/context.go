@@ -23,15 +23,17 @@ import (
 
 type ServiceContext struct {
 	core_context.CoreContext
-	LevelDist         *model.LevelDist
-	LevelRatio        []model.LevelRatio
-	LevelRatioMap     map[int32]model.LevelRatio
-	DiscountRate      *model.DiscountRate
-	TakeTokenConfig   *model.TakeTokenConfig
-	GiveTokenConfig   *model.GiveTokenConfig
-	RewardKeyMap      map[string]solana.PrivateKey
-	LightHouseAddress solana.PublicKey
-	TaskMgr           *task.TaskManager
+	LevelDist              *model.LevelDist
+	LevelRatio             []model.LevelRatio
+	LevelRatioMap          map[int32]model.LevelRatio
+	DiscountRate           *model.DiscountRate
+	TakeTokenConfig        *model.TakeTokenConfig
+	GiveTokenConfig        *model.GiveTokenConfig
+	CampaignExchangeConfig *model.CampaignExchangeConfig
+	RewardKeyMap           map[string]solana.PrivateKey
+	LightHouseAddress      solana.PublicKey
+	TaskMgr                *task.TaskManager
+	CampaignClientV1       *rewardrpc.CampaignClient
 }
 
 const (
@@ -62,7 +64,7 @@ func NewServiceContext() (*ServiceContext, error) {
 	redSync := redsync.New(pool)
 
 	// 创建 ServiceContext
-	svcCtx := &ServiceContext{
+	srvCtx := &ServiceContext{
 		CoreContext: core_context.CoreContext{
 			Config:  cfg,
 			DB:      db,
@@ -73,32 +75,37 @@ func NewServiceContext() (*ServiceContext, error) {
 	}
 
 	// 初始化数据库配置
-	if err := svcCtx.initDatabaseConfigs(); err != nil {
+	if err := srvCtx.initDatabaseConfigs(); err != nil {
 		return nil, err
 	}
 
 	// 初始化Solana RPC客户端
-	svcCtx.initSolanaRPC()
+	srvCtx.initSolanaRPC()
 
 	// 初始化Kafka生产者
-	if err := svcCtx.initKafkaProducer(); err != nil {
+	if err := srvCtx.initKafkaProducer(); err != nil {
 		fmt.Printf("Init kafka producer error: %v\n", err)
 	}
 
 	// 初始化Kafka消费者
-	if err := svcCtx.initKafkaConsumer(); err != nil {
+	if err := srvCtx.initKafkaConsumer(); err != nil {
 		fmt.Printf("Init kafka consumer error: %v\n", err)
 	}
 
 	// 初始化 Base 模块 RPC 客户端
-	if err := svcCtx.initBaseClient(); err != nil {
+	if err := srvCtx.initBaseClient(); err != nil {
 		fmt.Printf("Init base client error: %v\n", err)
 	}
 
-	// 初始化任务管理器
-	svcCtx.startTasks()
+	// 初始化 Campaign 模块 RPC 客户端
+	if err := srvCtx.initCampaignClient(); err != nil {
+		fmt.Printf("Init campaign client error: %v\n", err)
+	}
 
-	return svcCtx, nil
+	// 初始化任务管理器
+	srvCtx.startTasks()
+
+	return srvCtx, nil
 }
 
 func initDatabase(cfg config.DatabaseConfig) (*gorm.DB, error) {
@@ -206,6 +213,13 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 	}
 	s.GiveTokenConfig = &giveTokenConfig
 
+	// 加载 campaign 业务配置
+	var campaignExchangeConfig model.CampaignExchangeConfig
+	if err := s.DB.First(&campaignExchangeConfig).Error; err != nil {
+		return fmt.Errorf("can not find campaign exchange config from database: %v", err)
+	}
+	s.CampaignExchangeConfig = &campaignExchangeConfig
+
 	// 加载私钥
 	s.RewardKeyMap = make(map[string]solana.PrivateKey)
 	// 初始化所有业务的发送奖励私钥
@@ -256,6 +270,15 @@ func (s *ServiceContext) initBaseClient() error {
 		return fmt.Errorf("init base client error: %w", err)
 	}
 	s.BaseClient = cli
+	return nil
+}
+
+func (s *ServiceContext) initCampaignClient() error {
+	if s.SystemConfig.Env == 0 {
+		s.CampaignClientV1 = rewardrpc.NewCampaignClient("http://172.31.48.20:4000/internal/api/v1", map[string]string{})
+	} else {
+		s.CampaignClientV1 = rewardrpc.NewCampaignClient("http://172.31.48.157:80/internal/api/v1", map[string]string{})
+	}
 	return nil
 }
 

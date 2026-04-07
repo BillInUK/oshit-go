@@ -277,68 +277,72 @@ func (l *GiveTokenLogic) limitExceed() (bool, error) {
 }
 
 // ProcessCommitTx 处理前端提交的 give token 交易
-func (l *GiveTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, toNativeAccount solana.PublicKey) (*solana.Signature, error) {
-	prefix := fmt.Sprintf("%s - %s -", l.prefix, "处理钱包提交交易")
+func (l *GiveTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, toNativeAccount solana.PublicKey) error {
+	txIdStr := preCheckedTx.TxId.String()
+	prefix := fmt.Sprintf("%s 处理用户提交交易Id %v -", l.prefix, txIdStr)
 
-	// TODO: 调用 limitExceed 检查是否超过限制
-
-	// 分布式锁，防止重复处理同一地址的转账
+	// 1. 分布式锁，防止重复处理同一地址短时间内重复进行业务
 	mutex := l.rs.NewMutex("give-token:process:commit-tx:"+preCheckedTx.From.String(), redsync.WithExpiry(1*time.Hour))
 	if err := mutex.Lock(); err != nil {
 		var errTaken *redsync.ErrTaken
 		if !errors.As(err, &errTaken) {
 			log.Errorf("%s 获取处理交易的分布式锁错误: %v", prefix, err)
-			return nil, errors.New("process transaction error")
+			return errors.New("process transaction error")
 		}
-		return nil, errors.New("you have unfinished transfer.please try again later")
+		return errors.New("you have unfinished service.please try again later")
 	}
 	defer mutex.Unlock()
 
-	// 查询地址是否是有效地址
+	// 2. 查询地址是否是有效地址
 	valid, err := l.accountValid(toNativeAccount.String())
 	if err != nil {
-		log.Errorf("%s 查询地址是否是有效地址错误:[%v]", prefix, err)
-		return nil, errors.New("query receipt account match reward rule error")
+		log.Errorf("%s 查询接收地址是否是有效地址错误: %v", prefix, err)
+		return errors.New("query receipt account match reward rule error")
 	}
 
-	// 查询转账用户的邀请上级
+	// 3. 查询转账用户的邀请上级
 	upInvitersInfo, err := l.getUpInviters(preCheckedTx.From.String())
 	if err != nil {
-		log.Errorf("%s 查找转账地址[%v]的邀请上级失败", prefix, preCheckedTx.From.String())
-		return nil, errors.New("query claims and inviter error")
+		log.Errorf("%s 查找转账地址上级邀请人错误: %v", prefix, err)
+		return errors.New("query claims and inviter error")
 	}
 
 	tokenMintAccount, _ := solana.PublicKeyFromBase58(l.srvCtx.TokenConfig.Mint)
 	transferToTokenAccount, _, _ := solana.FindAssociatedTokenAddress(toNativeAccount, tokenMintAccount)
 
-	// 解析交易
+	// 4. 解析 solana 交易
 	decodedTx, err := l.decodeSOLTx(l.rpcClient, tokenMintAccount, toNativeAccount, true, &preCheckedTx.SOLTx)
 	if err != nil {
-		log.Errorf("%s 解析solana交易失败，错误: %v", prefix, err)
-		return nil, errors.New("decode solana transaction error")
+		log.Errorf("%s 解析solana交易失败错误: %v", prefix, err)
+		return errors.New("decode solana transaction error")
 	}
 
-	// 检查交易指令是否符合规则
+	// 5. 检查交易指令是否符合规则,并返回业务交易
 	decodedServiceTx, err := l.checkSOLTx(decodedTx, upInvitersInfo, transferToTokenAccount, valid)
 	if err != nil {
-		log.Errorf("%s 检查交易当中的指令失败，错误: %v", prefix, err)
-		return nil, err
+		log.Errorf("%s 检查交易当中的指令失败错误: %v", prefix, err)
+		return err
 	}
 
-	// 通过 base 模块签名并异步广播
-	txIdStr, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "GiveToken")
+	// 6. 通过 base 模块的dubbo接口签名并异步广播
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "TakeToken")
 	if err != nil {
-		log.Errorf("%s 发送交易失败,错误: %v", prefix, err)
-		return nil, errors.New(utils.FilterAndTranslateSOLError(err))
+		log.Errorf("%s 调用base模块dubbo接口发送交易失败,错误: %v", prefix, err)
+		return errors.New(utils.FilterAndTranslateSOLError(err))
 	}
-	txId := solana.MustSignatureFromBase58(txIdStr)
+	// 如果发送的交易Id与预期的不一致，则报错
+	if sentTxId == "" || sentTxId != txIdStr {
+		log.Errorf("%s 调用base模块dubbo接口发送的交易Id %s 与预期的不一致", prefix, sentTxId)
+		return errors.New("sent transaction id not equal expected")
+	}
 
-	// 记录领取记录到数据库
-	decodedServiceTx.TxID = txIdStr
+	// 7. 记录领取记录到数据库
+	txId := preCheckedTx.SOLTx.Signatures[0]
+	decodedServiceTx.TxID = txId.String()
 	if err = l.recordGiveToken(decodedServiceTx); err != nil {
 		log.Errorf("%s 记录交易信息,错误: %v", prefix, err)
-		return &txId, errors.New("record give token error")
+		return errors.New("record give token error")
 	}
 
-	return &txId, nil
+	return nil
 }

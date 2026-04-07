@@ -210,7 +210,11 @@ func (l *LotteryLogic) GetTxInfo(ctx context.Context, recordId string) (*types.C
 }
 
 // recordLotteryClaim 创建 t_lottery_claim_record 和 t_service_tx（在同一事务中）
-func (l *LotteryLogic) recordLotteryClaim(dbTx *gorm.DB, nativeAccount, txId, rewardId string) error {
+func (l *LotteryLogic) recordLotteryClaim(txId, rewardId string) error {
+	dbTx := l.db.Begin()
+	if dbTx.Error != nil {
+		return errors.New("begin transaction error")
+	}
 	// 创建 service_tx 记录
 	txRecord := model.ServiceTx{
 		Service:    "Reward",
@@ -219,6 +223,7 @@ func (l *LotteryLogic) recordLotteryClaim(dbTx *gorm.DB, nativeAccount, txId, re
 		CreatedAt:  time.Now(),
 	}
 	if err := dbTx.Table(model.TableNameServiceTx).Create(&txRecord).Error; err != nil {
+		dbTx.Rollback()
 		return fmt.Errorf("insert service tx error: %v", err)
 	}
 
@@ -231,72 +236,83 @@ func (l *LotteryLogic) recordLotteryClaim(dbTx *gorm.DB, nativeAccount, txId, re
 		UpdatedAt: time.Now(),
 	}
 	if err := dbTx.Table(model.TableNameLotteryClaimRecord).Omit("record_id").Create(&claimRecord).Error; err != nil {
+		dbTx.Rollback()
 		return fmt.Errorf("insert lottery claim record error: %v", err)
 	}
-
+	if err := dbTx.Commit().Error; err != nil {
+		log.Errorf("%s 提交事务错误: %v", l.prefix, err)
+		dbTx.Rollback()
+		return errors.New("commit transaction error")
+	}
 	return nil
 }
 
 // ProcessCommitTx 处理前端提交的抽奖领取交易
-func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, rewardId string) (*solana.Signature, error) {
-	prefix := fmt.Sprintf("%s ProcessCommitTx from=%s rewardId=%s -", l.prefix, preCheckedTx.From.String(), rewardId)
+func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, rewardId string) error {
+	txIdStr := preCheckedTx.TxId.String()
+	prefix := fmt.Sprintf("%s 处理用户提交交易Id %v -", l.prefix, txIdStr)
 
-	// 查询抽奖记录
+	// 1. 分布式锁，防止重复处理同一地址短时间内重复进行业务
+	mutex := l.rs.NewMutex("lottery:process:commit-tx:"+preCheckedTx.From.String(), redsync.WithExpiry(1*time.Hour))
+	if err := mutex.Lock(); err != nil {
+		var errTaken *redsync.ErrTaken
+		if !errors.As(err, &errTaken) {
+			log.Errorf("%s 获取处理交易的分布式锁错误: %v", prefix, err)
+			return errors.New("process transaction error")
+		}
+		return errors.New("you have unfinished service.please try again later")
+	}
+	defer mutex.Unlock()
+
+	// 2. 查询抽奖记录
 	var reward model.LotteryReward
 	if err := l.db.Table(model.TableNameLotteryReward).
-		Where("record_id = ? AND native_account = ? AND pending = ? AND state = ?", rewardId, preCheckedTx.From.String(), true, 0).
+		Where("record_id = ? and native_account = ? and pending = ? and state = ?", rewardId, preCheckedTx.From.String(), true, 0).
 		First(&reward).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("lottery reward record not found or already claimed")
+			return errors.New("lottery reward record not found or already claimed")
 		}
 		log.Errorf("%s 查询抽奖记录错误: %v", prefix, err)
-		return nil, errors.New("query lottery reward error")
+		return errors.New("query lottery reward error")
 	}
 
-	// 获取交易信息用于校验
+	// 3. 获取交易信息用于校验
 	rewardInfo, err := l.GetTxInfo(ctx, reward.RecordID)
 	if err != nil {
 		log.Errorf("%s 获取交易信息错误: %v", prefix, err)
-		return nil, fmt.Errorf("get lottery tx info error: %v", err)
+		return fmt.Errorf("get lottery tx info error: %v", err)
 	}
 
-	// 解析交易
+	// 4. 解析交易
 	decodedTx, err := l.decodeSOLTx(&preCheckedTx.SOLTx, rewardInfo)
 	if err != nil {
 		log.Errorf("%s 解析solana交易错误: %v", prefix, err)
-		return nil, fmt.Errorf("decode transaction error: %v", err)
+		return fmt.Errorf("decode transaction error: %v", err)
 	}
 
-	// 校验交易
+	// 5. 校验交易
 	if err := l.checkSOLTx(decodedTx, rewardInfo); err != nil {
 		log.Errorf("%s 校验交易错误: %v", prefix, err)
-		return nil, fmt.Errorf("check transaction error: %v", err)
+		return fmt.Errorf("check transaction error: %v", err)
 	}
 
-	// 发送交易给 base 模块
-	txIdStr, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "Lottery")
+	// 6. 发送交易给 base 模块
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "Lottery")
 	if err != nil {
 		log.Errorf("%s 发送交易失败,错误: %v", prefix, err)
-		return nil, errors.New(utils.FilterAndTranslateSOLError(err))
+		return errors.New(utils.FilterAndTranslateSOLError(err))
 	}
-	txId := solana.MustSignatureFromBase58(txIdStr)
-
-	// 在事务中记录领取记录
-	dbTx := l.db.Begin()
-	if dbTx.Error != nil {
-		return &txId, errors.New("begin transaction error")
+	// 如果发送的交易Id与预期的不一致，则报错
+	if sentTxId == "" || sentTxId != txIdStr {
+		log.Errorf("%s 调用base模块dubbo接口发送的交易Id %s 与预期的不一致", prefix, sentTxId)
+		return errors.New("sent transaction id not equal expected")
 	}
 
-	if err := l.recordLotteryClaim(dbTx, preCheckedTx.From.String(), txIdStr, rewardId); err != nil {
-		dbTx.Rollback()
+	// 7. 在事务中记录领取记录
+	if err := l.recordLotteryClaim(txIdStr, rewardId); err != nil {
 		log.Errorf("%s 记录领取记录错误: %v", prefix, err)
-		return &txId, errors.New("record lottery claim error")
+		return errors.New("record lottery claim error")
 	}
 
-	if err := dbTx.Commit().Error; err != nil {
-		log.Errorf("%s 提交事务错误: %v", prefix, err)
-		return &txId, errors.New("commit transaction error")
-	}
-
-	return &txId, nil
+	return nil
 }

@@ -26,7 +26,7 @@ func NewLotteryHandler(srvCtx *svc.ServiceContext) *LotteryHandler {
 }
 
 // GetStatus 查询今日抽奖状态
-func (h LotteryHandler) GetStatus(fiberCtx *fiber.Ctx) error {
+func (h *LotteryHandler) GetStatus(fiberCtx *fiber.Ctx) error {
 	claims, err := utils.ExtractTokenMetadata(fiberCtx)
 	if err != nil {
 		return response.UnAuthorizedError(fiberCtx, "unauthorized")
@@ -50,7 +50,7 @@ func (h LotteryHandler) GetStatus(fiberCtx *fiber.Ctx) error {
 }
 
 // GetUnClaimedRecord 查询未领取的抽奖奖励
-func (h LotteryHandler) GetUnClaimedRecord(fiberCtx *fiber.Ctx) error {
+func (h *LotteryHandler) GetUnClaimedRecord(fiberCtx *fiber.Ctx) error {
 	var req types.GetUnclaimedLotteryReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
 		log.Errorf("%s 反序列化参数错误: %v", h.prefix, err)
@@ -70,7 +70,7 @@ func (h LotteryHandler) GetUnClaimedRecord(fiberCtx *fiber.Ctx) error {
 }
 
 // ExecuteLottery 执行抽奖
-func (h LotteryHandler) ExecuteLottery(fiberCtx *fiber.Ctx) error {
+func (h *LotteryHandler) ExecuteLottery(fiberCtx *fiber.Ctx) error {
 	// 从 JWT 中提取 native account
 	claims, err := utils.ExtractTokenMetadata(fiberCtx)
 	if err != nil {
@@ -97,7 +97,7 @@ func (h LotteryHandler) ExecuteLottery(fiberCtx *fiber.Ctx) error {
 }
 
 // GetRecord 根据 txId 查询抽奖领取记录
-func (h LotteryHandler) GetRecord(fiberCtx *fiber.Ctx) error {
+func (h *LotteryHandler) GetRecord(fiberCtx *fiber.Ctx) error {
 	var req types.GetByTxIdReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
 		return response.BadRequest(fiberCtx, "invalid request body")
@@ -117,7 +117,7 @@ func (h LotteryHandler) GetRecord(fiberCtx *fiber.Ctx) error {
 }
 
 // GetTxInfo 获取抽奖领取的交易信息
-func (h LotteryHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
+func (h *LotteryHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 	var req types.GetLotteryTxInfoReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
 		log.Errorf("%s 反序列化参数错误: %v", h.prefix, err)
@@ -137,14 +137,17 @@ func (h LotteryHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 }
 
 // CommitTx 提交抽奖领取交易
-func (h LotteryHandler) CommitTx(fiberCtx *fiber.Ctx) error {
-	prefix := fmt.Sprintf("%s 处理钱包提交抽奖领取交易请求 -", h.prefix)
+func (h *LotteryHandler) CommitTx(fiberCtx *fiber.Ctx) error {
+	prefix := fmt.Sprintf("%s 处理钱包提交交易请求 -", h.prefix)
 	ctx := fiberCtx.Context()
 
+	// 1. 发序列化请求
 	var req types.CommitLotteryTxReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
 		return response.BadRequest(fiberCtx, "invalid request body")
 	}
+
+	// 2. 检查交易参数
 	if req.EncodedTx == "" {
 		return response.BadRequest(fiberCtx, "encodedTx is required")
 	}
@@ -152,19 +155,22 @@ func (h LotteryHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 		return response.BadRequest(fiberCtx, "rewardId is required")
 	}
 
-	// 初步检查提交上来的交易
+	// 3. 预检查提交上来的交易
 	preCheckedTx, err := app_utils.PreCheckEncodedTx(req.EncodedTx)
 	if err != nil {
-		log.Errorf("%s 检查打包的交易错误: %v", prefix, err)
+		log.Errorf("%s 预检查打包的交易错误: %v", prefix, err)
 		return response.FailWithError(fiberCtx, "pre check encoded transaction error", err)
 	}
 
-	log.Infof("%s 地址 %v 提交抽奖领取交易 rewardId %s", prefix, preCheckedTx.From, req.RewardId)
+	// 4. 打印交易id以及业务信息
+	prefix = fmt.Sprintf("%s 业务发起地址 %v 交易id %v", prefix, preCheckedTx.From, preCheckedTx.TxId)
+	log.Infof("%s 提交抽奖领取交易 rewardId %s", prefix, req.RewardId)
 
+	// 5. 处理交易主体逻辑
 	l := lottery.NewLotteryLogic(ctx, h.srvCtx)
-	txId, err := l.ProcessCommitTx(ctx, preCheckedTx, req.RewardId)
-	if err != nil {
+	if err := l.ProcessCommitTx(ctx, preCheckedTx, req.RewardId); err != nil {
+		log.Errorf("%s 处理交易错误: %v", prefix, err)
 		return response.FailWithError(fiberCtx, "process commit lottery tx error", err)
 	}
-	return response.OkWithData(fiberCtx, txId)
+	return response.OkWithData(fiberCtx, preCheckedTx.TxId)
 }

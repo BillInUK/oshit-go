@@ -31,8 +31,9 @@ type GiveTokenTxInfo struct {
 	Decimals      int32   `json:"decimals"`
 	QuoteSOLPrice float64 `json:"quoteSOLPrice"`
 
-	TotalReward       float64            `json:"totalReward"`
-	QuotedSOLAmount   float64            `json:"quotedSOLAmount"`
+	TotalReward     float64 `json:"totalReward"`
+	QuotedSOLAmount float64 `json:"quotedSOLAmount"`
+
 	Claims            []model.LevelRatio `json:"claims"`
 	GiveInfo          RewardTokenItem    `json:"giveInfo"`
 	RewardInfo        RewardTokenItem    `json:"rewardInfo"`
@@ -63,8 +64,9 @@ type TakeTokenTxInfo struct {
 	Invited         bool    `json:"invited"`
 	QuoteSOLPrice   float64 `json:"quoteSOLPrice"`
 
-	TotalReward       float64            `json:"totalReward"`
-	QuotedSOLAmount   float64            `json:"quotedSOLAmount"`
+	TotalReward     float64 `json:"totalReward"`
+	QuotedSOLAmount float64 `json:"quotedSOLAmount"`
+
 	Claims            []model.LevelRatio `json:"claims"`
 	RewardInfo        RewardTokenItem    `json:"rewardInfo"`
 	RewardInviterInfo []RewardTokenItem  `json:"rewardInviterInfo"`
@@ -95,8 +97,27 @@ type ClaimLotteryTxInfo struct {
 	RecordId      string  `json:"recordId"`      // 抽奖的记录id
 	RewardAccount string  `json:"rewardAccount"` // 发放抽奖记录的token
 	Mint          string  `json:"mint"`          // token地址
-	CostAccount   string  `json:"costAccount"`   // 成本费
 	Decimals      int32   `json:"decimals"`      // 币种精度
+	CostAccount   string  `json:"costAccount"`   // 成本费
 	LotteryAmount float64 `json:"lotteryAmount"` // 奖励金额
-	CostFee       float64 `json:"CostFee"`       // 成本费
+	CostFee       float64 `json:"costFee"`       // 成本费
+}
+
+type CampaignExchangeTxInfoReq struct {
+	Score uint64 `json:"score"`
+}
+
+type CampaignExchangeReq struct {
+	EncodedTx string `json:"encodedTx"`
+	XAcJwt    string `json:"x-ac-jwt"`
+	Score     uint64 `json:"score"`
+}
+
+type CampaignExchangeTxInfo struct {
+	RewardAccount string  `json:"rewardAccount"` // 发放抽奖记录的token
+	Mint          string  `json:"mint"`          // token地址
+	Decimals      int32   `json:"decimals"`      // 币种精度
+	CostAccount   string  `json:"costAccount"`   // 成本费
+	TokenAmount   float64 `json:"tokenAmount"`   // 兑换出来token的金额
+	CostFee       float64 `json:"costFee"`       // solana成本费
 }

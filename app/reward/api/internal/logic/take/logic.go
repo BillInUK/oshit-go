@@ -41,7 +41,7 @@ type TakeTokenLogic struct {
 
 func NewTakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *TakeTokenLogic {
 	return &TakeTokenLogic{
-		prefix:            "TakeToken -",
+		prefix:            "TakeToken业务 -",
 		ctx:               ctx,
 		srvCtx:            srvCtx,
 		db:                srvCtx.DB,
@@ -263,7 +263,7 @@ func (l *TakeTokenLogic) checkNeedLottery(ctx context.Context, nativeAccount str
 	today := time.Now().Truncate(24 * time.Hour)
 	var stats model.DailyClaimStats
 	err := l.db.Table(model.TableNameDailyClaimStats).
-		Where("native_account = ? AND take_date = ?", nativeAccount, today).
+		Where("native_account = ? and take_date = ?", nativeAccount, today).
 		First(&stats).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -279,45 +279,67 @@ func (l *TakeTokenLogic) checkNeedLottery(ctx context.Context, nativeAccount str
 }
 
 // ProcessCommitTx 处理提交上来的交易
-func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, inviteCode string) (*solana.Signature, error) {
-	// Check if user must complete lottery before taking again
-	if err := l.checkNeedLottery(ctx, preCheckedTx.From.String()); err != nil {
-		return nil, err
-	}
+func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, inviteCode string) error {
+	txIdStr := preCheckedTx.TxId.String()
+	prefix := fmt.Sprintf("%s 处理用户提交交易Id %v -", l.prefix, txIdStr)
 
+	// 1. 分布式锁，防止重复处理同一地址短时间内重复进行业务
+	mutex := l.rs.NewMutex("take-token:process:commit-tx:"+preCheckedTx.From.String(), redsync.WithExpiry(1*time.Hour))
+	if err := mutex.Lock(); err != nil {
+		var errTaken *redsync.ErrTaken
+		if !errors.As(err, &errTaken) {
+			log.Errorf("%s 获取处理交易的分布式锁错误: %v", prefix, err)
+			return errors.New("process transaction error")
+		}
+		return errors.New("you have unfinished service.please try again later")
+	}
+	defer mutex.Unlock()
+
+	// 2. 检查是否必须要抽奖
+	if err := l.checkNeedLottery(ctx, preCheckedTx.From.String()); err != nil {
+		log.Errorf("%s 获取钱包是否需要抽奖错误: %v", prefix, err)
+		return err
+	}
+	// 3. 获取take token的交易信息
 	takeTxInfo, err := l.getTxInfo(ctx, preCheckedTx.From.String(), inviteCode)
 	if err != nil {
-		return nil, fmt.Errorf("get take token transaction info error: %v", err)
+		log.Errorf("%s 获取交易信息错误: %v", prefix, err)
+		return fmt.Errorf("get take token transaction info error: %v", err)
 	}
 
-	// 解析出来交易里面的transfer checked和transfer指令集合
+	// 4. 解析出来交易里面的 transfer checked 和 transfer 指令集合
 	decodedTx, err := l.decodeSOLTx(takeTxInfo, &preCheckedTx.SOLTx)
 	if err != nil {
-		log.Errorf("%s 解析solana交易错误: %v", l.prefix, err)
-		return nil, fmt.Errorf("decode transaction error:%s", err)
+		log.Errorf("%s 解析solana交易错误: %v", prefix, err)
+		return fmt.Errorf("decode transaction error:%s", err)
 	}
 
-	// 检查 transfer checked 指令和 transfer 指令是否符合奖励要求
+	// 5. 检查 transfer checked 指令和 transfer 指令是否符合奖励要求
 	decodedServiceTx, err := l.checkDecodedSOLTx(takeTxInfo, decodedTx)
 	if err != nil {
-		log.Errorf("%s 校验solana交易当中的指令错误: %v", l.prefix, err)
-		return nil, fmt.Errorf("check transaction instruction failed: %v", err)
+		log.Errorf("%s 校验solana交易当中的指令错误: %v", prefix, err)
+		return fmt.Errorf("check transaction instruction failed: %v", err)
 	}
 
-	// 通过 base 模块签名并异步广播
-	txIdStr, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "TakeToken")
+	// 6. 通过 base 模块的dubbo接口签名并异步广播
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "TakeToken")
 	if err != nil {
-		log.Errorf("%s 发送交易失败,错误: %v", l.prefix, err)
-		return nil, errors.New(utils.FilterAndTranslateSOLError(err))
+		log.Errorf("%s 调用base模块dubbo接口发送交易失败,错误: %v", prefix, err)
+		return errors.New(utils.FilterAndTranslateSOLError(err))
 	}
-	txId := solana.MustSignatureFromBase58(txIdStr)
 
-	// 记录领取记录到数据库
+	// 7. 如果发送的交易Id与预期的不一致，则报错
+	if sentTxId == "" || sentTxId != txIdStr {
+		log.Errorf("%s 调用base模块dubbo接口发送的交易Id %s 与预期的不一致", prefix, sentTxId)
+		return errors.New("sent transaction id not equal expected")
+	}
+
+	// 8. 记录领取记录到数据库
 	decodedServiceTx.TxID = txIdStr
 	if err = l.recordTakeToken(takeTxInfo, decodedServiceTx, takeTxInfo.Invited); err != nil {
-		log.Errorf("%s 记录交易信息,错误: %v", l.prefix, err)
-		return &txId, errors.New("record official transfer token error")
+		log.Errorf("%s 记录交易信息,错误: %v", prefix, err)
+		return errors.New("record official transfer token error")
 	}
 
-	return &txId, nil
+	return nil
 }

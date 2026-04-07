@@ -135,12 +135,132 @@ CREATE TABLE public.t_give_token_record
     updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
--- 旧工程 t_reward_key_config
-DROP TABLE IF EXISTS public.t_reward_key_config;
-CREATE TABLE public.t_reward_key_config
+-- 奖励码
+DROP TABLE IF EXISTS public.t_reward_code;
+CREATE TABLE public.t_reward_code
 (
-    service       character varying(64)   NOT NULL,
-    encrypted_key character varying(1024) NOT NULL,
+    record_id     ulid                        DEFAULT gen_ulid() NOT NULL,
+    reward_code   character varying(6)                           NOT NULL,
+    reward_amount numeric(78, 0)                                 NOT NULL,
+    tx_id         character varying(128)      DEFAULT NULL:: character varying,
+    state         integer                     DEFAULT 0          NOT NULL,
+    expired_at    timestamp without time zone DEFAULT (CURRENT_TIMESTAMP + '24:00:00':: interval),
     created_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 奖励码奖励规则
+DROP TABLE IF EXISTS public.t_reward_code_config;
+CREATE TABLE public.t_reward_code_config
+(
+    record_id      ulid                        DEFAULT gen_ulid() NOT NULL,
+    reward_account character varying(64)                          NOT NULL,
+    cost_account   character varying(64)                          NOT NULL,
+    fee_rate       numeric(78, 0)                                 NOT NULL,
+    max_fee        numeric(78, 0)                                 NOT NULL,
+    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 奖励码兑换费率表
+DROP TABLE IF EXISTS public.t_reward_code_fee;
+CREATE TABLE public.t_reward_code_fee
+(
+    amount     numeric(78, 0) NOT NULL,
+    fee_rate   numeric(78, 0) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- campaign积分兑换
+DROP TABLE IF EXISTS public.t_campaign_exchange_config;
+CREATE TABLE public.t_campaign_exchange_config
+(
+    record_id      ulid                        DEFAULT gen_ulid() NOT NULL,
+    reward_account character varying(64)                          NOT NULL,
+    cost_account   character varying(64)                          NOT NULL,
+    rate           numeric(5, 2)                                  NOT NULL,
+    cost_rate      numeric(5, 2)                                  NOT NULL,
+    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- 全局每日兑换限额表
+DROP TABLE IF EXISTS t_global_daily_exchange_limit;
+CREATE TABLE t_global_daily_exchange_limit
+(
+    id          BIGSERIAL PRIMARY KEY,
+    daily_limit NUMERIC(78, 0) NOT NULL  DEFAULT 0,            -- 每日全局最大兑换量（单位：1/1000 token）
+    quota_date  DATE           NOT NULL  DEFAULT CURRENT_DATE, -- 日期
+    created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE (quota_date)
+);
+
+-- 用户每日兑换额度表
+DROP TABLE IF EXISTS t_user_daily_exchange_quota;
+CREATE TABLE t_user_daily_exchange_quota
+(
+    id              BIGSERIAL PRIMARY KEY,
+    user_id         VARCHAR(64)    NOT NULL,                   -- 用户ID（与t_sol_exchange_campaign_score_to_token_record中的UserId对应）
+    quota_date      DATE           NOT NULL,                   -- 日期（天）
+    max_quota       NUMERIC(78, 0) NOT NULL  DEFAULT 50000000, -- 最大兑换额度（默认500000，token decimals=3，数据库存50000000）
+    frozen_quota    NUMERIC(78, 0) NOT NULL  DEFAULT 0,        -- 冻结兑换额度
+    available_quota NUMERIC(78, 0) NOT NULL  DEFAULT 50000000, -- 可用兑换额度（初始等于max_quota）
+    created_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE (user_id, quota_date)
+);
+
+-- 用户每日兑换额度表
+DROP TABLE IF EXISTS t_user_daily_exchange_quota;
+CREATE TABLE t_user_daily_exchange_quota
+(
+    id BIGSERIAL PRIMARY KEY,
+    user_id VARCHAR(64) NOT NULL, -- 用户ID（与t_sol_exchange_campaign_score_to_token_record中的UserId对应）
+    quota_date DATE NOT NULL, -- 日期（天）
+    max_quota NUMERIC(78, 0) NOT NULL DEFAULT 50000000, -- 最大兑换额度（默认500000，token decimals=3，数据库存50000000）
+    frozen_quota NUMERIC(78, 0) NOT NULL DEFAULT 0, -- 冻结兑换额度
+    available_quota NUMERIC(78, 0) NOT NULL DEFAULT 50000000, -- 可用兑换额度（初始等于max_quota）
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE (user_id, quota_date)
+);
+
+-- 兑换社交媒体积分为token的记录
+DROP TABLE IF EXISTS public.t_campaign_exchange_record;
+CREATE TABLE public.t_campaign_exchange_record
+(
+    record_id       ulid           NOT NULL     DEFAULT gen_ulid(),-- 记录Id
+    reward_account  VARCHAR(64)    NOT NULL,-- 发放奖励的native account
+    receipt_account VARCHAR(64)    NOT NULL,-- 接收奖励的native account
+    provider        VARCHAR(64)    NOT NULL,-- 社交媒体
+    user_id         VARCHAR(64)    NOT NULL,-- 用户ID
+    tx_id           VARCHAR(128)   NOT NULL,-- 奖励token的txId
+    score_flow_id   INT            NOT NULL,-- 积分流水Id
+    score_tx_id     VARCHAR(128)   NOT NULL,-- 积分交易Id
+    amount          NUMERIC(78, 0) NOT NULL,-- 获取的token额度
+    score           NUMERIC(78, 0) NOT NULL,-- 兑换的积分额度
+    state           INT,-- 状态,-1.失败 0.初始化 1.成功
+    created_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (record_id)
+);
+CREATE INDEX ON public.t_campaign_exchange_record (receipt_account);
+CREATE INDEX ON public.t_campaign_exchange_record (provider, user_id);
+CREATE INDEX ON public.t_campaign_exchange_record (tx_id);
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -16,40 +16,49 @@ import (
 )
 
 var (
-	Q                   = new(Query)
-	AwsConfig           *awsConfig
-	ChainConfig         *chainConfig
-	DailyClaimStats     *dailyClaimStats
-	DiscountRate        *discountRate
-	ExcludeAccount      *excludeAccount
-	FeeStatistics       *feeStatistics
-	FeeTolerance        *feeTolerance
-	FundFlow            *fundFlow
-	GiveTokenConfig     *giveTokenConfig
-	GiveTokenRecord     *giveTokenRecord
-	HackerAccount       *hackerAccount
-	InviteRelation      *inviteRelation
-	LevelDist           *levelDist
-	LevelRatio          *levelRatio
-	LotteryClaimRecord  *lotteryClaimRecord
-	LotteryReward       *lotteryReward
-	NativeAccountInfo   *nativeAccountInfo
-	QnFee               *qnFee
-	RewardKeyConfig     *rewardKeyConfig
-	ServiceInfo         *serviceInfo
-	ServiceKey          *serviceKey
-	ServiceTx           *serviceTx
-	SystemConfig        *systemConfig
-	TakeTokenConfig     *takeTokenConfig
-	TakeTokenRecord     *takeTokenRecord
-	TokenConfig         *tokenConfig
-	TxScanInfo          *txScanInfo
-	UserWalletRpcConfig *userWalletRpcConfig
+	Q                        = new(Query)
+	AwsConfig                *awsConfig
+	CampaignExchangeConfig   *campaignExchangeConfig
+	CampaignExchangeRecord   *campaignExchangeRecord
+	ChainConfig              *chainConfig
+	DailyClaimStats          *dailyClaimStats
+	DiscountRate             *discountRate
+	ExcludeAccount           *excludeAccount
+	FeeStatistics            *feeStatistics
+	FeeTolerance             *feeTolerance
+	FundFlow                 *fundFlow
+	GiveTokenConfig          *giveTokenConfig
+	GiveTokenRecord          *giveTokenRecord
+	GlobalDailyExchangeLimit *globalDailyExchangeLimit
+	HackerAccount            *hackerAccount
+	InviteRelation           *inviteRelation
+	LevelDist                *levelDist
+	LevelRatio               *levelRatio
+	LotteryClaimRecord       *lotteryClaimRecord
+	LotteryReward            *lotteryReward
+	NativeAccountInfo        *nativeAccountInfo
+	QnFee                    *qnFee
+	RewardCode               *rewardCode
+	RewardCodeConfig         *rewardCodeConfig
+	RewardCodeFee            *rewardCodeFee
+	RewardKeyConfig          *rewardKeyConfig
+	ServiceInfo              *serviceInfo
+	ServiceKey               *serviceKey
+	ServiceTx                *serviceTx
+	SystemConfig             *systemConfig
+	TakeTokenConfig          *takeTokenConfig
+	TakeTokenRecord          *takeTokenRecord
+	TokenConfig              *tokenConfig
+	TxScanInfo               *txScanInfo
+	UserDailyExchangeQuota   *userDailyExchangeQuota
+	UserWalletRpcConfig      *userWalletRpcConfig
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	AwsConfig = &Q.AwsConfig
+	CampaignExchangeConfig = &Q.CampaignExchangeConfig
+	CampaignExchangeRecord = &Q.CampaignExchangeRecord
 	ChainConfig = &Q.ChainConfig
 	DailyClaimStats = &Q.DailyClaimStats
 	DiscountRate = &Q.DiscountRate
@@ -59,6 +68,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	FundFlow = &Q.FundFlow
 	GiveTokenConfig = &Q.GiveTokenConfig
 	GiveTokenRecord = &Q.GiveTokenRecord
+	GlobalDailyExchangeLimit = &Q.GlobalDailyExchangeLimit
 	HackerAccount = &Q.HackerAccount
 	InviteRelation = &Q.InviteRelation
 	LevelDist = &Q.LevelDist
@@ -67,6 +77,9 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	LotteryReward = &Q.LotteryReward
 	NativeAccountInfo = &Q.NativeAccountInfo
 	QnFee = &Q.QnFee
+	RewardCode = &Q.RewardCode
+	RewardCodeConfig = &Q.RewardCodeConfig
+	RewardCodeFee = &Q.RewardCodeFee
 	RewardKeyConfig = &Q.RewardKeyConfig
 	ServiceInfo = &Q.ServiceInfo
 	ServiceKey = &Q.ServiceKey
@@ -76,109 +89,131 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	TakeTokenRecord = &Q.TakeTokenRecord
 	TokenConfig = &Q.TokenConfig
 	TxScanInfo = &Q.TxScanInfo
+	UserDailyExchangeQuota = &Q.UserDailyExchangeQuota
 	UserWalletRpcConfig = &Q.UserWalletRpcConfig
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:                  db,
-		AwsConfig:           newAwsConfig(db, opts...),
-		ChainConfig:         newChainConfig(db, opts...),
-		DailyClaimStats:     newDailyClaimStats(db, opts...),
-		DiscountRate:        newDiscountRate(db, opts...),
-		ExcludeAccount:      newExcludeAccount(db, opts...),
-		FeeStatistics:       newFeeStatistics(db, opts...),
-		FeeTolerance:        newFeeTolerance(db, opts...),
-		FundFlow:            newFundFlow(db, opts...),
-		GiveTokenConfig:     newGiveTokenConfig(db, opts...),
-		GiveTokenRecord:     newGiveTokenRecord(db, opts...),
-		HackerAccount:       newHackerAccount(db, opts...),
-		InviteRelation:      newInviteRelation(db, opts...),
-		LevelDist:           newLevelDist(db, opts...),
-		LevelRatio:          newLevelRatio(db, opts...),
-		LotteryClaimRecord:  newLotteryClaimRecord(db, opts...),
-		LotteryReward:       newLotteryReward(db, opts...),
-		NativeAccountInfo:   newNativeAccountInfo(db, opts...),
-		QnFee:               newQnFee(db, opts...),
-		RewardKeyConfig:     newRewardKeyConfig(db, opts...),
-		ServiceInfo:         newServiceInfo(db, opts...),
-		ServiceKey:          newServiceKey(db, opts...),
-		ServiceTx:           newServiceTx(db, opts...),
-		SystemConfig:        newSystemConfig(db, opts...),
-		TakeTokenConfig:     newTakeTokenConfig(db, opts...),
-		TakeTokenRecord:     newTakeTokenRecord(db, opts...),
-		TokenConfig:         newTokenConfig(db, opts...),
-		TxScanInfo:          newTxScanInfo(db, opts...),
-		UserWalletRpcConfig: newUserWalletRpcConfig(db, opts...),
+		db:                       db,
+		AwsConfig:                newAwsConfig(db, opts...),
+		CampaignExchangeConfig:   newCampaignExchangeConfig(db, opts...),
+		CampaignExchangeRecord:   newCampaignExchangeRecord(db, opts...),
+		ChainConfig:              newChainConfig(db, opts...),
+		DailyClaimStats:          newDailyClaimStats(db, opts...),
+		DiscountRate:             newDiscountRate(db, opts...),
+		ExcludeAccount:           newExcludeAccount(db, opts...),
+		FeeStatistics:            newFeeStatistics(db, opts...),
+		FeeTolerance:             newFeeTolerance(db, opts...),
+		FundFlow:                 newFundFlow(db, opts...),
+		GiveTokenConfig:          newGiveTokenConfig(db, opts...),
+		GiveTokenRecord:          newGiveTokenRecord(db, opts...),
+		GlobalDailyExchangeLimit: newGlobalDailyExchangeLimit(db, opts...),
+		HackerAccount:            newHackerAccount(db, opts...),
+		InviteRelation:           newInviteRelation(db, opts...),
+		LevelDist:                newLevelDist(db, opts...),
+		LevelRatio:               newLevelRatio(db, opts...),
+		LotteryClaimRecord:       newLotteryClaimRecord(db, opts...),
+		LotteryReward:            newLotteryReward(db, opts...),
+		NativeAccountInfo:        newNativeAccountInfo(db, opts...),
+		QnFee:                    newQnFee(db, opts...),
+		RewardCode:               newRewardCode(db, opts...),
+		RewardCodeConfig:         newRewardCodeConfig(db, opts...),
+		RewardCodeFee:            newRewardCodeFee(db, opts...),
+		RewardKeyConfig:          newRewardKeyConfig(db, opts...),
+		ServiceInfo:              newServiceInfo(db, opts...),
+		ServiceKey:               newServiceKey(db, opts...),
+		ServiceTx:                newServiceTx(db, opts...),
+		SystemConfig:             newSystemConfig(db, opts...),
+		TakeTokenConfig:          newTakeTokenConfig(db, opts...),
+		TakeTokenRecord:          newTakeTokenRecord(db, opts...),
+		TokenConfig:              newTokenConfig(db, opts...),
+		TxScanInfo:               newTxScanInfo(db, opts...),
+		UserDailyExchangeQuota:   newUserDailyExchangeQuota(db, opts...),
+		UserWalletRpcConfig:      newUserWalletRpcConfig(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	AwsConfig           awsConfig
-	ChainConfig         chainConfig
-	DailyClaimStats     dailyClaimStats
-	DiscountRate        discountRate
-	ExcludeAccount      excludeAccount
-	FeeStatistics       feeStatistics
-	FeeTolerance        feeTolerance
-	FundFlow            fundFlow
-	GiveTokenConfig     giveTokenConfig
-	GiveTokenRecord     giveTokenRecord
-	HackerAccount       hackerAccount
-	InviteRelation      inviteRelation
-	LevelDist           levelDist
-	LevelRatio          levelRatio
-	LotteryClaimRecord  lotteryClaimRecord
-	LotteryReward       lotteryReward
-	NativeAccountInfo   nativeAccountInfo
-	QnFee               qnFee
-	RewardKeyConfig     rewardKeyConfig
-	ServiceInfo         serviceInfo
-	ServiceKey          serviceKey
-	ServiceTx           serviceTx
-	SystemConfig        systemConfig
-	TakeTokenConfig     takeTokenConfig
-	TakeTokenRecord     takeTokenRecord
-	TokenConfig         tokenConfig
-	TxScanInfo          txScanInfo
-	UserWalletRpcConfig userWalletRpcConfig
+	AwsConfig                awsConfig
+	CampaignExchangeConfig   campaignExchangeConfig
+	CampaignExchangeRecord   campaignExchangeRecord
+	ChainConfig              chainConfig
+	DailyClaimStats          dailyClaimStats
+	DiscountRate             discountRate
+	ExcludeAccount           excludeAccount
+	FeeStatistics            feeStatistics
+	FeeTolerance             feeTolerance
+	FundFlow                 fundFlow
+	GiveTokenConfig          giveTokenConfig
+	GiveTokenRecord          giveTokenRecord
+	GlobalDailyExchangeLimit globalDailyExchangeLimit
+	HackerAccount            hackerAccount
+	InviteRelation           inviteRelation
+	LevelDist                levelDist
+	LevelRatio               levelRatio
+	LotteryClaimRecord       lotteryClaimRecord
+	LotteryReward            lotteryReward
+	NativeAccountInfo        nativeAccountInfo
+	QnFee                    qnFee
+	RewardCode               rewardCode
+	RewardCodeConfig         rewardCodeConfig
+	RewardCodeFee            rewardCodeFee
+	RewardKeyConfig          rewardKeyConfig
+	ServiceInfo              serviceInfo
+	ServiceKey               serviceKey
+	ServiceTx                serviceTx
+	SystemConfig             systemConfig
+	TakeTokenConfig          takeTokenConfig
+	TakeTokenRecord          takeTokenRecord
+	TokenConfig              tokenConfig
+	TxScanInfo               txScanInfo
+	UserDailyExchangeQuota   userDailyExchangeQuota
+	UserWalletRpcConfig      userWalletRpcConfig
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:                  db,
-		AwsConfig:           q.AwsConfig.clone(db),
-		ChainConfig:         q.ChainConfig.clone(db),
-		DailyClaimStats:     q.DailyClaimStats.clone(db),
-		DiscountRate:        q.DiscountRate.clone(db),
-		ExcludeAccount:      q.ExcludeAccount.clone(db),
-		FeeStatistics:       q.FeeStatistics.clone(db),
-		FeeTolerance:        q.FeeTolerance.clone(db),
-		FundFlow:            q.FundFlow.clone(db),
-		GiveTokenConfig:     q.GiveTokenConfig.clone(db),
-		GiveTokenRecord:     q.GiveTokenRecord.clone(db),
-		HackerAccount:       q.HackerAccount.clone(db),
-		InviteRelation:      q.InviteRelation.clone(db),
-		LevelDist:           q.LevelDist.clone(db),
-		LevelRatio:          q.LevelRatio.clone(db),
-		LotteryClaimRecord:  q.LotteryClaimRecord.clone(db),
-		LotteryReward:       q.LotteryReward.clone(db),
-		NativeAccountInfo:   q.NativeAccountInfo.clone(db),
-		QnFee:               q.QnFee.clone(db),
-		RewardKeyConfig:     q.RewardKeyConfig.clone(db),
-		ServiceInfo:         q.ServiceInfo.clone(db),
-		ServiceKey:          q.ServiceKey.clone(db),
-		ServiceTx:           q.ServiceTx.clone(db),
-		SystemConfig:        q.SystemConfig.clone(db),
-		TakeTokenConfig:     q.TakeTokenConfig.clone(db),
-		TakeTokenRecord:     q.TakeTokenRecord.clone(db),
-		TokenConfig:         q.TokenConfig.clone(db),
-		TxScanInfo:          q.TxScanInfo.clone(db),
-		UserWalletRpcConfig: q.UserWalletRpcConfig.clone(db),
+		db:                       db,
+		AwsConfig:                q.AwsConfig.clone(db),
+		CampaignExchangeConfig:   q.CampaignExchangeConfig.clone(db),
+		CampaignExchangeRecord:   q.CampaignExchangeRecord.clone(db),
+		ChainConfig:              q.ChainConfig.clone(db),
+		DailyClaimStats:          q.DailyClaimStats.clone(db),
+		DiscountRate:             q.DiscountRate.clone(db),
+		ExcludeAccount:           q.ExcludeAccount.clone(db),
+		FeeStatistics:            q.FeeStatistics.clone(db),
+		FeeTolerance:             q.FeeTolerance.clone(db),
+		FundFlow:                 q.FundFlow.clone(db),
+		GiveTokenConfig:          q.GiveTokenConfig.clone(db),
+		GiveTokenRecord:          q.GiveTokenRecord.clone(db),
+		GlobalDailyExchangeLimit: q.GlobalDailyExchangeLimit.clone(db),
+		HackerAccount:            q.HackerAccount.clone(db),
+		InviteRelation:           q.InviteRelation.clone(db),
+		LevelDist:                q.LevelDist.clone(db),
+		LevelRatio:               q.LevelRatio.clone(db),
+		LotteryClaimRecord:       q.LotteryClaimRecord.clone(db),
+		LotteryReward:            q.LotteryReward.clone(db),
+		NativeAccountInfo:        q.NativeAccountInfo.clone(db),
+		QnFee:                    q.QnFee.clone(db),
+		RewardCode:               q.RewardCode.clone(db),
+		RewardCodeConfig:         q.RewardCodeConfig.clone(db),
+		RewardCodeFee:            q.RewardCodeFee.clone(db),
+		RewardKeyConfig:          q.RewardKeyConfig.clone(db),
+		ServiceInfo:              q.ServiceInfo.clone(db),
+		ServiceKey:               q.ServiceKey.clone(db),
+		ServiceTx:                q.ServiceTx.clone(db),
+		SystemConfig:             q.SystemConfig.clone(db),
+		TakeTokenConfig:          q.TakeTokenConfig.clone(db),
+		TakeTokenRecord:          q.TakeTokenRecord.clone(db),
+		TokenConfig:              q.TokenConfig.clone(db),
+		TxScanInfo:               q.TxScanInfo.clone(db),
+		UserDailyExchangeQuota:   q.UserDailyExchangeQuota.clone(db),
+		UserWalletRpcConfig:      q.UserWalletRpcConfig.clone(db),
 	}
 }
 
@@ -192,99 +227,120 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:                  db,
-		AwsConfig:           q.AwsConfig.replaceDB(db),
-		ChainConfig:         q.ChainConfig.replaceDB(db),
-		DailyClaimStats:     q.DailyClaimStats.replaceDB(db),
-		DiscountRate:        q.DiscountRate.replaceDB(db),
-		ExcludeAccount:      q.ExcludeAccount.replaceDB(db),
-		FeeStatistics:       q.FeeStatistics.replaceDB(db),
-		FeeTolerance:        q.FeeTolerance.replaceDB(db),
-		FundFlow:            q.FundFlow.replaceDB(db),
-		GiveTokenConfig:     q.GiveTokenConfig.replaceDB(db),
-		GiveTokenRecord:     q.GiveTokenRecord.replaceDB(db),
-		HackerAccount:       q.HackerAccount.replaceDB(db),
-		InviteRelation:      q.InviteRelation.replaceDB(db),
-		LevelDist:           q.LevelDist.replaceDB(db),
-		LevelRatio:          q.LevelRatio.replaceDB(db),
-		LotteryClaimRecord:  q.LotteryClaimRecord.replaceDB(db),
-		LotteryReward:       q.LotteryReward.replaceDB(db),
-		NativeAccountInfo:   q.NativeAccountInfo.replaceDB(db),
-		QnFee:               q.QnFee.replaceDB(db),
-		RewardKeyConfig:     q.RewardKeyConfig.replaceDB(db),
-		ServiceInfo:         q.ServiceInfo.replaceDB(db),
-		ServiceKey:          q.ServiceKey.replaceDB(db),
-		ServiceTx:           q.ServiceTx.replaceDB(db),
-		SystemConfig:        q.SystemConfig.replaceDB(db),
-		TakeTokenConfig:     q.TakeTokenConfig.replaceDB(db),
-		TakeTokenRecord:     q.TakeTokenRecord.replaceDB(db),
-		TokenConfig:         q.TokenConfig.replaceDB(db),
-		TxScanInfo:          q.TxScanInfo.replaceDB(db),
-		UserWalletRpcConfig: q.UserWalletRpcConfig.replaceDB(db),
+		db:                       db,
+		AwsConfig:                q.AwsConfig.replaceDB(db),
+		CampaignExchangeConfig:   q.CampaignExchangeConfig.replaceDB(db),
+		CampaignExchangeRecord:   q.CampaignExchangeRecord.replaceDB(db),
+		ChainConfig:              q.ChainConfig.replaceDB(db),
+		DailyClaimStats:          q.DailyClaimStats.replaceDB(db),
+		DiscountRate:             q.DiscountRate.replaceDB(db),
+		ExcludeAccount:           q.ExcludeAccount.replaceDB(db),
+		FeeStatistics:            q.FeeStatistics.replaceDB(db),
+		FeeTolerance:             q.FeeTolerance.replaceDB(db),
+		FundFlow:                 q.FundFlow.replaceDB(db),
+		GiveTokenConfig:          q.GiveTokenConfig.replaceDB(db),
+		GiveTokenRecord:          q.GiveTokenRecord.replaceDB(db),
+		GlobalDailyExchangeLimit: q.GlobalDailyExchangeLimit.replaceDB(db),
+		HackerAccount:            q.HackerAccount.replaceDB(db),
+		InviteRelation:           q.InviteRelation.replaceDB(db),
+		LevelDist:                q.LevelDist.replaceDB(db),
+		LevelRatio:               q.LevelRatio.replaceDB(db),
+		LotteryClaimRecord:       q.LotteryClaimRecord.replaceDB(db),
+		LotteryReward:            q.LotteryReward.replaceDB(db),
+		NativeAccountInfo:        q.NativeAccountInfo.replaceDB(db),
+		QnFee:                    q.QnFee.replaceDB(db),
+		RewardCode:               q.RewardCode.replaceDB(db),
+		RewardCodeConfig:         q.RewardCodeConfig.replaceDB(db),
+		RewardCodeFee:            q.RewardCodeFee.replaceDB(db),
+		RewardKeyConfig:          q.RewardKeyConfig.replaceDB(db),
+		ServiceInfo:              q.ServiceInfo.replaceDB(db),
+		ServiceKey:               q.ServiceKey.replaceDB(db),
+		ServiceTx:                q.ServiceTx.replaceDB(db),
+		SystemConfig:             q.SystemConfig.replaceDB(db),
+		TakeTokenConfig:          q.TakeTokenConfig.replaceDB(db),
+		TakeTokenRecord:          q.TakeTokenRecord.replaceDB(db),
+		TokenConfig:              q.TokenConfig.replaceDB(db),
+		TxScanInfo:               q.TxScanInfo.replaceDB(db),
+		UserDailyExchangeQuota:   q.UserDailyExchangeQuota.replaceDB(db),
+		UserWalletRpcConfig:      q.UserWalletRpcConfig.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	AwsConfig           IAwsConfigDo
-	ChainConfig         IChainConfigDo
-	DailyClaimStats     IDailyClaimStatsDo
-	DiscountRate        IDiscountRateDo
-	ExcludeAccount      IExcludeAccountDo
-	FeeStatistics       IFeeStatisticsDo
-	FeeTolerance        IFeeToleranceDo
-	FundFlow            IFundFlowDo
-	GiveTokenConfig     IGiveTokenConfigDo
-	GiveTokenRecord     IGiveTokenRecordDo
-	HackerAccount       IHackerAccountDo
-	InviteRelation      IInviteRelationDo
-	LevelDist           ILevelDistDo
-	LevelRatio          ILevelRatioDo
-	LotteryClaimRecord  ILotteryClaimRecordDo
-	LotteryReward       ILotteryRewardDo
-	NativeAccountInfo   INativeAccountInfoDo
-	QnFee               IQnFeeDo
-	RewardKeyConfig     IRewardKeyConfigDo
-	ServiceInfo         IServiceInfoDo
-	ServiceKey          IServiceKeyDo
-	ServiceTx           IServiceTxDo
-	SystemConfig        ISystemConfigDo
-	TakeTokenConfig     ITakeTokenConfigDo
-	TakeTokenRecord     ITakeTokenRecordDo
-	TokenConfig         ITokenConfigDo
-	TxScanInfo          ITxScanInfoDo
-	UserWalletRpcConfig IUserWalletRpcConfigDo
+	AwsConfig                IAwsConfigDo
+	CampaignExchangeConfig   ICampaignExchangeConfigDo
+	CampaignExchangeRecord   ICampaignExchangeRecordDo
+	ChainConfig              IChainConfigDo
+	DailyClaimStats          IDailyClaimStatsDo
+	DiscountRate             IDiscountRateDo
+	ExcludeAccount           IExcludeAccountDo
+	FeeStatistics            IFeeStatisticsDo
+	FeeTolerance             IFeeToleranceDo
+	FundFlow                 IFundFlowDo
+	GiveTokenConfig          IGiveTokenConfigDo
+	GiveTokenRecord          IGiveTokenRecordDo
+	GlobalDailyExchangeLimit IGlobalDailyExchangeLimitDo
+	HackerAccount            IHackerAccountDo
+	InviteRelation           IInviteRelationDo
+	LevelDist                ILevelDistDo
+	LevelRatio               ILevelRatioDo
+	LotteryClaimRecord       ILotteryClaimRecordDo
+	LotteryReward            ILotteryRewardDo
+	NativeAccountInfo        INativeAccountInfoDo
+	QnFee                    IQnFeeDo
+	RewardCode               IRewardCodeDo
+	RewardCodeConfig         IRewardCodeConfigDo
+	RewardCodeFee            IRewardCodeFeeDo
+	RewardKeyConfig          IRewardKeyConfigDo
+	ServiceInfo              IServiceInfoDo
+	ServiceKey               IServiceKeyDo
+	ServiceTx                IServiceTxDo
+	SystemConfig             ISystemConfigDo
+	TakeTokenConfig          ITakeTokenConfigDo
+	TakeTokenRecord          ITakeTokenRecordDo
+	TokenConfig              ITokenConfigDo
+	TxScanInfo               ITxScanInfoDo
+	UserDailyExchangeQuota   IUserDailyExchangeQuotaDo
+	UserWalletRpcConfig      IUserWalletRpcConfigDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		AwsConfig:           q.AwsConfig.WithContext(ctx),
-		ChainConfig:         q.ChainConfig.WithContext(ctx),
-		DailyClaimStats:     q.DailyClaimStats.WithContext(ctx),
-		DiscountRate:        q.DiscountRate.WithContext(ctx),
-		ExcludeAccount:      q.ExcludeAccount.WithContext(ctx),
-		FeeStatistics:       q.FeeStatistics.WithContext(ctx),
-		FeeTolerance:        q.FeeTolerance.WithContext(ctx),
-		FundFlow:            q.FundFlow.WithContext(ctx),
-		GiveTokenConfig:     q.GiveTokenConfig.WithContext(ctx),
-		GiveTokenRecord:     q.GiveTokenRecord.WithContext(ctx),
-		HackerAccount:       q.HackerAccount.WithContext(ctx),
-		InviteRelation:      q.InviteRelation.WithContext(ctx),
-		LevelDist:           q.LevelDist.WithContext(ctx),
-		LevelRatio:          q.LevelRatio.WithContext(ctx),
-		LotteryClaimRecord:  q.LotteryClaimRecord.WithContext(ctx),
-		LotteryReward:       q.LotteryReward.WithContext(ctx),
-		NativeAccountInfo:   q.NativeAccountInfo.WithContext(ctx),
-		QnFee:               q.QnFee.WithContext(ctx),
-		RewardKeyConfig:     q.RewardKeyConfig.WithContext(ctx),
-		ServiceInfo:         q.ServiceInfo.WithContext(ctx),
-		ServiceKey:          q.ServiceKey.WithContext(ctx),
-		ServiceTx:           q.ServiceTx.WithContext(ctx),
-		SystemConfig:        q.SystemConfig.WithContext(ctx),
-		TakeTokenConfig:     q.TakeTokenConfig.WithContext(ctx),
-		TakeTokenRecord:     q.TakeTokenRecord.WithContext(ctx),
-		TokenConfig:         q.TokenConfig.WithContext(ctx),
-		TxScanInfo:          q.TxScanInfo.WithContext(ctx),
-		UserWalletRpcConfig: q.UserWalletRpcConfig.WithContext(ctx),
+		AwsConfig:                q.AwsConfig.WithContext(ctx),
+		CampaignExchangeConfig:   q.CampaignExchangeConfig.WithContext(ctx),
+		CampaignExchangeRecord:   q.CampaignExchangeRecord.WithContext(ctx),
+		ChainConfig:              q.ChainConfig.WithContext(ctx),
+		DailyClaimStats:          q.DailyClaimStats.WithContext(ctx),
+		DiscountRate:             q.DiscountRate.WithContext(ctx),
+		ExcludeAccount:           q.ExcludeAccount.WithContext(ctx),
+		FeeStatistics:            q.FeeStatistics.WithContext(ctx),
+		FeeTolerance:             q.FeeTolerance.WithContext(ctx),
+		FundFlow:                 q.FundFlow.WithContext(ctx),
+		GiveTokenConfig:          q.GiveTokenConfig.WithContext(ctx),
+		GiveTokenRecord:          q.GiveTokenRecord.WithContext(ctx),
+		GlobalDailyExchangeLimit: q.GlobalDailyExchangeLimit.WithContext(ctx),
+		HackerAccount:            q.HackerAccount.WithContext(ctx),
+		InviteRelation:           q.InviteRelation.WithContext(ctx),
+		LevelDist:                q.LevelDist.WithContext(ctx),
+		LevelRatio:               q.LevelRatio.WithContext(ctx),
+		LotteryClaimRecord:       q.LotteryClaimRecord.WithContext(ctx),
+		LotteryReward:            q.LotteryReward.WithContext(ctx),
+		NativeAccountInfo:        q.NativeAccountInfo.WithContext(ctx),
+		QnFee:                    q.QnFee.WithContext(ctx),
+		RewardCode:               q.RewardCode.WithContext(ctx),
+		RewardCodeConfig:         q.RewardCodeConfig.WithContext(ctx),
+		RewardCodeFee:            q.RewardCodeFee.WithContext(ctx),
+		RewardKeyConfig:          q.RewardKeyConfig.WithContext(ctx),
+		ServiceInfo:              q.ServiceInfo.WithContext(ctx),
+		ServiceKey:               q.ServiceKey.WithContext(ctx),
+		ServiceTx:                q.ServiceTx.WithContext(ctx),
+		SystemConfig:             q.SystemConfig.WithContext(ctx),
+		TakeTokenConfig:          q.TakeTokenConfig.WithContext(ctx),
+		TakeTokenRecord:          q.TakeTokenRecord.WithContext(ctx),
+		TokenConfig:              q.TokenConfig.WithContext(ctx),
+		TxScanInfo:               q.TxScanInfo.WithContext(ctx),
+		UserDailyExchangeQuota:   q.UserDailyExchangeQuota.WithContext(ctx),
+		UserWalletRpcConfig:      q.UserWalletRpcConfig.WithContext(ctx),
 	}
 }
 

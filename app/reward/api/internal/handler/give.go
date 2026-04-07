@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -13,11 +14,15 @@ import (
 )
 
 type GiveTokenHandler struct {
+	prefix string
 	srvCtx *svc.ServiceContext
 }
 
 func NewGiveTokenHandler(srvCtx *svc.ServiceContext) *GiveTokenHandler {
-	return &GiveTokenHandler{srvCtx}
+	return &GiveTokenHandler{
+		prefix: "GiveToken业务 - 处理前端请求 -",
+		srvCtx: srvCtx,
+	}
 }
 
 // GetConfig 获取 give token 配置信息
@@ -87,33 +92,41 @@ func (h *GiveTokenHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 // CommitTx 提交打包好的交易，等待服务器签名
 func (h *GiveTokenHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 	ctx := fiberCtx.Context()
-	// 检查请求当中的to account
+	prefix := fmt.Sprintf("%s 处理钱包提交交易请求 - ", h.prefix)
+
+	// 1. 反序列化请求
 	var req types.CommitGiveTokenTxInfoReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
+		log.Errorf("%s 反序列化请求错误: %v", prefix, err)
 		return response.BadRequest(fiberCtx, "invalid request body")
 	}
 	encodedTx := req.EncodedTx
 
-	// 检查to地址是否正确
+	// 2. 检查请求当中的参数是否正确
 	toNativeAccount, err := solana.PublicKeyFromBase58(req.To)
 	if err != nil {
+		log.Errorf("%s 接收token的地址校验错误: %v", prefix, err)
 		return response.FailWithError(fiberCtx, "malformed to address", err)
 	}
 
-	// 解析交易，确定手续费支付地址，成本费支付地址，以及签名是否正确
+	// 3. 解析交易，确定手续费支付地址，成本费支付地址，以及签名是否正确
 	preCheckedTx, err := app_utils.PreCheckEncodedTx(encodedTx)
 	if err != nil {
-		log.Errorf("官方转账获取奖励 - 检查打包的交易错误: %v", err)
+		log.Errorf("%s 预检查打包的交易错误: %v", prefix, err)
 		return response.FailWithError(fiberCtx, "check transaction error: %v", err)
 	}
 
-	// 处理交易
+	// 4. 打印交易id以及业务信息
+	prefix = fmt.Sprintf("%s 业务发起地址 %v 交易id %v", prefix, preCheckedTx.From, preCheckedTx.TxId)
+	log.Infof("%s 接收token地址 %s", prefix, req.To)
+
+	// 5. 处理交易主逻辑
 	l := give.NewGiveTokenLogic(ctx, h.srvCtx)
-	txId, err := l.ProcessCommitTx(ctx, preCheckedTx, toNativeAccount)
-	if err != nil {
+	if err := l.ProcessCommitTx(ctx, preCheckedTx, toNativeAccount); err != nil {
+		log.Errorf("%s 处理交易错误: %v", prefix, err)
 		return response.FailWithError(fiberCtx, "process transaction error:", err)
 	}
 
-	// 返回交易Id
-	return response.OkWithData(fiberCtx, txId)
+	// 6. 返回交易Id
+	return response.OkWithData(fiberCtx, preCheckedTx.TxId)
 }
