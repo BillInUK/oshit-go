@@ -1,13 +1,16 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"oshit-go/app/pos/api/internal/logic/stake"
 	"oshit-go/app/pos/api/internal/svc"
 	"oshit-go/app/pos/api/types"
+	app_utils "oshit-go/app/utils"
 	"oshit-go/common/pkg/response"
 	"oshit-go/common/utils"
 )
@@ -57,7 +60,7 @@ func (h *StakeHandler) GetRewardRecord(fiberCtx *fiber.Ctx) error {
 	if err != nil {
 		return response.UnAuthorizedError(fiberCtx, "unauthorized")
 	}
-	nativeAccountString := claims.Credentials["nativeAccount"].(string)
+	nativeAccountString := claims.Credentials["account"].(string)
 	if _, err := solana.PublicKeyFromBase58(nativeAccountString); err != nil {
 		return response.FailWithError(fiberCtx, "malformed native account", err)
 	}
@@ -68,7 +71,7 @@ func (h *StakeHandler) GetRewardRecord(fiberCtx *fiber.Ctx) error {
 	}
 	l := stake.NewStakeRewardLogic(fiberCtx.Context(), h.srvCtx)
 
-	record, err := l.GetRewardRecord(req.TxId)
+	record, err := l.GetRewardRecord(nativeAccountString)
 	if err != nil {
 		return response.FailWithMsg(fiberCtx, "get stake reward record error")
 	}
@@ -81,7 +84,7 @@ func (h *StakeHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 	if err != nil {
 		return response.UnAuthorizedError(fiberCtx, "unauthorized")
 	}
-	nativeAccountString := claims.Credentials["nativeAccount"].(string)
+	nativeAccountString := claims.Credentials["account"].(string)
 	if _, err := solana.PublicKeyFromBase58(nativeAccountString); err != nil {
 		return response.FailWithError(fiberCtx, "malformed native account", err)
 	}
@@ -95,9 +98,36 @@ func (h *StakeHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 	return response.OkWithData(fiberCtx, txInfo)
 }
 
-// CommitTx 提交领取奖励的交易
+// CommitTx 提交领取 stake 奖励的交易
 func (h *StakeHandler) CommitTx(fiberCtx *fiber.Ctx) error {
-	return nil
+	prefix := fmt.Sprintf("%s 处理领取stake奖励提交请求 -", h.prefix)
+	ctx := fiberCtx.Context()
+
+	var req types.CommitStakeRewardTxReq
+	if err := fiberCtx.BodyParser(&req); err != nil {
+		return response.BadRequest(fiberCtx, "invalid request body")
+	}
+	if req.EncodedTx == "" {
+		return response.BadRequest(fiberCtx, "encodedTx is required")
+	}
+
+	// 预检查：hex 解码、反序列化、校验用户签名
+	preCheckedTx, err := app_utils.PreCheckEncodedTx(req.EncodedTx)
+	if err != nil {
+		log.Errorf("%s 预检查交易错误: %v", prefix, err)
+		return response.FailWithError(fiberCtx, "pre check encoded transaction error", err)
+	}
+
+	prefix = fmt.Sprintf("%s 发起地址 %v txId %v", prefix, preCheckedTx.From, preCheckedTx.TxId)
+	log.Infof("%s 提交stake奖励领取交易", prefix)
+
+	l := stake.NewStakeRewardLogic(ctx, h.srvCtx)
+	txId, err := l.ProcessCommitTx(ctx, preCheckedTx)
+	if err != nil {
+		log.Errorf("%s 处理交易错误: %v", prefix, err)
+		return response.FailWithError(fiberCtx, "process commit stake reward tx error", err)
+	}
+	return response.OkWithData(fiberCtx, txId)
 }
 
 // TakeSnapShot 手动快照

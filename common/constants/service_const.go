@@ -35,6 +35,7 @@ const (
 	FlowSwapNewToken = 0 // 流水类型 - 出账 - swap旧token到新token的转账
 
 	FlowPosCost      = 0 // 流水类型 - 入账 - POS领取奖励时转给dex的sol
+	FlowStakeCost    = 0 // 流水类型 - 入账 - POS领取奖励时转给dex的sol
 	FlowPosReceipt   = 1 // 流水类型 - 出账 - POS领取奖励token出账给领取人
 	FlowStakeReceipt = 2 // 流水类型 - 出账 - POS领取奖励token出账给领取人
 

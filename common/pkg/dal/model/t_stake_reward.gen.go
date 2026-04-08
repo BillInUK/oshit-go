@@ -21,12 +21,13 @@ type StakeReward struct {
 	RewardAmount  float64   `gorm:"column:reward_amount" json:"reward_amount"`
 	StakeType     int32     `gorm:"column:stake_type;not null" json:"stake_type"`
 	RewardType    int32     `gorm:"column:reward_type;not null" json:"reward_type"`
-	State         int32     `gorm:"column:state" json:"state"`
+	RewardState   int32     `gorm:"column:reward_state" json:"reward_state"`
 	Starred       bool      `gorm:"column:starred;not null" json:"starred"`
+	TxID          string    `gorm:"column:tx_id" json:"tx_id"`
 	Pending       bool      `gorm:"column:pending" json:"pending"`
-	Day           time.Time `gorm:"column:day;not null" json:"day"`
-	CreateTime    time.Time `gorm:"column:create_time;default:CURRENT_TIMESTAMP" json:"create_time"`
-	UpdateTime    time.Time `gorm:"column:update_time;default:CURRENT_TIMESTAMP" json:"update_time"`
+	SnapDay       time.Time `gorm:"column:snap_day;not null" json:"snap_day"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
 // TableName StakeReward's table name

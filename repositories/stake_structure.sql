@@ -107,17 +107,18 @@ CREATE TABLE public.t_stake_reward
     reward_amount  numeric(78, 0),                                        -- 奖励金额
     stake_type     int         NOT NULL,                                  -- 质押类型 0.180天质押 1.360天质押
     reward_type    int         NOT NULL,                                  -- 奖励类型 0.质押每日固定利息 1.质押邀请奖励 2.质押激励奖励 -  个人奖励 3.质押激励奖励 - 星级奖励 4.质押激励奖励 - 团队奖励
-    state          int                         DEFAULT 0,                 -- 状态,-1.过期 0.初始化 1.已经领取
+    reward_state   int                         DEFAULT 0,                 -- 状态,-1.过期 0.初始化 1.已经领取
     starred        bool        NOT NULL,                                  -- 是否是星级用户奖励
+    tx_id          varchar(128),                                          -- 交易Id
     pending        bool                        DEFAULT false,             -- 是否正在被处理
-    day            date        NOT NULL,                                  -- 快照的日期
-    create_time    timestamp without time zone DEFAULT current_timestamp, -- 记录创建时间
-    update_time    timestamp without time zone DEFAULT current_timestamp, -- 记录更新时间
+    snap_day       date        NOT NULL,                                  -- 快照的日期
+    created_at     timestamp without time zone DEFAULT current_timestamp, -- 记录创建时间
+    updated_at     timestamp without time zone DEFAULT current_timestamp, -- 记录更新时间
     primary key (record_id)
 );
 create index on public.t_stake_reward (group_id);
-create index on public.t_stake_reward (native_account, state, pending);
-create unique index on public.t_stake_reward (native_account, day, reward_type, starred);
+create index on public.t_stake_reward (native_account, reward_state, pending);
+create unique index on public.t_stake_reward (native_account, snap_day, reward_type, starred);
 
 -- 质押奖励领取记录表
 -- 旧工程 t_sol_stake_reward_claim_record

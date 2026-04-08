@@ -37,12 +37,13 @@ func newStakeReward(db *gorm.DB, opts ...gen.DOOption) stakeReward {
 	_stakeReward.RewardAmount = field.NewFloat64(tableName, "reward_amount")
 	_stakeReward.StakeType = field.NewInt32(tableName, "stake_type")
 	_stakeReward.RewardType = field.NewInt32(tableName, "reward_type")
-	_stakeReward.State = field.NewInt32(tableName, "state")
+	_stakeReward.RewardState = field.NewInt32(tableName, "reward_state")
 	_stakeReward.Starred = field.NewBool(tableName, "starred")
+	_stakeReward.TxID = field.NewString(tableName, "tx_id")
 	_stakeReward.Pending = field.NewBool(tableName, "pending")
-	_stakeReward.Day = field.NewTime(tableName, "day")
-	_stakeReward.CreateTime = field.NewTime(tableName, "create_time")
-	_stakeReward.UpdateTime = field.NewTime(tableName, "update_time")
+	_stakeReward.SnapDay = field.NewTime(tableName, "snap_day")
+	_stakeReward.CreatedAt = field.NewTime(tableName, "created_at")
+	_stakeReward.UpdatedAt = field.NewTime(tableName, "updated_at")
 
 	_stakeReward.fillFieldMap()
 
@@ -62,12 +63,13 @@ type stakeReward struct {
 	RewardAmount  field.Float64
 	StakeType     field.Int32
 	RewardType    field.Int32
-	State         field.Int32
+	RewardState   field.Int32
 	Starred       field.Bool
+	TxID          field.String
 	Pending       field.Bool
-	Day           field.Time
-	CreateTime    field.Time
-	UpdateTime    field.Time
+	SnapDay       field.Time
+	CreatedAt     field.Time
+	UpdatedAt     field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -93,12 +95,13 @@ func (s *stakeReward) updateTableName(table string) *stakeReward {
 	s.RewardAmount = field.NewFloat64(table, "reward_amount")
 	s.StakeType = field.NewInt32(table, "stake_type")
 	s.RewardType = field.NewInt32(table, "reward_type")
-	s.State = field.NewInt32(table, "state")
+	s.RewardState = field.NewInt32(table, "reward_state")
 	s.Starred = field.NewBool(table, "starred")
+	s.TxID = field.NewString(table, "tx_id")
 	s.Pending = field.NewBool(table, "pending")
-	s.Day = field.NewTime(table, "day")
-	s.CreateTime = field.NewTime(table, "create_time")
-	s.UpdateTime = field.NewTime(table, "update_time")
+	s.SnapDay = field.NewTime(table, "snap_day")
+	s.CreatedAt = field.NewTime(table, "created_at")
+	s.UpdatedAt = field.NewTime(table, "updated_at")
 
 	s.fillFieldMap()
 
@@ -125,7 +128,7 @@ func (s *stakeReward) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (s *stakeReward) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 15)
+	s.fieldMap = make(map[string]field.Expr, 16)
 	s.fieldMap["record_id"] = s.RecordID
 	s.fieldMap["group_id"] = s.GroupID
 	s.fieldMap["native_account"] = s.NativeAccount
@@ -135,12 +138,13 @@ func (s *stakeReward) fillFieldMap() {
 	s.fieldMap["reward_amount"] = s.RewardAmount
 	s.fieldMap["stake_type"] = s.StakeType
 	s.fieldMap["reward_type"] = s.RewardType
-	s.fieldMap["state"] = s.State
+	s.fieldMap["reward_state"] = s.RewardState
 	s.fieldMap["starred"] = s.Starred
+	s.fieldMap["tx_id"] = s.TxID
 	s.fieldMap["pending"] = s.Pending
-	s.fieldMap["day"] = s.Day
-	s.fieldMap["create_time"] = s.CreateTime
-	s.fieldMap["update_time"] = s.UpdateTime
+	s.fieldMap["snap_day"] = s.SnapDay
+	s.fieldMap["created_at"] = s.CreatedAt
+	s.fieldMap["updated_at"] = s.UpdatedAt
 }
 
 func (s stakeReward) clone(db *gorm.DB) stakeReward {

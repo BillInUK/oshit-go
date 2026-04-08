@@ -41,6 +41,10 @@ type StakeRewardStat struct {
 	GroupTotalStake     float64 `json:"groupTotalStake"`     // 团队总质押量
 }
 
+type CommitStakeRewardTxReq struct {
+	EncodedTx string `json:"encodedTx"`
+}
+
 type ClaimStakeRewardTxInfo struct {
 	RewardAccount string  `json:"rewardAccount"`
 	Mint          string  `json:"mint"`

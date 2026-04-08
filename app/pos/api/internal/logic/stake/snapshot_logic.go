@@ -181,12 +181,12 @@ func (l *StakeSnapShotLogic) rewardOrdinaryStaker(snapShotDay time.Time) (map[st
 				Rate:          rateConfig.FixRate,
 				RewardAmount:  rewardAmount,
 				RewardType:    types.StakeFixed,
-				State:         0,
+				RewardState:   0,
 				Pending:       false,
 				Starred:       false,
-				Day:           snapShotDay,
-				CreateTime:    time.Now(),
-				UpdateTime:    time.Now(),
+				SnapDay:       snapShotDay,
+				CreatedAt:     time.Now(),
+				UpdatedAt:     time.Now(),
 			}
 			rewardRecordMap[snapShot.NativeAccount] = record
 		} else {
@@ -207,7 +207,7 @@ func (l *StakeSnapShotLogic) rewardOrdinaryStaker(snapShotDay time.Time) (map[st
 		clause.OnConflict{
 			Columns: []clause.Column{
 				{Name: "native_account"},
-				{Name: "day"},
+				{Name: "snap_day"},
 				{Name: "reward_type"},
 				{Name: "starred"},
 			},
@@ -241,7 +241,7 @@ func (l *StakeSnapShotLogic) rewardInviter(rewardMap map[string]model.StakeRewar
 	// 遍历map发放邀请人奖励
 	for invitee, record := range rewardMap {
 		// 把rewardMap里面的地址当成是被邀请人，逐个计算奖励上级邀请人的信息
-		inviteRewardMap, err := l.distributeInviteRewardsWithRecursiveCTE(l.db, rewardMap, invitee, record.Day, record.Base)
+		inviteRewardMap, err := l.distributeInviteRewardsWithRecursiveCTE(l.db, rewardMap, invitee, record.SnapDay, record.Base)
 		if err != nil {
 			log.Errorf("%s 创建地址 %s 邀请人奖励记录错误: %v", l.prefix, record.NativeAccount, err)
 			return rewardMap, err
@@ -269,7 +269,7 @@ func (l *StakeSnapShotLogic) rewardInviter(rewardMap map[string]model.StakeRewar
 		clause.OnConflict{
 			Columns: []clause.Column{
 				{Name: "native_account"},
-				{Name: "day"},
+				{Name: "snap_day"},
 				{Name: "reward_type"},
 				{Name: "starred"},
 			},
@@ -482,12 +482,12 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 					Rate:          node.Rate,
 					RewardAmount:  node.Base / 365,
 					RewardType:    types.StakeStarGroup,
-					State:         0,
+					RewardState:   0,
 					Pending:       false,
 					Starred:       node.StarLevel > 0,
-					Day:           snapShotDay,
-					CreateTime:    time.Now(),
-					UpdateTime:    time.Now(),
+					SnapDay:       snapShotDay,
+					CreatedAt:     time.Now(),
+					UpdatedAt:     time.Now(),
 				}
 				totalRewardMap[node.Inviter] = rewardRecord
 			} else {
@@ -506,7 +506,7 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 			clause.OnConflict{
 				Columns: []clause.Column{
 					{Name: "native_account"},
-					{Name: "day"},
+					{Name: "snap_day"},
 					{Name: "reward_type"},
 					{Name: "starred"},
 				},
@@ -591,13 +591,13 @@ func (l *StakeSnapShotLogic) distributeInviteRewardsWithRecursiveCTE(tx *gorm.DB
 func (l *StakeSnapShotLogic) expireRewards(snapShotDay time.Time) {
 	var err error
 	table := l.db.Table(model.TableNameStakeReward)
-	if err = table.Where("day < CAST(? AS DATE) AND state IN (?,?,?,?)",
+	if err = table.Where("snap_day < cast(? as date) and reward_state in (?,?,?,?)",
 		snapShotDay,
 		types.StakeInvite,
 		types.StakeStarIndividual,
 		types.StakeStarIndividual,
 		types.StakeStarGroup,
-	).Update("state", -1).Error; err != nil {
+	).Update("reward_state", -1).Error; err != nil {
 		log.Errorf("%s 设置奖励为过期失败错误:%v", l.prefix, err)
 	}
 }
