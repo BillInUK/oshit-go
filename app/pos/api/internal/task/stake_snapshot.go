@@ -250,14 +250,14 @@ func (t *StakeSnapshotTask) StartTaskManually() {
 		log.Infof("No active stakes found to snapshot")
 	}
 
-	//rmqMsg := entity.KafkaNewSnapShotMsg{
-	//	MsgType:    "NewStakeSnapShot",
-	//	MsgContent: today,
-	//}
-	//if err := t.sendMsgToKafka(rmqMsg); err != nil {
-	//	log.Errorf("Pos业务 - 分发RocketMQ消息错误: %v", err)
-	//	return
-	//}
+	rmqMsg := entity.KafkaNewSnapShotMsg{
+		MsgType:    "NewStakeSnapShot",
+		MsgContent: today,
+	}
+	if err := t.sendMsgToKafka(rmqMsg); err != nil {
+		log.Errorf("Pos业务 - 分发RocketMQ消息错误: %v", err)
+		return
+	}
 }
 
 // sendMsgToKafka 发送消息到Kafka
@@ -272,7 +272,7 @@ func (t *StakeSnapshotTask) sendMsgToKafka(msg entity.KafkaMsg) error {
 	}
 
 	return t.kafkaWriter.WriteMessages(context.Background(), kafka.Message{
-		Topic: "PosTopic",
+		Topic: "StakeTopic",
 		Key:   []byte(msg.GetMsgType()),
 		Value: body,
 	})

@@ -26,6 +26,25 @@ func (s *ServiceContext) initKafkaConsumer() error {
 	return nil
 }
 
+func (s *ServiceContext) initSnapShotKafkaConsumer() error {
+	cfg := s.Config.Kafka
+	if len(cfg.Brokers) == 0 || cfg.Consumer.GroupID == "" {
+		return nil
+	}
+
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:     cfg.Brokers,
+		GroupID:     cfg.Consumer.GroupID + "-snapshot",
+		GroupTopics: []string{"PosTopic", "StakeTopic"},
+		MinBytes:    10e3,
+		MaxBytes:    10e6,
+	})
+
+	s.SnapShotKafkaConsumer = reader
+	fmt.Println("Snapshot Kafka consumer initialized successfully")
+	return nil
+}
+
 func (s *ServiceContext) closeKafkaConsumer() error {
 	if s.KafkaConsumer != nil {
 		if reader, ok := s.KafkaConsumer.(*kafka.Reader); ok {
@@ -47,8 +66,9 @@ func (s *ServiceContext) initKafkaProducer() error {
 
 	// 创建Kafka生产者
 	producer := &kafka.Writer{
-		Addr:     kafka.TCP(brokers...),
-		Balancer: &kafka.LeastBytes{},
+		Addr:                   kafka.TCP(brokers...),
+		Balancer:               &kafka.LeastBytes{},
+		AllowAutoTopicCreation: true,
 	}
 
 	s.KafkaProducer = producer

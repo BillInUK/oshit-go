@@ -121,3 +121,81 @@ func (t *KafkaConsumerTask) handleExpiredTx(tx entity.NewExpiredTx) {
 		log.Errorf("KafkaConsumerTask: 处理超时交易失败 subService=%s txID=%s: %v", tx.SubService, tx.TxID, err)
 	}
 }
+
+// SnapShotConsumerTask 消费 PosTopic 和 StakeTopic 的快照消息
+type SnapShotConsumerTask struct {
+	reader           *kafka.Reader
+	snapShotHandlers map[string]SnapShotHandler
+}
+
+// NewSnapShotConsumerTask 创建快照消费任务
+func NewSnapShotConsumerTask(taskCtx *TaskContext) *SnapShotConsumerTask {
+	reader, _ := taskCtx.SnapShotKafkaConsumer.(*kafka.Reader)
+	return &SnapShotConsumerTask{
+		reader:           reader,
+		snapShotHandlers: taskCtx.SnapShotHandlers,
+	}
+}
+
+// Start 启动快照消费任务
+func (t *SnapShotConsumerTask) Start() {
+	if t.reader == nil {
+		log.Warn("SnapShotConsumerTask: reader 未初始化，跳过启动")
+		return
+	}
+	go t.consume()
+}
+
+// consume 持续读取并分发快照消息
+func (t *SnapShotConsumerTask) consume() {
+	for {
+		msg, err := t.reader.ReadMessage(context.Background())
+		if err != nil {
+			log.Errorf("SnapShotConsumerTask: 读取消息失败: %v", err)
+			continue
+		}
+		t.dispatch(msg)
+	}
+}
+
+// dispatch 根据 MsgType 分发到对应的快照处理器
+func (t *SnapShotConsumerTask) dispatch(msg kafka.Message) {
+	var envelope struct {
+		MsgType string `json:"MsgType"`
+	}
+	if err := json.Unmarshal(msg.Value, &envelope); err != nil {
+		log.Errorf("SnapShotConsumerTask: 解析消息 MsgType 失败: %v", err)
+		return
+	}
+
+	// MsgType → handler key 的映射
+	handlerKey := ""
+	switch envelope.MsgType {
+	case "NewPosSnapShot":
+		handlerKey = "PosSnapShot"
+	case "NewStakeSnapShot":
+		handlerKey = "StakeSnapShot"
+	default:
+		log.Warnf("SnapShotConsumerTask: 未知消息类型: %s", envelope.MsgType)
+		return
+	}
+
+	var m entity.KafkaNewSnapShotMsg
+	if err := json.Unmarshal(msg.Value, &m); err != nil {
+		log.Errorf("SnapShotConsumerTask: 解析 %s 失败: %v", envelope.MsgType, err)
+		return
+	}
+
+	if t.snapShotHandlers == nil {
+		log.Warnf("SnapShotConsumerTask: snapShotHandlers 未注册，跳过 %s", envelope.MsgType)
+		return
+	}
+	handler, ok := t.snapShotHandlers[handlerKey]
+	if !ok {
+		log.Warnf("SnapShotConsumerTask: 未找到 handler=%s 的处理器", handlerKey)
+		return
+	}
+	if err := handler(context.Background(), m); err != nil {
+		log.Errorf("SnapShotConsumerTask: 处理 %s 失败: %v", envelope.MsgType, err)
+	}
+}

@@ -26,8 +26,9 @@ type TaskContext struct {
 	// ScannedHandlers 按 SubService 注册的已确认交易处理器，key 为 SubService 名称
 	ScannedHandlers map[string]ScannedTxHandler
 	// ExpiredHandlers 按 SubService 注册的超时交易处理器，key 为 SubService 名称
-	ExpiredHandlers map[string]ExpiredTxHandler
-	RewardConfig    *model.StakeRewardConfig
+	ExpiredHandlers       map[string]ExpiredTxHandler
+	RewardConfig          *model.StakeRewardConfig
+	SnapShotKafkaConsumer interface{} // *kafka.Reader，消费 PosTopic + StakeTopic
 }
 
 // runPeriodic 启动时立即执行一次，之后按固定间隔周期执行。

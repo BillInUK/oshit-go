@@ -23,8 +23,9 @@ type CoreContext struct {
 	RpcClient         *rpc.Client
 	LightHouseAddress solana.PublicKey
 	TokenDecimal      float64
-	KafkaProducer     interface{} // *kafka.Writer，在kafka.go中定义
-	KafkaConsumer     interface{} // *kafka.Reader，在kafka.go中定义
+	KafkaProducer          interface{} // *kafka.Writer，在kafka.go中定义
+	KafkaConsumer          interface{} // *kafka.Reader，消费 ServiceTransaction（base 模块）
+	SnapShotKafkaConsumer  interface{} // *kafka.Reader，消费 PosTopic + StakeTopic
 	BaseClient        *posrpc.BaseClient
 
 	// 配置表数据

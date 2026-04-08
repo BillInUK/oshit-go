@@ -94,6 +94,11 @@ func NewServiceContext() (*ServiceContext, error) {
 		fmt.Printf("Init kafka consumer error: %v\n", err)
 	}
 
+	// 初始化快照 Kafka 消费者（PosTopic + StakeTopic）
+	if err := srvCtx.initSnapShotKafkaConsumer(); err != nil {
+		fmt.Printf("Init snapshot kafka consumer error: %v\n", err)
+	}
+
 	// 初始化 Base 模块 RPC 客户端
 	if err := srvCtx.initBaseClient(); err != nil {
 		fmt.Printf("Init base client error: %v\n", err)
@@ -311,8 +316,9 @@ func (s *ServiceContext) initStakeConfig() error {
 
 func (s *ServiceContext) startTasks() {
 	taskCtx := &task.TaskContext{
-		CoreContext:  s.CoreContext,
-		RewardConfig: s.StakeRewardConfig,
+		CoreContext:           s.CoreContext,
+		RewardConfig:          s.StakeRewardConfig,
+		SnapShotKafkaConsumer: s.SnapShotKafkaConsumer,
 	}
 	s.TaskMgr = task.NewTaskManager(taskCtx)
 }

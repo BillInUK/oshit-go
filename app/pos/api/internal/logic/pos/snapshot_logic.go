@@ -28,7 +28,7 @@ type PosSnapShotLogic struct {
 
 func NewPosSnapShotLogic(ctx context.Context, srvCtx *svc.ServiceContext) *PosSnapShotLogic {
 	return &PosSnapShotLogic{
-		prefix:            "TakeToken业务 -",
+		prefix:            "Pos快照业务 -",
 		ctx:               ctx,
 		srvCtx:            srvCtx,
 		db:                srvCtx.DB,

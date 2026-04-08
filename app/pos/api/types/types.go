@@ -13,6 +13,23 @@ type GetByTxIdReq struct {
 	TxId string `json:"txId"`
 }
 
+type StakeSnapShotDetail struct {
+	NativeAccount string
+	SnapBase      float64
+	SnapTotal     float64
+}
+
+type StakeInviteNode struct {
+	Inviter   string  `gorm:"column:inviter"`
+	Invitee   string  `gorm:"column:invitee"`
+	Level     int     `gorm:"column:level"`
+	Amount    float64 `gorm:"column:amount"`
+	StarLevel int     `gorm:"column:star_level"`
+	Rate      float64 `gorm:"column:rate"`
+	GroupId   string  `gorm:"column:group_id"`
+	Base      float64 `gorm:"column:base"`
+}
+
 type StakeRewardStat struct {
 	StarLevel           int32   `json:"starLevel"`           // 星级
 	StakeAmount         float64 `json:"stakeAmount"`         // 个人质押量
