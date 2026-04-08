@@ -20,7 +20,7 @@ func NewPosHandler(srvCtx *svc.ServiceContext) *PosHandler {
 }
 
 func (h *PosHandler) GetConfig(fiberCtx *fiber.Ctx) error {
-	l := pos.NewPosLogic(fiberCtx.Context(), h.srvCtx)
+	l := pos.NewPosRewardLogic(fiberCtx.Context(), h.srvCtx)
 	config, err := l.GetConfig()
 	if err != nil {
 		return response.FailWithMsg(fiberCtx, "get pos reward config error")

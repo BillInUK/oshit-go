@@ -21,17 +21,14 @@ type PosRewardLogic struct {
 	rd                redis.UniversalClient
 	rs                redsync.Redsync
 	baseClient        *posrpc.BaseClient
-	levelDist         int32
-	levelRatio        []model.LevelRatio
-	levelRatioMap     map[int32]model.LevelRatio
 	serviceConfig     *model.PosRewardConfig
 	rpcClient         *rpc.Client
 	LightHouseAddress solana.PublicKey
 }
 
-func NewPosLogic(ctx context.Context, srvCtx *svc.ServiceContext) *PosRewardLogic {
+func NewPosRewardLogic(ctx context.Context, srvCtx *svc.ServiceContext) *PosRewardLogic {
 	return &PosRewardLogic{
-		prefix:            "TakeToken业务 -",
+		prefix:            "Pos业务 -",
 		ctx:               ctx,
 		srvCtx:            srvCtx,
 		db:                srvCtx.DB,

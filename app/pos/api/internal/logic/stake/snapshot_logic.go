@@ -55,7 +55,7 @@ func (l *StakeSnapShotLogic) TakeStakeSnapShot() error {
 		RewardConfig: l.srvCtx.StakeRewardConfig,
 	}
 	snapShotTask := task.NewStakeSnapShotTask(taskCtx)
-	snapShotTask.StartStakeSnapshotManually()
+	snapShotTask.StartTaskManually()
 	return nil
 }
 

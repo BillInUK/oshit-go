@@ -67,10 +67,10 @@ func NewStakeSnapShotTask(taskCtx *TaskContext) *StakeSnapshotTask {
 
 // Start 启动服务的函数
 func (t *StakeSnapshotTask) Start() {
-	go t.startStakeSnapshotTask()
+	go t.startTask()
 }
 
-func (t *StakeSnapshotTask) startStakeSnapshotTask() {
+func (t *StakeSnapshotTask) startTask() {
 	//计算第一次执行的时间
 	location, err := time.LoadLocation("Asia/Singapore")
 	if err != nil {
@@ -178,8 +178,8 @@ func (t *StakeSnapshotTask) startStakeSnapshotTask() {
 	}
 }
 
-// StartStakeSnapshotManually 手动执行执行质押快照
-func (t *StakeSnapshotTask) StartStakeSnapshotManually() {
+// StartTaskManually 手动执行执行质押快照
+func (t *StakeSnapshotTask) StartTaskManually() {
 	log.Infof("Taking stake snapshot...")
 
 	// 获取所有质押信息账户

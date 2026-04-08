@@ -10,6 +10,14 @@ func NewTaskManager(taskCtx *TaskContext) *TaskManager {
 	}
 }
 
+// RegisterSnapShotHandler 注册已确认交易处理器，key 为 SubService 名称
+func (m *TaskManager) RegisterSnapShotHandler(subService string, handler SnapShotHandler) {
+	if m.taskCtx.SnapShotHandlers == nil {
+		m.taskCtx.SnapShotHandlers = make(map[string]SnapShotHandler)
+	}
+	m.taskCtx.SnapShotHandlers[subService] = handler
+}
+
 // RegisterScannedTxHandler 注册已确认交易处理器，key 为 SubService 名称
 func (m *TaskManager) RegisterScannedTxHandler(subService string, handler ScannedTxHandler) {
 	if m.taskCtx.ScannedHandlers == nil {

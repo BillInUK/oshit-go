@@ -11,6 +11,9 @@ import (
 	"oshit-go/common/pkg/entity"
 )
 
+// SnapShotHandler 处理快照消息
+type SnapShotHandler func(ctx context.Context, tx entity.KafkaNewSnapShotMsg) error
+
 // ScannedTxHandler 处理链上已确认交易的回调函数类型
 type ScannedTxHandler func(ctx context.Context, tx entity.NewScannedTx) error
 
@@ -19,6 +22,7 @@ type ExpiredTxHandler func(ctx context.Context, tx entity.NewExpiredTx) error
 
 type TaskContext struct {
 	core_context.CoreContext
+	SnapShotHandlers map[string]SnapShotHandler
 	// ScannedHandlers 按 SubService 注册的已确认交易处理器，key 为 SubService 名称
 	ScannedHandlers map[string]ScannedTxHandler
 	// ExpiredHandlers 按 SubService 注册的超时交易处理器，key 为 SubService 名称
