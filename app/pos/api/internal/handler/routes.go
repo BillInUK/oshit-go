@@ -22,8 +22,14 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 	// stake 相关路由
 	stake := api.Group("/stake")
 	{
+		// 快照相关接口
+		stake.Post("/shot/take", stakeHandler.TakeSnapShot)
+		stake.Post("/shot/reset", stakeHandler.ResetSnapShot)
+
+		// 用户奖励相关接口
 		stake.Post("/reward/config", stakeHandler.GetConfig)
-		stake.Post("/reward/record", stakeHandler.GetRecord)
+		stake.Post("/reward/record", stakeHandler.GetRewardRecord)
+		stake.Post("/reward/claim-record", stakeHandler.GetClaimRecord)
 		stake.Post("/reward/tx-info", stakeHandler.GetTxInfo)
 		stake.Post("/reward/commit-tx", stakeHandler.CommitTx)
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/segmentio/kafka-go"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"math"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"oshit-go/common/utils"
@@ -53,13 +54,14 @@ func NewStakeSnapShotTask(taskCtx *TaskContext) *StakeSnapshotTask {
 			kafkaWriter = w
 		}
 	}
+	dec := math.Pow10(int(taskCtx.TokenConfig.Decimals))
 	return &StakeSnapshotTask{
 		db:          taskCtx.DB,
 		rpcClient:   taskCtx.RpcClient,
 		kafkaWriter: kafkaWriter,
 		programID:   solana.MustPublicKeyFromBase58(taskCtx.RewardConfig.ProgramID),
 		mint:        solana.MustPublicKeyFromBase58(taskCtx.TokenConfig.Mint),
-		dec:         uint64(taskCtx.TokenConfig.Decimals),
+		dec:         uint64(dec),
 	}
 }
 
@@ -248,14 +250,14 @@ func (t *StakeSnapshotTask) StartStakeSnapshotManually() {
 		log.Infof("No active stakes found to snapshot")
 	}
 
-	rmqMsg := entity.KafkaNewSnapShotMsg{
-		MsgType:    "NewStakeSnapShot",
-		MsgContent: today,
-	}
-	if err := t.sendMsgToKafka(rmqMsg); err != nil {
-		log.Errorf("Pos业务 - 分发RocketMQ消息错误: %v", err)
-		return
-	}
+	//rmqMsg := entity.KafkaNewSnapShotMsg{
+	//	MsgType:    "NewStakeSnapShot",
+	//	MsgContent: today,
+	//}
+	//if err := t.sendMsgToKafka(rmqMsg); err != nil {
+	//	log.Errorf("Pos业务 - 分发RocketMQ消息错误: %v", err)
+	//	return
+	//}
 }
 
 // sendMsgToKafka 发送消息到Kafka
@@ -289,7 +291,7 @@ func (t *StakeSnapshotTask) saveSnapshots(snapshots []model.StakeSnapShot) error
 				{Name: "snap_day"},
 				{Name: "stake_type"},
 			},
-			DoUpdates: clause.AssignmentColumns([]string{"Amount", "UpdateTime"}),
+			DoUpdates: clause.AssignmentColumns([]string{"amount", "updated_at"}),
 		},
 	).CreateInBatches(snapshots, 100).Error
 }

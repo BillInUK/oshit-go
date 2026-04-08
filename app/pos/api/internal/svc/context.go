@@ -23,26 +23,25 @@ import (
 
 type ServiceContext struct {
 	core_context.CoreContext
-	LightHouseAddress    solana.PublicKey
-	TaskMgr              *task.TaskManager
-	PosStarLevelRule     *model.PosStarLevelRule
-	PosRewardConfig      *model.PosRewardConfig
-	StakeRewardConfig    *model.StakeRewardConfig
-	StakeAmmConfig       *model.StakeAmmConfig
-	TotalAreaLeaders     []model.StakeTotalAreaLeader
-	PosWhiteListMap      map[string]model.PosStarWhitelist
-	StakeFixConfig       map[int32]model.StakeFixRateConfig
-	StakeInviteRate      map[int32]model.StakeInviteRate
-	StakeStarLevelRule   map[int32]model.StakeStarLevelRule
-	StakeTokenPoolMap    map[string]model.StakeTokenPool
-	StakeDistLevel       int32
-	StakeStarLevelConfig map[string]model.StakeStarWhitelist
-}
+	LightHouseAddress solana.PublicKey
+	TaskMgr           *task.TaskManager
 
-const (
-	decryptAlgo = "PBEWithHMACSHA512AndAES_256"
-	decryptPwd  = "fktYimwMl3OfUF3m"
-)
+	// pos业务配置
+	PosStarLevelRule *model.PosStarLevelRule
+	PosRewardConfig  *model.PosRewardConfig
+	PosWhiteListMap  map[string]model.PosStarWhitelist
+
+	// stake业务配置
+	StakeAmmConfig     *model.StakeAmmConfig
+	StakeRewardConfig  *model.StakeRewardConfig
+	StakeFixConfig     map[int32]model.StakeFixRateConfig
+	StakeInviteRate    map[int32]model.StakeInviteRate
+	StakeStarLevelRule map[int32]model.StakeStarLevelRule
+	TotalAreaLeaders   []model.StakeTotalAreaLeader
+	StakeTokenPoolMap  map[string]model.StakeTokenPool
+	StakeDistLevel     int32
+	StakeStarWhitelist map[string]model.StakeStarWhitelist
+}
 
 func NewServiceContext() (*ServiceContext, error) {
 	// 加载配置
@@ -101,8 +100,13 @@ func NewServiceContext() (*ServiceContext, error) {
 	}
 
 	// 初始化pos配置
-	if err := srvCtx.initPosConfig(); err != nil {
-		fmt.Printf("Init pos config error: %v", err)
+	//if err := srvCtx.initPosConfig(); err != nil {
+	//	fmt.Printf("Init pos config error: %v", err)
+	//}
+
+	// 初始化stake配置
+	if err := srvCtx.initStakeConfig(); err != nil {
+		fmt.Printf("Init stake config error: %v", err)
 	}
 
 	// 初始化任务管理器
@@ -249,14 +253,14 @@ func (s *ServiceContext) initStakeConfig() error {
 
 	table = s.DB.Table(model.TableNameStakeInviteRate)
 	if err := table.Find(&inviteRates).Error; err != nil || len(inviteRates) == 0 {
-		panic("can not find any stake invite rate config")
+		return errors.New("can not find any stake invite rate config")
 	}
 	for _, rate := range inviteRates {
 		s.StakeInviteRate[rate.Level] = rate
 	}
 	table = s.DB.Table(model.TableNameStakeFixRateConfig)
 	if err := table.Find(&fixConfig).Error; err != nil || len(fixConfig) == 0 {
-		panic("can not find any stake fix config")
+		return errors.New("can not find any stake fix config")
 	}
 	for _, config := range fixConfig {
 		s.StakeFixConfig[config.StakeType] = config
@@ -266,37 +270,38 @@ func (s *ServiceContext) initStakeConfig() error {
 	var startLevelConfigs []model.StakeStarWhitelist
 	table = s.DB.Table(model.TableNameStakeStarWhitelist)
 	if err := table.Find(&startLevelConfigs).Order("star_level asc").Error; err != nil {
-		panic("can not load any pos star level config from database")
+		return errors.New("can not load any pos star level config from database")
 	}
-	s.StakeStarLevelConfig = make(map[string]model.StakeStarWhitelist)
+	s.StakeStarWhitelist = make(map[string]model.StakeStarWhitelist)
 	for _, c := range startLevelConfigs {
-		s.StakeStarLevelConfig[c.NativeAccount] = c
+		s.StakeStarWhitelist[c.NativeAccount] = c
 	}
+	var starLevelRules []model.StakeStarLevelRule
 	table = s.DB.Table(model.TableNameStakeStarLevelRule)
-	if err := table.Order("star_level asc").Find(&s.StakeStarLevelRule).Error; err != nil {
-		panic("can not load any pos star level rule from database")
+	if err := table.Find(&starLevelRules).Order("star_level asc").Error; err != nil {
+		return errors.New("can not load any pos star level rule from database")
 	}
 	for _, r := range s.StakeStarLevelRule {
 		s.StakeStarLevelRule[r.StarLevel] = r
 	}
 	table = s.DB.Table(model.TableNameStakeRewardConfig)
 	if err := table.First(&s.StakeRewardConfig).Error; err != nil {
-		panic("can not load any pos reward rule from database")
+		return errors.New("can not load any pos reward rule from database")
 	}
 	table = s.DB.Table(model.TableNameStakeAmmConfig)
 	if err := table.First(&s.StakeAmmConfig).Error; err != nil {
-		panic("can not load any stake amm config from database")
+		return errors.New("can not load any stake amm config from database")
 	}
 	table = s.DB.Table(model.TableNameStakeTotalAreaLeader)
 	if err := table.Find(&s.TotalAreaLeaders).Error; err != nil {
-		panic("can not find total area leaders from database")
+		return errors.New("can not find total area leaders from database")
 	}
 	if len(s.TotalAreaLeaders) != 2 {
 		panic("expected exactly 2 total area leaders in database")
 	}
 	table = s.DB.Table(model.TableNameStakeTokenPool)
 	if err := table.Find(&stakeTokenPools).Error; err != nil {
-		panic("can not load any stake pool config from database")
+		return errors.New("can not load any stake pool config from database")
 	}
 	for _, tokenPool := range stakeTokenPools {
 		s.StakeTokenPoolMap[tokenPool.FromTokenAccount] = tokenPool

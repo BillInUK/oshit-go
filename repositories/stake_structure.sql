@@ -2,16 +2,16 @@
 DROP TABLE IF EXISTS public.t_stake_amm_config;
 CREATE TABLE public.t_stake_amm_config
 (
-    quote_token character varying(64)  not null,
-    public_key character varying(64)  not null
+    quote_token character varying(64) not null,
+    public_key  character varying(64) not null
 );
 
 -- 质押池配置
 DROP TABLE IF EXISTS public.t_stake_token_pool;
 CREATE TABLE public.t_stake_token_pool
 (
-    source character varying(64)  not null,
-    from_token_account character varying(64)  not null
+    source             character varying(64) not null,
+    from_token_account character varying(64) not null
 );
 
 -- 质押每日固定利息
@@ -52,13 +52,13 @@ CREATE TABLE public.t_stake_invite_rate
 DROP TABLE IF EXISTS public.t_stake_star_level_rule;
 CREATE TABLE public.t_stake_star_level_rule
 (
-    record_id    ulid           NOT NULL DEFAULT gen_ulid(),            -- 记录Id
-    amount      NUMERIC(78, 2) NOT NULL,                               -- 个人质押金额
+    record_id    ulid           NOT NULL     DEFAULT gen_ulid(),        -- 记录Id
+    amount       NUMERIC(78, 2) NOT NULL,                               -- 个人质押金额
     group_amount NUMERIC(78, 2) NOT NULL,                               -- 团队质押金额
-    star_level  INT            NOT NULL,                               -- 星级
-    rate        NUMERIC(5, 2)  NOT NULL,                               -- 星级费率
-    created_at  TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 记录创建时间
-    updated_at  TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 记录更新时间
+    star_level   INT            NOT NULL,                               -- 星级
+    rate         NUMERIC(5, 2)  NOT NULL,                               -- 星级费率
+    created_at   TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 记录创建时间
+    updated_at   TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 记录更新时间
     PRIMARY KEY (record_id)
 );
 
@@ -67,75 +67,15 @@ CREATE TABLE public.t_stake_star_level_rule
 DROP TABLE IF EXISTS public.t_stake_star_whitelist;
 CREATE TABLE public.t_stake_star_whitelist
 (
-    record_id    ulid           NOT NULL DEFAULT gen_ulid(),            -- 记录Id
+    record_id      ulid        NOT NULL        DEFAULT gen_ulid(),        -- 记录Id
     native_account VARCHAR(64) NOT NULL,                                  -- 地址
     star_level     INT         NOT NULL,                                  -- 质押地址的星级
-    rate          NUMERIC(5, 2),                                         -- 质押地址的极差费率
-    created_at  TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 记录创建时间
-    updated_at  TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 记录更新时间
+    rate           NUMERIC(5, 2),                                         -- 质押地址的极差费率
+    created_at     TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 记录创建时间
+    updated_at     TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 记录更新时间
     PRIMARY KEY (record_id)
 );
 CREATE UNIQUE INDEX ON public.t_stake_star_whitelist (native_account);
-
--- stake奖励明细表
--- 旧工程 t_sol_stake_reward
-DROP TABLE IF EXISTS public.t_stake_reward;
-CREATE TABLE public.t_stake_reward
-(
-    record_id    ulid           NOT NULL DEFAULT gen_ulid(),            -- 记录Id
-    group_id       varchar(64) NOT NULL,                                  -- 根地址
-    native_account varchar(64) NOT NULL,                                  -- 质押地址
-    star_level     int                  DEFAULT 0,                        -- 质押地址的星级
-    base          numeric(78, 0),                                        -- 质押数量的Base
-    rate          numeric(5, 2),                                         -- 奖励费率
-    reward_amount  numeric(78, 0),                                        -- 奖励金额
-    stake_type     int         NOT NULL,                                  -- 质押类型 0.180天质押 1.360天质押
-    reward_type    int         NOT NULL,                                  -- 奖励类型 0.质押每日固定利息 1.质押邀请奖励 2.质押激励奖励 -  个人奖励 3.质押激励奖励 - 星级奖励 4.质押激励奖励 - 团队奖励
-    state         int                  DEFAULT 0,                        -- 状态,-1.过期 0.初始化 1.已经领取
-    starred       bool        NOT NULL,                                  -- 是否是星级用户奖励
-    pending       bool                 DEFAULT false,                    -- 是否正在被处理
-    day           date        NOT NULL,                                  -- 快照的日期
-    create_time    timestamp without time zone DEFAULT current_timestamp, -- 记录创建时间
-    update_time    timestamp without time zone DEFAULT current_timestamp, -- 记录更新时间
-    primary key (record_id)
-);
--- 注意：以下三个索引原表名为 t_sol_stake_reward，但该表未创建，请根据实际表名修改
-create index on public.t_stake_reward (group_id);
-create index on public.t_stake_reward (native_account, state, pending);
-create unique index on public.t_stake_reward (native_account, day, reward_type, starred);
-
--- 质押奖励领取记录表
--- 旧工程 t_sol_stake_reward_claim_record
-drop table if exists public.t_stake_reward_claim_record;
-create table public.t_stake_reward_claim_record
-(
-    record_id             ulid not null default gen_ulid(),                      -- 记录Id
-    reward_ids            ulid[] not null,                                       -- 奖励Id
-    tx_id                 varchar(128),                                          -- 交易Id
-    tx_state                int           default 0,                               -- 状态,-2.过期 -1.失败 0.初始化 1.成功
-    created_at           timestamp without time zone default current_timestamp, -- 记录创建时间
-    updated_at           timestamp without time zone default current_timestamp, -- 记录更新时间
-    primary key (record_id)
-);
-create index on public.t_stake_reward_claim_record (tx_id);
-create index on public.t_stake_reward_claim_record (tx_state, created_at);
-
--- stake 每日快照表
--- 旧工程 t_sol_stake_snap_shot
-drop table if exists public.t_stake_snap_shot;
-create table public.t_stake_snap_shot
-(
-    record_id      ulid        not null default gen_ulid(),               -- 记录Id
-    native_account varchar(64) not null,                                  -- native account 地址
-    amount        numeric(78, 0),                                        -- 质押金额
-    stake_type     int         not null,                                  -- 质押类型 0.180天 1.360天
-    snap_day           date        not null,                                  -- 快照的日期
-    created_at           timestamp without time zone default current_timestamp, -- 记录创建时间
-    updated_at           timestamp without time zone default current_timestamp, -- 记录更新时间
-    primary key (record_id)
-);
-create index on public.t_stake_snap_shot (native_account);
-create unique index on public.t_stake_snap_shot (native_account, snap_day);
 
 -- 质押奖励发放配置表
 -- 旧工程 t_sol_stake_reward_rule
@@ -152,6 +92,65 @@ create table public.t_stake_reward_config
     updated_at         timestamp without time zone default current_timestamp, -- 记录更新时间
     primary key (record_id)
 );
+
+-- stake奖励明细表
+-- 旧工程 t_sol_stake_reward
+DROP TABLE IF EXISTS public.t_stake_reward;
+CREATE TABLE public.t_stake_reward
+(
+    record_id      ulid        NOT NULL        DEFAULT gen_ulid(),        -- 记录Id
+    group_id       varchar(64) NOT NULL,                                  -- 根地址
+    native_account varchar(64) NOT NULL,                                  -- 质押地址
+    star_level     int                         DEFAULT 0,                 -- 质押地址的星级
+    base           numeric(78, 0),                                        -- 质押数量的Base
+    rate           numeric(5, 2),                                         -- 奖励费率
+    reward_amount  numeric(78, 0),                                        -- 奖励金额
+    stake_type     int         NOT NULL,                                  -- 质押类型 0.180天质押 1.360天质押
+    reward_type    int         NOT NULL,                                  -- 奖励类型 0.质押每日固定利息 1.质押邀请奖励 2.质押激励奖励 -  个人奖励 3.质押激励奖励 - 星级奖励 4.质押激励奖励 - 团队奖励
+    state          int                         DEFAULT 0,                 -- 状态,-1.过期 0.初始化 1.已经领取
+    starred        bool        NOT NULL,                                  -- 是否是星级用户奖励
+    pending        bool                        DEFAULT false,             -- 是否正在被处理
+    day            date        NOT NULL,                                  -- 快照的日期
+    create_time    timestamp without time zone DEFAULT current_timestamp, -- 记录创建时间
+    update_time    timestamp without time zone DEFAULT current_timestamp, -- 记录更新时间
+    primary key (record_id)
+);
+create index on public.t_stake_reward (group_id);
+create index on public.t_stake_reward (native_account, state, pending);
+create unique index on public.t_stake_reward (native_account, day, reward_type, starred);
+
+-- 质押奖励领取记录表
+-- 旧工程 t_sol_stake_reward_claim_record
+drop table if exists public.t_stake_reward_claim_record;
+create table public.t_stake_reward_claim_record
+(
+    record_id  ulid   not null             default gen_ulid(),        -- 记录Id
+    reward_ids ulid[] not null,                                       -- 奖励Id
+    tx_id      varchar(128),                                          -- 交易Id
+    tx_state   int                         default 0,                 -- 状态,-2.过期 -1.失败 0.初始化 1.成功
+    created_at timestamp without time zone default current_timestamp, -- 记录创建时间
+    updated_at timestamp without time zone default current_timestamp, -- 记录更新时间
+    primary key (record_id)
+);
+create index on public.t_stake_reward_claim_record (tx_id);
+create index on public.t_stake_reward_claim_record (tx_state, created_at);
+
+-- stake 每日快照表
+-- 旧工程 t_sol_stake_snap_shot
+drop table if exists public.t_stake_snap_shot;
+create table public.t_stake_snap_shot
+(
+    record_id      ulid        not null        default gen_ulid(),        -- 记录Id
+    native_account varchar(64) not null,                                  -- native account 地址
+    amount         numeric(78, 0),                                        -- 质押金额
+    stake_type     int         not null,                                  -- 质押类型 0.180天 1.360天
+    snap_day       date        not null,                                  -- 快照的日期
+    created_at     timestamp without time zone default current_timestamp, -- 记录创建时间
+    updated_at     timestamp without time zone default current_timestamp, -- 记录更新时间
+    primary key (record_id)
+);
+create index on public.t_stake_snap_shot (native_account);
+create unique index on public.t_stake_snap_shot (native_account,stake_type, snap_day);
 
 -- 质押记录表
 drop table if exists public.t_stake_record;
@@ -191,63 +190,65 @@ create index idx_stake_buy_token_locked_at on public.t_stake_buy_token (locked_a
 create index idx_stake_buy_token_locked_by on public.t_stake_buy_token (locked_by);
 create index idx_stake_buy_token_slot on public.t_stake_buy_token (slot);
 
--- 区域经理表
-drop table if exists public.t_stake_area_leader;
-create table public.t_stake_area_leader
-(
-    record_id      ulid     not null default gen_ulid(),-- 记录Id
-    native_account varchar(64),-- 区域经理地址
-    level         smallint not null, -- 区域经理等级
-    share         numeric(20, 8), -- 用户质押时奖励该区域经理的分成费率
-    leader        varchar(64),-- 区域经理的上级
-    created_at     timestamp without time zone default current_timestamp,-- 记录创建时间
-    updated_at     timestamp without time zone default current_timestamp,-- 记录更新时间
-    primary key (record_id)
-);
-
 -- 总区域经理表
 drop table if exists public.t_stake_total_area_leader;
 create table public.t_stake_total_area_leader
 (
-    record_id      ulid not null default gen_ulid(),-- 记录Id
+    record_id      ulid not null               default gen_ulid(),-- 记录Id
     native_account varchar(64),-- 区域领导地址
-    share         numeric(20, 8), -- 用户质押时奖励总区域经理的分成费率
+    share          numeric(20, 8), -- 用户质押时奖励总区域经理的分成费率
     created_at     timestamp without time zone default current_timestamp,-- 记录创建时间
     updated_at     timestamp without time zone default current_timestamp,-- 记录更新时间
     primary key (record_id)
 );
 
+-- 区域经理表
+drop table if exists public.t_stake_area_leader;
+create table public.t_stake_area_leader
+(
+    record_id      ulid     not null           default gen_ulid(),-- 记录Id
+    native_account varchar(64),-- 区域经理地址
+    level          smallint not null, -- 区域经理等级
+    share          numeric(20, 8), -- 用户质押时奖励该区域经理的分成费率
+    leader         varchar(64),-- 区域经理的上级
+    created_at     timestamp without time zone default current_timestamp,-- 记录创建时间
+    updated_at     timestamp without time zone default current_timestamp,-- 记录更新时间
+    primary key (record_id)
+);
+
+-- 区域经理奖励明细表
 drop table if exists public.t_stake_area_leader_reward;
 create table public.t_stake_area_leader_reward
 (
-    record_id      ulid         not null default gen_ulid(),
-    native_account varchar(64)  not null,               -- 区域经理地址
-    staker        varchar(64)  not null,               -- 触发奖励的质押者
-    reward_type    int          not null,               -- 0=直接区域经理10% 1=区域经理7% 2=上级leader3% 3=总区域经理
-    base_amount    numeric(78, 0),                      -- 基础金额(min(购买量,质押量))
-    rate          numeric(5, 2),                       -- 奖励费率
-    reward_amount  numeric(78, 0),                      -- 奖励金额
-    state         int          not null default 0,     -- -1=过期 0=初始化 1=已领取
-    pending       bool         not null default false, -- 是否正在处理中
-    tx_id          varchar(128),                        -- 领取交易Id
+    record_id      ulid        not null        default gen_ulid(),
+    native_account varchar(64) not null,                      -- 区域经理地址
+    staker         varchar(64) not null,                      -- 触发奖励的质押者
+    reward_type    int         not null,                      -- 0=直接区域经理10% 1=区域经理7% 2=上级leader3% 3=总区域经理
+    base_amount    numeric(78, 0),                            -- 基础金额(min(购买量,质押量))
+    rate           numeric(5, 2),                             -- 奖励费率
+    reward_amount  numeric(78, 0),                            -- 奖励金额
+    state          int         not null        default 0,     -- -1=过期 0=初始化 1=已领取
+    pending        bool        not null        default false, -- 是否正在处理中
+    tx_id          varchar(128),                              -- 领取交易Id
     create_time    timestamp without time zone default current_timestamp,
     update_time    timestamp without time zone default current_timestamp,
     primary key (record_id)
 );
 create index on public.t_stake_area_leader_reward (native_account, state, pending);
 
+-- 区域经理奖励领取表
 drop table if exists public.t_stake_area_leader_reward_claim_record;
 create table public.t_stake_area_leader_reward_claim_record
 (
-    record_id             ulid     not null default gen_ulid(),
-    native_account        varchar(64) not null,          -- 领取者（区域经理）地址
-    reward_ids            ulid[]   not null,             -- 本次领取的奖励Id列表
-    tx_id                 varchar(128),
-    ref_block_hash         varchar(45),
+    record_id               ulid        not null        default gen_ulid(),
+    native_account          varchar(64) not null,                  -- 领取者（区域经理）地址
+    reward_ids              ulid[]      not null,                  -- 本次领取的奖励Id列表
+    tx_id                   varchar(128),
+    ref_block_hash          varchar(45),
     last_valid_block_height bigint,
-    state                int      default 0,            -- -2=过期 -1=失败 0=初始化 1=成功
-    create_time           timestamp without time zone default current_timestamp,
-    update_time           timestamp without time zone default current_timestamp,
+    state                   int                         default 0, -- -2=过期 -1=失败 0=初始化 1=成功
+    create_time             timestamp without time zone default current_timestamp,
+    update_time             timestamp without time zone default current_timestamp,
     primary key (record_id)
 );
 create index on public.t_stake_area_leader_reward_claim_record (tx_id);
