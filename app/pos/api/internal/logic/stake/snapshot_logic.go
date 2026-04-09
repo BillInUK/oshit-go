@@ -323,7 +323,7 @@ func (l *StakeSnapShotLogic) setStakeStarLevel(rewardMap map[string]model.StakeR
 // rewardGroup 发放邀请关系当中的星级用户奖励
 func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward, snapShotMap map[string]types.StakeSnapShotDetail, snapShotDay time.Time, maxDepth int) {
 	var err error
-	var inviteChains []types.StakeInviteNode
+	var inviteChains []types.InviteNode
 
 	log.Infof("%s 发放质押激励奖励团队奖励部分 - 快照日期: %v\n", l.prefix, snapShotDay)
 
@@ -422,14 +422,14 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 	}
 
 	// 1. 按 GroupID 分组，生成邀请树分支数组
-	groupedBranch := make(map[string][]types.StakeInviteNode)
+	groupedBranch := make(map[string][]types.InviteNode)
 	for _, inviteNode := range inviteChains {
 		groupedBranch[inviteNode.GroupId] = append(groupedBranch[inviteNode.GroupId], inviteNode)
 	}
 
 	// 2. 遍历每个邀请分支，然后在每个邀请分支的末尾加上级别最低被邀请的质押用户
 	for groupId, branch := range groupedBranch {
-		var maxInviteLevelNode types.StakeInviteNode
+		var maxInviteLevelNode types.InviteNode
 		for _, inviteNode := range branch {
 			if inviteNode.Level > maxInviteLevelNode.Level {
 				maxInviteLevelNode = inviteNode
@@ -444,7 +444,7 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 		starLevel := int(rewardMap[inviteeNativeAccount].StarLevel)
 		rate := rewardMap[inviteeNativeAccount].Rate
 		inviteLevel := maxInviteLevelNode.Level + 1
-		lastInviteNode := types.StakeInviteNode{
+		lastInviteNode := types.InviteNode{
 			GroupId:   groupId,
 			Inviter:   inviteeNativeAccount,
 			Invitee:   inviteeNativeAccount,
@@ -719,7 +719,7 @@ func (l *StakeSnapShotLogic) GetStakeStarLevelFromConfig(owner string, amount fl
 	}
 }
 
-func (l *StakeSnapShotLogic) calculateStakeBase(records []types.StakeInviteNode, index int, maxOffset int, selfFlagMap map[string]bool, topFlagMap map[string]bool) {
+func (l *StakeSnapShotLogic) calculateStakeBase(records []types.InviteNode, index int, maxOffset int, selfFlagMap map[string]bool, topFlagMap map[string]bool) {
 	// 如果分支的长度只有1则Base是当前的 每个固定利息 * 星级费率
 	if len(records) == 1 {
 		selfFlagMap[records[index].Inviter] = true

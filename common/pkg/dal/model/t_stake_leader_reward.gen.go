@@ -8,25 +8,25 @@ import (
 	"time"
 )
 
-const TableNameStakeAreaLeaderReward = "t_stake_area_leader_reward"
+const TableNameStakeLeaderReward = "t_stake_leader_reward"
 
-// StakeAreaLeaderReward mapped from table <t_stake_area_leader_reward>
-type StakeAreaLeaderReward struct {
+// StakeLeaderReward mapped from table <t_stake_leader_reward>
+type StakeLeaderReward struct {
 	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
 	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
 	Staker        string    `gorm:"column:staker;not null" json:"staker"`
 	RewardType    int32     `gorm:"column:reward_type;not null" json:"reward_type"`
 	BaseAmount    float64   `gorm:"column:base_amount" json:"base_amount"`
-	Rate          float64   `gorm:"column:rate" json:"rate"`
+	StakeShare    float64   `gorm:"column:stake_share" json:"stake_share"`
 	RewardAmount  float64   `gorm:"column:reward_amount" json:"reward_amount"`
-	State         int32     `gorm:"column:state;not null" json:"state"`
+	RewardState   int32     `gorm:"column:reward_state;not null" json:"reward_state"`
 	Pending       bool      `gorm:"column:pending;not null" json:"pending"`
 	TxID          string    `gorm:"column:tx_id" json:"tx_id"`
-	CreateTime    time.Time `gorm:"column:create_time;default:CURRENT_TIMESTAMP" json:"create_time"`
-	UpdateTime    time.Time `gorm:"column:update_time;default:CURRENT_TIMESTAMP" json:"update_time"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
-// TableName StakeAreaLeaderReward's table name
-func (*StakeAreaLeaderReward) TableName() string {
-	return TableNameStakeAreaLeaderReward
+// TableName StakeLeaderReward's table name
+func (*StakeLeaderReward) TableName() string {
+	return TableNameStakeLeaderReward
 }

@@ -13,6 +13,7 @@ import (
 	app_utils "oshit-go/app/utils"
 	"oshit-go/common/pkg/response"
 	"oshit-go/common/utils"
+	"strconv"
 )
 
 type StakeHandler struct {
@@ -35,6 +36,16 @@ func (h *StakeHandler) GetConfig(fiberCtx *fiber.Ctx) error {
 		return response.FailWithMsg(fiberCtx, "get stake reward config error")
 	}
 	return response.OkWithData(fiberCtx, config)
+}
+
+// GetRewardStat 获取质押奖励信息
+func (h *StakeHandler) GetRewardStat(fiberCtx *fiber.Ctx) error {
+	return nil
+}
+
+// GetStarLevel 获取质押星级
+func (h *StakeHandler) GetStarLevel(fiberCtx *fiber.Ctx) error {
+	return nil
 }
 
 // GetClaimRecord 根据交易id获取领取stake奖励记录
@@ -92,7 +103,7 @@ func (h *StakeHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 	l := stake.NewStakeRewardLogic(fiberCtx.Context(), h.srvCtx)
 	txInfo, err := l.GetTxInfo(nativeAccountString)
 	if err != nil {
-		return response.FailWithMsg(fiberCtx, "get claim stake reward transacion info error")
+		return response.FailWithMsg(fiberCtx, "get claim stake reward transaction info error")
 	}
 
 	return response.OkWithData(fiberCtx, txInfo)
@@ -146,4 +157,112 @@ func (h *StakeHandler) ResetSnapShot(fiberCtx *fiber.Ctx) error {
 		return response.FailWithMsg(fiberCtx, "reset snapshot error")
 	}
 	return response.Ok(fiberCtx)
+}
+
+// MinAmount 获取最小质押奖励
+func (h *StakeHandler) MinAmount(fiberCtx *fiber.Ctx) error {
+	stakeTypeStr := fiberCtx.Params("type")
+	stakeType, err := strconv.ParseInt(stakeTypeStr, 10, 64)
+	if err != nil || (stakeType != 0 && stakeType != 1) {
+		return response.FailWithMsg(fiberCtx, "stake type must 0 or 1")
+	}
+	l := stake.NewStakeLogic(fiberCtx.Context(), h.srvCtx)
+	minStakeAmount := l.GetStakeMinAmount(stakeType)
+	return response.OkWithData(fiberCtx, minStakeAmount)
+}
+
+// StakeToken 提交质押token交易
+func (h *StakeHandler) StakeToken(fiberCtx *fiber.Ctx) error {
+	var err error
+	var txId *solana.Signature
+	var prefix = fmt.Sprintf("Stake业务 - 质押token -")
+
+	// 1. 检查交易参数
+	ctx := fiberCtx.Context()
+	encodedTx := fiberCtx.FormValue("encodedTx")
+	if err != nil {
+		return response.FailWithError(fiberCtx, "parameter encodedTx must not be null", err)
+	}
+
+	// 2. 预处理交易
+	preCheckedTx, err := app_utils.PreCheckEncodedTx(encodedTx)
+	if err != nil {
+		log.Errorf("%s 预处理交易错误: %v", prefix, err)
+		return response.FailWithMsg(fiberCtx, "pre check transaction error")
+	}
+
+	log.Infof("%s 质押地址 %v, 交易id: %v", prefix, preCheckedTx.From, preCheckedTx.TxId)
+
+	// 3. 处理交易主逻辑
+	l := stake.NewStakeLogic(ctx, h.srvCtx)
+	if err = l.ProcessStakeToken(ctx, preCheckedTx); err != nil {
+		log.Errorf("%s 处理地址 %v 交易id %v 错误: %v", prefix, preCheckedTx.From, preCheckedTx.TxId, err)
+		return response.FailWithError(fiberCtx, "process transaction error:", err)
+	}
+
+	return response.OkWithData(fiberCtx, txId)
+}
+
+// UnStakeToken 解除质押
+func (h *StakeHandler) UnStakeToken(fiberCtx *fiber.Ctx) error {
+	var err error
+	var txId *solana.Signature
+	var prefix = fmt.Sprintf("Stake业务 - 解除质押token -")
+
+	// 1. 检查交易参数
+	ctx := fiberCtx.Context()
+	encodedTx := fiberCtx.FormValue("encodedTx")
+	if err != nil {
+		return response.FailWithError(fiberCtx, "parameter encodedTx must not be null", err)
+	}
+
+	// 2. 预处理交易
+	preCheckedTx, err := app_utils.PreCheckEncodedTx(encodedTx)
+	if err != nil {
+		log.Errorf("%s 预处理交易错误: %v", prefix, err)
+		return response.FailWithMsg(fiberCtx, "pre check transaction error")
+	}
+
+	log.Infof("%s 质押地址 %v, 交易id: %v", prefix, preCheckedTx.From, preCheckedTx.TxId)
+
+	// 3. 处理交易主逻辑
+	l := stake.NewStakeLogic(ctx, h.srvCtx)
+	if err = l.ProcessUnStakeToken(ctx, preCheckedTx); err != nil {
+		log.Errorf("%s 处理地址 %v 交易id %v 错误: %v", prefix, preCheckedTx.From, preCheckedTx.TxId, err)
+		return response.FailWithError(fiberCtx, "process transaction error:", err)
+	}
+
+	return response.OkWithData(fiberCtx, txId)
+}
+
+// ReStakeToken 重新质押
+func (h *StakeHandler) ReStakeToken(fiberCtx *fiber.Ctx) error {
+	var err error
+	var txId *solana.Signature
+	var prefix = fmt.Sprintf("Stake业务 - 重新质押token -")
+
+	// 1. 检查交易参数
+	ctx := fiberCtx.Context()
+	encodedTx := fiberCtx.FormValue("encodedTx")
+	if err != nil {
+		return response.FailWithError(fiberCtx, "parameter encodedTx must not be null", err)
+	}
+
+	// 2. 预处理交易
+	preCheckedTx, err := app_utils.PreCheckEncodedTx(encodedTx)
+	if err != nil {
+		log.Errorf("%s 预处理交易错误: %v", prefix, err)
+		return response.FailWithMsg(fiberCtx, "pre check transaction error")
+	}
+
+	log.Infof("%s 质押地址 %v, 交易id: %v", prefix, preCheckedTx.From, preCheckedTx.TxId)
+
+	// 3. 处理交易主逻辑
+	l := stake.NewStakeLogic(ctx, h.srvCtx)
+	if err = l.ProcessReStakeToken(ctx, preCheckedTx); err != nil {
+		log.Errorf("%s 处理地址 %v 交易id %v 错误: %v", prefix, preCheckedTx.From, preCheckedTx.TxId, err)
+		return response.FailWithError(fiberCtx, "process transaction error:", err)
+	}
+
+	return response.OkWithData(fiberCtx, txId)
 }

@@ -28,7 +28,7 @@ func newStakeInviteRate(db *gorm.DB, opts ...gen.DOOption) stakeInviteRate {
 
 	tableName := _stakeInviteRate.stakeInviteRateDo.TableName()
 	_stakeInviteRate.ALL = field.NewAsterisk(tableName)
-	_stakeInviteRate.Level = field.NewInt32(tableName, "level")
+	_stakeInviteRate.DistLevel = field.NewInt32(tableName, "dist_level")
 	_stakeInviteRate.Rate = field.NewFloat64(tableName, "rate")
 
 	_stakeInviteRate.fillFieldMap()
@@ -39,9 +39,9 @@ func newStakeInviteRate(db *gorm.DB, opts ...gen.DOOption) stakeInviteRate {
 type stakeInviteRate struct {
 	stakeInviteRateDo stakeInviteRateDo
 
-	ALL   field.Asterisk
-	Level field.Int32
-	Rate  field.Float64
+	ALL       field.Asterisk
+	DistLevel field.Int32
+	Rate      field.Float64
 
 	fieldMap map[string]field.Expr
 }
@@ -58,7 +58,7 @@ func (s stakeInviteRate) As(alias string) *stakeInviteRate {
 
 func (s *stakeInviteRate) updateTableName(table string) *stakeInviteRate {
 	s.ALL = field.NewAsterisk(table)
-	s.Level = field.NewInt32(table, "level")
+	s.DistLevel = field.NewInt32(table, "dist_level")
 	s.Rate = field.NewFloat64(table, "rate")
 
 	s.fillFieldMap()
@@ -89,7 +89,7 @@ func (s *stakeInviteRate) GetFieldByName(fieldName string) (field.OrderExpr, boo
 
 func (s *stakeInviteRate) fillFieldMap() {
 	s.fieldMap = make(map[string]field.Expr, 2)
-	s.fieldMap["level"] = s.Level
+	s.fieldMap["dist_level"] = s.DistLevel
 	s.fieldMap["rate"] = s.Rate
 }
 

@@ -186,6 +186,19 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 	}
 	s.LightHouseAddress = lighthouseAddr
 
+	// 初始化服务配置
+	var serviceInfos []model.ServiceInfo
+	if err := s.DB.Find(&serviceInfos).Error; err != nil {
+		return fmt.Errorf("can not load service info from database: %v", err)
+	}
+	s.ServiceInfoMap = make(map[string]map[string]model.ServiceInfo)
+	for _, si := range serviceInfos {
+		if s.ServiceInfoMap[si.Service] == nil {
+			s.ServiceInfoMap[si.Service] = make(map[string]model.ServiceInfo)
+		}
+		s.ServiceInfoMap[si.Service][si.SubService] = si
+	}
+
 	return nil
 }
 

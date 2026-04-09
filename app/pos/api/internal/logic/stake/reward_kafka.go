@@ -40,7 +40,7 @@ func (l *StakeRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		}
 	} else {
 		// 更新 t_stake_reward_claim_record 的交易状态为已成功
-		table := dbTx.Table(model.TableNameStakeRewardClaimRecord)
+		table := dbTx.Table(model.TableNameStakeRewardClaim)
 		if err = table.Where("tx_id = ?", txId).Updates(map[string]interface{}{
 			"tx_state":   1,
 			"updated_at": time.Now(),
@@ -98,7 +98,7 @@ func (l *StakeRewardLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	defer dbTx.Rollback()
 
 	// 将 t_stake_reward_claim_record 标记为失败
-	claimTable := dbTx.Table(model.TableNameStakeRewardClaimRecord)
+	claimTable := dbTx.Table(model.TableNameStakeRewardClaim)
 	if err = claimTable.Where("tx_id = ?", txId).Updates(map[string]interface{}{
 		"tx_state":   -1,
 		"updated_at": time.Now(),

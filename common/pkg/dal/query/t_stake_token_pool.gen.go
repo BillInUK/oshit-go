@@ -28,7 +28,7 @@ func newStakeTokenPool(db *gorm.DB, opts ...gen.DOOption) stakeTokenPool {
 
 	tableName := _stakeTokenPool.stakeTokenPoolDo.TableName()
 	_stakeTokenPool.ALL = field.NewAsterisk(tableName)
-	_stakeTokenPool.Source = field.NewString(tableName, "source")
+	_stakeTokenPool.SourceAccount = field.NewString(tableName, "source_account")
 	_stakeTokenPool.FromTokenAccount = field.NewString(tableName, "from_token_account")
 
 	_stakeTokenPool.fillFieldMap()
@@ -40,7 +40,7 @@ type stakeTokenPool struct {
 	stakeTokenPoolDo stakeTokenPoolDo
 
 	ALL              field.Asterisk
-	Source           field.String
+	SourceAccount    field.String
 	FromTokenAccount field.String
 
 	fieldMap map[string]field.Expr
@@ -58,7 +58,7 @@ func (s stakeTokenPool) As(alias string) *stakeTokenPool {
 
 func (s *stakeTokenPool) updateTableName(table string) *stakeTokenPool {
 	s.ALL = field.NewAsterisk(table)
-	s.Source = field.NewString(table, "source")
+	s.SourceAccount = field.NewString(table, "source_account")
 	s.FromTokenAccount = field.NewString(table, "from_token_account")
 
 	s.fillFieldMap()
@@ -89,7 +89,7 @@ func (s *stakeTokenPool) GetFieldByName(fieldName string) (field.OrderExpr, bool
 
 func (s *stakeTokenPool) fillFieldMap() {
 	s.fieldMap = make(map[string]field.Expr, 2)
-	s.fieldMap["source"] = s.Source
+	s.fieldMap["source_account"] = s.SourceAccount
 	s.fieldMap["from_token_account"] = s.FromTokenAccount
 }
 

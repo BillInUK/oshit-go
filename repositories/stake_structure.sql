@@ -10,7 +10,7 @@ CREATE TABLE public.t_stake_amm_config
 DROP TABLE IF EXISTS public.t_stake_token_pool;
 CREATE TABLE public.t_stake_token_pool
 (
-    source             character varying(64) not null,
+    source_account     character varying(64) not null,
     from_token_account character varying(64) not null
 );
 
@@ -34,7 +34,7 @@ CREATE TABLE public.t_stake_fix_rate_config
 DROP TABLE IF EXISTS public.t_stake_invite_dist;
 CREATE TABLE public.t_stake_invite_dist
 (
-    level INTEGER NOT NULL -- 发放奖励往上追溯的级别
+    dist_level INTEGER NOT NULL -- 发放奖励往上追溯的级别
 );
 
 -- 邀请奖励每个级别的奖励费率
@@ -42,9 +42,9 @@ CREATE TABLE public.t_stake_invite_dist
 DROP TABLE IF EXISTS public.t_stake_invite_rate;
 CREATE TABLE public.t_stake_invite_rate
 (
-    level INTEGER       NOT NULL, -- 奖励级别
-    rate  NUMERIC(5, 2) NOT NULL, -- 奖励费率从被邀请人的 质押每日固定利息 抽取的费率
-    PRIMARY KEY (level)
+    dist_level INTEGER       NOT NULL, -- 奖励级别
+    rate       NUMERIC(5, 2) NOT NULL, -- 奖励费率从被邀请人的 质押每日固定利息 抽取的费率
+    PRIMARY KEY (dist_level)
 );
 
 -- 质押星级配置
@@ -122,8 +122,8 @@ create unique index on public.t_stake_reward (native_account, snap_day, reward_t
 
 -- 质押奖励领取记录表
 -- 旧工程 t_sol_stake_reward_claim_record
-drop table if exists public.t_stake_reward_claim_record;
-create table public.t_stake_reward_claim_record
+drop table if exists public.t_stake_reward_claim;
+create table public.t_stake_reward_claim
 (
     record_id  ulid   not null             default gen_ulid(),        -- 记录Id
     reward_ids ulid[] not null,                                       -- 奖励Id
@@ -133,8 +133,8 @@ create table public.t_stake_reward_claim_record
     updated_at timestamp without time zone default current_timestamp, -- 记录更新时间
     primary key (record_id)
 );
-create index on public.t_stake_reward_claim_record (tx_id);
-create index on public.t_stake_reward_claim_record (tx_state, created_at);
+create index on public.t_stake_reward_claim (tx_id);
+create index on public.t_stake_reward_claim (tx_state, created_at);
 
 -- stake 每日快照表
 -- 旧工程 t_sol_stake_snap_shot
@@ -151,7 +151,7 @@ create table public.t_stake_snap_shot
     primary key (record_id)
 );
 create index on public.t_stake_snap_shot (native_account);
-create unique index on public.t_stake_snap_shot (native_account,stake_type, snap_day);
+create unique index on public.t_stake_snap_shot (native_account, stake_type, snap_day);
 
 -- 质押记录表
 drop table if exists public.t_stake_record;
@@ -175,8 +175,8 @@ create table public.t_stake_buy_token
 (
     tx_id            varchar(128) collate "pg_catalog"."default" not null,
     slot             numeric(78, 0)                              not null,
-    source           varchar(64) collate "pg_catalog"."default"  not null,
-    destination      varchar(64) collate "pg_catalog"."default"  not null,
+    from_account     varchar(64) collate "pg_catalog"."default"  not null,
+    to_account       varchar(64) collate "pg_catalog"."default"  not null,
     amount           numeric(78, 0)                              not null,
     locked           bool                                        not null default false,
     locked_by        varchar(128) collate "pg_catalog"."default",
@@ -192,66 +192,63 @@ create index idx_stake_buy_token_locked_by on public.t_stake_buy_token (locked_b
 create index idx_stake_buy_token_slot on public.t_stake_buy_token (slot);
 
 -- 总区域经理表
-drop table if exists public.t_stake_total_area_leader;
-create table public.t_stake_total_area_leader
+drop table if exists public.t_stake_total_leader;
+create table public.t_stake_total_leader
 (
     record_id      ulid not null               default gen_ulid(),-- 记录Id
     native_account varchar(64),-- 区域领导地址
-    share          numeric(20, 8), -- 用户质押时奖励总区域经理的分成费率
+    stake_share    numeric(5, 2), -- 用户质押时奖励总区域经理的分成费率
     created_at     timestamp without time zone default current_timestamp,-- 记录创建时间
     updated_at     timestamp without time zone default current_timestamp,-- 记录更新时间
     primary key (record_id)
 );
 
 -- 区域经理表
-drop table if exists public.t_stake_area_leader;
-create table public.t_stake_area_leader
+drop table if exists public.t_stake_leader;
+create table public.t_stake_leader
 (
     record_id      ulid     not null           default gen_ulid(),-- 记录Id
     native_account varchar(64),-- 区域经理地址
-    level          smallint not null, -- 区域经理等级
-    share          numeric(20, 8), -- 用户质押时奖励该区域经理的分成费率
-    leader         varchar(64),-- 区域经理的上级
+    leader_level   smallint not null, -- 区域经理等级
+    up_leader      varchar(64),-- 区域经理的上级
     created_at     timestamp without time zone default current_timestamp,-- 记录创建时间
     updated_at     timestamp without time zone default current_timestamp,-- 记录更新时间
     primary key (record_id)
 );
 
 -- 区域经理奖励明细表
-drop table if exists public.t_stake_area_leader_reward;
-create table public.t_stake_area_leader_reward
+drop table if exists public.t_stake_leader_reward;
+create table public.t_stake_leader_reward
 (
     record_id      ulid        not null        default gen_ulid(),
     native_account varchar(64) not null,                      -- 区域经理地址
     staker         varchar(64) not null,                      -- 触发奖励的质押者
     reward_type    int         not null,                      -- 0=直接区域经理10% 1=区域经理7% 2=上级leader3% 3=总区域经理
     base_amount    numeric(78, 0),                            -- 基础金额(min(购买量,质押量))
-    rate           numeric(5, 2),                             -- 奖励费率
+    stake_share    numeric(5, 2),                             -- 奖励费率
     reward_amount  numeric(78, 0),                            -- 奖励金额
-    state          int         not null        default 0,     -- -1=过期 0=初始化 1=已领取
+    reward_state   int         not null        default 0,     -- -1=过期 0=初始化 1=已领取
     pending        bool        not null        default false, -- 是否正在处理中
     tx_id          varchar(128),                              -- 领取交易Id
-    create_time    timestamp without time zone default current_timestamp,
-    update_time    timestamp without time zone default current_timestamp,
+    created_at     timestamp without time zone default current_timestamp,
+    updated_at     timestamp without time zone default current_timestamp,
     primary key (record_id)
 );
-create index on public.t_stake_area_leader_reward (native_account, state, pending);
+create index on public.t_stake_leader_reward (native_account, reward_state, pending);
 
 -- 区域经理奖励领取表
-drop table if exists public.t_stake_area_leader_reward_claim_record;
-create table public.t_stake_area_leader_reward_claim_record
+drop table if exists public.t_stake_leader_reward_claim;
+create table public.t_stake_leader_reward_claim
 (
-    record_id               ulid        not null        default gen_ulid(),
-    native_account          varchar(64) not null,                  -- 领取者（区域经理）地址
-    reward_ids              ulid[]      not null,                  -- 本次领取的奖励Id列表
-    tx_id                   varchar(128),
-    ref_block_hash          varchar(45),
-    last_valid_block_height bigint,
-    state                   int                         default 0, -- -2=过期 -1=失败 0=初始化 1=成功
-    create_time             timestamp without time zone default current_timestamp,
-    update_time             timestamp without time zone default current_timestamp,
+    record_id      ulid        not null        default gen_ulid(),
+    native_account varchar(64) not null,                  -- 领取者（区域经理）地址
+    reward_ids     ulid[]      not null,                  -- 本次领取的奖励Id列表
+    tx_id          varchar(128),
+    tx_state       int                         default 0, -- -2=过期 -1=失败 0=初始化 1=成功
+    created_at     timestamp without time zone default current_timestamp,
+    updated_at     timestamp without time zone default current_timestamp,
     primary key (record_id)
 );
-create index on public.t_stake_area_leader_reward_claim_record (tx_id);
-create index on public.t_stake_area_leader_reward_claim_record (state, create_time);
-create index on public.t_stake_area_leader_reward_claim_record (native_account, state);
+create index on public.t_stake_leader_reward_claim (tx_id);
+create index on public.t_stake_leader_reward_claim (tx_state, created_at);
+create index on public.t_stake_leader_reward_claim (native_account, tx_state);

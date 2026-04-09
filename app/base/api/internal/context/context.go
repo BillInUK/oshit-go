@@ -40,4 +40,7 @@ type CoreContext struct {
 
 	// 服务签名私钥: ServiceKeyMap[service][subService]
 	ServiceKeyMap ServiceKey
+
+	// 服务配置: ServiceInfoMap[service][subService] = ServiceInfo
+	ServiceInfoMap map[string]map[string]model.ServiceInfo
 }

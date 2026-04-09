@@ -27,7 +27,7 @@ type ServiceContext struct {
 	TaskMgr           *task.TaskManager
 
 	// pos业务配置
-	PosStarLevelRule *model.PosStarLevelRule
+	PosStarLevelRule map[int32]model.PosStarLevelRule
 	PosRewardConfig  *model.PosRewardConfig
 	PosWhiteListMap  map[string]model.PosStarWhitelist
 
@@ -37,7 +37,7 @@ type ServiceContext struct {
 	StakeFixConfig     map[int32]model.StakeFixRateConfig
 	StakeInviteRate    map[int32]model.StakeInviteRate
 	StakeStarLevelRule map[int32]model.StakeStarLevelRule
-	TotalAreaLeaders   []model.StakeTotalAreaLeader
+	TotalAreaLeaders   []model.StakeTotalLeader
 	StakeTokenPoolMap  map[string]model.StakeTokenPool
 	StakeDistLevel     int32
 	StakeStarWhitelist map[string]model.StakeStarWhitelist
@@ -224,9 +224,13 @@ func (s *ServiceContext) initPosConfig() error {
 	}
 
 	// 初始化pos星级评定规则
+	var starLevelRules []model.PosStarLevelRule
 	table = s.DB.Table(model.TableNamePosStarLevelRule)
-	if err := table.Find(&s.PosStarLevelRule).Order("star_level asc").Error; err != nil {
+	if err := table.Find(&starLevelRules).Order("star_level asc").Error; err != nil {
 		return errors.New("can not load any pos star level rule from database")
+	}
+	for _, r := range s.PosStarLevelRule {
+		s.PosStarLevelRule[r.StarLevel] = r
 	}
 
 	// 初始化pos奖励配置
@@ -254,21 +258,21 @@ func (s *ServiceContext) initStakeConfig() error {
 	if err := table.Find(&dist).Error; err != nil {
 		panic("can not find any stake invite dist config")
 	}
-	s.StakeDistLevel = dist.Level
+	s.StakeDistLevel = dist.DistLevel
 
 	table = s.DB.Table(model.TableNameStakeInviteRate)
 	if err := table.Find(&inviteRates).Error; err != nil || len(inviteRates) == 0 {
 		return errors.New("can not find any stake invite rate config")
 	}
 	for _, rate := range inviteRates {
-		s.StakeInviteRate[rate.Level] = rate
+		s.StakeInviteRate[rate.DistLevel] = rate
 	}
 	table = s.DB.Table(model.TableNameStakeFixRateConfig)
 	if err := table.Find(&fixConfig).Error; err != nil || len(fixConfig) == 0 {
 		return errors.New("can not find any stake fix config")
 	}
-	for _, config := range fixConfig {
-		s.StakeFixConfig[config.StakeType] = config
+	for _, c := range fixConfig {
+		s.StakeFixConfig[c.StakeType] = c
 	}
 
 	// 初始化stake星级配置
@@ -297,7 +301,7 @@ func (s *ServiceContext) initStakeConfig() error {
 	if err := table.First(&s.StakeAmmConfig).Error; err != nil {
 		return errors.New("can not load any stake amm config from database")
 	}
-	table = s.DB.Table(model.TableNameStakeTotalAreaLeader)
+	table = s.DB.Table(model.TableNameStakeTotalLeader)
 	if err := table.Find(&s.TotalAreaLeaders).Error; err != nil {
 		return errors.New("can not find total area leaders from database")
 	}

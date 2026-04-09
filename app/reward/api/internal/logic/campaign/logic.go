@@ -281,7 +281,7 @@ func (l *CampaignLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_u
 	}
 
 	// 7. 通过 base 模块的dubbo接口签名并异步广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Campaign", "ExchangeToken")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "ExchangeToken")
 	if err != nil {
 		log.Errorf("%s 调用base模块dubbo接口发送交易失败,错误: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))

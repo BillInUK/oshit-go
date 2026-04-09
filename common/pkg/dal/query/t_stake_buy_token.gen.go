@@ -30,8 +30,8 @@ func newStakeBuyToken(db *gorm.DB, opts ...gen.DOOption) stakeBuyToken {
 	_stakeBuyToken.ALL = field.NewAsterisk(tableName)
 	_stakeBuyToken.TxID = field.NewString(tableName, "tx_id")
 	_stakeBuyToken.Slot = field.NewFloat64(tableName, "slot")
-	_stakeBuyToken.Source = field.NewString(tableName, "source")
-	_stakeBuyToken.Destination = field.NewString(tableName, "destination")
+	_stakeBuyToken.FromAccount = field.NewString(tableName, "from_account")
+	_stakeBuyToken.ToAccount = field.NewString(tableName, "to_account")
 	_stakeBuyToken.Amount = field.NewFloat64(tableName, "amount")
 	_stakeBuyToken.Locked = field.NewBool(tableName, "locked")
 	_stakeBuyToken.LockedBy = field.NewString(tableName, "locked_by")
@@ -51,8 +51,8 @@ type stakeBuyToken struct {
 	ALL             field.Asterisk
 	TxID            field.String
 	Slot            field.Float64
-	Source          field.String
-	Destination     field.String
+	FromAccount     field.String
+	ToAccount       field.String
 	Amount          field.Float64
 	Locked          field.Bool
 	LockedBy        field.String
@@ -78,8 +78,8 @@ func (s *stakeBuyToken) updateTableName(table string) *stakeBuyToken {
 	s.ALL = field.NewAsterisk(table)
 	s.TxID = field.NewString(table, "tx_id")
 	s.Slot = field.NewFloat64(table, "slot")
-	s.Source = field.NewString(table, "source")
-	s.Destination = field.NewString(table, "destination")
+	s.FromAccount = field.NewString(table, "from_account")
+	s.ToAccount = field.NewString(table, "to_account")
 	s.Amount = field.NewFloat64(table, "amount")
 	s.Locked = field.NewBool(table, "locked")
 	s.LockedBy = field.NewString(table, "locked_by")
@@ -118,8 +118,8 @@ func (s *stakeBuyToken) fillFieldMap() {
 	s.fieldMap = make(map[string]field.Expr, 11)
 	s.fieldMap["tx_id"] = s.TxID
 	s.fieldMap["slot"] = s.Slot
-	s.fieldMap["source"] = s.Source
-	s.fieldMap["destination"] = s.Destination
+	s.fieldMap["from_account"] = s.FromAccount
+	s.fieldMap["to_account"] = s.ToAccount
 	s.fieldMap["amount"] = s.Amount
 	s.fieldMap["locked"] = s.Locked
 	s.fieldMap["locked_by"] = s.LockedBy

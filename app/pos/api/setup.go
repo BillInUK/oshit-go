@@ -25,7 +25,6 @@ func registerTasks(srvCtx *svc.ServiceContext) {
 	srvCtx.TaskMgr.RegisterSnapShotHandler("StakeSnapShot", func(ctx context.Context, msg entity.KafkaNewSnapShotMsg) error {
 		return stake.NewStakeSnapShotLogic(ctx, srvCtx).HandeSnapShot(msg)
 	})
-
 	srvCtx.TaskMgr.RegisterScannedTxHandler("StakeReward", func(ctx context.Context, msg entity.NewScannedTx) error {
 		return stake.NewStakeRewardLogic(ctx, srvCtx).HandleScannedTx(msg)
 	})

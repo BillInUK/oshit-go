@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-const TableNameStakeRewardClaimRecord = "t_stake_reward_claim_record"
+const TableNameStakeRewardClaim = "t_stake_reward_claim"
 
-// StakeRewardClaimRecord mapped from table <t_stake_reward_claim_record>
-type StakeRewardClaimRecord struct {
+// StakeRewardClaim mapped from table <t_stake_reward_claim>
+type StakeRewardClaim struct {
 	RecordID  string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
 	RewardIds string    `gorm:"column:reward_ids;not null" json:"reward_ids"`
 	TxID      string    `gorm:"column:tx_id" json:"tx_id"`
@@ -20,7 +20,7 @@ type StakeRewardClaimRecord struct {
 	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
-// TableName StakeRewardClaimRecord's table name
-func (*StakeRewardClaimRecord) TableName() string {
-	return TableNameStakeRewardClaimRecord
+// TableName StakeRewardClaim's table name
+func (*StakeRewardClaim) TableName() string {
+	return TableNameStakeRewardClaim
 }

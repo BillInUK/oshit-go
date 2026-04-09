@@ -28,14 +28,27 @@ func (h *PosHandler) GetConfig(fiberCtx *fiber.Ctx) error {
 	return response.OkWithData(fiberCtx, config)
 }
 
-func (h *PosHandler) GetRecord(fiberCtx *fiber.Ctx) error {
+// GetRewardStat 获取 pos 奖励统计
+func (h *PosHandler) GetRewardStat(fiberCtx *fiber.Ctx) error {
 	return nil
 }
 
+// GetRewardRecord 获取 pos 奖励明细
+func (h *PosHandler) GetRewardRecord(fiberCtx *fiber.Ctx) error {
+	return nil
+}
+
+// GetTxInfo 获取领取pos奖励交易信息
 func (h *PosHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 	return nil
 }
 
+// CommitTx 提交领取pos奖励
 func (h *PosHandler) CommitTx(fiberCtx *fiber.Ctx) error {
+	return nil
+}
+
+// GetClaimRecord 获取 pos 奖励领取记录
+func (h *PosHandler) GetClaimRecord(fiberCtx *fiber.Ctx) error {
 	return nil
 }

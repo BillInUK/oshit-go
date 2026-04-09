@@ -28,7 +28,7 @@ func newStakeInviteDist(db *gorm.DB, opts ...gen.DOOption) stakeInviteDist {
 
 	tableName := _stakeInviteDist.stakeInviteDistDo.TableName()
 	_stakeInviteDist.ALL = field.NewAsterisk(tableName)
-	_stakeInviteDist.Level = field.NewInt32(tableName, "level")
+	_stakeInviteDist.DistLevel = field.NewInt32(tableName, "dist_level")
 
 	_stakeInviteDist.fillFieldMap()
 
@@ -38,8 +38,8 @@ func newStakeInviteDist(db *gorm.DB, opts ...gen.DOOption) stakeInviteDist {
 type stakeInviteDist struct {
 	stakeInviteDistDo stakeInviteDistDo
 
-	ALL   field.Asterisk
-	Level field.Int32
+	ALL       field.Asterisk
+	DistLevel field.Int32
 
 	fieldMap map[string]field.Expr
 }
@@ -56,7 +56,7 @@ func (s stakeInviteDist) As(alias string) *stakeInviteDist {
 
 func (s *stakeInviteDist) updateTableName(table string) *stakeInviteDist {
 	s.ALL = field.NewAsterisk(table)
-	s.Level = field.NewInt32(table, "level")
+	s.DistLevel = field.NewInt32(table, "dist_level")
 
 	s.fillFieldMap()
 
@@ -86,7 +86,7 @@ func (s *stakeInviteDist) GetFieldByName(fieldName string) (field.OrderExpr, boo
 
 func (s *stakeInviteDist) fillFieldMap() {
 	s.fieldMap = make(map[string]field.Expr, 1)
-	s.fieldMap["level"] = s.Level
+	s.fieldMap["dist_level"] = s.DistLevel
 }
 
 func (s stakeInviteDist) clone(db *gorm.DB) stakeInviteDist {

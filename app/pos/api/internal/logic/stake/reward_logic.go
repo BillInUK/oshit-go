@@ -68,10 +68,10 @@ func (l *StakeRewardLogic) GetConfig() (*model.StakeRewardConfig, error) {
 }
 
 // GetClaimRecord 根据交易id获取领取stake奖励记录
-func (l *StakeRewardLogic) GetClaimRecord(txId string) (*model.StakeRewardClaimRecord, error) {
+func (l *StakeRewardLogic) GetClaimRecord(txId string) (*model.StakeRewardClaim, error) {
 	var err error
-	var record model.StakeRewardClaimRecord
-	table := l.db.Table(model.TableNameStakeRewardClaimRecord)
+	var record model.StakeRewardClaim
+	table := l.db.Table(model.TableNameStakeRewardClaim)
 	if err = table.Where("tx_id = ?", txId).First(&record).Error; err != nil {
 		return nil, err
 	}
@@ -180,29 +180,18 @@ func (l *StakeRewardLogic) recordStakeClaim(nativeAccount, txId string, rewards 
 		return fmt.Errorf("mark stake rewards as pending error: %v", err)
 	}
 
-	// 2. 写入 t_service_tx（base 模块扫链用）
-	serviceTx := model.ServiceTx{
-		Service:    "Pos",
-		SubService: "StakeReward",
-		TxID:       txId,
-		CreatedAt:  time.Now(),
-	}
-	if err := dbTx.Table(model.TableNameServiceTx).Create(&serviceTx).Error; err != nil {
-		return fmt.Errorf("insert service tx error: %v", err)
-	}
-
-	// 3. 写入 t_stake_reward_claim_record
-	claimRecord := model.StakeRewardClaimRecord{
+	// 2. 写入 t_stake_reward_claim_record
+	claimRecord := model.StakeRewardClaim{
 		RewardIds: rewardIdsStr,
 		TxID:      txId,
 		TxState:   0,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	if err := dbTx.Table(model.TableNameStakeRewardClaimRecord).Omit("record_id").Create(&claimRecord).Error; err != nil {
+	if err := dbTx.Table(model.TableNameStakeRewardClaim).Omit("record_id").Create(&claimRecord).Error; err != nil {
 		return fmt.Errorf("insert stake reward claim record error: %v", err)
 	}
-	
+
 	if err := dbTx.Commit().Error; err != nil {
 		return fmt.Errorf("commit transaction error: %v", err)
 	}
@@ -257,7 +246,7 @@ func (l *StakeRewardLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *ap
 	}
 
 	// 6. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "StakeReward")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Stake", "StakeReward")
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return "", errors.New(utils.FilterAndTranslateSOLError(err))

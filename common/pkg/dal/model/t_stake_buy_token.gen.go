@@ -14,8 +14,8 @@ const TableNameStakeBuyToken = "t_stake_buy_token"
 type StakeBuyToken struct {
 	TxID            string    `gorm:"column:tx_id;not null" json:"tx_id"`
 	Slot            float64   `gorm:"column:slot;not null" json:"slot"`
-	Source          string    `gorm:"column:source;not null" json:"source"`
-	Destination     string    `gorm:"column:destination;not null" json:"destination"`
+	FromAccount     string    `gorm:"column:from_account;not null" json:"from_account"`
+	ToAccount       string    `gorm:"column:to_account;not null" json:"to_account"`
 	Amount          float64   `gorm:"column:amount;not null" json:"amount"`
 	Locked          bool      `gorm:"column:locked;not null" json:"locked"`
 	LockedBy        string    `gorm:"column:locked_by" json:"locked_by"`

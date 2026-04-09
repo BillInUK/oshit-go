@@ -1,6 +1,11 @@
 package types
 
 const (
+	PosFixedIncome  = 0 // Pos 持币固定收益
+	PosTwitterLike  = 1 // Pos 关注twitter奖励
+	PosRetweet      = 2 // Pos 推特转贴奖励
+	PosTwitterReply = 3 // Pos 推特点赞或回复奖励：每次点赞或回复奖励 0.25
+
 	StakeFixed          = 0 // 质押每日固定利息
 	StakeInvite         = 1 // 质押邀请奖励
 	StakeStarIndividual = 2 // 质押激励奖励 -  个人奖励
@@ -13,13 +18,20 @@ type GetByTxIdReq struct {
 	TxId string `json:"txId"`
 }
 
+type PosGroupInfo struct {
+	Inviter         string
+	StarLevel       int32
+	GroupHoldAmount float64
+	GroupFixReward  float64
+}
+
 type StakeSnapShotDetail struct {
 	NativeAccount string
 	SnapBase      float64
 	SnapTotal     float64
 }
 
-type StakeInviteNode struct {
+type InviteNode struct {
 	Inviter   string  `gorm:"column:inviter"`
 	Invitee   string  `gorm:"column:invitee"`
 	Level     int     `gorm:"column:level"`

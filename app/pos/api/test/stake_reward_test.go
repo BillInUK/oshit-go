@@ -222,8 +222,8 @@ func commitStakeRewardTx(encodedTx string) (string, error) {
 }
 
 // getStakeClaimRecord 根据 txId 查询领取记录
-func getStakeClaimRecord(txId string) (*model.StakeRewardClaimRecord, error) {
-	rsp, err := postJsonRequest[model.StakeRewardClaimRecord](
+func getStakeClaimRecord(txId string) (*model.StakeRewardClaim, error) {
+	rsp, err := postJsonRequest[model.StakeRewardClaim](
 		PosURL+"/stake/reward/claim-record",
 		struct {
 			TxId string `json:"txId"`

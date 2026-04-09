@@ -121,13 +121,15 @@ CREATE TABLE public.t_invite_relation
 DROP TABLE IF EXISTS public.t_service_info;
 CREATE TABLE public.t_service_info
 (
-    service     character varying(64)                 NOT NULL,
-    sub_service character varying(64)                 NOT NULL,
-    address     character varying(64)                 NOT NULL,
+    service     character varying(64)                    NOT NULL,
+    sub_service character varying(64)                    NOT NULL,
+    address     character varying(64)                    NOT NULL,
     webhook     character varying(1024)     DEFAULT NULL,
     mq_group    character varying(64)       DEFAULT NULL,
     mq_topic    character varying(64)       DEFAULT NULL,
-    hook_type   integer                     DEFAULT 0 NOT NULL,
+    hook_type   integer                     DEFAULT 0    NOT NULL,
+    confirm     bool                        DEFAULT true NOT NULL,
+    multi_sign  bool                        DEFAULT true NOT NULL,
     created_at  timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at  timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );

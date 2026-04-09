@@ -35,6 +35,8 @@ func newServiceInfo(db *gorm.DB, opts ...gen.DOOption) serviceInfo {
 	_serviceInfo.MqGroup = field.NewString(tableName, "mq_group")
 	_serviceInfo.MqTopic = field.NewString(tableName, "mq_topic")
 	_serviceInfo.HookType = field.NewInt32(tableName, "hook_type")
+	_serviceInfo.Confirm = field.NewBool(tableName, "confirm")
+	_serviceInfo.MultiSign = field.NewBool(tableName, "multi_sign")
 	_serviceInfo.CreatedAt = field.NewTime(tableName, "created_at")
 	_serviceInfo.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -54,6 +56,8 @@ type serviceInfo struct {
 	MqGroup    field.String
 	MqTopic    field.String
 	HookType   field.Int32
+	Confirm    field.Bool
+	MultiSign  field.Bool
 	CreatedAt  field.Time
 	UpdatedAt  field.Time
 
@@ -79,6 +83,8 @@ func (s *serviceInfo) updateTableName(table string) *serviceInfo {
 	s.MqGroup = field.NewString(table, "mq_group")
 	s.MqTopic = field.NewString(table, "mq_topic")
 	s.HookType = field.NewInt32(table, "hook_type")
+	s.Confirm = field.NewBool(table, "confirm")
+	s.MultiSign = field.NewBool(table, "multi_sign")
 	s.CreatedAt = field.NewTime(table, "created_at")
 	s.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -107,7 +113,7 @@ func (s *serviceInfo) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (s *serviceInfo) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 9)
+	s.fieldMap = make(map[string]field.Expr, 11)
 	s.fieldMap["service"] = s.Service
 	s.fieldMap["sub_service"] = s.SubService
 	s.fieldMap["address"] = s.Address
@@ -115,6 +121,8 @@ func (s *serviceInfo) fillFieldMap() {
 	s.fieldMap["mq_group"] = s.MqGroup
 	s.fieldMap["mq_topic"] = s.MqTopic
 	s.fieldMap["hook_type"] = s.HookType
+	s.fieldMap["confirm"] = s.Confirm
+	s.fieldMap["multi_sign"] = s.MultiSign
 	s.fieldMap["created_at"] = s.CreatedAt
 	s.fieldMap["updated_at"] = s.UpdatedAt
 }
