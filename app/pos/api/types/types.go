@@ -1,10 +1,16 @@
 package types
 
+import "github.com/gagliardetto/solana-go"
+
 const (
 	PosFixedIncome  = 0 // Pos 持币固定收益
 	PosTwitterLike  = 1 // Pos 关注twitter奖励
 	PosRetweet      = 2 // Pos 推特转贴奖励
 	PosTwitterReply = 3 // Pos 推特点赞或回复奖励：每次点赞或回复奖励 0.25
+
+	StakeStateInit    = 0
+	StakeStateSuccess = 1
+	StakeStateFailed  = -1
 
 	StakeFixed          = 0 // 质押每日固定利息
 	StakeInvite         = 1 // 质押邀请奖励
@@ -12,7 +18,41 @@ const (
 	StakeStar           = 3 // 质押激励奖励 - 星级奖励
 	StakeStarGroup      = 4 // 质押激励奖励 - 团队奖励
 	StakeAreaLeader     = 5 // 质押激励奖励 - 区域领导奖励
+
+	AreaLeaderRewardTypeDirect      = 0 // 区域经理奖励 - 直接区域经理（无Leader），10%
+	AreaLeaderRewardTypeLevel1      = 1 // 区域经理奖励 - level=1 区域经理，7%
+	AreaLeaderRewardTypeLeader      = 2 // 区域经理奖励 - level=1 的上级 Leader，3%
+	AreaLeaderRewardTypeTotalLeader = 3 // 区域经理奖励 - 总区域经理
 )
+
+// StakeInstructionData 质押指令数据结构
+type StakeInstructionData struct {
+	Discriminator []byte // 8字节
+	Amount        uint64 // 质押数量
+	StakeType     uint8  // 质押类型
+}
+
+// StakeAccounts 质押指令相关的账户
+type StakeAccounts struct {
+	Staker           solana.PublicKey // 质押者
+	Deployer         solana.PublicKey // 部署者
+	ConfigAccount    solana.PublicKey // 配置账户
+	StakeInfoAccount solana.PublicKey // 质押信息账户
+	StakeAccount     solana.PublicKey // 质押账户
+	UserTokenAccount solana.PublicKey // 用户代币账户
+	MintAccount      solana.PublicKey // Mint账户
+	ProgramID        solana.PublicKey // 程序ID
+}
+
+// ParsedStakeTx 解析后的质押交易
+type ParsedStakeTx struct {
+	TransactionSignature solana.Signature
+	InstructionData      StakeInstructionData
+	Accounts             StakeAccounts
+	Signatures           []solana.Signature
+	Success              bool
+	RawData              []byte // 原始指令数据
+}
 
 type GetByTxIdReq struct {
 	TxId string `json:"txId"`
