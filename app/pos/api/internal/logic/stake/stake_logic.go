@@ -36,6 +36,7 @@ type StakeLogic struct {
 	baseClient        *posrpc.BaseClient
 
 	// 业务相关参数
+	rewardConfig *model.StakeRewardConfig
 	fixConfig    map[int32]model.StakeFixRateConfig
 	totalLeaders []model.StakeTotalLeader
 }
@@ -54,6 +55,7 @@ func NewStakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *StakeLogic 
 		LightHouseAddress: srvCtx.LightHouseAddress,
 
 		// 业务相关参数
+		rewardConfig: srvCtx.StakeRewardConfig,
 		fixConfig:    srvCtx.StakeFixConfig,
 		totalLeaders: srvCtx.TotalAreaLeaders,
 	}
@@ -130,6 +132,27 @@ func (l *StakeLogic) ProcessReStakeToken(ctx context.Context, preCheckedTx *app_
 // HandleStakeTx 处理成功质押的交易
 func (l *StakeLogic) HandleStakeTx(msg entity.NewScannedTx) error {
 	log.Infof("%s 收到成功质押的交易id: %v", l.prefix, msg.TxSig)
+	// 开始事务
+	stakeTxSig := msg.TxSig.Signature
+	stakeTxId := stakeTxSig.String()
+	log.Infof("%s 处理质押交易 %s", l.prefix, stakeTxId)
+
+	// 解析交易
+	parser := NewStakeTxParser(l.rpcClient, float64(1000), l.rewardConfig.ProgramID)
+	parsedTx, err := parser.ParseStakeTx(context.Background(), stakeTxSig)
+	if err != nil {
+		log.Errorf("%s 交易Id[%s] - 解析质押交易错误: %v", l.prefix, stakeTxId, err)
+		return err
+	}
+	if !parsedTx.Success {
+		log.Errorf("%s 交易Id[%s] - 交易执行错误", l.prefix, stakeTxId)
+		return err
+	}
+	// TODO: 解析交易是否符合要求
+	if err = l.HandleStakeSuccess(parsedTx, parser.GetStakeAmount(parsedTx)); err != nil {
+		log.Errorf("%s 交易Id[%s] - 处理成功的质押错误 %v", l.prefix, stakeTxId, err)
+		return err
+	}
 	return nil
 }
 

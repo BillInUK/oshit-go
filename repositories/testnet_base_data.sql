@@ -5,7 +5,7 @@ insert into t_system_config(env)values(1);
 insert into t_aws_config
 (access_key_id,secret_access_key,region)
 values
-    ('AKIAUBM64K3O3GFSHN7W','7eGqmuBxHO8x82s8gU6pjQRVtU4bkCgE5XC8qTvI','ap-southeast-1');
+    ('','','');
 
 insert into t_chain_config
 (chain,rpc_url,wss_url,decimals,symbol)
