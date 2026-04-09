@@ -23,7 +23,7 @@ const (
 	StakingProgramIDStr = "As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws"
 
 	// devnet 测试环境下管理员与用户使用同一密钥
-	StakingAdminPrivate = DavidPrivate
+	StakingAdminPrivate = "5LCaLqUSWKaD95BsR6sNQ4A62rCoADsxVsfYqhirEsGa5eNmDZwx1vxWoDTgio8eKT3K9HHwj7b5KfaVjYEsin6a"
 
 	// 每次质押的基础数量（不含精度，合约最小要求 100000）
 	StakingBaseAmount uint64 = 100000
