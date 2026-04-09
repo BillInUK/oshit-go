@@ -392,6 +392,59 @@ func TestStakeUnstakeRestake(t *testing.T) {
 }
 
 // ============================================================
+// 链上数据解析辅助
+// ============================================================
+
+// stakeRecordBorshSize 是单条 StakeRecord 的 borsh 序列化字节数（无 padding）：
+// stake_type(1) + staked_amount(8) + stake_start_slot(8) + stake_end_slot(8) = 25
+const stakeRecordBorshSize = 25
+
+// parsedStakeRecord 解析后的链上质押记录
+type parsedStakeRecord struct {
+	Index          uint8
+	StakeType      uint8
+	StakedAmount   uint64
+	StakeStartSlot uint64
+	StakeEndSlot   uint64
+}
+
+// stakingReadStakeInfo 从链上读取并解析 stake_info PDA 账户数据。
+//
+// 账户数据布局（borsh）：
+//
+//	[0:8]         discriminator
+//	[8:40]        user_wallet (Pubkey, 32 bytes)
+//	[40:40+N*25]  stakes[N]   (每条 25 bytes, N=MAX_STAKE_RECORDS=10)
+func stakingReadStakeInfo(ctx context.Context, stakeInfoPDA solana.PublicKey) ([]parsedStakeRecord, error) {
+	info, err := rpcClient.GetAccountInfo(ctx, stakeInfoPDA)
+	if err != nil {
+		return nil, fmt.Errorf("GetAccountInfo error: %w", err)
+	}
+	if info == nil || info.Value == nil {
+		return nil, fmt.Errorf("stake_info 账户不存在（用户尚未质押过）")
+	}
+	data := info.Value.Data.GetBinary()
+
+	const maxRecords = 10
+	minLen := 8 + 32 + maxRecords*stakeRecordBorshSize // = 290
+	if len(data) < minLen {
+		return nil, fmt.Errorf("账户数据长度不足: %d < %d", len(data), minLen)
+	}
+
+	records := make([]parsedStakeRecord, maxRecords)
+	offset := 40 // 跳过 discriminator(8) + user_wallet(32)
+	for i := 0; i < maxRecords; i++ {
+		records[i].Index = uint8(i)
+		records[i].StakeType = data[offset]
+		records[i].StakedAmount = binary.LittleEndian.Uint64(data[offset+1 : offset+9])
+		records[i].StakeStartSlot = binary.LittleEndian.Uint64(data[offset+9 : offset+17])
+		records[i].StakeEndSlot = binary.LittleEndian.Uint64(data[offset+17 : offset+25])
+		offset += stakeRecordBorshSize
+	}
+	return records, nil
+}
+
+// ============================================================
 // 后端接口辅助函数
 // ============================================================
 
@@ -574,4 +627,92 @@ func TestSubmitStakeTokenViaBackend(t *testing.T) {
 		}
 	}
 	t.Fatalf("等待链上确认超时（60 秒），txId=%s", txId)
+}
+
+// ============================================================
+// 测试用例：取出全部已到期的质押
+// ============================================================
+
+// TestUnstakeAll 读取链上所有质押记录，将全部已到期（stake_end_slot <= currentSlot）
+// 且有余额（staked_amount > 0）的记录逐一解押，token 退回用户账户。
+//
+// 运行命令：
+//
+//	go test ./test/... -v -run TestUnstakeAll -timeout 5m
+func TestUnstakeAll(t *testing.T) {
+	ctx := context.Background()
+
+	userKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
+	if err != nil {
+		t.Fatalf("解析私钥失败: %v", err)
+	}
+	userPubKey := userKey.PublicKey()
+
+	programID := solana.MPK(StakingProgramIDStr)
+	mintPubKey := solana.MPK(TokenMintAddress)
+
+	_, stakeInfoPDA, stakeAcctPDA, userTokenAcct :=
+		stakingComputePDAs(programID, userPubKey, mintPubKey)
+
+	fmt.Printf("用户地址      : %s\n", userPubKey.String())
+	fmt.Printf("StakeInfo PDA : %s\n", stakeInfoPDA.String())
+
+	// 1. 读取链上 stake_info 账户并解析所有记录
+	records, err := stakingReadStakeInfo(ctx, stakeInfoPDA)
+	if err != nil {
+		t.Fatalf("读取 stake_info 失败: %v", err)
+	}
+
+	// 2. 获取当前 slot
+	currentSlot, err := rpcClient.GetSlot(ctx, rpc.CommitmentConfirmed)
+	if err != nil {
+		t.Fatalf("GetSlot 失败: %v", err)
+	}
+
+	// 3. 打印所有记录并筛选可 unstake 的
+	fmt.Printf("\n%-6s %-6s %-12s %-14s %-14s %s\n",
+		"Index", "Type", "Amount", "StartSlot", "EndSlot", "Status")
+	fmt.Println("--------------------------------------------------------------")
+
+	var toUnstake []parsedStakeRecord
+	for _, r := range records {
+		if r.StakedAmount == 0 {
+			fmt.Printf("%-6d %-6s %-12s %-14s %-14s %s\n",
+				r.Index, "-", "-", "-", "-", "empty")
+			continue
+		}
+		var status string
+		if currentSlot >= r.StakeEndSlot {
+			status = "expired ✓"
+			toUnstake = append(toUnstake, r)
+		} else {
+			remainSec := (r.StakeEndSlot - currentSlot) * 400 / 1000
+			status = fmt.Sprintf("locked (~%ds left)", remainSec)
+		}
+		fmt.Printf("%-6d %-6d %-12d %-14d %-14d %s\n",
+			r.Index, r.StakeType, r.StakedAmount, r.StakeStartSlot, r.StakeEndSlot, status)
+	}
+	fmt.Printf("当前 slot: %d\n", currentSlot)
+
+	if len(toUnstake) == 0 {
+		t.Log("\n没有已到期的质押记录，跳过 unstake。")
+		return
+	}
+
+	fmt.Printf("\n=== 开始 Unstake（共 %d 条到期记录）===\n", len(toUnstake))
+
+	// 4. 逐一发送 unstake 交易
+	// unstake 只需要 user 签名，adminKey 传入 userKey 即可（不参与签名）
+	for _, r := range toUnstake {
+		inst := stakingBuildUnstakeInst(
+			programID, userPubKey,
+			stakeInfoPDA, stakeAcctPDA, userTokenAcct, mintPubKey,
+			r.Index,
+		)
+		label := fmt.Sprintf("Unstake[%d]", r.Index)
+		stakingSendAndConfirm(ctx, t, label, []solana.Instruction{inst}, userKey, userKey)
+		fmt.Printf("  [%s] 成功取回 %d token（type=%d）\n", label, r.StakedAmount, r.StakeType)
+	}
+
+	fmt.Printf("\n=== 全部到期质押已取出（%d 条）===\n", len(toUnstake))
 }

@@ -178,6 +178,7 @@ CREATE TABLE public.t_service_tx
 
 -- 旧工程 t_sol_fund_flow
 -- 需要导入并且搞分表
+DROP TABLE IF EXISTS public.t_fund_flow;
 CREATE TABLE public.t_fund_flow
 (
     record_id    public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
