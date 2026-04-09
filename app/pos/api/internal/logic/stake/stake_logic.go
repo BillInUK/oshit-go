@@ -17,6 +17,7 @@ import (
 	"oshit-go/app/pos/api/types"
 	app_utils "oshit-go/app/utils"
 	"oshit-go/common/pkg/dal/model"
+	"oshit-go/common/pkg/entity"
 	"oshit-go/common/utils"
 	"time"
 )
@@ -123,6 +124,12 @@ func (l *StakeLogic) ProcessReStakeToken(ctx context.Context, preCheckedTx *app_
 		return errors.New("sent transaction id not equal expected")
 	}
 
+	return nil
+}
+
+// HandleStakeTx 处理成功质押的交易
+func (l *StakeLogic) HandleStakeTx(msg entity.NewScannedTx) error {
+	log.Infof("%s 收到成功质押的交易id: %v", l.prefix, msg.TxSig)
 	return nil
 }
 

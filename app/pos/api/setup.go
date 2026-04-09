@@ -22,6 +22,9 @@ func registerTasks(srvCtx *svc.ServiceContext) {
 	})
 
 	// 注册stake相关消息处理
+	srvCtx.TaskMgr.RegisterScannedTxHandler("StakeToken", func(ctx context.Context, msg entity.NewScannedTx) error {
+		return stake.NewStakeLogic(ctx, srvCtx).HandleStakeTx(msg)
+	})
 	srvCtx.TaskMgr.RegisterSnapShotHandler("StakeSnapShot", func(ctx context.Context, msg entity.KafkaNewSnapShotMsg) error {
 		return stake.NewStakeSnapShotLogic(ctx, srvCtx).HandeSnapShot(msg)
 	})

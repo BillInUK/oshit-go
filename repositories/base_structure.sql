@@ -63,21 +63,23 @@ CREATE TABLE public.t_fee_tolerance
 DROP TABLE IF EXISTS public.t_fee_statistics;
 CREATE TABLE public.t_fee_statistics
 (
-    record_id  public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    slot       bigint,
-    tx_index   integer,
-    block_hash character varying(64),
-    tx_id      character varying(128),
+    record_id      public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    slot           bigint,
+    tx_index       integer,
+    block_hash     character varying(64),
+    tx_id          character varying(128),
     price          numeric(78, 0),
     unit_limit     numeric(78, 0),
     units_consumed numeric(78, 0),
-    fee        numeric(78, 0),
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    fee            numeric(78, 0),
+    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE ONLY public.t_fee_statistics ADD CONSTRAINT fee_slot_tx_index UNIQUE (slot, tx_index);
-ALTER TABLE ONLY public.t_fee_statistics ADD CONSTRAINT fee_tx_id UNIQUE (tx_id);
+ALTER TABLE ONLY public.t_fee_statistics
+    ADD CONSTRAINT fee_slot_tx_index UNIQUE (slot, tx_index);
+ALTER TABLE ONLY public.t_fee_statistics
+    ADD CONSTRAINT fee_tx_id UNIQUE (tx_id);
 
 DROP TABLE IF EXISTS public.t_qn_fee;
 CREATE TABLE public.t_qn_fee

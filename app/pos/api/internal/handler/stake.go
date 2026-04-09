@@ -179,13 +179,14 @@ func (h *StakeHandler) StakeToken(fiberCtx *fiber.Ctx) error {
 
 	// 1. 检查交易参数
 	ctx := fiberCtx.Context()
-	encodedTx := fiberCtx.FormValue("encodedTx")
-	if err != nil {
-		return response.FailWithError(fiberCtx, "parameter encodedTx must not be null", err)
+	var req types.EncodedTxReq
+	if err := fiberCtx.BodyParser(&req); err != nil {
+		log.Errorf("%s 反序列化请求错误: %v", h.prefix, err)
+		return response.FailWithMsg(fiberCtx, "invalid request")
 	}
 
 	// 2. 预处理交易
-	preCheckedTx, err := app_utils.PreCheckEncodedTx(encodedTx)
+	preCheckedTx, err := app_utils.PreCheckEncodedTx(req.EncodedTx)
 	if err != nil {
 		log.Errorf("%s 预处理交易错误: %v", prefix, err)
 		return response.FailWithMsg(fiberCtx, "pre check transaction error")
@@ -211,13 +212,14 @@ func (h *StakeHandler) UnStakeToken(fiberCtx *fiber.Ctx) error {
 
 	// 1. 检查交易参数
 	ctx := fiberCtx.Context()
-	encodedTx := fiberCtx.FormValue("encodedTx")
-	if err != nil {
-		return response.FailWithError(fiberCtx, "parameter encodedTx must not be null", err)
+	var req types.EncodedTxReq
+	if err := fiberCtx.BodyParser(&req); err != nil {
+		log.Errorf("%s 反序列化请求错误: %v", h.prefix, err)
+		return response.FailWithMsg(fiberCtx, "invalid request")
 	}
 
 	// 2. 预处理交易
-	preCheckedTx, err := app_utils.PreCheckEncodedTx(encodedTx)
+	preCheckedTx, err := app_utils.PreCheckEncodedTx(req.EncodedTx)
 	if err != nil {
 		log.Errorf("%s 预处理交易错误: %v", prefix, err)
 		return response.FailWithMsg(fiberCtx, "pre check transaction error")
@@ -243,13 +245,13 @@ func (h *StakeHandler) ReStakeToken(fiberCtx *fiber.Ctx) error {
 
 	// 1. 检查交易参数
 	ctx := fiberCtx.Context()
-	encodedTx := fiberCtx.FormValue("encodedTx")
-	if err != nil {
-		return response.FailWithError(fiberCtx, "parameter encodedTx must not be null", err)
+	var req types.EncodedTxReq
+	if err := fiberCtx.BodyParser(&req); err != nil {
+		log.Errorf("%s 反序列化请求错误: %v", h.prefix, err)
+		return response.FailWithMsg(fiberCtx, "invalid request")
 	}
-
 	// 2. 预处理交易
-	preCheckedTx, err := app_utils.PreCheckEncodedTx(encodedTx)
+	preCheckedTx, err := app_utils.PreCheckEncodedTx(req.EncodedTx)
 	if err != nil {
 		log.Errorf("%s 预处理交易错误: %v", prefix, err)
 		return response.FailWithMsg(fiberCtx, "pre check transaction error")

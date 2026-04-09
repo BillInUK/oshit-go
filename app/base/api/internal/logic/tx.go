@@ -80,7 +80,7 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 		recordID = record.RecordID
 	}
 
-	// 6. 若 multi_sign=true，用服务私钥补签（索引1）
+	// 6. 若 multi_sign=true，用服务私钥在索引1处补签
 	if multiSign {
 		subSvcMap, ok := l.svcCtx.ServiceKeyMap[req.Service]
 		if !ok {
