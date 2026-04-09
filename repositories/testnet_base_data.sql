@@ -2,11 +2,6 @@
 -- 基础配置
 insert into t_system_config(env)values(1);
 
-insert into t_aws_config
-(access_key_id,secret_access_key,region)
-values
-    ('','','');
-
 insert into t_chain_config
 (chain,rpc_url,wss_url,decimals,symbol)
 values
