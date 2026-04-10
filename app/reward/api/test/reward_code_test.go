@@ -202,7 +202,7 @@ func TestRewardCode(t *testing.T) {
 
 	// 1. 随机选择奖励码（1000000~1000010）
 	rand.New(rand.NewSource(time.Now().UnixNano()))
-	rewardCode := fmt.Sprintf("%d", 1000000+rand.Intn(11))
+	rewardCode := fmt.Sprintf("%d", 100000+rand.Intn(11))
 	fmt.Printf("=== 使用奖励码: %s ===\n", rewardCode)
 
 	// 2. 查询奖励码基本信息

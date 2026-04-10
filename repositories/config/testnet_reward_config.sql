@@ -22,4 +22,5 @@ INSERT INTO public.t_reward_code_fee(amount,cost_rate)VALUES(5000000,8);
 INSERT INTO public.t_reward_code_fee(amount,cost_rate)VALUES(1000000,20);
 INSERT INTO public.t_reward_code_fee(amount,cost_rate)VALUES(500000,30);
 
--- lottery
+-- campaign
+INSERT INTO t_campaign_exchange_config(reward_account,cost_account,rate,cost_rate)VALUES('2NVji8RvQAFhg4YJKuxqhdMjWMLJmWbKm5MBvSJmTUHL','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',500,17);

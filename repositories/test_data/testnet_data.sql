@@ -170,6 +170,19 @@ where t.record_id = ih.record_id;
 
 -- reward 配置开始
 
+-- 奖励码
+INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100000',5000000);
+INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100001',5000000);
+INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100002',5000000);
+INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100003',1000000);
+INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100004',1000000);
+INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100005',1000000);
+INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100006',1000000);
+INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100007',500000);
+INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100008',500000);
+INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100009',500000);
+INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100010',500000);
+
 
 -- reward 配置结束
 
