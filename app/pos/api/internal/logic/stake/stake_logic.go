@@ -1,6 +1,7 @@
 package stake
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -76,7 +77,7 @@ func (l *StakeLogic) ProcessStakeToken(ctx context.Context, preCheckedTx *app_ut
 	txIdStr := preCheckedTx.TxId.String()
 
 	// 1. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Stake", "StakeToken")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "StakeToken")
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))
@@ -97,7 +98,7 @@ func (l *StakeLogic) ProcessUnStakeToken(ctx context.Context, preCheckedTx *app_
 	txIdStr := preCheckedTx.TxId.String()
 
 	// 1. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Stake", "UnStakeToken")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "StakeToken")
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))
@@ -118,7 +119,7 @@ func (l *StakeLogic) ProcessReStakeToken(ctx context.Context, preCheckedTx *app_
 	txIdStr := preCheckedTx.TxId.String()
 
 	// 1. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Stake", "ReStakeToken")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "StakeToken")
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))
@@ -131,35 +132,67 @@ func (l *StakeLogic) ProcessReStakeToken(ctx context.Context, preCheckedTx *app_
 	return nil
 }
 
-// HandleStakeTx 处理成功质押的交易
+// HandleStakeTx 处理质押/解除质押/重新质押交易（SubService 均为 "StakeToken"）
 func (l *StakeLogic) HandleStakeTx(msg entity.NewScannedTx) error {
-	log.Infof("%s 收到成功质押的交易id: %v", l.prefix, msg.TxSig)
-	// 开始事务
 	stakeTxSig := msg.TxSig.Signature
 	stakeTxId := stakeTxSig.String()
-	log.Infof("%s 处理质押交易 %s", l.prefix, stakeTxId)
+	log.Infof("%s 收到 StakeToken 交易 txId=%s", l.prefix, stakeTxId)
 
-	// 解析交易
+	// 解析交易（支持 stake/unstake/restake 的不同指令数据长度）
 	parser := NewStakeTxParser(l.rpcClient, float64(1000), "As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws")
 	parsedTx, err := parser.ParseStakeTx(context.Background(), stakeTxSig)
 	if err != nil {
-		log.Errorf("%s 交易Id[%s] - 解析质押交易错误: %v", l.prefix, stakeTxId, err)
+		log.Errorf("%s txId=%s 解析交易失败: %v", l.prefix, stakeTxId, err)
 		return err
 	}
 	if !parsedTx.Success {
-		log.Errorf("%s 交易Id[%s] - 交易执行错误", l.prefix, stakeTxId)
-		return err
+		log.Infof("%s txId=%s 链上执行失败，跳过处理", l.prefix, stakeTxId)
+		return nil
 	}
-	// TODO: 解析交易是否符合要求
-	if err = l.HandleStakeSuccess(parsedTx, parser.GetStakeAmount(parsedTx)); err != nil {
-		log.Errorf("%s 交易Id[%s] - 处理成功的质押错误 %v", l.prefix, stakeTxId, err)
-		return err
+
+	disc := parsedTx.InstructionData.Discriminator
+	staker := parsedTx.Accounts.Staker.String()
+
+	switch {
+	case bytes.Equal(disc, AnchorDiscriminator("stake")):
+		log.Infof("%s txId=%s 识别为 stake 交易，staker=%s amount=%d stakeType=%d",
+			l.prefix, stakeTxId, staker,
+			parsedTx.InstructionData.Amount, parsedTx.InstructionData.StakeType)
+		if err = l.handleStakeToken(parsedTx, parser.GetStakeAmount(parsedTx)); err != nil {
+			log.Errorf("%s txId=%s 处理 stake 失败: %v", l.prefix, stakeTxId, err)
+			return err
+		}
+
+	case bytes.Equal(disc, AnchorDiscriminator("unstake")):
+		// stakeIndex 在 rawData[8]
+		var stakeIndex uint8
+		if len(parsedTx.RawData) > 8 {
+			stakeIndex = parsedTx.RawData[8]
+		}
+		log.Infof("%s txId=%s 识别为 unstake 交易，staker=%s stakeIndex=%d rawData=%x",
+			l.prefix, stakeTxId, staker, stakeIndex, parsedTx.RawData)
+
+	case bytes.Equal(disc, AnchorDiscriminator("restake")):
+		// stakeIndex 在 rawData[8]，stakeType 在 rawData[9]
+		var stakeIndex, stakeType uint8
+		if len(parsedTx.RawData) > 8 {
+			stakeIndex = parsedTx.RawData[8]
+		}
+		if len(parsedTx.RawData) > 9 {
+			stakeType = parsedTx.RawData[9]
+		}
+		log.Infof("%s txId=%s 识别为 restake 交易，staker=%s stakeIndex=%d stakeType=%d rawData=%x",
+			l.prefix, stakeTxId, staker, stakeIndex, stakeType, parsedTx.RawData)
+
+	default:
+		log.Warnf("%s txId=%s 未知指令类型，discriminator=%x，跳过处理", l.prefix, stakeTxId, disc)
 	}
+
 	return nil
 }
 
-// HandleStakeSuccess 处理质押成功后的逻辑
-func (l *StakeLogic) HandleStakeSuccess(parsedTx *types.ParsedStakeTx, stakeAmount uint64) error {
+// handleStakeToken 处理质押成功后的逻辑
+func (l *StakeLogic) handleStakeToken(parsedTx *types.ParsedStakeTx, stakeAmount uint64) error {
 	dbTx := l.db.Begin()
 	defer func() {
 		if r := recover(); r != nil {

@@ -2,33 +2,21 @@ package stake
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 	"oshit-go/app/pos/api/types"
 
-	"github.com/gagliardetto/binary"
+	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 )
 
-//// StakeInstructionData 质押指令数据结构
-//type StakeInstructionData struct {
-//	Discriminator []byte // 8字节
-//	Amount        uint64 // 质押数量
-//	StakeType     uint8  // 质押类型
-//}
-//
-//// StakeAccounts 质押指令相关的账户
-//type StakeAccounts struct {
-//	Staker           solana.PublicKey // 质押者
-//	Deployer         solana.PublicKey // 部署者
-//	ConfigAccount    solana.PublicKey // 配置账户
-//	StakeInfoAccount solana.PublicKey // 质押信息账户
-//	StakeAccount     solana.PublicKey // 质押账户
-//	UserTokenAccount solana.PublicKey // 用户代币账户
-//	MintAccount      solana.PublicKey // Mint账户
-//	ProgramID        solana.PublicKey // 程序ID
-//}
+// AnchorDiscriminator 计算 Anchor global 指令判别器（SHA256("global:<name>") 前 8 字节）
+func AnchorDiscriminator(name string) []byte {
+	h := sha256.Sum256([]byte("global:" + name))
+	return h[:8]
+}
 
 // StakeTxParser 质押交易解析器
 type StakeTxParser struct {
@@ -120,34 +108,62 @@ func (p *StakeTxParser) ParseStakeTx(ctx context.Context, txSignature solana.Sig
 }
 
 // parseInstructionData 解析指令数据
+// stake:   disc(8) + amount(8) + stakeType(1) = 17 bytes
+// unstake: disc(8) + stakeIndex(1)            =  9 bytes
+// restake: disc(8) + stakeIndex(1) + stakeType(1) = 10 bytes
 func (p *StakeTxParser) parseInstructionData(data []byte) (*types.StakeInstructionData, error) {
-	if len(data) != 17 {
-		return nil, fmt.Errorf("unexpected instruction data length: got %d, expected 17", len(data))
+	if len(data) < 8 {
+		return nil, fmt.Errorf("instruction data too short: got %d bytes, expected at least 8", len(data))
 	}
 
-	return &types.StakeInstructionData{
+	result := &types.StakeInstructionData{
 		Discriminator: data[:8],
-		Amount:        binary.LittleEndian.Uint64(data[8:16]),
-		StakeType:     data[16],
-	}, nil
+	}
+	// stake 指令携带 amount 和 stakeType
+	if len(data) == 17 {
+		result.Amount = binary.LittleEndian.Uint64(data[8:16])
+		result.StakeType = data[16]
+	}
+	return result, nil
 }
 
 // parseAccounts 解析账户信息
+// 各指令账户布局：
+//
+//	stake/unstake (≥7): [0]Staker [1]Deployer [2]Config [3]StakeInfo [4]StakeAccount [5]UserToken [6]Mint ...
+//	restake       (6):  [0]Staker [1]Deployer [2]Config [3]StakeInfo [4]Mint [5]SystemProgram
 func (p *StakeTxParser) parseAccounts(inst solana.CompiledInstruction, accountKeys []solana.PublicKey) (*types.StakeAccounts, error) {
-	if len(inst.Accounts) < 7 {
-		return nil, fmt.Errorf("insufficient accounts in instruction: got %d, expected at least 7", len(inst.Accounts))
+	n := len(inst.Accounts)
+	if n < 4 {
+		return nil, fmt.Errorf("insufficient accounts in instruction: got %d, expected at least 4", n)
 	}
 
-	return &types.StakeAccounts{
-		Staker:           accountKeys[inst.Accounts[0]],
-		Deployer:         accountKeys[inst.Accounts[1]],
-		ConfigAccount:    accountKeys[inst.Accounts[2]],
-		StakeInfoAccount: accountKeys[inst.Accounts[3]],
-		StakeAccount:     accountKeys[inst.Accounts[4]],
-		UserTokenAccount: accountKeys[inst.Accounts[5]],
-		MintAccount:      accountKeys[inst.Accounts[6]],
+	get := func(i int) solana.PublicKey {
+		if i < n {
+			return accountKeys[inst.Accounts[i]]
+		}
+		return solana.PublicKey{}
+	}
+
+	accounts := &types.StakeAccounts{
+		Staker:           get(0),
+		Deployer:         get(1),
+		ConfigAccount:    get(2),
+		StakeInfoAccount: get(3),
 		ProgramID:        accountKeys[inst.ProgramIDIndex],
-	}, nil
+	}
+
+	if n >= 7 {
+		// stake / unstake：StakeAccount(4) UserToken(5) Mint(6)
+		accounts.StakeAccount = get(4)
+		accounts.UserTokenAccount = get(5)
+		accounts.MintAccount = get(6)
+	} else if n >= 5 {
+		// restake：Mint(4)
+		accounts.MintAccount = get(4)
+	}
+
+	return accounts, nil
 }
 
 // ValidateDiscriminator 验证discriminator是否匹配

@@ -88,37 +88,37 @@ func (t *KafkaConsumerTask) dispatch(msg kafka.Message) {
 	}
 }
 
-// handleScannedTx 根据 SubService 将已确认交易路由到对应的业务处理器
+// handleScannedTx 根据 Service 将已确认交易路由到对应的业务处理器，内部再按 SubService 细分
 func (t *KafkaConsumerTask) handleScannedTx(tx entity.NewScannedTx) {
 	log.Infof("KafkaConsumerTask: 收到已扫描交易 service=%s subService=%s txID=%s", tx.Service, tx.SubService, tx.TxSig.Signature)
 	if t.scannedHandlers == nil {
-		log.Warnf("KafkaConsumerTask: scannedHandlers 未注册，跳过处理 subService=%s", tx.SubService)
+		log.Warnf("KafkaConsumerTask: scannedHandlers 未注册，跳过处理 service=%s", tx.Service)
 		return
 	}
-	handler, ok := t.scannedHandlers[tx.SubService]
+	handler, ok := t.scannedHandlers[tx.Service]
 	if !ok {
-		log.Warnf("KafkaConsumerTask: 未找到 subService=%s 的已扫描交易处理器", tx.SubService)
+		log.Warnf("KafkaConsumerTask: 未找到 service=%s 的已扫描交易处理器", tx.Service)
 		return
 	}
 	if err := handler(context.Background(), tx); err != nil {
-		log.Errorf("KafkaConsumerTask: 处理已扫描交易失败 subService=%s txID=%s: %v", tx.SubService, tx.TxSig.Signature, err)
+		log.Errorf("KafkaConsumerTask: 处理已扫描交易失败 service=%s subService=%s txID=%s: %v", tx.Service, tx.SubService, tx.TxSig.Signature, err)
 	}
 }
 
-// handleExpiredTx 根据 SubService 将超时交易路由到对应的业务处理器
+// handleExpiredTx 根据 Service 将超时交易路由到对应的业务处理器，内部再按 SubService 细分
 func (t *KafkaConsumerTask) handleExpiredTx(tx entity.NewExpiredTx) {
 	log.Infof("KafkaConsumerTask: 收到超时交易 service=%s subService=%s txID=%s", tx.Service, tx.SubService, tx.TxID)
 	if t.expiredHandlers == nil {
-		log.Warnf("KafkaConsumerTask: expiredHandlers 未注册，跳过处理 subService=%s", tx.SubService)
+		log.Warnf("KafkaConsumerTask: expiredHandlers 未注册，跳过处理 service=%s", tx.Service)
 		return
 	}
-	handler, ok := t.expiredHandlers[tx.SubService]
+	handler, ok := t.expiredHandlers[tx.Service]
 	if !ok {
-		log.Warnf("KafkaConsumerTask: 未找到 subService=%s 的超时交易处理器", tx.SubService)
+		log.Warnf("KafkaConsumerTask: 未找到 service=%s 的超时交易处理器", tx.Service)
 		return
 	}
 	if err := handler(context.Background(), tx); err != nil {
-		log.Errorf("KafkaConsumerTask: 处理超时交易失败 subService=%s txID=%s: %v", tx.SubService, tx.TxID, err)
+		log.Errorf("KafkaConsumerTask: 处理超时交易失败 service=%s subService=%s txID=%s: %v", tx.Service, tx.SubService, tx.TxID, err)
 	}
 }
 
@@ -168,14 +168,7 @@ func (t *SnapShotConsumerTask) dispatch(msg kafka.Message) {
 		return
 	}
 
-	// MsgType → handler key 的映射
-	handlerKey := ""
-	switch envelope.MsgType {
-	case "NewPosSnapShot":
-		handlerKey = "PosSnapShot"
-	case "NewStakeSnapShot":
-		handlerKey = "StakeSnapShot"
-	default:
+	if envelope.MsgType != "NewPosSnapShot" && envelope.MsgType != "NewStakeSnapShot" {
 		log.Warnf("SnapShotConsumerTask: 未知消息类型: %s", envelope.MsgType)
 		return
 	}
@@ -190,9 +183,9 @@ func (t *SnapShotConsumerTask) dispatch(msg kafka.Message) {
 		log.Warnf("SnapShotConsumerTask: snapShotHandlers 未注册，跳过 %s", envelope.MsgType)
 		return
 	}
-	handler, ok := t.snapShotHandlers[handlerKey]
+	handler, ok := t.snapShotHandlers["Pos"]
 	if !ok {
-		log.Warnf("SnapShotConsumerTask: 未找到 handler=%s 的处理器", handlerKey)
+		log.Warnf("SnapShotConsumerTask: 未找到 Pos 快照处理器")
 		return
 	}
 	if err := handler(context.Background(), m); err != nil {

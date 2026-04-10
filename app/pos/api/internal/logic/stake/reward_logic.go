@@ -246,7 +246,7 @@ func (l *StakeRewardLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *ap
 	}
 
 	// 6. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Stake", "StakeReward")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "StakeReward")
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return "", errors.New(utils.FilterAndTranslateSOLError(err))
@@ -372,7 +372,7 @@ func (l *StakeRewardLogic) ProcessLeaderCommitTx(ctx context.Context, preChecked
 	}
 
 	// 6. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Stake", "StakeLeaderReward")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "StakeLeaderReward")
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return "", errors.New(utils.FilterAndTranslateSOLError(err))

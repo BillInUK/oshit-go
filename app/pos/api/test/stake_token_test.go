@@ -128,18 +128,20 @@ func stakingBuildStakeInst(
 // Accounts（按合约 DeStake 结构体顺序）：
 //
 //	0  signer           writable, signer
-//	1  stake_info       PDA, writable
-//	2  stake_account    PDA, writable
-//	3  user_token_acct  ATA, writable
-//	4  mint             read-only
-//	5  token_program    read-only
-//	6  associated_token read-only
-//	7  system_program   read-only
+//	1  admin_signer     signer
+//	2  config           PDA, read-only
+//	3  stake_info       PDA, writable
+//	4  stake_account    PDA, writable
+//	5  user_token_acct  ATA, writable
+//	6  mint             read-only
+//	7  token_program    read-only
+//	8  associated_token read-only
+//	9  system_program   read-only
 //
 // Data: disc(8) + stake_index:u8
 func stakingBuildUnstakeInst(
-	programID, userPubKey,
-	stakeInfoPDA, stakeAcctPDA, userTokenAcct, mintPubKey solana.PublicKey,
+	programID, userPubKey, adminPubKey,
+	configPDA, stakeInfoPDA, stakeAcctPDA, userTokenAcct, mintPubKey solana.PublicKey,
 	stakeIndex uint8,
 ) solana.Instruction {
 	data := make([]byte, 8+1)
@@ -150,6 +152,8 @@ func stakingBuildUnstakeInst(
 		programID: programID,
 		accounts: []*solana.AccountMeta{
 			{PublicKey: userPubKey, IsWritable: true, IsSigner: true},
+			{PublicKey: adminPubKey, IsWritable: false, IsSigner: true},
+			{PublicKey: configPDA, IsWritable: false, IsSigner: false},
 			{PublicKey: stakeInfoPDA, IsWritable: true, IsSigner: false},
 			{PublicKey: stakeAcctPDA, IsWritable: true, IsSigner: false},
 			{PublicKey: userTokenAcct, IsWritable: true, IsSigner: false},
@@ -362,8 +366,8 @@ func TestStakeUnstakeRestake(t *testing.T) {
 	fmt.Println("\n=== Phase 3: Unstake[0] ===")
 
 	unstakeInst := stakingBuildUnstakeInst(
-		programID, userPubKey,
-		stakeInfoPDA, stakeAcctPDA, userTokenAcct, mintPubKey,
+		programID, userPubKey, adminPubKey,
+		configPDA, stakeInfoPDA, stakeAcctPDA, userTokenAcct, mintPubKey,
 		0,
 	)
 	stakingSendAndConfirm(ctx, t, "Unstake[0]", []solana.Instruction{unstakeInst}, userKey, adminKey)
@@ -651,10 +655,17 @@ func TestUnstakeAll(t *testing.T) {
 	programID := solana.MPK(StakingProgramIDStr)
 	mintPubKey := solana.MPK(TokenMintAddress)
 
-	_, stakeInfoPDA, stakeAcctPDA, userTokenAcct :=
+	configPDA, stakeInfoPDA, stakeAcctPDA, userTokenAcct :=
 		stakingComputePDAs(programID, userPubKey, mintPubKey)
 
+	// 从链上 config PDA 读取合约 authority（即 admin 公钥）
+	adminPubKey, err := stakingQueryAuthority(ctx, configPDA)
+	if err != nil {
+		t.Fatalf("查询合约 authority 失败: %v", err)
+	}
+
 	fmt.Printf("用户地址      : %s\n", userPubKey.String())
+	fmt.Printf("合约 authority: %s\n", adminPubKey.String())
 	fmt.Printf("StakeInfo PDA : %s\n", stakeInfoPDA.String())
 
 	// 1. 读取链上 stake_info 账户并解析所有记录
@@ -701,18 +712,208 @@ func TestUnstakeAll(t *testing.T) {
 
 	fmt.Printf("\n=== 开始 Unstake（共 %d 条到期记录）===\n", len(toUnstake))
 
-	// 4. 逐一发送 unstake 交易
-	// unstake 只需要 user 签名，adminKey 传入 userKey 即可（不参与签名）
+	// 4. 逐一通过后端接口提交 unstake 交易
 	for _, r := range toUnstake {
+		label := fmt.Sprintf("Unstake[%d]", r.Index)
+
 		inst := stakingBuildUnstakeInst(
-			programID, userPubKey,
-			stakeInfoPDA, stakeAcctPDA, userTokenAcct, mintPubKey,
+			programID, userPubKey, adminPubKey,
+			configPDA, stakeInfoPDA, stakeAcctPDA, userTokenAcct, mintPubKey,
 			r.Index,
 		)
-		label := fmt.Sprintf("Unstake[%d]", r.Index)
-		stakingSendAndConfirm(ctx, t, label, []solana.Instruction{inst}, userKey, userKey)
-		fmt.Printf("  [%s] 成功取回 %d token（type=%d）\n", label, r.StakedAmount, r.StakeType)
+
+		// 构建交易：用户签 Signatures[0]，hex 编码后发往后端
+		encodedHex, txId, err := stakingBuildHexEncodedTx(ctx, userKey, []solana.Instruction{inst})
+		if err != nil {
+			t.Fatalf("[%s] 构建交易失败: %v", label, err)
+		}
+		fmt.Printf("[%s] TxID=%s\n", label, txId)
+
+		// 提交到后端 /snap/stake/token/unstake
+		rsp, err := postJsonRequest[any](
+			PosURL+"/stake/token/unstake",
+			types.EncodedTxReq{EncodedTx: encodedHex},
+			nil,
+		)
+		if err != nil {
+			t.Fatalf("[%s] 请求后端接口失败: %v", label, err)
+		}
+		if rsp.Code != 200 {
+			t.Fatalf("[%s] 后端返回错误: code=%d msg=%s", label, rsp.Code, rsp.Msg)
+		}
+		fmt.Printf("[%s] 后端接受成功，等待链上确认... https://solscan.io/tx/%s?cluster=devnet\n", label, txId)
+
+		// 轮询链上确认（最多 60 秒）
+		userSig, err := solana.SignatureFromBase58(txId)
+		if err != nil {
+			t.Fatalf("[%s] 解析 txId 签名失败: %v", label, err)
+		}
+		confirmed := false
+		for i := 0; i < 30; i++ {
+			time.Sleep(2 * time.Second)
+			statuses, err := rpcClient.GetSignatureStatuses(ctx, false, userSig)
+			if err != nil || statuses == nil || len(statuses.Value) == 0 || statuses.Value[0] == nil {
+				continue
+			}
+			st := statuses.Value[0]
+			if st.Err != nil {
+				t.Fatalf("[%s] 链上执行失败: %v", label, st.Err)
+			}
+			if st.ConfirmationStatus == rpc.ConfirmationStatusFinalized ||
+				st.ConfirmationStatus == rpc.ConfirmationStatusConfirmed {
+				fmt.Printf("[%s] 链上确认成功 (status=%s)，取回 %d token（type=%d）\n",
+					label, st.ConfirmationStatus, r.StakedAmount, r.StakeType)
+				confirmed = true
+				break
+			}
+		}
+		if !confirmed {
+			t.Fatalf("[%s] 等待链上确认超时（60 秒），txId=%s", label, txId)
+		}
 	}
 
 	fmt.Printf("\n=== 全部到期质押已取出（%d 条）===\n", len(toUnstake))
+}
+
+// ============================================================
+// 测试用例：将全部已到期的质押通过后端接口重新质押
+// ============================================================
+
+// TestRestakeAll 读取链上所有质押记录，将全部已到期（stake_end_slot <= currentSlot）
+// 且有余额（staked_amount > 0）的记录逐一重新质押（原地续期，token 不移动）。
+// 交易通过后端接口转发，base 服务负责补签 admin 签名并广播。
+//
+// 运行命令：
+//
+//	go test ./test/... -v -run TestRestakeAll -timeout 5m
+func TestRestakeAll(t *testing.T) {
+	ctx := context.Background()
+
+	userKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
+	if err != nil {
+		t.Fatalf("解析私钥失败: %v", err)
+	}
+	userPubKey := userKey.PublicKey()
+
+	programID := solana.MPK(StakingProgramIDStr)
+	mintPubKey := solana.MPK(TokenMintAddress)
+
+	configPDA, stakeInfoPDA, _, _ :=
+		stakingComputePDAs(programID, userPubKey, mintPubKey)
+
+	// 从链上 config PDA 读取合约 authority（即 admin 公钥）
+	adminPubKey, err := stakingQueryAuthority(ctx, configPDA)
+	if err != nil {
+		t.Fatalf("查询合约 authority 失败: %v", err)
+	}
+
+	fmt.Printf("用户地址      : %s\n", userPubKey.String())
+	fmt.Printf("合约 authority: %s\n", adminPubKey.String())
+	fmt.Printf("StakeInfo PDA : %s\n", stakeInfoPDA.String())
+
+	// 1. 读取链上 stake_info 账户并解析所有记录
+	records, err := stakingReadStakeInfo(ctx, stakeInfoPDA)
+	if err != nil {
+		t.Fatalf("读取 stake_info 失败: %v", err)
+	}
+
+	// 2. 获取当前 slot
+	currentSlot, err := rpcClient.GetSlot(ctx, rpc.CommitmentConfirmed)
+	if err != nil {
+		t.Fatalf("GetSlot 失败: %v", err)
+	}
+
+	// 3. 打印所有记录并筛选可 restake 的（已到期且有余额）
+	fmt.Printf("\n%-6s %-6s %-12s %-14s %-14s %s\n",
+		"Index", "Type", "Amount", "StartSlot", "EndSlot", "Status")
+	fmt.Println("--------------------------------------------------------------")
+
+	var toRestake []parsedStakeRecord
+	for _, r := range records {
+		if r.StakedAmount == 0 {
+			fmt.Printf("%-6d %-6s %-12s %-14s %-14s %s\n",
+				r.Index, "-", "-", "-", "-", "empty")
+			continue
+		}
+		var status string
+		if currentSlot >= r.StakeEndSlot {
+			status = "expired ✓"
+			toRestake = append(toRestake, r)
+		} else {
+			remainSec := (r.StakeEndSlot - currentSlot) * 400 / 1000
+			status = fmt.Sprintf("locked (~%ds left)", remainSec)
+		}
+		fmt.Printf("%-6d %-6d %-12d %-14d %-14d %s\n",
+			r.Index, r.StakeType, r.StakedAmount, r.StakeStartSlot, r.StakeEndSlot, status)
+	}
+	fmt.Printf("当前 slot: %d\n", currentSlot)
+
+	if len(toRestake) == 0 {
+		t.Log("\n没有已到期的质押记录，跳过 restake。")
+		return
+	}
+
+	fmt.Printf("\n=== 开始 Restake（共 %d 条到期记录）===\n", len(toRestake))
+
+	// 4. 逐一通过后端接口提交 restake 交易
+	for _, r := range toRestake {
+		label := fmt.Sprintf("Restake[%d]", r.Index)
+
+		inst := stakingBuildRestakeInst(
+			programID, userPubKey, adminPubKey,
+			configPDA, stakeInfoPDA, mintPubKey,
+			r.Index, r.StakeType,
+		)
+
+		// 构建交易：用户签 Signatures[0]，admin 签名槽留零由后端补签
+		encodedHex, txId, err := stakingBuildHexEncodedTx(ctx, userKey, []solana.Instruction{inst})
+		if err != nil {
+			t.Fatalf("[%s] 构建交易失败: %v", label, err)
+		}
+		fmt.Printf("[%s] TxID=%s\n", label, txId)
+
+		// 提交到后端 /snap/stake/token/restake
+		rsp, err := postJsonRequest[any](
+			PosURL+"/stake/token/restake",
+			types.EncodedTxReq{EncodedTx: encodedHex},
+			nil,
+		)
+		if err != nil {
+			t.Fatalf("[%s] 请求后端接口失败: %v", label, err)
+		}
+		if rsp.Code != 200 {
+			t.Fatalf("[%s] 后端返回错误: code=%d msg=%s", label, rsp.Code, rsp.Msg)
+		}
+		fmt.Printf("[%s] 后端接受成功，等待链上确认... https://solscan.io/tx/%s?cluster=devnet\n", label, txId)
+
+		// 轮询链上确认（最多 60 秒）
+		userSig, err := solana.SignatureFromBase58(txId)
+		if err != nil {
+			t.Fatalf("[%s] 解析 txId 签名失败: %v", label, err)
+		}
+		confirmed := false
+		for i := 0; i < 30; i++ {
+			time.Sleep(2 * time.Second)
+			statuses, err := rpcClient.GetSignatureStatuses(ctx, false, userSig)
+			if err != nil || statuses == nil || len(statuses.Value) == 0 || statuses.Value[0] == nil {
+				continue
+			}
+			st := statuses.Value[0]
+			if st.Err != nil {
+				t.Fatalf("[%s] 链上执行失败: %v", label, st.Err)
+			}
+			if st.ConfirmationStatus == rpc.ConfirmationStatusFinalized ||
+				st.ConfirmationStatus == rpc.ConfirmationStatusConfirmed {
+				fmt.Printf("[%s] 链上确认成功 (status=%s)，续期 %d token（type=%d）\n",
+					label, st.ConfirmationStatus, r.StakedAmount, r.StakeType)
+				confirmed = true
+				break
+			}
+		}
+		if !confirmed {
+			t.Fatalf("[%s] 等待链上确认超时（60 秒），txId=%s", label, txId)
+		}
+	}
+
+	fmt.Printf("\n=== 全部到期质押已续期（%d 条）===\n", len(toRestake))
 }

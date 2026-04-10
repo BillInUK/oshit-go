@@ -120,14 +120,14 @@ func (l *TxLogic) broadcastTx(recordID string, confirm bool, tx *solana.Transact
 	defer cancel()
 
 	if _, err := l.svcCtx.RpcClient.SendTransaction(ctx, tx); err != nil {
-		log.Errorf("broadcast tx record[%s] error: %v", recordID, err)
+		log.Errorf("broadcast tx record[%v] error: %v", tx.Signatures[0], err)
 		if confirm && recordID != "" {
 			l.updateServiceTxState(recordID, -1)
 		}
 		return
 	}
 
-	log.Infof("broadcast tx record[%s] success", recordID)
+	log.Infof("broadcast tx record[%v] success", tx.Signatures[0])
 }
 
 func (l *TxLogic) updateServiceTxState(recordID string, state int32) {
