@@ -12,12 +12,12 @@ const TableNameRewardCode = "t_reward_code"
 
 // RewardCode mapped from table <t_reward_code>
 type RewardCode struct {
-	RecordID     string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
+	RecordID     string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
 	RewardCode   string    `gorm:"column:reward_code;not null" json:"reward_code"`
 	RewardAmount float64   `gorm:"column:reward_amount;not null" json:"reward_amount"`
 	TxID         string    `gorm:"column:tx_id;default:NULL" json:"tx_id"`
-	State        int32     `gorm:"column:state;not null" json:"state"`
-	ExpiredAt    time.Time `gorm:"column:expired_at;default:(CURRENT_TIMESTAMP + '24:00:00" json:"expired_at"`
+	TxState      int32     `gorm:"column:tx_state;not null" json:"tx_state"`
+	ExpireTime   time.Time `gorm:"column:expire_time;default:(CURRENT_TIMESTAMP + '24:00:00" json:"expire_time"`
 	CreatedAt    time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt    time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }

@@ -28,4 +28,5 @@ func (m *TaskManager) RegisterExpiredTxHandler(subService string, handler Expire
 
 func (m *TaskManager) StartAllTasks() {
 	NewKafkaConsumerTask(m.taskCtx).Start()
+	NewRewardCodeExpireTask(m.taskCtx).Start()
 }

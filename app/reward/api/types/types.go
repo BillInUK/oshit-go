@@ -121,3 +121,21 @@ type CampaignExchangeTxInfo struct {
 	TokenAmount   float64 `json:"tokenAmount"`   // 兑换出来token的金额
 	CostFee       float64 `json:"costFee"`       // solana成本费
 }
+
+type GetRewardCodeTxInfoReq struct {
+	RewardCode string `json:"rewardCode"`
+}
+
+type CommitRewardCodeTxReq struct {
+	EncodedTx  string `json:"encodedTx"`
+	RewardCode string `json:"rewardCode"`
+}
+
+type RewardCodeTxInfo struct {
+	RewardAccount string  `json:"rewardAccount"` // 发放token的地址
+	Mint          string  `json:"mint"`          // token地址
+	Decimals      int32   `json:"decimals"`      // 币种精度
+	CostAccount   string  `json:"costAccount"`   // 收取成本费的地址
+	RewardAmount  float64 `json:"rewardAmount"`  // 奖励的token数量(raw)
+	CostFee       float64 `json:"costFee"`       // 需要支付的SOL成本费(lamports)
+}

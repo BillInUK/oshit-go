@@ -11,6 +11,7 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 	giveTokenHandler := NewGiveTokenHandler(srvCtx)
 	lotteryHandler := NewLotteryHandler(srvCtx)
 	campaignHandler := NewCampaignHandler(srvCtx)
+	rewardCodeHandler := NewRewardCodeHandler(srvCtx)
 
 	// take token 相关路由
 	take := api.Group("/take")
@@ -48,6 +49,14 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 		campaign.Post("/limit", campaignHandler.GetExchangeLimit)
 		campaign.Post("/tx-info", campaignHandler.GetTxInfo)
 		campaign.Post("/commit-tx", campaignHandler.CommitTx)
+	}
+
+	// reward code 相关路由
+	rewardCode := api.Group("/reward-code")
+	{
+		rewardCode.Post("/info", rewardCodeHandler.GetInfo)
+		rewardCode.Post("/tx-info", rewardCodeHandler.GetTxInfo)
+		rewardCode.Post("/commit-tx", rewardCodeHandler.CommitTx)
 	}
 
 }

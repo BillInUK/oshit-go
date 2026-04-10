@@ -135,6 +135,29 @@ CREATE TABLE public.t_give_token_record
     updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 奖励码发放奖励配置
+DROP TABLE IF EXISTS public.t_reward_code_config;
+CREATE TABLE public.t_reward_code_config
+(
+    record_id      ulid                        DEFAULT gen_ulid() NOT NULL,
+    reward_account character varying(64)                          NOT NULL,
+    cost_account   character varying(64)                          NOT NULL,
+    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (record_id)
+);
+
+-- 兑换奖励码兑换费率表
+DROP TABLE IF EXISTS public.t_reward_code_fee;
+CREATE TABLE public.t_reward_code_fee
+(
+    amount     numeric(78, 0) NOT NULL,
+    cost_rate  numeric(78, 0) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (amount)
+);
+
 -- 奖励码
 DROP TABLE IF EXISTS public.t_reward_code;
 CREATE TABLE public.t_reward_code
@@ -143,33 +166,12 @@ CREATE TABLE public.t_reward_code
     reward_code   character varying(6)                           NOT NULL,
     reward_amount numeric(78, 0)                                 NOT NULL,
     tx_id         character varying(128)      DEFAULT NULL:: character varying,
-    state         integer                     DEFAULT 0          NOT NULL,
-    expired_at    timestamp without time zone DEFAULT (CURRENT_TIMESTAMP + '24:00:00':: interval),
+    tx_state      integer                     DEFAULT 0          NOT NULL,
+    expire_time   timestamp without time zone DEFAULT (CURRENT_TIMESTAMP + '24:00:00':: interval),
     created_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
--- 奖励码奖励规则
-DROP TABLE IF EXISTS public.t_reward_code_config;
-CREATE TABLE public.t_reward_code_config
-(
-    record_id      ulid                        DEFAULT gen_ulid() NOT NULL,
-    reward_account character varying(64)                          NOT NULL,
-    cost_account   character varying(64)                          NOT NULL,
-    fee_rate       numeric(78, 0)                                 NOT NULL,
-    max_fee        numeric(78, 0)                                 NOT NULL,
-    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
--- 奖励码兑换费率表
-DROP TABLE IF EXISTS public.t_reward_code_fee;
-CREATE TABLE public.t_reward_code_fee
-(
-    amount     numeric(78, 0) NOT NULL,
-    fee_rate   numeric(78, 0) NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (record_id),
+    CONSTRAINT unique_reward_code UNIQUE (reward_code)
 );
 
 
@@ -251,6 +253,7 @@ CREATE TABLE public.t_campaign_exchange_record
 CREATE INDEX ON public.t_campaign_exchange_record (receipt_account);
 CREATE INDEX ON public.t_campaign_exchange_record (provider, user_id);
 CREATE INDEX ON public.t_campaign_exchange_record (tx_id);
+
 
 
 

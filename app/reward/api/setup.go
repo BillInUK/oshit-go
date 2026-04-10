@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"oshit-go/app/reward/api/internal/logic/give"
 	"oshit-go/app/reward/api/internal/logic/lottery"
+	"oshit-go/app/reward/api/internal/logic/rewardcode"
 	"oshit-go/app/reward/api/internal/logic/take"
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/common/pkg/entity"
@@ -21,6 +22,8 @@ func registerTasks(srvCtx *svc.ServiceContext) {
 			return give.NewGiveTokenLogic(ctx, srvCtx).HandleScannedTx(msg)
 		case "Lottery":
 			return lottery.NewLotteryLogic(ctx, srvCtx).HandleScannedTx(msg)
+		case "RewardCode":
+			return rewardcode.NewRewardCodeLogic(ctx, srvCtx).HandleScannedTx(msg)
 		default:
 			log.Warnf("registerTasks: 未知 SubService=%s 的已扫描交易，跳过", msg.SubService)
 			return nil
@@ -36,6 +39,8 @@ func registerTasks(srvCtx *svc.ServiceContext) {
 			return give.NewGiveTokenLogic(ctx, srvCtx).HandleExpiredTx(msg)
 		case "Lottery":
 			return lottery.NewLotteryLogic(ctx, srvCtx).HandleExpiredTx(msg)
+		case "RewardCode":
+			return rewardcode.NewRewardCodeLogic(ctx, srvCtx).HandleExpiredTx(msg)
 		default:
 			log.Warnf("registerTasks: 未知 SubService=%s 的超时交易，跳过", msg.SubService)
 			return nil

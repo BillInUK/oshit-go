@@ -29,7 +29,7 @@ func newRewardCodeFee(db *gorm.DB, opts ...gen.DOOption) rewardCodeFee {
 	tableName := _rewardCodeFee.rewardCodeFeeDo.TableName()
 	_rewardCodeFee.ALL = field.NewAsterisk(tableName)
 	_rewardCodeFee.Amount = field.NewFloat64(tableName, "amount")
-	_rewardCodeFee.FeeRate = field.NewFloat64(tableName, "fee_rate")
+	_rewardCodeFee.CostRate = field.NewFloat64(tableName, "cost_rate")
 	_rewardCodeFee.CreatedAt = field.NewTime(tableName, "created_at")
 	_rewardCodeFee.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -43,7 +43,7 @@ type rewardCodeFee struct {
 
 	ALL       field.Asterisk
 	Amount    field.Float64
-	FeeRate   field.Float64
+	CostRate  field.Float64
 	CreatedAt field.Time
 	UpdatedAt field.Time
 
@@ -63,7 +63,7 @@ func (r rewardCodeFee) As(alias string) *rewardCodeFee {
 func (r *rewardCodeFee) updateTableName(table string) *rewardCodeFee {
 	r.ALL = field.NewAsterisk(table)
 	r.Amount = field.NewFloat64(table, "amount")
-	r.FeeRate = field.NewFloat64(table, "fee_rate")
+	r.CostRate = field.NewFloat64(table, "cost_rate")
 	r.CreatedAt = field.NewTime(table, "created_at")
 	r.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -96,7 +96,7 @@ func (r *rewardCodeFee) GetFieldByName(fieldName string) (field.OrderExpr, bool)
 func (r *rewardCodeFee) fillFieldMap() {
 	r.fieldMap = make(map[string]field.Expr, 4)
 	r.fieldMap["amount"] = r.Amount
-	r.fieldMap["fee_rate"] = r.FeeRate
+	r.fieldMap["cost_rate"] = r.CostRate
 	r.fieldMap["created_at"] = r.CreatedAt
 	r.fieldMap["updated_at"] = r.UpdatedAt
 }

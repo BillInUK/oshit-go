@@ -31,8 +31,6 @@ func newRewardCodeConfig(db *gorm.DB, opts ...gen.DOOption) rewardCodeConfig {
 	_rewardCodeConfig.RecordID = field.NewString(tableName, "record_id")
 	_rewardCodeConfig.RewardAccount = field.NewString(tableName, "reward_account")
 	_rewardCodeConfig.CostAccount = field.NewString(tableName, "cost_account")
-	_rewardCodeConfig.FeeRate = field.NewFloat64(tableName, "fee_rate")
-	_rewardCodeConfig.MaxFee = field.NewFloat64(tableName, "max_fee")
 	_rewardCodeConfig.CreatedAt = field.NewTime(tableName, "created_at")
 	_rewardCodeConfig.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -48,8 +46,6 @@ type rewardCodeConfig struct {
 	RecordID      field.String
 	RewardAccount field.String
 	CostAccount   field.String
-	FeeRate       field.Float64
-	MaxFee        field.Float64
 	CreatedAt     field.Time
 	UpdatedAt     field.Time
 
@@ -71,8 +67,6 @@ func (r *rewardCodeConfig) updateTableName(table string) *rewardCodeConfig {
 	r.RecordID = field.NewString(table, "record_id")
 	r.RewardAccount = field.NewString(table, "reward_account")
 	r.CostAccount = field.NewString(table, "cost_account")
-	r.FeeRate = field.NewFloat64(table, "fee_rate")
-	r.MaxFee = field.NewFloat64(table, "max_fee")
 	r.CreatedAt = field.NewTime(table, "created_at")
 	r.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -103,12 +97,10 @@ func (r *rewardCodeConfig) GetFieldByName(fieldName string) (field.OrderExpr, bo
 }
 
 func (r *rewardCodeConfig) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 7)
+	r.fieldMap = make(map[string]field.Expr, 5)
 	r.fieldMap["record_id"] = r.RecordID
 	r.fieldMap["reward_account"] = r.RewardAccount
 	r.fieldMap["cost_account"] = r.CostAccount
-	r.fieldMap["fee_rate"] = r.FeeRate
-	r.fieldMap["max_fee"] = r.MaxFee
 	r.fieldMap["created_at"] = r.CreatedAt
 	r.fieldMap["updated_at"] = r.UpdatedAt
 }

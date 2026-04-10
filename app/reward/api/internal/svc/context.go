@@ -30,6 +30,7 @@ type ServiceContext struct {
 	TakeTokenConfig        *model.TakeTokenConfig
 	GiveTokenConfig        *model.GiveTokenConfig
 	CampaignExchangeConfig *model.CampaignExchangeConfig
+	RewardCodeConfig       *model.RewardCodeConfig
 	RewardKeyMap           map[string]solana.PrivateKey
 	LightHouseAddress      solana.PublicKey
 	TaskMgr                *task.TaskManager
@@ -219,6 +220,13 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 		return fmt.Errorf("can not find campaign exchange config from database: %v", err)
 	}
 	s.CampaignExchangeConfig = &campaignExchangeConfig
+
+	// 加载 reward code 业务配置
+	var rewardCodeConfig model.RewardCodeConfig
+	if err := s.DB.First(&rewardCodeConfig).Error; err != nil {
+		return fmt.Errorf("can not find reward code config from database: %v", err)
+	}
+	s.RewardCodeConfig = &rewardCodeConfig
 
 	// 加载私钥
 	s.RewardKeyMap = make(map[string]solana.PrivateKey)
