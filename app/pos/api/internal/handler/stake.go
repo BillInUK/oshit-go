@@ -268,3 +268,115 @@ func (h *StakeHandler) ReStakeToken(fiberCtx *fiber.Ctx) error {
 
 	return response.OkWithData(fiberCtx, txId)
 }
+
+// GetLeaderInfo 获取当前登录用户的区域经理信息
+func (h *StakeHandler) GetLeaderInfo(fiberCtx *fiber.Ctx) error {
+	claims, err := utils.ExtractTokenMetadata(fiberCtx)
+	if err != nil {
+		return response.UnAuthorizedError(fiberCtx, "unauthorized")
+	}
+	nativeAccountString := claims.Credentials["nativeAccount"].(string)
+	if _, err := solana.PublicKeyFromBase58(nativeAccountString); err != nil {
+		return response.FailWithError(fiberCtx, "malformed native account", err)
+	}
+
+	l := stake.NewStakeLogic(fiberCtx.Context(), h.srvCtx)
+	leader, err := l.GetLeaderInfo(nativeAccountString)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return response.OkWithData(fiberCtx, nil)
+		}
+		return response.FailWithMsg(fiberCtx, "get leader info error")
+	}
+	return response.OkWithData(fiberCtx, leader)
+}
+
+// GetLeaderRewardRecord 获取区域经理奖励发放记录
+func (h *StakeHandler) GetLeaderRewardRecord(fiberCtx *fiber.Ctx) error {
+	claims, err := utils.ExtractTokenMetadata(fiberCtx)
+	if err != nil {
+		return response.UnAuthorizedError(fiberCtx, "unauthorized")
+	}
+	nativeAccountString := claims.Credentials["nativeAccount"].(string)
+	nativeAccount, err := solana.PublicKeyFromBase58(nativeAccountString)
+	if err != nil {
+		return response.FailWithError(fiberCtx, "malformed native account", err)
+	}
+
+	l := stake.NewStakeLogic(fiberCtx.Context(), h.srvCtx)
+	records, err := l.GetLeaderRewards(nativeAccount.String())
+	if err != nil {
+		log.Errorf("Stake业务 - 查询区域经理未领取奖励错误: %v", err)
+		return response.FailWithMsg(fiberCtx, "query area leader rewards error")
+	}
+	return response.OkWithData(fiberCtx, records)
+}
+
+// GetLeaderTxInfo 获取区域经理奖励信息
+func (h *StakeHandler) GetLeaderTxInfo(fiberCtx *fiber.Ctx) error {
+	tokenMetadata, err := utils.ExtractTokenMetadata(fiberCtx)
+	if err != nil {
+		return response.UnAuthorizedError(fiberCtx, "unauthorized")
+	}
+	nativeAccountString := tokenMetadata.Credentials["nativeAccount"].(string)
+	nativeAccount, err := solana.PublicKeyFromBase58(nativeAccountString)
+	if err != nil {
+		return response.FailWithError(fiberCtx, "malformed native account", err)
+	}
+
+	l := stake.NewStakeLogic(fiberCtx.Context(), h.srvCtx)
+	txInfo, err := l.GetLeaderTxInfo(nativeAccount)
+	if err != nil {
+		log.Errorf("%s - 获取区域经理奖励交易信息错误: %v", h.prefix, err)
+		return response.FailWithMsg(fiberCtx, "get claim area leader reward tx info failed")
+	}
+	return response.OkWithData(fiberCtx, txInfo)
+}
+
+// GetLeaderClaimRecord 获取区域经理奖励领取记录
+func (h *StakeHandler) GetLeaderClaimRecord(fiberCtx *fiber.Ctx) error {
+	var req types.GetByTxIdReq
+	if err := fiberCtx.BodyParser(&req); err != nil {
+		return response.FailWithMsg(fiberCtx, "invalid request body")
+	}
+	l := stake.NewStakeRewardLogic(fiberCtx.Context(), h.srvCtx)
+	record, err := l.GetLeaderClaimRecord(req.TxId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return response.OkWithData(fiberCtx, nil)
+		}
+		return response.FailWithMsg(fiberCtx, "get leader reward claim record error")
+	}
+	return response.OkWithData(fiberCtx, record)
+}
+
+// LeaderCommitTx 区域经理领取奖励
+func (h *StakeHandler) LeaderCommitTx(fiberCtx *fiber.Ctx) error {
+	prefix := fmt.Sprintf("%s 处理区域经理领取奖励提交请求 -", h.prefix)
+	ctx := fiberCtx.Context()
+
+	var req types.CommitStakeRewardTxReq
+	if err := fiberCtx.BodyParser(&req); err != nil {
+		return response.BadRequest(fiberCtx, "invalid request body")
+	}
+	if req.EncodedTx == "" {
+		return response.BadRequest(fiberCtx, "encodedTx is required")
+	}
+
+	preCheckedTx, err := app_utils.PreCheckEncodedTx(req.EncodedTx)
+	if err != nil {
+		log.Errorf("%s 预检查交易错误: %v", prefix, err)
+		return response.FailWithError(fiberCtx, "pre check encoded transaction error", err)
+	}
+
+	prefix = fmt.Sprintf("%s 发起地址 %v txId %v", prefix, preCheckedTx.From, preCheckedTx.TxId)
+	log.Infof("%s 提交区域经理领取奖励交易", prefix)
+
+	l := stake.NewStakeRewardLogic(ctx, h.srvCtx)
+	txId, err := l.ProcessLeaderCommitTx(ctx, preCheckedTx)
+	if err != nil {
+		log.Errorf("%s 处理交易错误: %v", prefix, err)
+		return response.FailWithError(fiberCtx, "process leader commit tx error", err)
+	}
+	return response.OkWithData(fiberCtx, txId)
+}

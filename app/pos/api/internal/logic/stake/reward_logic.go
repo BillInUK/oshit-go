@@ -265,3 +265,150 @@ func (l *StakeRewardLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *ap
 	log.Infof("%s 处理完成", prefix)
 	return txIdStr, nil
 }
+
+// GetLeaderClaimRecord 根据交易id获取区域经理奖励领取记录
+func (l *StakeRewardLogic) GetLeaderClaimRecord(txId string) (*model.StakeLeaderRewardClaim, error) {
+	var record model.StakeLeaderRewardClaim
+	if err := l.db.Table(model.TableNameStakeLeaderRewardClaim).
+		Where("tx_id = ?", txId).
+		First(&record).Error; err != nil {
+		return nil, err
+	}
+	return &record, nil
+}
+
+// recordLeaderClaim 在同一数据库事务中：
+// 1. 将本次可领取的区域经理奖励标记为 pending=true
+// 2. 写入 t_stake_leader_reward_claim
+func (l *StakeRewardLogic) recordLeaderClaim(nativeAccount, txId string, rewards []model.StakeLeaderReward) error {
+	dbTx := l.db.Begin()
+	if dbTx.Error != nil {
+		return fmt.Errorf("begin transaction error: %v", dbTx.Error)
+	}
+	defer dbTx.Rollback()
+
+	rewardIds := make([]string, 0, len(rewards))
+	for _, r := range rewards {
+		rewardIds = append(rewardIds, r.RecordID)
+	}
+	rewardIdsStr := "{" + strings.Join(rewardIds, ",") + "}"
+
+	if err := dbTx.Table(model.TableNameStakeLeaderReward).
+		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
+		Updates(map[string]interface{}{
+			"pending":    true,
+			"tx_id":      txId,
+			"updated_at": time.Now(),
+		}).Error; err != nil {
+		return fmt.Errorf("mark leader rewards as pending error: %v", err)
+	}
+
+	claimRecord := model.StakeLeaderRewardClaim{
+		NativeAccount: nativeAccount,
+		RewardIds:     rewardIdsStr,
+		TxID:          txId,
+		TxState:       0,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+	if err := dbTx.Table(model.TableNameStakeLeaderRewardClaim).Omit("record_id").Create(&claimRecord).Error; err != nil {
+		return fmt.Errorf("insert leader reward claim record error: %v", err)
+	}
+
+	if err := dbTx.Commit().Error; err != nil {
+		return fmt.Errorf("commit transaction error: %v", err)
+	}
+	return nil
+}
+
+// ProcessLeaderCommitTx 处理区域经理领取奖励的交易
+func (l *StakeRewardLogic) ProcessLeaderCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx) (string, error) {
+	nativeAccount := preCheckedTx.From.String()
+	txIdStr := preCheckedTx.TxId.String()
+	prefix := fmt.Sprintf("%s ProcessLeaderCommitTx account=%s txId=%s -", l.prefix, nativeAccount, txIdStr)
+
+	// 1. 分布式锁，防止同一地址并发提交
+	mutex := l.rs.NewMutex("stake:leader-reward:commit-tx:"+nativeAccount, redsync.WithExpiry(time.Hour))
+	if err := mutex.Lock(); err != nil {
+		var errTaken *redsync.ErrTaken
+		if !errors.As(err, &errTaken) {
+			log.Errorf("%s 获取分布式锁错误: %v", prefix, err)
+			return "", errors.New("process transaction error")
+		}
+		return "", errors.New("you have unfinished service, please try again later")
+	}
+	defer mutex.Unlock()
+
+	// 2. 服务端重新计算 txInfo（不信任客户端参数）
+	leaderTxInfo, err := l.getLeaderTxInfo(nativeAccount)
+	if err != nil {
+		log.Errorf("%s 获取交易信息错误: %v", prefix, err)
+		return "", fmt.Errorf("get leader tx info error: %v", err)
+	}
+	if leaderTxInfo.TotalReward <= 0 {
+		return "", errors.New("no claimable leader rewards found")
+	}
+
+	// 3. 查询本次可领取奖励（用于 recordLeaderClaim）
+	var rewards []model.StakeLeaderReward
+	if err := l.db.Table(model.TableNameStakeLeaderReward).
+		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
+		Find(&rewards).Error; err != nil {
+		log.Errorf("%s 查询奖励记录错误: %v", prefix, err)
+		return "", errors.New("query leader rewards error")
+	}
+
+	// 4. 解析交易
+	decodedTx, err := l.decodeLeaderSOLTx(&preCheckedTx.SOLTx, leaderTxInfo)
+	if err != nil {
+		log.Errorf("%s 解析solana交易错误: %v", prefix, err)
+		return "", fmt.Errorf("decode transaction error: %v", err)
+	}
+
+	// 5. 校验交易
+	if err := l.checkLeaderSOLTx(decodedTx, leaderTxInfo); err != nil {
+		log.Errorf("%s 校验交易错误: %v", prefix, err)
+		return "", fmt.Errorf("check transaction error: %v", err)
+	}
+
+	// 6. 发送给 base 模块签名 + 广播
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Stake", "StakeLeaderReward")
+	if err != nil {
+		log.Errorf("%s 发送交易失败: %v", prefix, err)
+		return "", errors.New(utils.FilterAndTranslateSOLError(err))
+	}
+	if sentTxId == "" || sentTxId != txIdStr {
+		log.Errorf("%s base返回的txId[%s]与预期[%s]不一致", prefix, sentTxId, txIdStr)
+		return "", errors.New("sent transaction id not equal expected")
+	}
+
+	// 7. 落库：标记 pending + 写领取记录
+	if err := l.recordLeaderClaim(nativeAccount, txIdStr, rewards); err != nil {
+		log.Errorf("%s 记录领取信息错误: %v", prefix, err)
+		return "", errors.New("record leader claim error")
+	}
+
+	log.Infof("%s 处理完成", prefix)
+	return txIdStr, nil
+}
+
+// getLeaderTxInfo 查询区域经理可领取奖励总额及交易参数
+func (l *StakeRewardLogic) getLeaderTxInfo(nativeAccount string) (*types.LeaderRewardTxInfo, error) {
+	config := l.srvCtx.LeaderRewardConfig
+	if config == nil {
+		return nil, fmt.Errorf("leader reward config not loaded")
+	}
+	var totalReward float64
+	if err := l.db.Table(model.TableNameStakeLeaderReward).
+		Select("coalesce(sum(reward_amount), 0)").
+		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
+		Scan(&totalReward).Error; err != nil {
+		return nil, fmt.Errorf("查询区域经理未领取奖励总额错误: %v", err)
+	}
+	return &types.LeaderRewardTxInfo{
+		RewardAccount: config.RewardAccount,
+		Mint:          l.srvCtx.TokenConfig.Mint,
+		Decimals:      l.srvCtx.TokenConfig.Decimals,
+		TotalReward:   totalReward,
+	}, nil
+}

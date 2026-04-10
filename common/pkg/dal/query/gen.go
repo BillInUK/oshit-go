@@ -61,6 +61,7 @@ var (
 	StakeLeader              *stakeLeader
 	StakeLeaderReward        *stakeLeaderReward
 	StakeLeaderRewardClaim   *stakeLeaderRewardClaim
+	StakeLeaderRewardConfig  *stakeLeaderRewardConfig
 	StakeRecord              *stakeRecord
 	StakeReward              *stakeReward
 	StakeRewardClaim         *stakeRewardClaim
@@ -125,6 +126,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	StakeLeader = &Q.StakeLeader
 	StakeLeaderReward = &Q.StakeLeaderReward
 	StakeLeaderRewardClaim = &Q.StakeLeaderRewardClaim
+	StakeLeaderRewardConfig = &Q.StakeLeaderRewardConfig
 	StakeRecord = &Q.StakeRecord
 	StakeReward = &Q.StakeReward
 	StakeRewardClaim = &Q.StakeRewardClaim
@@ -190,6 +192,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		StakeLeader:              newStakeLeader(db, opts...),
 		StakeLeaderReward:        newStakeLeaderReward(db, opts...),
 		StakeLeaderRewardClaim:   newStakeLeaderRewardClaim(db, opts...),
+		StakeLeaderRewardConfig:  newStakeLeaderRewardConfig(db, opts...),
 		StakeRecord:              newStakeRecord(db, opts...),
 		StakeReward:              newStakeReward(db, opts...),
 		StakeRewardClaim:         newStakeRewardClaim(db, opts...),
@@ -256,6 +259,7 @@ type Query struct {
 	StakeLeader              stakeLeader
 	StakeLeaderReward        stakeLeaderReward
 	StakeLeaderRewardClaim   stakeLeaderRewardClaim
+	StakeLeaderRewardConfig  stakeLeaderRewardConfig
 	StakeRecord              stakeRecord
 	StakeReward              stakeReward
 	StakeRewardClaim         stakeRewardClaim
@@ -323,6 +327,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		StakeLeader:              q.StakeLeader.clone(db),
 		StakeLeaderReward:        q.StakeLeaderReward.clone(db),
 		StakeLeaderRewardClaim:   q.StakeLeaderRewardClaim.clone(db),
+		StakeLeaderRewardConfig:  q.StakeLeaderRewardConfig.clone(db),
 		StakeRecord:              q.StakeRecord.clone(db),
 		StakeReward:              q.StakeReward.clone(db),
 		StakeRewardClaim:         q.StakeRewardClaim.clone(db),
@@ -397,6 +402,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		StakeLeader:              q.StakeLeader.replaceDB(db),
 		StakeLeaderReward:        q.StakeLeaderReward.replaceDB(db),
 		StakeLeaderRewardClaim:   q.StakeLeaderRewardClaim.replaceDB(db),
+		StakeLeaderRewardConfig:  q.StakeLeaderRewardConfig.replaceDB(db),
 		StakeRecord:              q.StakeRecord.replaceDB(db),
 		StakeReward:              q.StakeReward.replaceDB(db),
 		StakeRewardClaim:         q.StakeRewardClaim.replaceDB(db),
@@ -461,6 +467,7 @@ type queryCtx struct {
 	StakeLeader              IStakeLeaderDo
 	StakeLeaderReward        IStakeLeaderRewardDo
 	StakeLeaderRewardClaim   IStakeLeaderRewardClaimDo
+	StakeLeaderRewardConfig  IStakeLeaderRewardConfigDo
 	StakeRecord              IStakeRecordDo
 	StakeReward              IStakeRewardDo
 	StakeRewardClaim         IStakeRewardClaimDo
@@ -525,6 +532,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		StakeLeader:              q.StakeLeader.WithContext(ctx),
 		StakeLeaderReward:        q.StakeLeaderReward.WithContext(ctx),
 		StakeLeaderRewardClaim:   q.StakeLeaderRewardClaim.WithContext(ctx),
+		StakeLeaderRewardConfig:  q.StakeLeaderRewardConfig.WithContext(ctx),
 		StakeRecord:              q.StakeRecord.WithContext(ctx),
 		StakeReward:              q.StakeReward.WithContext(ctx),
 		StakeRewardClaim:         q.StakeRewardClaim.WithContext(ctx),

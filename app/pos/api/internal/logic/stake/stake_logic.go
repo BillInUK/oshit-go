@@ -36,9 +36,10 @@ type StakeLogic struct {
 	baseClient        *posrpc.BaseClient
 
 	// 业务相关参数
-	rewardConfig *model.StakeRewardConfig
-	fixConfig    map[int32]model.StakeFixRateConfig
-	totalLeaders []model.StakeTotalLeader
+	rewardConfig       *model.StakeRewardConfig
+	leaderRewardConfig *model.StakeLeaderRewardConfig
+	fixConfig          map[int32]model.StakeFixRateConfig
+	totalLeaders       []model.StakeTotalLeader
 }
 
 func NewStakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *StakeLogic {
@@ -55,9 +56,10 @@ func NewStakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *StakeLogic 
 		LightHouseAddress: srvCtx.LightHouseAddress,
 
 		// 业务相关参数
-		rewardConfig: srvCtx.StakeRewardConfig,
-		fixConfig:    srvCtx.StakeFixConfig,
-		totalLeaders: srvCtx.TotalAreaLeaders,
+		rewardConfig:       srvCtx.StakeRewardConfig,
+		leaderRewardConfig: srvCtx.LeaderRewardConfig,
+		fixConfig:          srvCtx.StakeFixConfig,
+		totalLeaders:       srvCtx.TotalAreaLeaders,
 	}
 }
 
@@ -493,4 +495,47 @@ func (l *StakeLogic) GetUserAvailableStake(userAddress string) (uint64, error) {
 	}
 
 	return totalAvailable.Total, nil
+}
+
+// GetLeaderInfo 根据 native account 查询区域经理信息，不存在时返回 nil
+func (l *StakeLogic) GetLeaderInfo(nativeAccount string) (*model.StakeLeader, error) {
+	var leader model.StakeLeader
+	err := l.db.Table(model.TableNameStakeLeader).
+		Where("native_account = ?", nativeAccount).
+		First(&leader).Error
+	if err != nil {
+		return nil, err
+	}
+	return &leader, nil
+}
+
+func (l *StakeLogic) GetLeaderRewards(nativeAccount string) ([]model.StakeLeaderReward, error) {
+	var rewards []model.StakeLeaderReward
+	err := l.db.Table(model.TableNameStakeLeaderReward).
+		Where("native_account = ? and state = ? and pending = ?", nativeAccount, 0, false).
+		Order("created_at asc").
+		Find(&rewards).Error
+	if err != nil {
+		return nil, err
+	}
+	return rewards, nil
+}
+
+func (l *StakeLogic) GetLeaderTxInfo(account solana.PublicKey) (*types.LeaderRewardTxInfo, error) {
+	// 查询未领取的奖励总额
+	var totalReward float64
+	err := l.db.Table(model.TableNameStakeLeaderReward).
+		Select("coalesce(sum(reward_amount), 0)").
+		Where("native_account = ? and reward_state = ? and pending = ?", account.String(), 0, false).
+		Scan(&totalReward).Error
+	if err != nil {
+		return nil, fmt.Errorf("查询区域经理未领取奖励总额错误: %v", err)
+	}
+
+	return &types.LeaderRewardTxInfo{
+		RewardAccount: l.leaderRewardConfig.RewardAccount,
+		Mint:          l.srvCtx.TokenConfig.Mint,
+		Decimals:      l.srvCtx.TokenConfig.Decimals,
+		TotalReward:   totalReward,
+	}, nil
 }

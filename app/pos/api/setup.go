@@ -34,6 +34,12 @@ func registerTasks(srvCtx *svc.ServiceContext) {
 	srvCtx.TaskMgr.RegisterExpiredTxHandler("StakeReward", func(ctx context.Context, msg entity.NewExpiredTx) error {
 		return stake.NewStakeRewardLogic(ctx, srvCtx).HandleExpiredTx(msg)
 	})
+	srvCtx.TaskMgr.RegisterScannedTxHandler("StakeLeaderReward", func(ctx context.Context, msg entity.NewScannedTx) error {
+		return stake.NewStakeRewardLogic(ctx, srvCtx).HandleLeaderScannedTx(msg)
+	})
+	srvCtx.TaskMgr.RegisterExpiredTxHandler("StakeLeaderReward", func(ctx context.Context, msg entity.NewExpiredTx) error {
+		return stake.NewStakeRewardLogic(ctx, srvCtx).HandleLeaderExpiredTx(msg)
+	})
 
 	go srvCtx.TaskMgr.StartAllTasks()
 }

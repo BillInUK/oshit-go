@@ -128,6 +128,151 @@ func (l *StakeRewardLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	return nil
 }
 
+// HandleLeaderScannedTx 处理区域经理领取奖励交易上链确认的 Kafka 消息
+func (l *StakeRewardLogic) HandleLeaderScannedTx(msg entity.NewScannedTx) error {
+	txId := msg.TxSig.Signature.String()
+
+	mutex := l.rs.NewMutex("stake:leader-reward:process-tx:" + txId)
+	if err := mutex.Lock(); err != nil {
+		return err
+	}
+	defer mutex.Unlock()
+
+	dbTx := l.db.Begin()
+	defer dbTx.Rollback()
+
+	if msg.TxSig.Err != nil {
+		// 链上执行失败：重置奖励领取状态
+		if err := dbTx.Table(model.TableNameStakeLeaderReward).
+			Where("tx_id = ?", txId).
+			Updates(map[string]interface{}{
+				"tx_id":        nil,
+				"reward_state": 0,
+				"pending":      false,
+				"updated_at":   time.Now(),
+			}).Error; err != nil {
+			log.Errorf("%s HandleLeaderScannedTx - 重置奖励状态失败 txId=%s: %v", l.prefix, txId, err)
+			return err
+		}
+		if err := dbTx.Table(model.TableNameStakeLeaderRewardClaim).
+			Where("tx_id = ?", txId).
+			Updates(map[string]interface{}{
+				"tx_state":   -1,
+				"updated_at": time.Now(),
+			}).Error; err != nil {
+			log.Errorf("%s HandleLeaderScannedTx - 更新claim record失败 txId=%s: %v", l.prefix, txId, err)
+			return err
+		}
+	} else {
+		// 链上执行成功
+		if err := dbTx.Table(model.TableNameStakeLeaderRewardClaim).
+			Where("tx_id = ?", txId).
+			Updates(map[string]interface{}{
+				"tx_state":   1,
+				"updated_at": time.Now(),
+			}).Error; err != nil {
+			log.Errorf("%s HandleLeaderScannedTx - 更新claim record状态失败 txId=%s: %v", l.prefix, txId, err)
+			return err
+		}
+		if err := dbTx.Table(model.TableNameStakeLeaderReward).
+			Where("tx_id = ?", txId).
+			Updates(map[string]interface{}{
+				"reward_state": 1,
+				"pending":      false,
+				"updated_at":   time.Now(),
+			}).Error; err != nil {
+			log.Errorf("%s HandleLeaderScannedTx - 更新leader reward状态失败 txId=%s: %v", l.prefix, txId, err)
+			return err
+		}
+		decodedServiceTx, err := app_utils.DecodeServiceTransaction(&msg.DecodedTx)
+		if err != nil {
+			log.Errorf("%s HandleLeaderScannedTx - 解码服务交易失败 txId=%s: %v", l.prefix, txId, err)
+			return err
+		}
+		if err := l.recordLeaderClaimFlow(txId, decodedServiceTx); err != nil {
+			log.Errorf("%s HandleLeaderScannedTx - 记录流水失败 txId=%s: %v", l.prefix, txId, err)
+			return err
+		}
+	}
+
+	if err := dbTx.Commit().Error; err != nil {
+		log.Errorf("%s HandleLeaderScannedTx - 提交事务失败 txId=%s: %v", l.prefix, txId, err)
+		return err
+	}
+	return nil
+}
+
+// HandleLeaderExpiredTx 处理区域经理领取奖励交易超时的 Kafka 消息
+func (l *StakeRewardLogic) HandleLeaderExpiredTx(msg entity.NewExpiredTx) error {
+	txId := msg.TxID
+
+	mutex := l.rs.NewMutex("stake:leader-reward:process-tx:" + txId)
+	if err := mutex.Lock(); err != nil {
+		return err
+	}
+	defer mutex.Unlock()
+
+	dbTx := l.db.Begin()
+	defer dbTx.Rollback()
+
+	if err := dbTx.Table(model.TableNameStakeLeaderRewardClaim).
+		Where("tx_id = ?", txId).
+		Updates(map[string]interface{}{
+			"tx_state":   -1,
+			"updated_at": time.Now(),
+		}).Error; err != nil {
+		log.Errorf("%s HandleLeaderExpiredTx - 更新claim record失败 txId=%s: %v", l.prefix, txId, err)
+		return err
+	}
+	if err := dbTx.Table(model.TableNameStakeLeaderReward).
+		Where("tx_id = ?", txId).
+		Updates(map[string]interface{}{
+			"tx_id":        nil,
+			"reward_state": 0,
+			"pending":      false,
+			"updated_at":   time.Now(),
+		}).Error; err != nil {
+		log.Errorf("%s HandleLeaderExpiredTx - 重置leader reward状态失败 txId=%s: %v", l.prefix, txId, err)
+		return err
+	}
+
+	if err := dbTx.Commit().Error; err != nil {
+		log.Errorf("%s HandleLeaderExpiredTx - 提交事务失败 txId=%s: %v", l.prefix, txId, err)
+		return err
+	}
+	return nil
+}
+
+// recordLeaderClaimFlow 记录区域经理领取奖励的资金流水
+func (l *StakeRewardLogic) recordLeaderClaimFlow(txId string, decodedServiceTx *entity.DecodedServiceTransaction) error {
+	rewardFlow := model.FundFlow{
+		IsToken:     true,
+		FromAccount: decodedServiceTx.RewardInst.FromNativeAccount,
+		ToAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
+		TxID:        txId,
+		Direction:   constants.FlowOutput,
+		ServiceType: constants.ServiceStake,
+		FlowType:    constants.FlowStakeReceipt,
+		Decimals:    int16(decodedServiceTx.RewardInst.Decimals),
+		Amount:      decodedServiceTx.RewardInst.Amount,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+	return l.db.Table(model.TableNameFundFlow).
+		Omit("record_id").
+		Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "tx_id"},
+				{Name: "to_account"},
+				{Name: "flow_type"},
+			},
+			DoUpdates: clause.Assignments(map[string]interface{}{
+				"updated_at": time.Now(),
+			}),
+		}).
+		Create(&rewardFlow).Error
+}
+
 // recordClaimRewardFlow 记录Stake领取token记录
 func (l *StakeRewardLogic) recordClaimRewardFlow(decodedServiceTx *entity.DecodedServiceTransaction) error {
 	var err error

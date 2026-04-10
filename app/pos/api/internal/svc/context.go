@@ -34,6 +34,7 @@ type ServiceContext struct {
 	// stake业务配置
 	StakeAmmConfig     *model.StakeAmmConfig
 	StakeRewardConfig  *model.StakeRewardConfig
+	LeaderRewardConfig *model.StakeLeaderRewardConfig
 	StakeFixConfig     map[int32]model.StakeFixRateConfig
 	StakeInviteRate    map[int32]model.StakeInviteRate
 	StakeStarLevelRule map[int32]model.StakeStarLevelRule
@@ -295,6 +296,10 @@ func (s *ServiceContext) initStakeConfig() error {
 	}
 	table = s.DB.Table(model.TableNameStakeRewardConfig)
 	if err := table.First(&s.StakeRewardConfig).Error; err != nil {
+		return errors.New("can not load any pos reward rule from database")
+	}
+	table = s.DB.Table(model.TableNameStakeLeaderRewardConfig)
+	if err := table.First(&s.LeaderRewardConfig).Error; err != nil {
 		return errors.New("can not load any pos reward rule from database")
 	}
 	table = s.DB.Table(model.TableNameStakeAmmConfig)

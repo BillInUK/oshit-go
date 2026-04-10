@@ -191,6 +191,17 @@ create index idx_stake_buy_token_locked_at on public.t_stake_buy_token (locked_a
 create index idx_stake_buy_token_locked_by on public.t_stake_buy_token (locked_by);
 create index idx_stake_buy_token_slot on public.t_stake_buy_token (slot);
 
+-- 区域经理奖励配置
+drop table if exists public.t_stake_leader_reward_config;
+create table public.t_stake_leader_reward_config
+(
+    record_id      ulid     not null           default gen_ulid(),-- 记录Id
+    reward_account varchar(64),-- 奖励发放地址
+    created_at     timestamp without time zone default current_timestamp,-- 记录创建时间
+    updated_at     timestamp without time zone default current_timestamp,-- 记录更新时间
+    primary key (record_id)
+);
+
 -- 总区域经理表
 drop table if exists public.t_stake_total_leader;
 create table public.t_stake_total_leader

@@ -143,6 +143,153 @@ func (l *StakeRewardLogic) decodeSOLTx(tx *solana.Transaction, txInfo *types.Cla
 	return &decodedTx, nil
 }
 
+// decodeLeaderSOLTx 解析区域经理领取奖励的 Solana 交易。
+// 交易结构：SetComputeUnitPrice / SetComputeUnitLimit / [CreateATA] /
+//
+//	TransferChecked(leaderRewardTokenAccount → leaderTokenAccount)
+func (l *StakeRewardLogic) decodeLeaderSOLTx(tx *solana.Transaction, txInfo *types.LeaderRewardTxInfo) (*entity.DecodedSolanaTransaction, error) {
+	var decodedTx entity.DecodedSolanaTransaction
+	decodedTx.FromNativeAccount = tx.Message.AccountKeys[0]
+	decodedTx.Signatures = tx.Signatures
+
+	tokenMintAccount, err := solana.PublicKeyFromBase58(txInfo.Mint)
+	if err != nil {
+		return nil, fmt.Errorf("invalid token mint: %v", err)
+	}
+
+	leaderTokenAccount, _, err := solana.FindAssociatedTokenAddress(decodedTx.FromNativeAccount, tokenMintAccount)
+	if err != nil {
+		return nil, fmt.Errorf("can not find leader token account: %v", err)
+	}
+	decodedTx.FromTokenAccount = leaderTokenAccount
+
+	rewardNativeKey, err := solana.PublicKeyFromBase58(txInfo.RewardAccount)
+	if err != nil {
+		return nil, fmt.Errorf("invalid reward account: %v", err)
+	}
+	rewardTokenAccount, _, _ := solana.FindAssociatedTokenAddress(rewardNativeKey, tokenMintAccount)
+
+	for index, inst := range tx.Message.Instructions {
+		programId, err := tx.ResolveProgramIDIndex(inst.ProgramIDIndex)
+		if err != nil {
+			return nil, fmt.Errorf("can not decode program id of instruction %d", index)
+		}
+
+		if programId.Equals(solana.ComputeBudget) {
+			accounts, _ := inst.ResolveInstructionAccounts(&tx.Message)
+			computeBudgetInst, _ := computebudget.DecodeInstruction(accounts, inst.Data)
+			if computeBudgetInst.TypeID.Uint8() == computebudget.Instruction_SetComputeUnitPrice {
+				computeUnitPriceInst, _ := computeBudgetInst.Impl.(*computebudget.SetComputeUnitPrice)
+				decodedTx.ComputeUnitPrice = computeUnitPriceInst.MicroLamports
+			}
+			if computeBudgetInst.TypeID.Uint8() == computebudget.Instruction_SetComputeUnitLimit {
+				computeUnitLimitInst, _ := computeBudgetInst.Impl.(*computebudget.SetComputeUnitLimit)
+				decodedTx.ComputeUnitLimit = uint64(computeUnitLimitInst.Units)
+			}
+			continue
+		}
+
+		if programId.Equals(solana.SPLAssociatedTokenAccountProgramID) {
+			continue
+		}
+
+		if programId.Equals(solana.TokenProgramID) {
+			accounts, err := inst.ResolveInstructionAccounts(&tx.Message)
+			if err != nil {
+				return nil, err
+			}
+			decodedTokenInst, err := token.DecodeInstruction(accounts, inst.Data)
+			if err != nil {
+				return nil, err
+			}
+			if transferChecked, ok := decodedTokenInst.Impl.(*token.TransferChecked); ok {
+				fromTokenAccount := transferChecked.Accounts.Get(0).PublicKey
+				toTokenAccount := transferChecked.Accounts.Get(2).PublicKey
+
+				var fromNativeAccount solana.PublicKey
+				if fromTokenAccount.Equals(rewardTokenAccount) {
+					fromNativeAccount = rewardNativeKey
+				} else {
+					return nil, fmt.Errorf("unexpected from token account in TransferChecked: %v", fromTokenAccount)
+				}
+
+				var toNativeAccount solana.PublicKey
+				if toTokenAccount.Equals(leaderTokenAccount) {
+					toNativeAccount = decodedTx.FromNativeAccount
+				} else {
+					return nil, fmt.Errorf("unexpected to token account in TransferChecked: %v", toTokenAccount)
+				}
+
+				checkedInst := entity.DecodedSolTransferCheckedInst{
+					FromTokenAccount:   fromTokenAccount,
+					FromNativeAccount:  fromNativeAccount,
+					TokenMintAccount:   transferChecked.Accounts.Get(1).PublicKey,
+					ToTokenAccount:     toTokenAccount,
+					ToNativeAccount:    toNativeAccount,
+					OwnerNativeAccount: transferChecked.Accounts.Get(3).PublicKey,
+					Amount:             *transferChecked.Amount,
+					Decimals:           *transferChecked.Decimals,
+				}
+				decodedTx.TransferCheckedInstructions = append(decodedTx.TransferCheckedInstructions, checkedInst)
+			} else {
+				return nil, errors.New("decode transfer checked instruction error")
+			}
+			continue
+		}
+
+		if programId.Equals(l.LightHouseAddress) {
+			continue
+		}
+
+		return nil, fmt.Errorf("unsupported program id %v", programId)
+	}
+
+	return &decodedTx, nil
+}
+
+// checkLeaderSOLTx 校验区域经理领取奖励交易是否符合规则
+func (l *StakeRewardLogic) checkLeaderSOLTx(decodedTx *entity.DecodedSolanaTransaction, txInfo *types.LeaderRewardTxInfo) error {
+	prefix := "区域经理领取奖励 checkLeaderSOLTx -"
+
+	if len(decodedTx.TransferInstructions) != 0 {
+		log.Errorf("%s 不应包含SOL转账指令，实际: %d", prefix, len(decodedTx.TransferInstructions))
+		return errors.New("leader claim transaction must not contain SOL transfer")
+	}
+	if len(decodedTx.TransferCheckedInstructions) != 1 {
+		log.Errorf("%s 必须包含1条TransferChecked指令，实际: %d", prefix, len(decodedTx.TransferCheckedInstructions))
+		return errors.New("must contain exactly 1 TransferChecked instruction")
+	}
+
+	checkedInst := decodedTx.TransferCheckedInstructions[0]
+	rewardNativeKey, _ := solana.PublicKeyFromBase58(txInfo.RewardAccount)
+	tokenMintKey, _ := solana.PublicKeyFromBase58(txInfo.Mint)
+	rewardTokenAccount, _, _ := solana.FindAssociatedTokenAddress(rewardNativeKey, tokenMintKey)
+
+	if !checkedInst.FromTokenAccount.Equals(rewardTokenAccount) {
+		log.Errorf("%s TransferChecked from[%v]不是leaderRewardTokenAccount[%v]", prefix, checkedInst.FromTokenAccount, rewardTokenAccount)
+		return errors.New("TransferChecked from account must be leader reward token account")
+	}
+	leaderTokenAccount, _, _ := solana.FindAssociatedTokenAddress(decodedTx.FromNativeAccount, tokenMintKey)
+	if !checkedInst.ToTokenAccount.Equals(leaderTokenAccount) {
+		log.Errorf("%s TransferChecked to[%v]不是领导人token账户[%v]", prefix, checkedInst.ToTokenAccount, leaderTokenAccount)
+		return errors.New("TransferChecked to account must be leader token account")
+	}
+	if checkedInst.TokenMintAccount.String() != txInfo.Mint {
+		log.Errorf("%s TransferChecked mint[%v]不匹配[%v]", prefix, checkedInst.TokenMintAccount, txInfo.Mint)
+		return errors.New("TransferChecked token mint not match")
+	}
+	if checkedInst.Amount != uint64(txInfo.TotalReward) {
+		log.Errorf("%s TransferChecked金额[%d]不等于totalReward[%.0f]", prefix, checkedInst.Amount, txInfo.TotalReward)
+		return errors.New("TransferChecked amount does not match total reward")
+	}
+	if checkedInst.Decimals != uint8(txInfo.Decimals) {
+		log.Errorf("%s TransferChecked精度[%d]不匹配[%d]", prefix, checkedInst.Decimals, txInfo.Decimals)
+		return errors.New("TransferChecked decimals not match token config")
+	}
+
+	return nil
+}
+
 // checkSOLTx 校验 stake 奖励领取交易是否符合规则
 func (l *StakeRewardLogic) checkSOLTx(decodedTx *entity.DecodedSolanaTransaction, txInfo *types.ClaimStakeRewardTxInfo) error {
 	prefix := fmt.Sprintf("%s checkSOLTx -", l.prefix)

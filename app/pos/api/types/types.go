@@ -111,3 +111,10 @@ type ClaimStakeRewardTxInfo struct {
 	CostFeeRate   int32   `json:"costFeeRate"`
 	CostFee       float64 `json:"costFee"`
 }
+
+type LeaderRewardTxInfo struct {
+	RewardAccount string  `json:"rewardAccount"`
+	Mint          string  `json:"mint"`
+	Decimals      int32   `json:"decimals"`
+	TotalReward   float64 `json:"totalReward"`
+}
