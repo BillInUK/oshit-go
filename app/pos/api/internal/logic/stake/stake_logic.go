@@ -181,7 +181,7 @@ func (l *StakeLogic) HandleStakeTx(msg entity.NewScannedTx) error {
 	log.Infof("%s 收到 StakeToken 交易 txId=%s", l.prefix, stakeTxId)
 
 	// 解析交易（支持 stake/unstake/restake 的不同指令数据长度）
-	parser := NewStakeTxParser(l.rpcClient, float64(1000), "As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws")
+	parser := NewStakeTxParser(l.rpcClient, float64(1000), l.rewardConfig.ProgramID)
 	parsedTx, err := parser.ParseStakeTx(context.Background(), stakeTxSig)
 	if err != nil {
 		log.Errorf("%s txId=%s 解析交易失败: %v", l.prefix, stakeTxId, err)

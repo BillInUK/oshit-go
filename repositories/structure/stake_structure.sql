@@ -183,14 +183,16 @@ create table public.t_stake_buy_token
     locked_at        timestamptz(6),
     staked_amount    numeric(78, 0)                              not null default 0,
     remaining_amount numeric(78, 0)                              not null default 0,
-    created_at       timestamptz(6)                                       default now()
+    expired          bool                                       not null default false,
+    created_at       timestamp without time zone default current_timestamp,
+    expired_at timestamp without time zone default current_timestamp
 );
 
 create index idx_stake_buy_token_locked on public.t_stake_buy_token (locked);
 create index idx_stake_buy_token_locked_at on public.t_stake_buy_token (locked_at);
 create index idx_stake_buy_token_locked_by on public.t_stake_buy_token (locked_by);
 create index idx_stake_buy_token_slot on public.t_stake_buy_token (slot);
-ALTER TABLE t_stake_buy_token ADD CONSTRAINT uq_stake_buy_token_tx_id UNIQUE (tx_id);
+alter table t_stake_buy_token add constraint uq_stake_buy_token_tx_id unique (tx_id);
 
 -- 区域经理奖励配置
 drop table if exists public.t_stake_leader_reward_config;

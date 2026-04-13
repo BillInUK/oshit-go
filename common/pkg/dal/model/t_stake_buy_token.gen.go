@@ -22,7 +22,9 @@ type StakeBuyToken struct {
 	LockedAt        time.Time `gorm:"column:locked_at" json:"locked_at"`
 	StakedAmount    float64   `gorm:"column:staked_amount;not null" json:"staked_amount"`
 	RemainingAmount float64   `gorm:"column:remaining_amount;not null" json:"remaining_amount"`
-	CreatedAt       time.Time `gorm:"column:created_at;default:now()" json:"created_at"`
+	Expired         bool      `gorm:"column:expired;not null" json:"expired"`
+	CreatedAt       time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
+	ExpiredAt       time.Time `gorm:"column:expired_at;default:CURRENT_TIMESTAMP" json:"expired_at"`
 }
 
 // TableName StakeBuyToken's table name

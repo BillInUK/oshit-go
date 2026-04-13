@@ -38,7 +38,9 @@ func newStakeBuyToken(db *gorm.DB, opts ...gen.DOOption) stakeBuyToken {
 	_stakeBuyToken.LockedAt = field.NewTime(tableName, "locked_at")
 	_stakeBuyToken.StakedAmount = field.NewFloat64(tableName, "staked_amount")
 	_stakeBuyToken.RemainingAmount = field.NewFloat64(tableName, "remaining_amount")
+	_stakeBuyToken.Expired = field.NewBool(tableName, "expired")
 	_stakeBuyToken.CreatedAt = field.NewTime(tableName, "created_at")
+	_stakeBuyToken.ExpiredAt = field.NewTime(tableName, "expired_at")
 
 	_stakeBuyToken.fillFieldMap()
 
@@ -59,7 +61,9 @@ type stakeBuyToken struct {
 	LockedAt        field.Time
 	StakedAmount    field.Float64
 	RemainingAmount field.Float64
+	Expired         field.Bool
 	CreatedAt       field.Time
+	ExpiredAt       field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -86,7 +90,9 @@ func (s *stakeBuyToken) updateTableName(table string) *stakeBuyToken {
 	s.LockedAt = field.NewTime(table, "locked_at")
 	s.StakedAmount = field.NewFloat64(table, "staked_amount")
 	s.RemainingAmount = field.NewFloat64(table, "remaining_amount")
+	s.Expired = field.NewBool(table, "expired")
 	s.CreatedAt = field.NewTime(table, "created_at")
+	s.ExpiredAt = field.NewTime(table, "expired_at")
 
 	s.fillFieldMap()
 
@@ -115,7 +121,7 @@ func (s *stakeBuyToken) GetFieldByName(fieldName string) (field.OrderExpr, bool)
 }
 
 func (s *stakeBuyToken) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 11)
+	s.fieldMap = make(map[string]field.Expr, 13)
 	s.fieldMap["tx_id"] = s.TxID
 	s.fieldMap["slot"] = s.Slot
 	s.fieldMap["from_account"] = s.FromAccount
@@ -126,7 +132,9 @@ func (s *stakeBuyToken) fillFieldMap() {
 	s.fieldMap["locked_at"] = s.LockedAt
 	s.fieldMap["staked_amount"] = s.StakedAmount
 	s.fieldMap["remaining_amount"] = s.RemainingAmount
+	s.fieldMap["expired"] = s.Expired
 	s.fieldMap["created_at"] = s.CreatedAt
+	s.fieldMap["expired_at"] = s.ExpiredAt
 }
 
 func (s stakeBuyToken) clone(db *gorm.DB) stakeBuyToken {

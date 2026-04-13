@@ -1,17 +1,17 @@
 -- 质押AMM配置
 insert into public.t_stake_amm_config(quote_token,public_key)values('SOL','46uzvWDstrwNtEpBSFrcVPx4ZaTMDpjarQYWpq82Z58p');
 -- 质押池配置
-insert into public.t_stake_token_pool(source,from_token_account)values('Raydium','Gh6MjRrJFBU9HcYMYKBbaD8fX1dv3CjGtDDhtVThD9v3');
+insert into public.t_stake_token_pool(source_account,from_token_account)values('Raydium','Gh6MjRrJFBU9HcYMYKBbaD8fX1dv3CjGtDDhtVThD9v3');
 -- 质押每日固定利息
 insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000,0,70,100,now(),now());
 insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000,1,100,100,now(),now());
 
 -- 邀请奖励级别
-insert into public.t_stake_invite_dist(level)values(2);
+insert into public.t_stake_invite_dist(dist_level)values(2);
 
 -- 邀请奖励每个级别的奖励费率
-insert into public.t_stake_invite_rate(level,rate)values(1,10);
-insert into public.t_stake_invite_rate(level,rate)values(2,5);
+insert into public.t_stake_invite_rate(dist_level,rate)values(1,10);
+insert into public.t_stake_invite_rate(dist_level,rate)values(2,5);
 
 -- 质押星级配置
 insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(100000000,0,1,8,now(),now());
@@ -40,6 +40,9 @@ values
 
 -- 购买token记录表
 
+-- 插入区域经理配置
+insert into public.t_stake_leader_reward_config(reward_account)values('2yRkofKW7xKRbN79MHKGX8HFyuHZEtTJDhTwAQjJHnMX');
+
 -- 总区域经理表
 insert into public.t_stake_total_leader(native_account,stake_share,created_at,updated_at)values('G6xxsFzFHPhLCUg4Qq8aun2EcQ3hTcLvwb6pUWMsVBKa',7,now(),now());
 insert into public.t_stake_total_leader(native_account,stake_share,created_at,updated_at)values('CH6nEGuiYF5kenkavr4KMLEvY6DP7cKgQKrh9t2UiHX9',3,now(),now());
@@ -57,11 +60,4 @@ insert into public.t_stake_leader(native_account,leader_level,up_leader,created_
 -- 区域经理奖励明细表
 
 -- 区域经理奖励领取表
-
--- 插入区域经理配置
-
-
-
-
-
 

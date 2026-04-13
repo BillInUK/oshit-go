@@ -112,7 +112,7 @@ func NewServiceContext() (*ServiceContext, error) {
 
 	// 初始化stake配置
 	if err := srvCtx.initStakeConfig(); err != nil {
-		fmt.Printf("Init stake config error: %v", err)
+		return nil, err
 	}
 
 	// 初始化任务管理器
@@ -294,10 +294,12 @@ func (s *ServiceContext) initStakeConfig() error {
 	for _, r := range s.StakeStarLevelRule {
 		s.StakeStarLevelRule[r.StarLevel] = r
 	}
+	var rewardConfig model.StakeRewardConfig
 	table = s.DB.Table(model.TableNameStakeRewardConfig)
-	if err := table.First(&s.StakeRewardConfig).Error; err != nil {
+	if err := table.First(&rewardConfig).Error; err != nil {
 		return errors.New("can not load any pos reward rule from database")
 	}
+	s.StakeRewardConfig = &rewardConfig
 	table = s.DB.Table(model.TableNameStakeLeaderRewardConfig)
 	if err := table.First(&s.LeaderRewardConfig).Error; err != nil {
 		return errors.New("can not load any pos reward rule from database")
