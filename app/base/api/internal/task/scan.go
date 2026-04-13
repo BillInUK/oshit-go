@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -32,20 +33,34 @@ const (
 	txHandleLockFmt = "base:sol:tx-handle:%s:lock"  // args: txSig
 )
 
+const subServiceMarketBuyToken = "MarketBuyToken"
+
+// marketBuyTokenProgramID Raydium 相关市场购买程序地址，用于识别 MarketBuyToken 交易
+const marketBuyTokenProgramID = "HtNfUbDaBamCBPWCFiESkXpewvwVLkwrSWRjjV8FNT7i"
+
+// raydiumPoolSourceAccount Raydium (SHIT-USDT) Pool 1 的 token account，作为 TransferChecked source 的过滤条件
+const raydiumPoolSourceAccount = "GjkvqFpZ5gqbzYEUAGsn5ozmFgM52JJDgso426DiLXbQ"
+
 // TxScanTask 业务交易扫描任务
 type TxScanTask struct {
-	db          *gorm.DB
-	redis       redis.UniversalClient
-	redSync     redsync.Redsync
-	rpcClient   *rpc.Client
-	rpcURL      string
-	kafkaWriter *kafka.Writer
+	db               *gorm.DB
+	redis            redis.UniversalClient
+	redSync          redsync.Redsync
+	rpcClient        *rpc.Client
+	mainnetRpcClient *rpc.Client
+	rpcURL           string
+	kafkaWriter      *kafka.Writer
 }
 
 // NewTxScanTask 创建交易扫描任务
 func NewTxScanTask(taskCtx *TaskContext) *TxScanTask {
 	rpcURL := taskCtx.ChainConfig.RPCURL
 	rpcClient := rpc.New(rpcURL)
+
+	var mainnetRpcClient *rpc.Client
+	if taskCtx.MainnetRPCConfig != nil && taskCtx.MainnetRPCConfig.RPCURL != "" {
+		mainnetRpcClient = rpc.New(taskCtx.MainnetRPCConfig.RPCURL)
+	}
 
 	var kafkaWriter *kafka.Writer
 	if taskCtx.KafkaProducer != nil {
@@ -55,13 +70,23 @@ func NewTxScanTask(taskCtx *TaskContext) *TxScanTask {
 	}
 
 	return &TxScanTask{
-		db:          taskCtx.DB,
-		redis:       taskCtx.Redis,
-		redSync:     taskCtx.RedSync,
-		rpcClient:   rpcClient,
-		rpcURL:      rpcURL,
-		kafkaWriter: kafkaWriter,
+		db:               taskCtx.DB,
+		redis:            taskCtx.Redis,
+		redSync:          taskCtx.RedSync,
+		rpcClient:        rpcClient,
+		mainnetRpcClient: mainnetRpcClient,
+		rpcURL:           rpcURL,
+		kafkaWriter:      kafkaWriter,
 	}
+}
+
+// getRpcClient 根据 subService 选择合适的 RPC 客户端
+// MarketBuyToken 强制使用主网 RPC，其余业务使用默认 RPC
+func (t *TxScanTask) getRpcClient(subService string) *rpc.Client {
+	if subService == subServiceMarketBuyToken && t.mainnetRpcClient != nil {
+		return t.mainnetRpcClient
+	}
+	return t.rpcClient
 }
 
 // Start 启动任务
@@ -145,12 +170,12 @@ func (t *TxScanTask) MarkTxFetchState(txId string, state int) error {
 }
 
 // 获取最新交易
-func (t *TxScanTask) getLatestTransaction(ctx context.Context, pdaAccountStr, untilTxId string) ([]*rpc.TransactionSignature, error) {
+func (t *TxScanTask) getLatestTransaction(ctx context.Context, rpcClient *rpc.Client, pdaAccountStr, untilTxId string) ([]*rpc.TransactionSignature, error) {
 	pdaAccount, _ := solana.PublicKeyFromBase58(pdaAccountStr)
 	untilTx, _ := solana.SignatureFromBase58(untilTxId)
 
 	var limit int = 300
-	outs, err := t.rpcClient.GetSignaturesForAddressWithOpts(
+	outs, err := rpcClient.GetSignaturesForAddressWithOpts(
 		ctx,
 		pdaAccount,
 		&rpc.GetSignaturesForAddressOpts{
@@ -206,8 +231,8 @@ func (t *TxScanTask) startTxScanTasks(service, subService string) {
 				return
 			}
 
-			// 4. 获取最新交易
-			outs, err := t.getLatestTransaction(ctx, pdaAccountStr, scanInfo.UntilTxID)
+			// 4. 获取最新交易（MarketBuyToken 强制使用主网 RPC）
+			outs, err := t.getLatestTransaction(ctx, t.getRpcClient(subService), pdaAccountStr, scanInfo.UntilTxID)
 			if err != nil || len(outs) == 0 {
 				tx.Rollback()
 				return
@@ -236,7 +261,7 @@ func (t *TxScanTask) startTxScanTasks(service, subService string) {
 			// 8. 处理交易（在事务外异步执行）
 			for _, tx := range outs {
 				if tx.Slot > uint64(scanInfo.Slot) {
-					go t.handleServiceTx(service, *tx)
+					go t.handleServiceTx(service, subService, *tx)
 				}
 			}
 		}()
@@ -245,8 +270,8 @@ func (t *TxScanTask) startTxScanTasks(service, subService string) {
 	}
 }
 
-func (t *TxScanTask) handleServiceTx(service string, txSig rpc.TransactionSignature) {
-	prefix := fmt.Sprintf("%s业务 - solana 处理扫描到的交易 -", service)
+func (t *TxScanTask) handleServiceTx(service, subService string, txSig rpc.TransactionSignature) {
+	prefix := fmt.Sprintf("%s业务 - %s - solana 处理扫描到的交易 -", service, subService)
 	log.Infof("%s 交易Id[%s]", prefix, txSig.Signature.String())
 
 	// 使用 Redis 限流，每秒最多 200 次
@@ -268,12 +293,15 @@ func (t *TxScanTask) handleServiceTx(service string, txSig rpc.TransactionSignat
 	}
 	defer handleMutex.Unlock()
 
+	// 根据 subService 选择 RPC 客户端
+	rpcClient := t.getRpcClient(subService)
+
 	// 获取交易执行结果
 	var err error
 	var tr *rpc.GetTransactionResult
 	maxRetries := 5
 	for i := 0; i <= maxRetries; i++ {
-		tr, err = utils.GetTransactionResultByTxId(context.Background(), t.rpcClient, txSig.Signature)
+		tr, err = utils.GetTransactionResultByTxId(context.Background(), rpcClient, txSig.Signature)
 		if err == nil {
 			break
 		}
@@ -284,7 +312,7 @@ func (t *TxScanTask) handleServiceTx(service string, txSig rpc.TransactionSignat
 			time.Sleep(totalDelay)
 			continue
 		}
-		log.Errorf("%s 交易Id[%s],查询交易错误[%v]", prefix, txSig.Signature.String(), err)
+		log.Errorf("%s 交易Id[%s] 查询交易错误[%v]", prefix, txSig.Signature.String(), err)
 		return
 	}
 
@@ -293,14 +321,20 @@ func (t *TxScanTask) handleServiceTx(service string, txSig rpc.TransactionSignat
 		return
 	}
 
-	// 原有的处理逻辑，适用于Stake, StakeToken, Pos
+	// MarketBuyToken 走独立的解析流程（DEX inner instruction）
+	if subService == subServiceMarketBuyToken {
+		t.handleMarketBuyTokenTx(prefix, service, subService, txSig, tr)
+		return
+	}
+
+	// 原有的处理逻辑，适用于 Stake, StakeToken, Pos, Reward 等
 	tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(tr.Transaction.GetBinary()))
 	if err != nil {
 		log.Errorf("%s 交易Id[%s] 从交易执行结果获取交错误: %v", prefix, txSig.Signature.String(), err)
 		return
 	}
 
-	decodedTx, err := app_utils.DecodeSolanaTransaction(t.rpcClient, t.db, tx, txSig.Signature)
+	decodedTx, err := app_utils.DecodeSolanaTransaction(rpcClient, t.db, tx, txSig.Signature)
 	if err != nil {
 		log.Errorf("%s 交易Id[%s],解析交易错误[%v]", prefix, txSig.Signature.String(), err)
 		return
@@ -330,6 +364,141 @@ func (t *TxScanTask) handleServiceTx(service string, txSig rpc.TransactionSignat
 	if err = t.sendMsgToKafka(rmqMsg); err != nil {
 		log.Errorf("%s 分发Kafka消息错误: %v", prefix, err)
 		return
+	}
+}
+
+// handleMarketBuyTokenTx 处理 MarketBuyToken DEX 购买交易：
+// 解析 inner instructions 中从 Raydium Pool 发出的 TransferChecked 指令，
+// 不依赖 t_service_tx，直接将解析结果发送到 Kafka。
+func (t *TxScanTask) handleMarketBuyTokenTx(prefix, service, subService string, txSig rpc.TransactionSignature, tr *rpc.GetTransactionResult) {
+	log.Infof("%s 处理交易所购买token交易，交易Id[%s] ", prefix, txSig.Signature.String())
+	// 只处理链上成功的交易
+	if txSig.Err != nil {
+		log.Infof("%s 交易Id[%s] 交易失败，跳过", prefix, txSig.Signature.String())
+		return
+	}
+
+	// 解码外层交易以获取 account keys
+	tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(tr.Transaction.GetBinary()))
+	if err != nil {
+		log.Errorf("%s 交易Id[%s] 解码交易失败: %v", prefix, txSig.Signature.String(), err)
+		return
+	}
+
+	if tr.Meta == nil {
+		log.Warnf("%s 交易Id[%s] meta 为空，跳过", prefix, txSig.Signature.String())
+		return
+	}
+
+	// 构建完整账户列表：静态账户 + ALT 动态加载的账户（v0 交易）
+	// 顺序：static keys → loaded writable → loaded readonly
+	accountKeys := make([]solana.PublicKey, len(tx.Message.AccountKeys))
+	copy(accountKeys, tx.Message.AccountKeys)
+	accountKeys = append(accountKeys, tr.Meta.LoadedAddresses.Writable...)
+	accountKeys = append(accountKeys, tr.Meta.LoadedAddresses.ReadOnly...)
+
+	// 1. 检查完整账户列表是否包含目标程序地址
+	marketProgramPubKey := solana.MPK(marketBuyTokenProgramID)
+	found := false
+	for _, acc := range accountKeys {
+		if acc.Equals(marketProgramPubKey) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		log.Infof("%s 交易Id[%s] 不包含目标程序 %s，跳过", prefix, txSig.Signature.String(), marketBuyTokenProgramID)
+		return
+	}
+
+	// 2. 遍历 inner instructions，找到符合条件的 TransferChecked
+	raydiumSrcPubKey := solana.MPK(raydiumPoolSourceAccount)
+	var matchedInsts []entity.DecodedSolTransferCheckedInst
+
+	for _, innerGroup := range tr.Meta.InnerInstructions {
+		for _, innerInst := range innerGroup.Instructions {
+			// 检查 program 是否为 Token Program
+			if int(innerInst.ProgramIDIndex) >= len(accountKeys) {
+				continue
+			}
+			programID := accountKeys[innerInst.ProgramIDIndex]
+			if !programID.Equals(solana.TokenProgramID) {
+				continue
+			}
+
+			// 检查指令数据：data[0]=12 表示 TransferChecked，data 至少 10 字节
+			data := []byte(innerInst.Data)
+			if len(data) < 10 || data[0] != 12 {
+				continue
+			}
+
+			// 需要至少 4 个 account indices
+			if len(innerInst.Accounts) < 4 {
+				continue
+			}
+
+			// 解析 account 索引
+			srcIdx := int(innerInst.Accounts[0])
+			mintIdx := int(innerInst.Accounts[1])
+			dstIdx := int(innerInst.Accounts[2])
+			authIdx := int(innerInst.Accounts[3])
+
+			nAccounts := len(accountKeys)
+			if srcIdx >= nAccounts || mintIdx >= nAccounts || dstIdx >= nAccounts || authIdx >= nAccounts {
+				continue
+			}
+
+			sourceAccount := accountKeys[srcIdx]
+
+			// 3. source 必须是 Raydium Pool source account
+			if !sourceAccount.Equals(raydiumSrcPubKey) {
+				continue
+			}
+
+			mintAccount := accountKeys[mintIdx]
+			dstAccount := accountKeys[dstIdx]
+			authAccount := accountKeys[authIdx]
+
+			// 解析 amount（uint64 little-endian）和 decimals
+			amount := binary.LittleEndian.Uint64(data[1:9])
+			decimals := data[9]
+
+			matchedInsts = append(matchedInsts, entity.DecodedSolTransferCheckedInst{
+				FromTokenAccount:   sourceAccount,
+				FromNativeAccount:  authAccount,
+				TokenMintAccount:   mintAccount,
+				ToTokenAccount:     dstAccount,
+				OwnerNativeAccount: authAccount,
+				Amount:             amount,
+				Decimals:           decimals,
+			})
+		}
+	}
+
+	if len(matchedInsts) == 0 {
+		log.Infof("%s 交易Id[%s] 未找到符合条件的 TransferChecked 指令，跳过", prefix, txSig.Signature.String())
+		return
+	}
+
+	// 4. 填充 DecodedSolanaTransaction
+	decodedTx := entity.DecodedSolanaTransaction{
+		TxID:                        txSig.Signature,
+		FromNativeAccount:           accountKeys[0],
+		TransferCheckedInstructions: matchedInsts,
+	}
+
+	// 5. 发送 Kafka 消息
+	rmqMsg := entity.KafkaTxMsg{
+		MsgType: "NewScannedTransaction",
+		MsgContent: entity.NewScannedTx{
+			Service:    service,
+			SubService: subService,
+			TxSig:      txSig,
+			DecodedTx:  decodedTx,
+		},
+	}
+	if err := t.sendMsgToKafka(rmqMsg); err != nil {
+		log.Errorf("%s 交易Id[%s] 发送 Kafka 消息失败: %v", prefix, txSig.Signature.String(), err)
 	}
 }
 

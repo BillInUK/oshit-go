@@ -19,6 +19,7 @@ type ServiceInfo struct {
 	MqGroup    string    `gorm:"column:mq_group;default:NULL" json:"mq_group"`
 	MqTopic    string    `gorm:"column:mq_topic;default:NULL" json:"mq_topic"`
 	HookType   int32     `gorm:"column:hook_type;not null" json:"hook_type"`
+	TxSource   int32     `gorm:"column:tx_source;not null" json:"tx_source"`
 	Confirm    bool      `gorm:"column:confirm;not null;default:true" json:"confirm"`
 	MultiSign  bool      `gorm:"column:multi_sign;not null;default:true" json:"multi_sign"`
 	CreatedAt  time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`

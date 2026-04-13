@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"math"
 	posrpc "oshit-go/app/pos/api/internal/rpc"
 	"oshit-go/app/pos/api/internal/svc"
@@ -129,6 +130,47 @@ func (l *StakeLogic) ProcessReStakeToken(ctx context.Context, preCheckedTx *app_
 		return errors.New("sent transaction id not equal expected")
 	}
 
+	return nil
+}
+
+// HandleMarketBuyTx 处理交易所购买 token 的逻辑
+func (l *StakeLogic) HandleMarketBuyTx(msg entity.NewScannedTx) error {
+	txID := msg.TxSig.Signature.String()
+	log.Infof("HandleMarketBuyTx: txId=%s", txID)
+
+	insts := msg.DecodedTx.TransferCheckedInstructions
+	if len(insts) == 0 {
+		log.Warnf("HandleMarketBuyTx: no TransferChecked instructions in txId=%s, skipping", txID)
+		return nil
+	}
+
+	toAccount := msg.DecodedTx.FromNativeAccount.String()
+	slot := float64(msg.TxSig.Slot)
+
+	var records []model.StakeBuyToken
+	for _, inst := range insts {
+		amount := float64(inst.Amount)
+		records = append(records, model.StakeBuyToken{
+			TxID:            txID,
+			Slot:            slot,
+			FromAccount:     inst.FromTokenAccount.String(),
+			ToAccount:       toAccount,
+			Amount:          amount,
+			Locked:          false,
+			StakedAmount:    0,
+			RemainingAmount: amount,
+		})
+	}
+
+	result := l.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "tx_id"}},
+		DoNothing: true,
+	}).Create(&records)
+	if result.Error != nil {
+		return fmt.Errorf("HandleMarketBuyTx: insert t_stake_buy_token failed txId=%s: %w", txID, result.Error)
+	}
+
+	log.Infof("HandleMarketBuyTx: inserted %d records for txId=%s", len(records), txID)
 	return nil
 }
 

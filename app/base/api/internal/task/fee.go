@@ -39,11 +39,12 @@ const (
 
 // FeeTask 手续费统计任务
 type FeeTask struct {
-	db        *gorm.DB
-	redis     redis.UniversalClient
-	redSync   redsync.Redsync
-	rpcClient *rpc.Client
-	rpcURL    string
+	db         *gorm.DB
+	redis      redis.UniversalClient
+	redSync    redsync.Redsync
+	rpcClient  *rpc.Client
+	rpcURL     string
+	mainnetRpc string
 }
 
 // NewFeeTask 创建手续费任务
@@ -51,11 +52,12 @@ func NewFeeTask(taskCtx *TaskContext) *FeeTask {
 	rpcURL := taskCtx.ChainConfig.RPCURL
 	rpcClient := rpc.New(rpcURL)
 	return &FeeTask{
-		db:        taskCtx.DB,
-		redis:     taskCtx.Redis,
-		redSync:   taskCtx.RedSync,
-		rpcClient: rpcClient,
-		rpcURL:    rpcURL,
+		db:         taskCtx.DB,
+		redis:      taskCtx.Redis,
+		redSync:    taskCtx.RedSync,
+		rpcClient:  rpcClient,
+		rpcURL:     rpcURL,
+		mainnetRpc: taskCtx.MainnetRPCConfig.RPCURL,
 	}
 }
 
@@ -382,11 +384,10 @@ func (t *FeeTask) updatePerTxFee() {
 }
 
 func (t *FeeTask) estimateWeightAvgFee() {
-	url := "https://nameless-old-spring.solana-mainnet.quiknode.pro/a30ccaa45b9570bcfce344407013972849ae0484/"
 	maxRecordNum := 20
 
 	// 执行核心业务逻辑
-	fee, err := utils.GetQnEstimatePriorityFees(url, 100, solana.TokenProgramID)
+	fee, err := utils.GetQnEstimatePriorityFees(t.mainnetRpc, 100, solana.TokenProgramID)
 	if err != nil || fee == nil {
 		log.Errorf("手续费获取失败: %v", err)
 		return

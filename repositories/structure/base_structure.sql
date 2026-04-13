@@ -29,6 +29,17 @@ CREATE TABLE public.t_user_wallet_rpc_config
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS public.t_mainnet_rpc_config;
+CREATE TABLE public.t_mainnet_rpc_config
+(
+    record_id  public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    chain      character varying(1024)                               NOT NULL,
+    rpc_url    character varying(1024)                               NOT NULL,
+    wss_url    character varying(1024)                               NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
 DROP TABLE IF EXISTS public.t_chain_config;
 CREATE TABLE public.t_chain_config
 (
@@ -130,6 +141,7 @@ CREATE TABLE public.t_service_info
     mq_group    character varying(64)       DEFAULT NULL,
     mq_topic    character varying(64)       DEFAULT NULL,
     hook_type   integer                     DEFAULT 0    NOT NULL,
+    tx_source   integer                     DEFAULT 0    NOT NULL,
     confirm     bool                        DEFAULT true NOT NULL,
     multi_sign  bool                        DEFAULT true NOT NULL,
     created_at  timestamp without time zone DEFAULT CURRENT_TIMESTAMP,

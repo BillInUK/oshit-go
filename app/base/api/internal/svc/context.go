@@ -155,6 +155,13 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 	}
 	s.UserWalletRPCConfig = &userWalletRPCConfig
 
+	// 初始化主网rpc，用于请求一些只能用主网才能请求的功能，比方说交易所买币，quicknode的手续费统计等
+	var mainnetRPCConfig model.MainnetRpcConfig
+	if err := s.DB.Where("chain = ?", "SOL").First(&mainnetRPCConfig).Error; err != nil {
+		return fmt.Errorf("can not load solana user wallet rpc configure of chain SOL from database: %v", err)
+	}
+	s.MainnetRPCConfig = &mainnetRPCConfig
+
 	// 初始化Token配置
 	var tokenConfig model.TokenConfig
 	if err := s.DB.First(&tokenConfig).Error; err != nil {

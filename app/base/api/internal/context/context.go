@@ -34,6 +34,7 @@ type CoreContext struct {
 	SystemConfig        *model.SystemConfig
 	ChainConfig         *model.ChainConfig
 	UserWalletRPCConfig *model.UserWalletRpcConfig
+	MainnetRPCConfig    *model.MainnetRpcConfig
 	TokenConfig         *model.TokenConfig
 	FeeTolerance        model.FeeTolerance
 	AwsConfig           *model.AwsConfig

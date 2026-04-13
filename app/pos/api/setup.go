@@ -31,6 +31,8 @@ func registerTasks(srvCtx *svc.ServiceContext) {
 			return pos.NewPosRewardLogic(ctx, srvCtx).HandleScannedTx(msg)
 		case "StakeToken":
 			return stake.NewStakeLogic(ctx, srvCtx).HandleStakeTx(msg)
+		case "MarketBuyToken":
+			return stake.NewStakeLogic(ctx, srvCtx).HandleMarketBuyTx(msg)
 		case "StakeReward":
 			return stake.NewStakeRewardLogic(ctx, srvCtx).HandleScannedTx(msg)
 		case "StakeLeaderReward":

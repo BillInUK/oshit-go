@@ -190,6 +190,7 @@ create index idx_stake_buy_token_locked on public.t_stake_buy_token (locked);
 create index idx_stake_buy_token_locked_at on public.t_stake_buy_token (locked_at);
 create index idx_stake_buy_token_locked_by on public.t_stake_buy_token (locked_by);
 create index idx_stake_buy_token_slot on public.t_stake_buy_token (slot);
+ALTER TABLE t_stake_buy_token ADD CONSTRAINT uq_stake_buy_token_tx_id UNIQUE (tx_id);
 
 -- 区域经理奖励配置
 drop table if exists public.t_stake_leader_reward_config;
