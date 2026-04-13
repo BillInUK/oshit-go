@@ -19,8 +19,7 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 	auth := api.Group("/auth")
 	{
 		auth.Post("/login", authHandler.Login)
-		// TODO: 添加JWT中间件
-		// auth.Post("/info", middleware.JWTProtected(), authHandler.QueryNativeAccountInfo)
+		auth.Post("/info", JWTAuthMiddleware, authHandler.QueryNativeAccountInfo)
 	}
 
 	// 信息路由

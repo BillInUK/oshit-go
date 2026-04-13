@@ -197,7 +197,7 @@ func TestGetLotteryStatus(t *testing.T) {
 	if err != nil {
 		t.Fatalf("loginForToken failed: %v", err)
 	}
-	stats, err := getLotteryStatus(jwtToken.Access)
+	stats, err := getLotteryStatus(jwtToken)
 	if err != nil {
 		t.Fatalf("getLotteryStatus failed: %v", err)
 	}
@@ -239,7 +239,7 @@ func TestExecuteLottery(t *testing.T) {
 		t.Fatalf("loginForToken failed: %v", err)
 	}
 
-	reward, err := executeLottery(jwtToken.Access)
+	reward, err := executeLottery(jwtToken)
 	if err != nil {
 		t.Fatalf("executeLottery failed: %v", err)
 	}
@@ -285,7 +285,7 @@ func TestLottery(t *testing.T) {
 	}
 
 	// 2. 执行抽奖
-	reward, err := executeLottery(jwtToken.Access)
+	reward, err := executeLottery(jwtToken)
 	if err != nil {
 		t.Fatalf("executeLottery failed: %v", err)
 	}
@@ -382,7 +382,7 @@ func doFullLotteryFlow(t *testing.T, privKey solana.PrivateKey) {
 		t.Fatalf("loginForToken failed: %v", err)
 	}
 
-	reward, err := executeLottery(jwtToken.Access)
+	reward, err := executeLottery(jwtToken)
 	if err != nil {
 		t.Fatalf("executeLottery failed: %v", err)
 	}
@@ -433,11 +433,11 @@ func TestTakeAndLottery(t *testing.T) {
 	// ── 第 5 次：触发抽奖阈值 ──
 	fmt.Println("=== Take 5（触发抽奖）===")
 	doOneTakeToken(t, 5, privKey, inviteCode)
-	waitNeedLottery(t, jwtToken.Access, pollTimeout)
+	waitNeedLottery(t, jwtToken, pollTimeout)
 
 	fmt.Println("=== Lottery #1（第 5 次后）===")
 	doFullLotteryFlow(t, privKey)
-	waitLotteryDone(t, jwtToken.Access, pollTimeout)
+	waitLotteryDone(t, jwtToken, pollTimeout)
 
 	// ── 第 6～9 次：不触发抽奖 ──
 	fmt.Println("=== Take 6~9 ===")
@@ -448,11 +448,11 @@ func TestTakeAndLottery(t *testing.T) {
 	// ── 第 10 次：触发抽奖阈值 ──
 	fmt.Println("=== Take 10（触发抽奖）===")
 	doOneTakeToken(t, 10, privKey, inviteCode)
-	waitNeedLottery(t, jwtToken.Access, pollTimeout)
+	waitNeedLottery(t, jwtToken, pollTimeout)
 
 	fmt.Println("=== Lottery #2（第 10 次后）===")
 	doFullLotteryFlow(t, privKey)
-	waitLotteryDone(t, jwtToken.Access, pollTimeout)
+	waitLotteryDone(t, jwtToken, pollTimeout)
 
 	// ── 第 11～19 次：不触发抽奖 ──
 	fmt.Println("=== Take 11~19 ===")
@@ -463,7 +463,7 @@ func TestTakeAndLottery(t *testing.T) {
 	// ── 第 20 次：触发抽奖阈值 ──
 	fmt.Println("=== Take 20（触发抽奖）===")
 	doOneTakeToken(t, 20, privKey, inviteCode)
-	waitNeedLottery(t, jwtToken.Access, pollTimeout)
+	waitNeedLottery(t, jwtToken, pollTimeout)
 
 	fmt.Println("=== Lottery #3（第 20 次后）===")
 	doFullLotteryFlow(t, privKey)

@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"fmt"
+	"github.com/Zany2/dtoken-go/dtoken"
 	"github.com/gagliardetto/solana-go"
 	"github.com/go-redsync/redsync/v4"
 	"github.com/pkg/errors"
@@ -75,19 +76,14 @@ func (l *AuthLogic) Login(req *types.LoginReq) (*types.LoginRsp, error) {
 			return nil, errors.New("register address failed")
 		}
 	}
-	// 颁发jwt token
-	tokens, err := utils.GenerateNewTokens(record.RecordID, map[string]interface{}{
-		"brand":   req.Brand,
-		"symbol":  req.Symbol,
-		"account": req.Account,
-		"nonce":   req.Nonce,
-	})
+	// 颁发 JWT token（loginID = nativeAccount，由 dtoken JWT 模式自签发）
+	token, err := dtoken.Login(l.ctx, req.Account)
 	if err != nil {
 		return nil, errors.New("generate new tokens error")
 	}
 	// 返回response
 	return &types.LoginRsp{
-		Token: *tokens,
+		Token: token,
 	}, nil
 }
 

@@ -103,6 +103,9 @@ func NewServiceContext() (*ServiceContext, error) {
 		fmt.Printf("Init campaign client error: %v\n", err)
 	}
 
+	// 初始化 dtoken 管理器（JWT 鉴权）
+	utils.InitDTokenManager()
+
 	// 初始化任务管理器
 	srvCtx.startTasks()
 

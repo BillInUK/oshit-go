@@ -34,6 +34,14 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/RoaringBitmap/roaring v1.2.3 // indirect
 	github.com/Workiva/go-datastructures v1.0.52 // indirect
+	github.com/Zany2/dtoken-go/com/codec/json v0.0.0-20260226075137-a3557c83255a // indirect
+	github.com/Zany2/dtoken-go/com/generator/dgenerator v0.0.0-20260226075137-a3557c83255a // indirect
+	github.com/Zany2/dtoken-go/com/log/dlog v0.0.0-20260226075137-a3557c83255a // indirect
+	github.com/Zany2/dtoken-go/com/log/nop v0.0.0-20260226075137-a3557c83255a // indirect
+	github.com/Zany2/dtoken-go/com/pool/ants v0.0.0-20260226075137-a3557c83255a // indirect
+	github.com/Zany2/dtoken-go/com/storage/memory v0.0.0-20260226075137-a3557c83255a // indirect
+	github.com/Zany2/dtoken-go/core v0.0.0-20260226075137-a3557c83255a // indirect
+	github.com/Zany2/dtoken-go/dtoken v0.0.0-20260226075137-a3557c83255a // indirect
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5 // indirect
 	github.com/alibaba/sentinel-golang v1.0.4 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1704 // indirect
@@ -54,7 +62,7 @@ require (
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/creasty/defaults v1.5.2 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/dop251/goja v0.0.0-20240220182346-e401ed450204 // indirect
@@ -83,6 +91,7 @@ require (
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -129,6 +138,8 @@ require (
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/openzipkin/zipkin-go v0.4.0 // indirect
+	github.com/panjf2000/ants/v2 v2.11.3 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect

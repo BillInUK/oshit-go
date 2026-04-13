@@ -7,7 +7,6 @@ import (
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
 	"oshit-go/common/pkg/response"
-	"oshit-go/common/utils"
 )
 
 type AuthHandler struct {
@@ -39,11 +38,7 @@ func (auth *AuthHandler) Login(fiberCtx *fiber.Ctx) error {
 }
 
 func (auth *AuthHandler) QueryNativeAccountInfo(fiberCtx *fiber.Ctx) error {
-	claims, err := utils.ExtractTokenMetadata(fiberCtx)
-	if err != nil {
-		return response.UnAuthorizedError(fiberCtx, "unauthorized")
-	}
-	fromAccount := claims.Credentials["account"].(string)
+	fromAccount := fiberCtx.Locals("nativeAccount").(string)
 
 	l := logic.NewAuthLogic(fiberCtx.Context(), auth.srvCtx)
 	rsp, err := l.QueryNativeAccountInfo(fromAccount)

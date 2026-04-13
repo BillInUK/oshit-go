@@ -18,6 +18,7 @@ import (
 	posrpc "oshit-go/app/pos/api/internal/rpc"
 	"oshit-go/app/pos/api/internal/task"
 	"oshit-go/common/pkg/dal/model"
+	"oshit-go/common/utils"
 	"strconv"
 )
 
@@ -114,6 +115,9 @@ func NewServiceContext() (*ServiceContext, error) {
 	if err := srvCtx.initStakeConfig(); err != nil {
 		return nil, err
 	}
+
+	// 初始化 dtoken 管理器（JWT 鉴权）
+	utils.InitDTokenManager()
 
 	// 初始化任务管理器
 	srvCtx.startTasks()

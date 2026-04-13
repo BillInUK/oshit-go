@@ -56,7 +56,7 @@ func createGiveTokenHexEncodedTx(ctx context.Context, privKey solana.PrivateKey,
 		return "", fmt.Errorf("loginForToken failed: %w", err)
 	}
 
-	txInfo, err := getGiveTokenTxInfo(jwtToken.Access, types.GetGiveTokenTxInfoReq{
+	txInfo, err := getGiveTokenTxInfo(jwtToken, types.GetGiveTokenTxInfoReq{
 		To:     toAccount,
 		Amount: amount,
 	})
@@ -202,7 +202,7 @@ func TestGetGiveTokenTxInfo(t *testing.T) {
 		t.Fatalf("loginForToken failed: %v", err)
 	}
 
-	txInfo, err := getGiveTokenTxInfo(jwtToken.Access, types.GetGiveTokenTxInfoReq{
+	txInfo, err := getGiveTokenTxInfo(jwtToken, types.GetGiveTokenTxInfoReq{
 		To:     BobNativePubKey,
 		Amount: 1000,
 	})

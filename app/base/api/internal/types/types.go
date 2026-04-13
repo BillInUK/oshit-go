@@ -2,7 +2,6 @@ package types
 
 import (
 	"oshit-go/common/pkg/entity"
-	"oshit-go/common/utils"
 )
 
 // Auth Types
@@ -16,7 +15,7 @@ type LoginReq struct {
 }
 
 type LoginRsp struct {
-	Token utils.Tokens `json:"token"`
+	Token string `json:"token"`
 }
 
 // Config Types

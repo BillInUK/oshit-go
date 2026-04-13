@@ -10,7 +10,6 @@ import (
 	"oshit-go/app/reward/api/types"
 	app_utils "oshit-go/app/utils"
 	"oshit-go/common/pkg/response"
-	"oshit-go/common/utils"
 )
 
 type GiveTokenHandler struct {
@@ -59,15 +58,7 @@ func (h *GiveTokenHandler) GetRecord(fiberCtx *fiber.Ctx) error {
 
 // GetTxInfo 根据 native account 获取打包 give token 交易的参数
 func (h *GiveTokenHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
-	// 检查jwt token，以及jwt token当中的from account
-	claims, err := utils.ExtractTokenMetadata(fiberCtx)
-	if err != nil {
-		return response.UnAuthorizedError(fiberCtx, "unauthorized")
-	}
-	fromAccount := claims.Credentials["account"].(string)
-	if _, err := solana.PublicKeyFromBase58(fromAccount); err != nil {
-		return response.FailWithError(fiberCtx, "malformed from account", err)
-	}
+	fromAccount := fiberCtx.Locals("nativeAccount").(string)
 
 	// 检查请求当中的to account
 	var req types.GetGiveTokenTxInfoReq

@@ -19,6 +19,7 @@ func NewPosHandler(srvCtx *svc.ServiceContext) *PosHandler {
 	}
 }
 
+// GetConfig 获取下发奖励配置
 func (h *PosHandler) GetConfig(fiberCtx *fiber.Ctx) error {
 	l := pos.NewPosRewardLogic(fiberCtx.Context(), h.srvCtx)
 	config, err := l.GetConfig()

@@ -12,7 +12,6 @@ import (
 	"oshit-go/app/pos/api/types"
 	app_utils "oshit-go/app/utils"
 	"oshit-go/common/pkg/response"
-	"oshit-go/common/utils"
 	"strconv"
 )
 
@@ -67,14 +66,7 @@ func (h *StakeHandler) GetClaimRecord(fiberCtx *fiber.Ctx) error {
 
 // GetRewardRecord 获取当天的 stake 奖励记录
 func (h *StakeHandler) GetRewardRecord(fiberCtx *fiber.Ctx) error {
-	claims, err := utils.ExtractTokenMetadata(fiberCtx)
-	if err != nil {
-		return response.UnAuthorizedError(fiberCtx, "unauthorized")
-	}
-	nativeAccountString := claims.Credentials["account"].(string)
-	if _, err := solana.PublicKeyFromBase58(nativeAccountString); err != nil {
-		return response.FailWithError(fiberCtx, "malformed native account", err)
-	}
+	nativeAccountString := fiberCtx.Locals("nativeAccount").(string)
 
 	var req types.GetByTxIdReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
@@ -91,14 +83,7 @@ func (h *StakeHandler) GetRewardRecord(fiberCtx *fiber.Ctx) error {
 
 // GetTxInfo 获取领取 stake 奖励的交易参数
 func (h *StakeHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
-	claims, err := utils.ExtractTokenMetadata(fiberCtx)
-	if err != nil {
-		return response.UnAuthorizedError(fiberCtx, "unauthorized")
-	}
-	nativeAccountString := claims.Credentials["account"].(string)
-	if _, err := solana.PublicKeyFromBase58(nativeAccountString); err != nil {
-		return response.FailWithError(fiberCtx, "malformed native account", err)
-	}
+	nativeAccountString := fiberCtx.Locals("nativeAccount").(string)
 
 	l := stake.NewStakeRewardLogic(fiberCtx.Context(), h.srvCtx)
 	txInfo, err := l.GetTxInfo(nativeAccountString)
@@ -271,14 +256,7 @@ func (h *StakeHandler) ReStakeToken(fiberCtx *fiber.Ctx) error {
 
 // GetLeaderInfo 获取当前登录用户的区域经理信息
 func (h *StakeHandler) GetLeaderInfo(fiberCtx *fiber.Ctx) error {
-	claims, err := utils.ExtractTokenMetadata(fiberCtx)
-	if err != nil {
-		return response.UnAuthorizedError(fiberCtx, "unauthorized")
-	}
-	nativeAccountString := claims.Credentials["nativeAccount"].(string)
-	if _, err := solana.PublicKeyFromBase58(nativeAccountString); err != nil {
-		return response.FailWithError(fiberCtx, "malformed native account", err)
-	}
+	nativeAccountString := fiberCtx.Locals("nativeAccount").(string)
 
 	l := stake.NewStakeLogic(fiberCtx.Context(), h.srvCtx)
 	leader, err := l.GetLeaderInfo(nativeAccountString)
@@ -293,11 +271,7 @@ func (h *StakeHandler) GetLeaderInfo(fiberCtx *fiber.Ctx) error {
 
 // GetLeaderRewardRecord 获取区域经理奖励发放记录
 func (h *StakeHandler) GetLeaderRewardRecord(fiberCtx *fiber.Ctx) error {
-	claims, err := utils.ExtractTokenMetadata(fiberCtx)
-	if err != nil {
-		return response.UnAuthorizedError(fiberCtx, "unauthorized")
-	}
-	nativeAccountString := claims.Credentials["nativeAccount"].(string)
+	nativeAccountString := fiberCtx.Locals("nativeAccount").(string)
 	nativeAccount, err := solana.PublicKeyFromBase58(nativeAccountString)
 	if err != nil {
 		return response.FailWithError(fiberCtx, "malformed native account", err)
@@ -314,11 +288,7 @@ func (h *StakeHandler) GetLeaderRewardRecord(fiberCtx *fiber.Ctx) error {
 
 // GetLeaderTxInfo 获取区域经理奖励信息
 func (h *StakeHandler) GetLeaderTxInfo(fiberCtx *fiber.Ctx) error {
-	tokenMetadata, err := utils.ExtractTokenMetadata(fiberCtx)
-	if err != nil {
-		return response.UnAuthorizedError(fiberCtx, "unauthorized")
-	}
-	nativeAccountString := tokenMetadata.Credentials["nativeAccount"].(string)
+	nativeAccountString := fiberCtx.Locals("nativeAccount").(string)
 	nativeAccount, err := solana.PublicKeyFromBase58(nativeAccountString)
 	if err != nil {
 		return response.FailWithError(fiberCtx, "malformed native account", err)

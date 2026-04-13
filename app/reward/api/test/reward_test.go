@@ -49,10 +49,7 @@ var rpcClient = rpc.New(RpcUrl)
 
 // ---- 公共数据类型 ----
 
-type JwtToken struct {
-	Access  string `json:"Access"`
-	Refresh string `json:"Refresh"`
-}
+type JwtToken = string
 
 type ApiResponse[T any] struct {
 	Code  int    `json:"code"`
@@ -86,7 +83,7 @@ type loginReqBody struct {
 }
 
 type loginRspData struct {
-	Token JwtToken `json:"token"`
+	Token string `json:"token"`
 }
 
 // ---- HTTP 工具函数 ----
@@ -184,12 +181,12 @@ func getJsonRequest[T any](reqURL string, headers map[string]string) (*ApiRespon
 
 // ---- 通用业务函数 ----
 
-func loginForToken(brand, symbol string, nativeAccount solana.PublicKey, privKey solana.PrivateKey) (*JwtToken, error) {
+func loginForToken(brand, symbol string, nativeAccount solana.PublicKey, privKey solana.PrivateKey) (string, error) {
 	nonce := uint64(time.Now().UnixMilli())
 	msg := fmt.Sprintf(SOLLoginSignMsg, brand, symbol, nativeAccount.String(), nonce)
 	sign, err := privKey.Sign([]byte(msg))
 	if err != nil {
-		return nil, fmt.Errorf("sign message error: %w", err)
+		return "", fmt.Errorf("sign message error: %w", err)
 	}
 
 	body := loginReqBody{
@@ -202,9 +199,9 @@ func loginForToken(brand, symbol string, nativeAccount solana.PublicKey, privKey
 
 	rsp, err := postJsonRequest[loginRspData](BaseURL+"/auth/login", body, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return &rsp.Data.Token, nil
+	return rsp.Data.Token, nil
 }
 
 func getPriorityFee() (*entity.PriorityFee, error) {
@@ -239,6 +236,5 @@ func TestLogin(t *testing.T) {
 	}
 
 	fmt.Println("=== JWT Token ===")
-	fmt.Println("Access :", token.Access)
-	fmt.Println("Refresh:", token.Refresh)
+	fmt.Println("Token:", token)
 }

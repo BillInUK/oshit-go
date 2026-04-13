@@ -27,15 +27,15 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 	{
 		give.Post("/config", giveTokenHandler.GetConfig)
 		give.Post("/record", giveTokenHandler.GetRecord)
-		give.Post("/tx-info", giveTokenHandler.GetTxInfo)
+		give.Post("/tx-info", JWTAuthMiddleware, giveTokenHandler.GetTxInfo)
 		give.Post("/commit-tx", giveTokenHandler.CommitTx)
 	}
 
 	// lottery token 相关路由
 	lottery := api.Group("/lottery")
 	{
-		lottery.Post("/status", lotteryHandler.GetStatus)
-		lottery.Post("/execute", lotteryHandler.ExecuteLottery)
+		lottery.Post("/status", JWTAuthMiddleware, lotteryHandler.GetStatus)
+		lottery.Post("/execute", JWTAuthMiddleware, lotteryHandler.ExecuteLottery)
 		lottery.Post("/unclaimed", lotteryHandler.GetUnClaimedRecord)
 		lottery.Post("/record", lotteryHandler.GetRecord)
 		lottery.Post("/tx-info", lotteryHandler.GetTxInfo)

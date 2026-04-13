@@ -46,10 +46,7 @@ var rpcClient = rpc.New(RpcUrl)
 
 // ---- 公共数据类型 ----
 
-type JwtToken struct {
-	Access  string `json:"Access"`
-	Refresh string `json:"Refresh"`
-}
+type JwtToken = string
 
 type ApiResponse[T any] struct {
 	Code  int    `json:"code"`
@@ -75,7 +72,7 @@ type loginReqBody struct {
 }
 
 type loginRspData struct {
-	Token JwtToken `json:"token"`
+	Token string `json:"token"`
 }
 
 // ---- HTTP 工具函数 ----
@@ -133,12 +130,12 @@ func getJsonRequest[T any](reqURL string, headers map[string]string) (*ApiRespon
 
 // ---- 通用业务函数 ----
 
-func loginForToken(brand, symbol string, nativeAccount solana.PublicKey, privKey solana.PrivateKey) (*JwtToken, error) {
+func loginForToken(brand, symbol string, nativeAccount solana.PublicKey, privKey solana.PrivateKey) (string, error) {
 	nonce := uint64(time.Now().UnixMilli())
 	msg := fmt.Sprintf(SOLLoginSignMsg, brand, symbol, nativeAccount.String(), nonce)
 	sign, err := privKey.Sign([]byte(msg))
 	if err != nil {
-		return nil, fmt.Errorf("sign message error: %w", err)
+		return "", fmt.Errorf("sign message error: %w", err)
 	}
 	body := loginReqBody{
 		Brand:   brand,
@@ -149,9 +146,9 @@ func loginForToken(brand, symbol string, nativeAccount solana.PublicKey, privKey
 	}
 	rsp, err := postJsonRequest[loginRspData](BaseURL+"/auth/login", body, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return &rsp.Data.Token, nil
+	return rsp.Data.Token, nil
 }
 
 func getPriorityFee() (uint64, error) {
@@ -351,7 +348,7 @@ func TestGetStakeRewardRecords(t *testing.T) {
 		t.Fatalf("loginForToken failed: %v", err)
 	}
 
-	rewards, err := getStakeRewardRecords(jwtToken.Access)
+	rewards, err := getStakeRewardRecords(jwtToken)
 	if err != nil {
 		t.Fatalf("getStakeRewardRecords failed: %v", err)
 	}
@@ -374,7 +371,7 @@ func TestGetStakeRewardTxInfo(t *testing.T) {
 		t.Fatalf("loginForToken failed: %v", err)
 	}
 
-	txInfo, err := getStakeRewardTxInfo(jwtToken.Access)
+	txInfo, err := getStakeRewardTxInfo(jwtToken)
 	if err != nil {
 		t.Fatalf("getStakeRewardTxInfo failed: %v", err)
 	}
@@ -407,7 +404,7 @@ func TestClaimStakeReward(t *testing.T) {
 	fmt.Printf("登录账户: %s\n", pubKey.String())
 
 	// 2. 查询待领取奖励（仅展示，不阻断流程）
-	rewards, err := getStakeRewardRecords(jwtToken.Access)
+	rewards, err := getStakeRewardRecords(jwtToken)
 	if err != nil {
 		t.Logf("getStakeRewardRecords failed (non-fatal): %v", err)
 	} else {
@@ -419,7 +416,7 @@ func TestClaimStakeReward(t *testing.T) {
 	}
 
 	// 3. 获取交易参数（服务端汇总可领取总额，不信任第 2 步的结果）
-	txInfo, err := getStakeRewardTxInfo(jwtToken.Access)
+	txInfo, err := getStakeRewardTxInfo(jwtToken)
 	if err != nil {
 		t.Fatalf("getStakeRewardTxInfo failed: %v", err)
 	}

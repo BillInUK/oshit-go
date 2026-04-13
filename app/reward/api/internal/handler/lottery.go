@@ -10,7 +10,6 @@ import (
 	app_utils "oshit-go/app/utils"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/response"
-	"oshit-go/common/utils"
 )
 
 type LotteryHandler struct {
@@ -27,18 +26,7 @@ func NewLotteryHandler(srvCtx *svc.ServiceContext) *LotteryHandler {
 
 // GetStatus 查询今日抽奖状态
 func (h *LotteryHandler) GetStatus(fiberCtx *fiber.Ctx) error {
-	claims, err := utils.ExtractTokenMetadata(fiberCtx)
-	if err != nil {
-		return response.UnAuthorizedError(fiberCtx, "unauthorized")
-	}
-	nativeAccountVal, ok := claims.Credentials["account"]
-	if !ok {
-		return response.UnAuthorizedError(fiberCtx, "missing account in token claims")
-	}
-	nativeAccountString, ok := nativeAccountVal.(string)
-	if !ok || nativeAccountString == "" {
-		return response.UnAuthorizedError(fiberCtx, "invalid account in token claims")
-	}
+	nativeAccountString := fiberCtx.Locals("nativeAccount").(string)
 	// 获取当日的领取token的次数
 	l := lottery.NewLotteryLogic(fiberCtx.Context(), h.srvCtx)
 	stats, err := l.GetStatus(nativeAccountString)
@@ -71,19 +59,7 @@ func (h *LotteryHandler) GetUnClaimedRecord(fiberCtx *fiber.Ctx) error {
 
 // ExecuteLottery 执行抽奖
 func (h *LotteryHandler) ExecuteLottery(fiberCtx *fiber.Ctx) error {
-	// 从 JWT 中提取 native account
-	claims, err := utils.ExtractTokenMetadata(fiberCtx)
-	if err != nil {
-		return response.UnAuthorizedError(fiberCtx, "unauthorized")
-	}
-	nativeAccountVal, ok := claims.Credentials["account"]
-	if !ok {
-		return response.UnAuthorizedError(fiberCtx, "missing account in token claims")
-	}
-	nativeAccount, ok := nativeAccountVal.(string)
-	if !ok || nativeAccount == "" {
-		return response.UnAuthorizedError(fiberCtx, "invalid account in token claims")
-	}
+	nativeAccount := fiberCtx.Locals("nativeAccount").(string)
 
 	log.Infof("%s 地址 %v 请求执行抽奖", h.prefix, nativeAccount)
 
