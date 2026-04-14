@@ -65,6 +65,33 @@ type PosGroupInfo struct {
 	GroupFixReward  float64
 }
 
+type PosRewardDetail struct {
+	StarLevel             int32   `json:"starLevel"`             // 星级
+	HoldingAmount         float64 `json:"holdingAmount"`         // 个人持币量
+	TeamHoldingAmount     float64 `json:"teamHoldingAmount"`     // 团队持币量
+	RewardAmount          float64 `json:"rewardAmount"`          // 非星级奖励
+	TeamRewardAmount      float64 `json:"teamRewardAmount"`      // 团队总奖励
+	StarredRewardAmount   float64 `json:"starredRewardAmount"`   // 星级奖励
+	StarredRewardBase     float64 `json:"starredRewardBase"`     // 星级奖励当中个人部分
+	StarredRewardFromTeam float64 `json:"starredRewardFromTeam"` // 星级奖励当中的团队部分
+	TotalRewardAmount     float64 `json:"totalRewardAmount"`     // 当日可以领取的总奖励
+	RewardState           int32   `json:"rewardState"`           // 奖励状态 -1.已经过期 0.未领取 1.已经领取
+	Pending               bool    `json:"pending"`               // 奖励处理状态 0.未领取 1.处理中
+}
+
+type ClaimPosRewardTxInfo struct {
+	RewardAccount string  `json:"rewardAccount"`
+	Mint          string  `json:"mint"`
+	Decimals      int32   `json:"decimals"`
+	TotalReward   float64 `json:"totalReward"`
+	CostAccount   string  `json:"costAccount"`
+	CostFee       float64 `json:"costFee"`
+}
+
+type CommitPosRewardTxReq struct {
+	EncodedTx string `json:"encodedTx"`
+}
+
 type StakeSnapShotDetail struct {
 	NativeAccount string
 	SnapBase      float64

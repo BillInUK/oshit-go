@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm/clause"
 	posrpc "oshit-go/app/pos/api/internal/rpc"
 	"oshit-go/app/pos/api/internal/svc"
+	"oshit-go/app/pos/api/internal/task"
 	"oshit-go/app/pos/api/types"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
@@ -54,6 +55,31 @@ func NewPosSnapShotLogic(ctx context.Context, srvCtx *svc.ServiceContext) *PosSn
 		starLevelRule: srvCtx.PosStarLevelRule,
 		whiteList:     srvCtx.PosWhiteListMap,
 	}
+}
+
+// TakeStakeSnapShot 手动快照
+func (l *PosSnapShotLogic) TakeStakeSnapShot() error {
+	taskCtx := &task.TaskContext{
+		CoreContext:  l.srvCtx.CoreContext,
+		RewardConfig: l.srvCtx.StakeRewardConfig,
+	}
+	snapShotTask := task.NewPosSnapShotTask(taskCtx)
+	snapShotTask.StartTaskManually()
+	return nil
+}
+
+// ResetStakeSnapShot 重置快照
+func (l *PosSnapShotLogic) ResetStakeSnapShot() error {
+	// 使用 Exec 执行多条 SQL 语句
+	err := l.db.Exec(`
+		delete from t_pos_snap_shot;
+		delete from t_pos_reward;
+		delete from t_pos_reward_claim_record;
+	`).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // ProcessSnapShot 处理快照,发放普通用户奖励以及星级用户的极差奖励
@@ -323,7 +349,7 @@ func (l *PosSnapShotLogic) rewardStaredUserDeterMineInvite(snapShotDay time.Time
 				ic.invitee,
 				-- 如果 Inviter 为空，说明是顶级节点，DistLevel - 1
 				case
-					where ic.inviter is null then ic.level - 1
+					when ic.inviter is null then ic.level - 1
 					else ic.level
 				end as level,
 				ss.amount,
@@ -338,7 +364,7 @@ func (l *PosSnapShotLogic) rewardStaredUserDeterMineInvite(snapShotDay time.Time
 				ss.snap_day = cast(? as date)
 			group by
 				ic.group_id, ic.inviter, ic.invitee, ic.level,
-				ss.amount, ss.range_base, ss.star_leve, ss.rate
+				ss.amount, ss.range_base, ss.star_level, ss.rate
 			order by
 				ic.group_id, ic.level, ic.invitee, ic.inviter;
 	`, snapShotDay).Scan(&inviteChains).Error

@@ -159,6 +159,96 @@ func (t *PosSnapShotTask) Start() {
 	}
 }
 
+// StartTaskManually 手动快照
+func (t *PosSnapShotTask) StartTaskManually() {
+	ctx := context.Background()
+	tokenMintAccount := solana.MPK(t.tokenMintAccount)
+
+	for {
+		day := time.Now()
+		log.Infof("Pos业务 - 快照开始")
+		var holders uint64 = 0
+		out, err := t.rpcClient.GetProgramAccountsWithOpts(ctx, solana.TokenProgramID, &rpc.GetProgramAccountsOpts{
+			Encoding: solana.EncodingJSONParsed,
+			Filters: []rpc.RPCFilter{
+				{
+					DataSize: 165,
+				},
+				{
+					Memcmp: &rpc.RPCFilterMemcmp{Offset: 0, Bytes: tokenMintAccount.Bytes()},
+				},
+			},
+		})
+		if err != nil {
+			log.Errorf("Pos业务 - 获取token余额错误: %v", err)
+			continue
+		}
+		if len(out) > 0 {
+			var snapShotRecords []model.PosSnapShot
+			for _, account := range out {
+				var parsedData utils.ParsedData
+				dataBytes, err := account.Account.Data.MarshalJSON()
+				if err != nil {
+					log.Errorf("Pos业务 - 获取token余额错误: %v", err)
+					break
+				}
+				if err = json.Unmarshal(dataBytes, &parsedData); err != nil {
+					log.Errorf("Pos业务 - 获取token余额错误: %v", err)
+					break
+				}
+				rawAmount := parsedData.Parsed.TokenAccountInfo.TokenAmount.UIAmount * math.Pow10(int(t.decimals))
+				if rawAmount < 500000 {
+					continue
+				}
+				owner := parsedData.Parsed.TokenAccountInfo.Owner.String()
+				snapShotRecord := model.PosSnapShot{
+					NativeAccount: owner,
+					Amount:        rawAmount,
+					StarLevel:     0,
+					Rate:          0,
+					SnapDay:       day,
+					CreatedAt:     time.Now(),
+					UpdatedAt:     time.Now(),
+				}
+
+				// 将每条记录加入到切片中
+				snapShotRecords = append(snapShotRecords, snapShotRecord)
+			}
+
+			// 批量插入，避免重复记录
+			if len(snapShotRecords) > 0 {
+				table := t.db.Table(model.TableNamePosSnapShot)
+				err := table.Clauses(
+					clause.OnConflict{
+						Columns: []clause.Column{
+							{Name: "native_account"},
+							{Name: "snap_day"},
+						},
+						DoNothing: true,
+					}).
+					CreateInBatches(snapShotRecords, 100).Error
+				if err != nil {
+					log.Errorf("Pos业务 - 批量插入快照数据失败: %v", err)
+				}
+			}
+		}
+		log.Infof("Pos业务 - 快照完成，需要奖励的持币人数量为 %d", holders)
+
+		rmqMsg := entity.KafkaNewSnapShotMsg{
+			MsgType:    "NewPosSnapShot",
+			MsgContent: day,
+		}
+		if err := t.sendMsgToKafka(rmqMsg); err != nil {
+			log.Errorf("Pos业务 - 分发RocketMQ消息错误: %v", err)
+			break
+		}
+
+		// 等待到第二天的新加坡时间12点
+		log.Infof("Pos业务 - 快照结束")
+		return
+	}
+}
+
 // sendMsgToKafka 发送消息到Kafka
 func (t *PosSnapShotTask) sendMsgToKafka(msg entity.KafkaMsg) error {
 	if t.kafkaWriter == nil {

@@ -138,7 +138,7 @@ func (h *StakeHandler) TakeSnapShot(fiberCtx *fiber.Ctx) error {
 // ResetSnapShot 手动消除快照
 func (h *StakeHandler) ResetSnapShot(fiberCtx *fiber.Ctx) error {
 	l := stake.NewStakeSnapShotLogic(fiberCtx.Context(), h.srvCtx)
-	if err := l.TakeStakeSnapShot(); err != nil {
+	if err := l.ResetStakeSnapShot(); err != nil {
 		return response.FailWithMsg(fiberCtx, "reset snapshot error")
 	}
 	return response.Ok(fiberCtx)
