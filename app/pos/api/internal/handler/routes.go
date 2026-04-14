@@ -17,14 +17,14 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 		pos.Post("/shot/take", posHandler.TakeSnapShot)   // 旧工程 	/sol/pos/takeStakeSnapShot
 		pos.Post("/shot/reset", posHandler.ResetSnapShot) // 旧工程  	/sol/pos/resetStakeSnapShot
 
-		pos.Post("/reward/group-info", posHandler.GetGroupInfo) // 旧工程 /sol/pos/queryGroupInfo
-		pos.Post("/reward/stat", posHandler.GetRewardStat)      // 旧工程 /sol/pos/queryPosRewardDetail
+		pos.Post("/reward/group-info", JWTAuthMiddleware, posHandler.GetGroupInfo) // 旧工程 /sol/pos/queryGroupInfo
+		pos.Post("/reward/stat", JWTAuthMiddleware, posHandler.GetRewardStat)     // 旧工程 /sol/pos/queryPosRewardDetail
 
-		pos.Post("/reward/config", posHandler.GetConfig)            // 旧工程 /sol/pos/querySolPosRewardRule 查询pos奖励发放规则
-		pos.Post("/reward/record", posHandler.GetRewardRecord)      // 旧工程 /sol/pos/queryPosRewards
-		pos.Post("/reward/tx-info", posHandler.GetTxInfo)           // 旧工程 /sol/pos/getClaimPosRewardTxInfo
-		pos.Post("/reward/claim-record", posHandler.GetClaimRecord) // 旧工程 /sol/pos/getClaimPosRewardTxInfo
-		pos.Post("/reward/commit-tx", posHandler.CommitTx)          // 旧工程 /sol/pos/claimPosReward
+		pos.Post("/reward/config", posHandler.GetConfig)                          // 旧工程 /sol/pos/querySolPosRewardRule 查询pos奖励发放规则
+		pos.Post("/reward/record", JWTAuthMiddleware, posHandler.GetRewardRecord) // 旧工程 /sol/pos/queryPosRewards
+		pos.Post("/reward/tx-info", JWTAuthMiddleware, posHandler.GetTxInfo)      // 旧工程 /sol/pos/getClaimPosRewardTxInfo
+		pos.Post("/reward/claim-record", posHandler.GetClaimRecord)               // 旧工程 /sol/pos/getClaimPosRewardTxInfo
+		pos.Post("/reward/commit-tx", posHandler.CommitTx)                        // 旧工程 /sol/pos/claimPosReward
 	}
 
 	// stake 相关路由
