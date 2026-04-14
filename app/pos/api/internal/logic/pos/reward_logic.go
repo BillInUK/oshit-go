@@ -178,6 +178,44 @@ func (l *PosRewardLogic) calCostFee(totalRewardAmount, tokenQuoteUSDTPrice, usdt
 	return defaultUSDTFee * usdtQuoteSOLPrice * float64(solana.LAMPORTS_PER_SOL)
 }
 
+// GetGroupInfo 获取团队信息
+func (l *PosRewardLogic) GetGroupInfo(nativeAccount string) (*types.PosGroupInfo, error) {
+	currentHoldAmount := 0.0
+	latestSnapShotDay := time.Now()
+	latestSnapShot, err := l.snapShotLogic.QuerySnapShotByNativeAccount(nativeAccount)
+	if err != nil {
+		log.Errorf("pos业务 - 根据地址 %s 获取最近1天的快照错误: %v", nativeAccount, err)
+		return nil, err
+	}
+	if latestSnapShot != nil {
+		currentHoldAmount = latestSnapShot.Amount
+		latestSnapShotDay = latestSnapShot.SnapDay
+	}
+	inviterNativeAccount, err := l.snapShotLogic.GetInviterAccount(nativeAccount)
+	if err != nil {
+		log.Errorf("pos业务 - 根据地址 %s 获取节点邀请人错误: %v", nativeAccount, err)
+		return nil, err
+	}
+	groupHoldAmount, err := l.snapShotLogic.GetPosGroupHoldAmount(nativeAccount, latestSnapShotDay)
+	if err != nil {
+		log.Errorf("pos业务 - 根据地址 %s 获取团队总持币数错误: %v", nativeAccount, err)
+		return nil, err
+	}
+	totalFixReward, err := l.snapShotLogic.GetGroupTotalFixReward(nativeAccount, latestSnapShotDay)
+	if err != nil {
+		log.Errorf("pos业务 - 根据地址 %s 获取团队总奖励数错误: %v", nativeAccount, err)
+		return nil, err
+	}
+	starLevel, _, _ := l.snapShotLogic.GetPosStarLevelFromConfig(nativeAccount, currentHoldAmount, latestSnapShotDay)
+
+	return &types.PosGroupInfo{
+		Inviter:         l.snapShotLogic.MaskString(inviterNativeAccount),
+		StarLevel:       starLevel,
+		GroupHoldAmount: groupHoldAmount + currentHoldAmount,
+		GroupFixReward:  totalFixReward,
+	}, nil
+}
+
 // GetTxInfo 获取领取pos奖励交易信息
 func (l *PosRewardLogic) GetTxInfo(nativeAccount string) (*types.ClaimPosRewardTxInfo, error) {
 	var txInfo types.ClaimPosRewardTxInfo
@@ -287,7 +325,7 @@ func (l *PosRewardLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 // recordPosClaim 在同一数据库事务中：
 // 1. 将本次可领取奖励标记为 pending=true
 // 2. 写入 t_service_tx
-// 3. 写入 t_pos_reward_claim_record
+// 3. 写入 t_pos_reward_claim
 func (l *PosRewardLogic) recordPosClaim(nativeAccount, txId string, rewards []model.PosReward) error {
 	dbTx := l.db.Begin()
 	if dbTx.Error != nil {
@@ -314,14 +352,14 @@ func (l *PosRewardLogic) recordPosClaim(nativeAccount, txId string, rewards []mo
 	}
 
 	// 2. 写入 t_stake_reward_claim_record
-	claimRecord := model.PosRewardClaimRecord{
+	claimRecord := model.PosRewardClaim{
 		RewardIds: rewardIdsStr,
 		TxID:      txId,
 		TxState:   0,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	if err := dbTx.Table(model.TableNameStakeRewardClaim).Omit("record_id").Create(&claimRecord).Error; err != nil {
+	if err := dbTx.Table(model.TableNamePosRewardClaim).Omit("record_id").Create(&claimRecord).Error; err != nil {
 		return fmt.Errorf("insert pos reward claim record error: %v", err)
 	}
 

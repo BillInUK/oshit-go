@@ -104,8 +104,8 @@ CREATE UNIQUE INDEX ON public.t_pos_reward (native_account, snap_day, reward_typ
 
 -- POS 奖励领取表
 -- 旧工程 t_sol_pos_reward_claim_record
-DROP TABLE IF EXISTS public.t_pos_reward_claim_record;
-CREATE TABLE public.t_pos_reward_claim_record
+DROP TABLE IF EXISTS public.t_pos_reward_claim;
+CREATE TABLE public.t_pos_reward_claim
 (
     record_id  ulid   NOT NULL             DEFAULT gen_ulid(), -- 记录Id
     reward_ids ulid[] NOT NULL,                                -- 奖励Id
@@ -115,8 +115,8 @@ CREATE TABLE public.t_pos_reward_claim_record
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (record_id)
 );
-CREATE INDEX ON "public"."t_pos_reward_claim_record" (tx_id);
-CREATE INDEX ON "public"."t_pos_reward_claim_record" (tx_state, created_at);
+CREATE INDEX ON "public"."t_pos_reward_claim" (tx_id);
+CREATE INDEX ON "public"."t_pos_reward_claim" (tx_state, created_at);
 
 DROP TABLE IF EXISTS public.t_pos_rpc_config;
 CREATE TABLE public.t_pos_rpc_config

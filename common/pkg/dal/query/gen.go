@@ -40,7 +40,7 @@ var (
 	NativeAccountInfo        *nativeAccountInfo
 	PosMissionConfig         *posMissionConfig
 	PosReward                *posReward
-	PosRewardClaimRecord     *posRewardClaimRecord
+	PosRewardClaim           *posRewardClaim
 	PosRewardConfig          *posRewardConfig
 	PosRpcConfig             *posRpcConfig
 	PosSnapShot              *posSnapShot
@@ -106,7 +106,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	NativeAccountInfo = &Q.NativeAccountInfo
 	PosMissionConfig = &Q.PosMissionConfig
 	PosReward = &Q.PosReward
-	PosRewardClaimRecord = &Q.PosRewardClaimRecord
+	PosRewardClaim = &Q.PosRewardClaim
 	PosRewardConfig = &Q.PosRewardConfig
 	PosRpcConfig = &Q.PosRpcConfig
 	PosSnapShot = &Q.PosSnapShot
@@ -173,7 +173,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		NativeAccountInfo:        newNativeAccountInfo(db, opts...),
 		PosMissionConfig:         newPosMissionConfig(db, opts...),
 		PosReward:                newPosReward(db, opts...),
-		PosRewardClaimRecord:     newPosRewardClaimRecord(db, opts...),
+		PosRewardClaim:           newPosRewardClaim(db, opts...),
 		PosRewardConfig:          newPosRewardConfig(db, opts...),
 		PosRpcConfig:             newPosRpcConfig(db, opts...),
 		PosSnapShot:              newPosSnapShot(db, opts...),
@@ -241,7 +241,7 @@ type Query struct {
 	NativeAccountInfo        nativeAccountInfo
 	PosMissionConfig         posMissionConfig
 	PosReward                posReward
-	PosRewardClaimRecord     posRewardClaimRecord
+	PosRewardClaim           posRewardClaim
 	PosRewardConfig          posRewardConfig
 	PosRpcConfig             posRpcConfig
 	PosSnapShot              posSnapShot
@@ -310,7 +310,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		NativeAccountInfo:        q.NativeAccountInfo.clone(db),
 		PosMissionConfig:         q.PosMissionConfig.clone(db),
 		PosReward:                q.PosReward.clone(db),
-		PosRewardClaimRecord:     q.PosRewardClaimRecord.clone(db),
+		PosRewardClaim:           q.PosRewardClaim.clone(db),
 		PosRewardConfig:          q.PosRewardConfig.clone(db),
 		PosRpcConfig:             q.PosRpcConfig.clone(db),
 		PosSnapShot:              q.PosSnapShot.clone(db),
@@ -386,7 +386,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		NativeAccountInfo:        q.NativeAccountInfo.replaceDB(db),
 		PosMissionConfig:         q.PosMissionConfig.replaceDB(db),
 		PosReward:                q.PosReward.replaceDB(db),
-		PosRewardClaimRecord:     q.PosRewardClaimRecord.replaceDB(db),
+		PosRewardClaim:           q.PosRewardClaim.replaceDB(db),
 		PosRewardConfig:          q.PosRewardConfig.replaceDB(db),
 		PosRpcConfig:             q.PosRpcConfig.replaceDB(db),
 		PosSnapShot:              q.PosSnapShot.replaceDB(db),
@@ -452,7 +452,7 @@ type queryCtx struct {
 	NativeAccountInfo        INativeAccountInfoDo
 	PosMissionConfig         IPosMissionConfigDo
 	PosReward                IPosRewardDo
-	PosRewardClaimRecord     IPosRewardClaimRecordDo
+	PosRewardClaim           IPosRewardClaimDo
 	PosRewardConfig          IPosRewardConfigDo
 	PosRpcConfig             IPosRpcConfigDo
 	PosSnapShot              IPosSnapShotDo
@@ -518,7 +518,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		NativeAccountInfo:        q.NativeAccountInfo.WithContext(ctx),
 		PosMissionConfig:         q.PosMissionConfig.WithContext(ctx),
 		PosReward:                q.PosReward.WithContext(ctx),
-		PosRewardClaimRecord:     q.PosRewardClaimRecord.WithContext(ctx),
+		PosRewardClaim:           q.PosRewardClaim.WithContext(ctx),
 		PosRewardConfig:          q.PosRewardConfig.WithContext(ctx),
 		PosRpcConfig:             q.PosRpcConfig.WithContext(ctx),
 		PosSnapShot:              q.PosSnapShot.WithContext(ctx),

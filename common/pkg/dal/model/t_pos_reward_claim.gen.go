@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-const TableNamePosRewardClaimRecord = "t_pos_reward_claim_record"
+const TableNamePosRewardClaim = "t_pos_reward_claim"
 
-// PosRewardClaimRecord mapped from table <t_pos_reward_claim_record>
-type PosRewardClaimRecord struct {
+// PosRewardClaim mapped from table <t_pos_reward_claim>
+type PosRewardClaim struct {
 	RecordID  string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
 	RewardIds string    `gorm:"column:reward_ids;not null" json:"reward_ids"`
 	TxID      string    `gorm:"column:tx_id" json:"tx_id"`
@@ -20,7 +20,7 @@ type PosRewardClaimRecord struct {
 	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
-// TableName PosRewardClaimRecord's table name
-func (*PosRewardClaimRecord) TableName() string {
-	return TableNamePosRewardClaimRecord
+// TableName PosRewardClaim's table name
+func (*PosRewardClaim) TableName() string {
+	return TableNamePosRewardClaim
 }

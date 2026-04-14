@@ -74,7 +74,7 @@ func (l *PosSnapShotLogic) ResetStakeSnapShot() error {
 	err := l.db.Exec(`
 		delete from t_pos_snap_shot;
 		delete from t_pos_reward;
-		delete from t_pos_reward_claim_record;
+		delete from t_pos_reward_claim;
 	`).Error
 	if err != nil {
 		return err
@@ -687,7 +687,7 @@ func (l *PosSnapShotLogic) QueryGroupInfoInSnapShot(currentAccount string) (*typ
 	starLevel, _, _ := l.GetPosStarLevelFromConfig(currentAccount, currentHoldAmount, latestSnapShotDay)
 
 	return &types.PosGroupInfo{
-		Inviter:         l.maskString(inviterNativeAccount),
+		Inviter:         l.MaskString(inviterNativeAccount),
 		StarLevel:       starLevel,
 		GroupHoldAmount: groupHoldAmount + currentHoldAmount,
 		GroupFixReward:  totalFixReward,
@@ -773,7 +773,7 @@ func (l *PosSnapShotLogic) GetInviterAccount(currentAccount string) (string, err
 	return record.Inviter, nil
 }
 
-func (l *PosSnapShotLogic) maskString(s string) string {
+func (l *PosSnapShotLogic) MaskString(s string) string {
 	// 检查字符串的长度
 	if len(s) <= 10 {
 		// 如果字符串长度小于等于10，则不需要掩码，直接返回原字符串

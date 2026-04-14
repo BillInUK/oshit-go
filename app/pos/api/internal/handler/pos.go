@@ -135,3 +135,15 @@ func (h *PosHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 func (h *PosHandler) GetClaimRecord(fiberCtx *fiber.Ctx) error {
 	return nil
 }
+
+func (h *PosHandler) GetGroupInfo(fiberCtx *fiber.Ctx) error {
+	nativeAccount := fiberCtx.Locals("nativeAccount").(string)
+
+	l := pos.NewPosRewardLogic(fiberCtx.Context(), h.srvCtx)
+	groupInfo, err := l.GetGroupInfo(nativeAccount)
+	if err != nil {
+		log.Errorf("%s - 根据地址信息查看团队信息错误: %v", h.prefix, err)
+		return response.FailWithMsg(fiberCtx, "query group info in snap shot error")
+	}
+	return response.OkWithData(fiberCtx, groupInfo)
+}
