@@ -10,7 +10,7 @@ CREATE TABLE public.t_stake_amm_config
 DROP TABLE IF EXISTS public.t_stake_token_pool;
 CREATE TABLE public.t_stake_token_pool
 (
-    source_account     character varying(64) not null,
+    source_account             character varying(64) not null,
     from_token_account character varying(64) not null
 );
 
@@ -43,7 +43,7 @@ DROP TABLE IF EXISTS public.t_stake_invite_rate;
 CREATE TABLE public.t_stake_invite_rate
 (
     dist_level INTEGER       NOT NULL, -- 奖励级别
-    rate       NUMERIC(5, 2) NOT NULL, -- 奖励费率从被邀请人的 质押每日固定利息 抽取的费率
+    rate  NUMERIC(5, 2) NOT NULL, -- 奖励费率从被邀请人的 质押每日固定利息 抽取的费率
     PRIMARY KEY (dist_level)
 );
 
@@ -211,7 +211,7 @@ create table public.t_stake_total_leader
 (
     record_id      ulid not null               default gen_ulid(),-- 记录Id
     native_account varchar(64),-- 区域领导地址
-    stake_share    numeric(5, 2), -- 用户质押时奖励总区域经理的分成费率
+    stake_share    numeric(5,2), -- 用户质押时奖励总区域经理的分成费率
     created_at     timestamp without time zone default current_timestamp,-- 记录创建时间
     updated_at     timestamp without time zone default current_timestamp,-- 记录更新时间
     primary key (record_id)
@@ -239,7 +239,7 @@ create table public.t_stake_leader_reward
     staker         varchar(64) not null,                      -- 触发奖励的质押者
     reward_type    int         not null,                      -- 0=直接区域经理10% 1=区域经理7% 2=上级leader3% 3=总区域经理
     base_amount    numeric(78, 0),                            -- 基础金额(min(购买量,质押量))
-    stake_share    numeric(5, 2),                             -- 奖励费率
+    stake_share    numeric(5,2),                                       -- 奖励费率
     reward_amount  numeric(78, 0),                            -- 奖励金额
     reward_state   int         not null        default 0,     -- -1=过期 0=初始化 1=已领取
     pending        bool        not null        default false, -- 是否正在处理中

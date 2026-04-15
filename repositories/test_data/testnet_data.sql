@@ -88,7 +88,7 @@ VALUES
     ('99f8Mz2fVrVPAizcNwmJeXvvrTi1DbMwEgrqXmNL7Udo', 'Co2NTx6XWmNek6n4u3EPRLLWunregDMiEYXi9p1VVKDT', 'ffAk9Qce', NOW(),
      NOW());
 
-INSERT INTO t_invite_relation (inviter, invitee, channel, level, tx_id, created_at, updated_at)
+INSERT INTO t_invite_relation (inviter, invitee, channel, inviter_level, tx_id, created_at, updated_at)
 VALUES
     -- leader-5 -> A1
     ('4tJJv3RiQfwL4vdRsdYJK12K1yoirw3b2n1RTZxKacwn', '5D4MWh35wxUcY1hBsm5GwuippPL2UBmfDnfkC8MeqxcN', 'TakeToken', 1,
@@ -162,7 +162,7 @@ with recursive invite_hierarchy as (
 )
 -- 更新原表中的 DistLevel 字段
 update t_invite_relation as t
-set level = ih.level
+set inviter_level = ih.level
     from invite_hierarchy ih
 where t.record_id = ih.record_id;
 
@@ -183,41 +183,22 @@ INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100008',50000
 INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100009',500000);
 INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100010',500000);
 
-
 -- reward 配置结束
 
+-- pos配置开始
+-- pos白名单
+INSERT INTO t_pos_star_whitelist(native_account,star_level,rate,created_at,updated_at)VALUES('5w7hP1bkSer1ThXs44bcJtC8Xun7igvpZ79cL2146vgo',1,10,NOW(),NOW());
+INSERT INTO t_pos_star_whitelist(native_account,star_level,rate,created_at,updated_at)VALUES('AyNy2K36DwCmChM5TAuWExv1KgpHSq9XZxoAnKbWxeLu',2,20,NOW(),NOW());
+INSERT INTO t_pos_star_whitelist(native_account,star_level,rate,created_at,updated_at)VALUES('Cexemt8grV33Lzp7T8aFWHftyJ4Crs1ThotrohdNR3yS',3,30,NOW(),NOW());
+INSERT INTO t_pos_star_whitelist(native_account,star_level,rate,created_at,updated_at)VALUES('C3ueiNXXoWgtN442pL5YuboCLN6Raj6MFnyjqx2RrVwe',4,40,NOW(),NOW());
+INSERT INTO t_pos_star_whitelist(native_account,star_level,rate,created_at,updated_at)VALUES('Gz4aPNBZkFTeinCYAvgWTrB1QSPzQ2BG5agiXoKnk7Rd',5,50,NOW(),NOW());
+INSERT INTO t_pos_star_whitelist(native_account,star_level,rate,created_at,updated_at)VALUES('8K6yE3FogMDXxYRPDrPiQ1aESLFTSMuwmQTyTnAtYk1N',6,60,NOW(),NOW());
+-- pos配置结束
 
 -- stake 配置开始
 
--- 质押AMM配置
-insert into public.t_stake_amm_config(quote_token,public_key)values('SOL','46uzvWDstrwNtEpBSFrcVPx4ZaTMDpjarQYWpq82Z58p');
--- 质押池配置
-insert into public.t_stake_token_pool(source,from_token_account)values('Raydium','Gh6MjRrJFBU9HcYMYKBbaD8fX1dv3CjGtDDhtVThD9v3');
--- 质押每日固定利息
-insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000,0,70,100,now(),now());
-insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000,1,100,100,now(),now());
-
--- 邀请奖励级别
-insert into public.t_stake_invite_dist(level)values(2);
-
--- 邀请奖励每个级别的奖励费率
-insert into public.t_stake_invite_rate(level,rate)values(1,10);
-insert into public.t_stake_invite_rate(level,rate)values(2,5);
-
--- 质押星级配置
-insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(100000000,0,1,8,now(),now());
-insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(200000000,0,2,16,now(),now());
-insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(300000000,0,3,24,now(),now());
-insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(400000000,0,4,32,now(),now());
-insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(500000000,0,5,40,now(),now());
-insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(600000000,0,6,48,now(),now());
-
 -- 质押白名单地址
 insert into public.t_stake_star_whitelist(native_account,star_level,rate)values('FrWcQiSAYQGDFToxbYBCCvarzb6SumXCUmT4XBb53xAp',6,48);
-
--- 质押奖励发放配置表
-insert into public.t_stake_reward_config
-(program_id,reward_account,cost_account,quote_token_amount,cost_fee_rate,created_at,updated_at)values('As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws','H5WmBY45gxP8rj7gecLXsv6yNHqHFXNH4Acmp2U9E2Tb','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',500000,110,now(),now());
 
 -- 总区域经理表
 insert into public.t_stake_total_leader(native_account,stake_share,created_at,updated_at)values('G6xxsFzFHPhLCUg4Qq8aun2EcQ3hTcLvwb6pUWMsVBKa',7,now(),now());

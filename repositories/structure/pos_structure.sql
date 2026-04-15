@@ -118,14 +118,3 @@ CREATE TABLE public.t_pos_reward_claim
 CREATE INDEX ON "public"."t_pos_reward_claim" (tx_id);
 CREATE INDEX ON "public"."t_pos_reward_claim" (tx_state, created_at);
 
-DROP TABLE IF EXISTS public.t_pos_rpc_config;
-CREATE TABLE public.t_pos_rpc_config
-(
-    record_id  ulid          NOT NULL      DEFAULT gen_ulid(), -- 记录Id
-    rpc_url    VARCHAR(1024) NOT NULL,                         -- rpc 链接地址
-    wss_url    VARCHAR(1024) NOT NULL,                         -- websocket 链接地址
-    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (record_id)
-);

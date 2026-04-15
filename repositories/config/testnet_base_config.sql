@@ -1,4 +1,3 @@
-
 -- 基础配置
 insert into t_system_config(env)values(1);
 
@@ -8,26 +7,26 @@ values
     ('AKIAUBM64K3O3GFSHN7W','7eGqmuBxHO8x82s8gU6pjQRVtU4bkCgE5XC8qTvI','ap-southeast-1');
 
 insert into t_chain_config
-(chain,rpc_url,wss_url,decimals,symbol)
+(chain_name,rpc_url,wss_url,decimals,symbol)
 values
-    ('SOL','https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/','wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/',9,'SOL');
+    ('solana','https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/','wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/',9,'SOL');
 
 insert into t_token_config
-(name,symbol,decimals,mint)
+(token_name,token_symbol,decimals,mint)
 values
     ('OShit','OShit',3,'wtnrTujJqBRUknLRhQQcUSwzAzx8LvcxKXEuBwvFnJM');
 
 insert into t_fee_tolerance(max_less_rate)values(0.05);
 
 insert into t_user_wallet_rpc_config
-(chain,rpc_url,wss_url)
+(chain_name,rpc_url,wss_url)
 values
-    ('SOL','https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/','wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/');
+    ('solana','https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/','wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/');
 
 insert into t_mainnet_rpc_config
-(chain,rpc_url,wss_url)
+(chain_name,rpc_url,wss_url)
 values
-    ('SOL','https://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043','wss://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043');
+    ('solana','https://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043','wss://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043');
 
 -- 业务配置
 insert into t_service_info
@@ -187,16 +186,3 @@ insert into t_native_account_info(native_account,token_account,invite_code)value
 -- stake area leader reward
 insert into t_native_account_info(native_account,token_account,invite_code)values('2yRkofKW7xKRbN79MHKGX8HFyuHZEtTJDhTwAQjJHnMX','ERYPoieDaHoh9jz1Gbmi9whHLd1QyWPKANvtZTnECufw','8XXZCPr5');
 
-SELECT * FROM t_reward_code;
-DELETE FROM t_reward_code;
-INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100000',5000000);
-INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100001',5000000);
-INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100002',5000000);
-INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100003',1000000);
-INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100004',1000000);
-INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100005',1000000);
-INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100006',1000000);
-INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100007',500000);
-INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100008',500000);
-INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100009',500000);
-INSERT INTO public.t_reward_code(reward_code,reward_amount)VALUES('100010',500000);

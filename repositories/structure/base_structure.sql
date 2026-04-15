@@ -22,7 +22,7 @@ DROP TABLE IF EXISTS public.t_user_wallet_rpc_config;
 CREATE TABLE public.t_user_wallet_rpc_config
 (
     record_id  public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    chain      character varying(1024)                               NOT NULL,
+    chain_name      character varying(1024)                               NOT NULL,
     rpc_url    character varying(1024)                               NOT NULL,
     wss_url    character varying(1024)                               NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
@@ -33,7 +33,7 @@ DROP TABLE IF EXISTS public.t_mainnet_rpc_config;
 CREATE TABLE public.t_mainnet_rpc_config
 (
     record_id  public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    chain      character varying(1024)                               NOT NULL,
+    chain_name      character varying(1024)                               NOT NULL,
     rpc_url    character varying(1024)                               NOT NULL,
     wss_url    character varying(1024)                               NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
@@ -43,7 +43,7 @@ CREATE TABLE public.t_mainnet_rpc_config
 DROP TABLE IF EXISTS public.t_chain_config;
 CREATE TABLE public.t_chain_config
 (
-    chain      character varying(64)   NOT NULL,
+    chain_name  character varying(64)   NOT NULL,
     rpc_url    character varying(1024) NOT NULL,
     wss_url    character varying(1024) NOT NULL,
     decimals   integer                 NOT NULL,
@@ -55,8 +55,8 @@ CREATE TABLE public.t_chain_config
 DROP TABLE IF EXISTS public.t_token_config;
 CREATE TABLE public.t_token_config
 (
-    name       character varying(64) NOT NULL,
-    symbol     character varying(64) NOT NULL,
+    token_name       character varying(64) NOT NULL,
+    token_symbol     character varying(64) NOT NULL,
     decimals   integer               NOT NULL,
     mint       character varying(64) NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
@@ -86,11 +86,8 @@ CREATE TABLE public.t_fee_statistics
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
-ALTER TABLE ONLY public.t_fee_statistics
-    ADD CONSTRAINT fee_slot_tx_index UNIQUE (slot, tx_index);
-ALTER TABLE ONLY public.t_fee_statistics
-    ADD CONSTRAINT fee_tx_id UNIQUE (tx_id);
+ALTER TABLE ONLY public.t_fee_statistics ADD CONSTRAINT fee_slot_tx_index UNIQUE (slot, tx_index);
+ALTER TABLE ONLY public.t_fee_statistics ADD CONSTRAINT fee_tx_id UNIQUE (tx_id);
 
 DROP TABLE IF EXISTS public.t_qn_fee;
 CREATE TABLE public.t_qn_fee
@@ -104,8 +101,7 @@ CREATE TABLE public.t_qn_fee
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE ONLY public.t_qn_fee
-    ADD CONSTRAINT t_sol_qn_fee_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.t_qn_fee ADD CONSTRAINT t_sol_qn_fee_pkey PRIMARY KEY (id);
 
 DROP TABLE IF EXISTS public.t_native_account_info;
 CREATE TABLE public.t_native_account_info
@@ -125,7 +121,7 @@ CREATE TABLE public.t_invite_relation
     inviter    character varying(64)                                 NOT NULL,
     invitee    character varying(64)                                 NOT NULL,
     channel    character varying(64)                                 NOT NULL,
-    level      integer                     DEFAULT 1                 NOT NULL,
+    inviter_level      integer                     DEFAULT 1                 NOT NULL,
     tx_id      character varying(128)                                NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
@@ -180,7 +176,7 @@ CREATE TABLE public.t_service_tx
     service         VARCHAR(64)                  NOT NULL,
     sub_service     VARCHAR(64)                  NOT NULL,
     tx_id           VARCHAR(128)                 NOT NULL,
-    state           INTEGER   DEFAULT 0          NOT NULL,
+    tx_state           INTEGER   DEFAULT 0          NOT NULL,
     retry_count     INTEGER   DEFAULT 0          NOT NULL,
     next_retry_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     max_retries     INTEGER   DEFAULT 5          NOT NULL,
@@ -194,8 +190,6 @@ DROP TABLE IF EXISTS public.t_fund_flow;
 CREATE TABLE public.t_fund_flow
 (
     record_id    public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    brand        character varying(64)                                 NOT NULL,
-    token_symbol character varying(64)                                 NOT NULL,
     is_token     boolean                                               NOT NULL,
     from_account character varying(64)                                 NOT NULL,
     to_account   character varying(64)                                 NOT NULL,
