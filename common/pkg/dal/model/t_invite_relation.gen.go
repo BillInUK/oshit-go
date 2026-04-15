@@ -16,7 +16,7 @@ type InviteRelation struct {
 	Inviter   string    `gorm:"column:inviter;not null" json:"inviter"`
 	Invitee   string    `gorm:"column:invitee;not null" json:"invitee"`
 	Channel   string    `gorm:"column:channel;not null" json:"channel"`
-	Level     int32     `gorm:"column:level;not null;default:1" json:"level"`
+	InviterLevel int32     `gorm:"column:inviter_level;not null;default:1" json:"inviter_level"`
 	TxID      string    `gorm:"column:tx_id;not null" json:"tx_id"`
 	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`

@@ -28,7 +28,7 @@ func newLevelRatio(db *gorm.DB, opts ...gen.DOOption) levelRatio {
 
 	tableName := _levelRatio.levelRatioDo.TableName()
 	_levelRatio.ALL = field.NewAsterisk(tableName)
-	_levelRatio.Level = field.NewInt32(tableName, "level")
+	_levelRatio.DistLevel = field.NewInt32(tableName, "dist_level")
 	_levelRatio.Ratio = field.NewFloat64(tableName, "ratio")
 
 	_levelRatio.fillFieldMap()
@@ -40,7 +40,7 @@ type levelRatio struct {
 	levelRatioDo levelRatioDo
 
 	ALL   field.Asterisk
-	Level field.Int32
+	DistLevel field.Int32
 	Ratio field.Float64
 
 	fieldMap map[string]field.Expr
@@ -58,7 +58,7 @@ func (l levelRatio) As(alias string) *levelRatio {
 
 func (l *levelRatio) updateTableName(table string) *levelRatio {
 	l.ALL = field.NewAsterisk(table)
-	l.Level = field.NewInt32(table, "level")
+	l.DistLevel = field.NewInt32(table, "dist_level")
 	l.Ratio = field.NewFloat64(table, "ratio")
 
 	l.fillFieldMap()
@@ -87,7 +87,7 @@ func (l *levelRatio) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 
 func (l *levelRatio) fillFieldMap() {
 	l.fieldMap = make(map[string]field.Expr, 2)
-	l.fieldMap["level"] = l.Level
+	l.fieldMap["dist_level"] = l.DistLevel
 	l.fieldMap["ratio"] = l.Ratio
 }
 

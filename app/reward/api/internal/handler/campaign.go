@@ -26,7 +26,7 @@ func NewCampaignHandler(srvCtx *svc.ServiceContext) *CampaignHandler {
 
 // GetExchangeConfig 查看通过官方转token奖励规则
 func (h *CampaignHandler) GetExchangeConfig(fiberCtx *fiber.Ctx) error {
-	return response.OkWithData(fiberCtx, h.srvCtx.CampaignExchangeConfig)
+	return response.OkWithData(fiberCtx, h.srvCtx.CampaignQuoteConfig)
 }
 
 // GetExchangeLimit 查询campaign用户兑换token额度和全局额度
@@ -85,7 +85,7 @@ func (h *CampaignHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 	}
 
 	// 2. 反序列化请求
-	var req types.CampaignExchangeTxInfoReq
+	var req types.CampaignQuoteTxInfoReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
 		return response.BadRequest(fiberCtx, "invalid request body")
 	}
@@ -108,7 +108,7 @@ func (h *CampaignHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 	ctx := fiberCtx.Context()
 
 	// 1. 反序列化请求
-	var req types.CampaignExchangeReq
+	var req types.CampaignQuoteReq
 	if err := fiberCtx.BodyParser(&req); err != nil {
 		return response.BadRequest(fiberCtx, "invalid request body")
 	}

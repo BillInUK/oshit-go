@@ -74,7 +74,7 @@ func (t *TxExpireTask) scanExpiredTransactions() {
 
 	var expiredTxs []model.ServiceTx
 	if err := t.db.WithContext(ctx).
-		Where(`state = ? AND created_at <= ?`, 0, fiveMinutesAgo).
+		Where(`tx_state = ? AND created_at <= ?`, 0, fiveMinutesAgo).
 		Find(&expiredTxs).Error; err != nil {
 		log.Errorf("%s 查询过期的交易错误: %v", t.prefix, err)
 		return
@@ -235,7 +235,7 @@ func (t *TxExpireTask) markTxFetched(ctx context.Context, posTxRecord model.Serv
 // MarkTxFetchState 标记交易获取状态
 func (t *TxExpireTask) MarkTxFetchState(txId string, state int) error {
 	table := t.db.Table(model.TableNameServiceTx)
-	if err := table.Where("tx_id = ?", txId).Update("state", state).Error; err != nil {
+	if err := table.Where("tx_id = ?", txId).Update("tx_state", state).Error; err != nil {
 		return err
 	}
 	return nil

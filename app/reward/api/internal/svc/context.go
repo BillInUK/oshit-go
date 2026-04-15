@@ -29,7 +29,7 @@ type ServiceContext struct {
 	DiscountRate           *model.DiscountRate
 	TakeTokenConfig        *model.TakeTokenConfig
 	GiveTokenConfig        *model.GiveTokenConfig
-	CampaignExchangeConfig *model.CampaignExchangeConfig
+	CampaignQuoteConfig *model.CampaignQuoteConfig
 	RewardCodeConfig       *model.RewardCodeConfig
 	RewardKeyMap           map[string]solana.PrivateKey
 	LightHouseAddress      solana.PublicKey
@@ -149,7 +149,7 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 
 	// 初始化链配置 - SOL链
 	var chainConfig model.ChainConfig
-	if err := s.DB.Where("chain = ?", "SOL").First(&chainConfig).Error; err != nil {
+	if err := s.DB.Where("chain_name = ?", "SOL").First(&chainConfig).Error; err != nil {
 		return fmt.Errorf("can not load solana chain configure of chain SOL from database: %v", err)
 	}
 	s.ChainConfig = &chainConfig
@@ -193,7 +193,7 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 
 	s.LevelRatioMap = make(map[int32]model.LevelRatio)
 	for _, ratio := range s.LevelRatio {
-		s.LevelRatioMap[ratio.Level] = ratio
+		s.LevelRatioMap[ratio.DistLevel] = ratio
 	}
 
 	// 加载折扣率配置
@@ -218,11 +218,11 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 	s.GiveTokenConfig = &giveTokenConfig
 
 	// 加载 campaign 业务配置
-	var campaignExchangeConfig model.CampaignExchangeConfig
-	if err := s.DB.First(&campaignExchangeConfig).Error; err != nil {
+	var campaignQuoteConfig model.CampaignQuoteConfig
+	if err := s.DB.First(&campaignQuoteConfig).Error; err != nil {
 		return fmt.Errorf("can not find campaign exchange config from database: %v", err)
 	}
-	s.CampaignExchangeConfig = &campaignExchangeConfig
+	s.CampaignQuoteConfig = &campaignQuoteConfig
 
 	// 加载 reward code 业务配置
 	var rewardCodeConfig model.RewardCodeConfig

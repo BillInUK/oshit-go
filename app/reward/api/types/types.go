@@ -103,17 +103,17 @@ type ClaimLotteryTxInfo struct {
 	CostFee       float64 `json:"costFee"`       // 成本费
 }
 
-type CampaignExchangeTxInfoReq struct {
+type CampaignQuoteTxInfoReq struct {
 	Score uint64 `json:"score"`
 }
 
-type CampaignExchangeReq struct {
+type CampaignQuoteReq struct {
 	EncodedTx string `json:"encodedTx"`
 	XAcJwt    string `json:"x-ac-jwt"`
 	Score     uint64 `json:"score"`
 }
 
-type CampaignExchangeTxInfo struct {
+type CampaignQuoteTxInfo struct {
 	RewardAccount string  `json:"rewardAccount"` // 发放抽奖记录的token
 	Mint          string  `json:"mint"`          // token地址
 	Decimals      int32   `json:"decimals"`      // 币种精度

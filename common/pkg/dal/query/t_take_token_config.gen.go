@@ -36,7 +36,6 @@ func newTakeTokenConfig(db *gorm.DB, opts ...gen.DOOption) takeTokenConfig {
 	_takeTokenConfig.InviteAmount = field.NewFloat64(tableName, "invite_amount")
 	_takeTokenConfig.DexFeeRate = field.NewFloat64(tableName, "dex_fee_rate")
 	_takeTokenConfig.MaxDexFee = field.NewFloat64(tableName, "max_dex_fee")
-	_takeTokenConfig.Interval = field.NewInt32(tableName, "interval")
 	_takeTokenConfig.IsDefault = field.NewBool(tableName, "is_default")
 	_takeTokenConfig.RewardInviter = field.NewBool(tableName, "reward_inviter")
 	_takeTokenConfig.Invited = field.NewBool(tableName, "invited")
@@ -60,7 +59,6 @@ type takeTokenConfig struct {
 	InviteAmount  field.Float64
 	DexFeeRate    field.Float64
 	MaxDexFee     field.Float64
-	Interval      field.Int32
 	IsDefault     field.Bool
 	RewardInviter field.Bool
 	Invited       field.Bool
@@ -90,7 +88,6 @@ func (t *takeTokenConfig) updateTableName(table string) *takeTokenConfig {
 	t.InviteAmount = field.NewFloat64(table, "invite_amount")
 	t.DexFeeRate = field.NewFloat64(table, "dex_fee_rate")
 	t.MaxDexFee = field.NewFloat64(table, "max_dex_fee")
-	t.Interval = field.NewInt32(table, "interval")
 	t.IsDefault = field.NewBool(table, "is_default")
 	t.RewardInviter = field.NewBool(table, "reward_inviter")
 	t.Invited = field.NewBool(table, "invited")
@@ -124,7 +121,7 @@ func (t *takeTokenConfig) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (t *takeTokenConfig) fillFieldMap() {
-	t.fieldMap = make(map[string]field.Expr, 14)
+	t.fieldMap = make(map[string]field.Expr, 13)
 	t.fieldMap["record_id"] = t.RecordID
 	t.fieldMap["invite_code"] = t.InviteCode
 	t.fieldMap["reward_account"] = t.RewardAccount
@@ -133,7 +130,6 @@ func (t *takeTokenConfig) fillFieldMap() {
 	t.fieldMap["invite_amount"] = t.InviteAmount
 	t.fieldMap["dex_fee_rate"] = t.DexFeeRate
 	t.fieldMap["max_dex_fee"] = t.MaxDexFee
-	t.fieldMap["interval"] = t.Interval
 	t.fieldMap["is_default"] = t.IsDefault
 	t.fieldMap["reward_inviter"] = t.RewardInviter
 	t.fieldMap["invited"] = t.Invited

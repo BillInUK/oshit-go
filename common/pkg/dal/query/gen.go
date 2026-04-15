@@ -20,6 +20,9 @@ var (
 	AwsConfig                *awsConfig
 	CampaignExchangeConfig   *campaignExchangeConfig
 	CampaignExchangeRecord   *campaignExchangeRecord
+	CampaignQuoteConfig      *campaignQuoteConfig
+	CampaignQuoteRecord      *campaignQuoteRecord
+	CampaignQuoteLimit       *campaignQuoteLimit
 	ChainConfig              *chainConfig
 	DailyClaimStats          *dailyClaimStats
 	DiscountRate             *discountRate
@@ -34,6 +37,7 @@ var (
 	InviteRelation           *inviteRelation
 	LevelDist                *levelDist
 	LevelRatio               *levelRatio
+	LotteryClaim             *lotteryClaim
 	LotteryClaimRecord       *lotteryClaimRecord
 	LotteryReward            *lotteryReward
 	MainnetRpcConfig         *mainnetRpcConfig
@@ -78,6 +82,7 @@ var (
 	TokenConfig              *tokenConfig
 	TxScanInfo               *txScanInfo
 	UserDailyExchangeQuota   *userDailyExchangeQuota
+	UserDailyQuota           *userDailyQuota
 	UserWalletRpcConfig      *userWalletRpcConfig
 )
 
@@ -86,6 +91,9 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	AwsConfig = &Q.AwsConfig
 	CampaignExchangeConfig = &Q.CampaignExchangeConfig
 	CampaignExchangeRecord = &Q.CampaignExchangeRecord
+	CampaignQuoteConfig = &Q.CampaignQuoteConfig
+	CampaignQuoteRecord = &Q.CampaignQuoteRecord
+	CampaignQuoteLimit = &Q.CampaignQuoteLimit
 	ChainConfig = &Q.ChainConfig
 	DailyClaimStats = &Q.DailyClaimStats
 	DiscountRate = &Q.DiscountRate
@@ -100,6 +108,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	InviteRelation = &Q.InviteRelation
 	LevelDist = &Q.LevelDist
 	LevelRatio = &Q.LevelRatio
+	LotteryClaim = &Q.LotteryClaim
 	LotteryClaimRecord = &Q.LotteryClaimRecord
 	LotteryReward = &Q.LotteryReward
 	MainnetRpcConfig = &Q.MainnetRpcConfig
@@ -144,6 +153,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	TokenConfig = &Q.TokenConfig
 	TxScanInfo = &Q.TxScanInfo
 	UserDailyExchangeQuota = &Q.UserDailyExchangeQuota
+	UserDailyQuota = &Q.UserDailyQuota
 	UserWalletRpcConfig = &Q.UserWalletRpcConfig
 }
 
@@ -153,6 +163,9 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		AwsConfig:                newAwsConfig(db, opts...),
 		CampaignExchangeConfig:   newCampaignExchangeConfig(db, opts...),
 		CampaignExchangeRecord:   newCampaignExchangeRecord(db, opts...),
+		CampaignQuoteConfig:      newCampaignQuoteConfig(db, opts...),
+		CampaignQuoteRecord:      newCampaignQuoteRecord(db, opts...),
+		CampaignQuoteLimit:       newCampaignQuoteLimit(db, opts...),
 		ChainConfig:              newChainConfig(db, opts...),
 		DailyClaimStats:          newDailyClaimStats(db, opts...),
 		DiscountRate:             newDiscountRate(db, opts...),
@@ -167,6 +180,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		InviteRelation:           newInviteRelation(db, opts...),
 		LevelDist:                newLevelDist(db, opts...),
 		LevelRatio:               newLevelRatio(db, opts...),
+		LotteryClaim:             newLotteryClaim(db, opts...),
 		LotteryClaimRecord:       newLotteryClaimRecord(db, opts...),
 		LotteryReward:            newLotteryReward(db, opts...),
 		MainnetRpcConfig:         newMainnetRpcConfig(db, opts...),
@@ -211,6 +225,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		TokenConfig:              newTokenConfig(db, opts...),
 		TxScanInfo:               newTxScanInfo(db, opts...),
 		UserDailyExchangeQuota:   newUserDailyExchangeQuota(db, opts...),
+		UserDailyQuota:           newUserDailyQuota(db, opts...),
 		UserWalletRpcConfig:      newUserWalletRpcConfig(db, opts...),
 	}
 }
@@ -221,6 +236,9 @@ type Query struct {
 	AwsConfig                awsConfig
 	CampaignExchangeConfig   campaignExchangeConfig
 	CampaignExchangeRecord   campaignExchangeRecord
+	CampaignQuoteConfig      campaignQuoteConfig
+	CampaignQuoteRecord      campaignQuoteRecord
+	CampaignQuoteLimit       campaignQuoteLimit
 	ChainConfig              chainConfig
 	DailyClaimStats          dailyClaimStats
 	DiscountRate             discountRate
@@ -235,6 +253,7 @@ type Query struct {
 	InviteRelation           inviteRelation
 	LevelDist                levelDist
 	LevelRatio               levelRatio
+	LotteryClaim             lotteryClaim
 	LotteryClaimRecord       lotteryClaimRecord
 	LotteryReward            lotteryReward
 	MainnetRpcConfig         mainnetRpcConfig
@@ -279,6 +298,7 @@ type Query struct {
 	TokenConfig              tokenConfig
 	TxScanInfo               txScanInfo
 	UserDailyExchangeQuota   userDailyExchangeQuota
+	UserDailyQuota           userDailyQuota
 	UserWalletRpcConfig      userWalletRpcConfig
 }
 
@@ -290,6 +310,9 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		AwsConfig:                q.AwsConfig.clone(db),
 		CampaignExchangeConfig:   q.CampaignExchangeConfig.clone(db),
 		CampaignExchangeRecord:   q.CampaignExchangeRecord.clone(db),
+		CampaignQuoteConfig:      q.CampaignQuoteConfig.clone(db),
+		CampaignQuoteRecord:      q.CampaignQuoteRecord.clone(db),
+		CampaignQuoteLimit:       q.CampaignQuoteLimit.clone(db),
 		ChainConfig:              q.ChainConfig.clone(db),
 		DailyClaimStats:          q.DailyClaimStats.clone(db),
 		DiscountRate:             q.DiscountRate.clone(db),
@@ -304,6 +327,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		InviteRelation:           q.InviteRelation.clone(db),
 		LevelDist:                q.LevelDist.clone(db),
 		LevelRatio:               q.LevelRatio.clone(db),
+		LotteryClaim:             q.LotteryClaim.clone(db),
 		LotteryClaimRecord:       q.LotteryClaimRecord.clone(db),
 		LotteryReward:            q.LotteryReward.clone(db),
 		MainnetRpcConfig:         q.MainnetRpcConfig.clone(db),
@@ -348,6 +372,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		TokenConfig:              q.TokenConfig.clone(db),
 		TxScanInfo:               q.TxScanInfo.clone(db),
 		UserDailyExchangeQuota:   q.UserDailyExchangeQuota.clone(db),
+		UserDailyQuota:           q.UserDailyQuota.clone(db),
 		UserWalletRpcConfig:      q.UserWalletRpcConfig.clone(db),
 	}
 }
@@ -366,6 +391,9 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		AwsConfig:                q.AwsConfig.replaceDB(db),
 		CampaignExchangeConfig:   q.CampaignExchangeConfig.replaceDB(db),
 		CampaignExchangeRecord:   q.CampaignExchangeRecord.replaceDB(db),
+		CampaignQuoteConfig:      q.CampaignQuoteConfig.replaceDB(db),
+		CampaignQuoteRecord:      q.CampaignQuoteRecord.replaceDB(db),
+		CampaignQuoteLimit:       q.CampaignQuoteLimit.replaceDB(db),
 		ChainConfig:              q.ChainConfig.replaceDB(db),
 		DailyClaimStats:          q.DailyClaimStats.replaceDB(db),
 		DiscountRate:             q.DiscountRate.replaceDB(db),
@@ -380,6 +408,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		InviteRelation:           q.InviteRelation.replaceDB(db),
 		LevelDist:                q.LevelDist.replaceDB(db),
 		LevelRatio:               q.LevelRatio.replaceDB(db),
+		LotteryClaim:             q.LotteryClaim.replaceDB(db),
 		LotteryClaimRecord:       q.LotteryClaimRecord.replaceDB(db),
 		LotteryReward:            q.LotteryReward.replaceDB(db),
 		MainnetRpcConfig:         q.MainnetRpcConfig.replaceDB(db),
@@ -424,6 +453,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		TokenConfig:              q.TokenConfig.replaceDB(db),
 		TxScanInfo:               q.TxScanInfo.replaceDB(db),
 		UserDailyExchangeQuota:   q.UserDailyExchangeQuota.replaceDB(db),
+		UserDailyQuota:           q.UserDailyQuota.replaceDB(db),
 		UserWalletRpcConfig:      q.UserWalletRpcConfig.replaceDB(db),
 	}
 }
@@ -432,6 +462,9 @@ type queryCtx struct {
 	AwsConfig                IAwsConfigDo
 	CampaignExchangeConfig   ICampaignExchangeConfigDo
 	CampaignExchangeRecord   ICampaignExchangeRecordDo
+	CampaignQuoteConfig      ICampaignQuoteConfigDo
+	CampaignQuoteRecord      ICampaignQuoteRecordDo
+	CampaignQuoteLimit       ICampaignQuoteLimitDo
 	ChainConfig              IChainConfigDo
 	DailyClaimStats          IDailyClaimStatsDo
 	DiscountRate             IDiscountRateDo
@@ -446,6 +479,7 @@ type queryCtx struct {
 	InviteRelation           IInviteRelationDo
 	LevelDist                ILevelDistDo
 	LevelRatio               ILevelRatioDo
+	LotteryClaim             ILotteryClaimDo
 	LotteryClaimRecord       ILotteryClaimRecordDo
 	LotteryReward            ILotteryRewardDo
 	MainnetRpcConfig         IMainnetRpcConfigDo
@@ -490,6 +524,7 @@ type queryCtx struct {
 	TokenConfig              ITokenConfigDo
 	TxScanInfo               ITxScanInfoDo
 	UserDailyExchangeQuota   IUserDailyExchangeQuotaDo
+	UserDailyQuota           IUserDailyQuotaDo
 	UserWalletRpcConfig      IUserWalletRpcConfigDo
 }
 
@@ -498,6 +533,9 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		AwsConfig:                q.AwsConfig.WithContext(ctx),
 		CampaignExchangeConfig:   q.CampaignExchangeConfig.WithContext(ctx),
 		CampaignExchangeRecord:   q.CampaignExchangeRecord.WithContext(ctx),
+		CampaignQuoteConfig:      q.CampaignQuoteConfig.WithContext(ctx),
+		CampaignQuoteRecord:      q.CampaignQuoteRecord.WithContext(ctx),
+		CampaignQuoteLimit:       q.CampaignQuoteLimit.WithContext(ctx),
 		ChainConfig:              q.ChainConfig.WithContext(ctx),
 		DailyClaimStats:          q.DailyClaimStats.WithContext(ctx),
 		DiscountRate:             q.DiscountRate.WithContext(ctx),
@@ -512,6 +550,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		InviteRelation:           q.InviteRelation.WithContext(ctx),
 		LevelDist:                q.LevelDist.WithContext(ctx),
 		LevelRatio:               q.LevelRatio.WithContext(ctx),
+		LotteryClaim:             q.LotteryClaim.WithContext(ctx),
 		LotteryClaimRecord:       q.LotteryClaimRecord.WithContext(ctx),
 		LotteryReward:            q.LotteryReward.WithContext(ctx),
 		MainnetRpcConfig:         q.MainnetRpcConfig.WithContext(ctx),
@@ -556,6 +595,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		TokenConfig:              q.TokenConfig.WithContext(ctx),
 		TxScanInfo:               q.TxScanInfo.WithContext(ctx),
 		UserDailyExchangeQuota:   q.UserDailyExchangeQuota.WithContext(ctx),
+		UserDailyQuota:           q.UserDailyQuota.WithContext(ctx),
 		UserWalletRpcConfig:      q.UserWalletRpcConfig.WithContext(ctx),
 	}
 }

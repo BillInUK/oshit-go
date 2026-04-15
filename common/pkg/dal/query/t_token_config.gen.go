@@ -28,8 +28,8 @@ func newTokenConfig(db *gorm.DB, opts ...gen.DOOption) tokenConfig {
 
 	tableName := _tokenConfig.tokenConfigDo.TableName()
 	_tokenConfig.ALL = field.NewAsterisk(tableName)
-	_tokenConfig.Name = field.NewString(tableName, "name")
-	_tokenConfig.Symbol = field.NewString(tableName, "symbol")
+	_tokenConfig.TokenName = field.NewString(tableName, "token_name")
+	_tokenConfig.TokenSymbol = field.NewString(tableName, "token_symbol")
 	_tokenConfig.Decimals = field.NewInt32(tableName, "decimals")
 	_tokenConfig.Mint = field.NewString(tableName, "mint")
 	_tokenConfig.CreatedAt = field.NewTime(tableName, "created_at")
@@ -44,8 +44,8 @@ type tokenConfig struct {
 	tokenConfigDo tokenConfigDo
 
 	ALL       field.Asterisk
-	Name      field.String
-	Symbol    field.String
+	TokenName   field.String
+	TokenSymbol field.String
 	Decimals  field.Int32
 	Mint      field.String
 	CreatedAt field.Time
@@ -66,8 +66,8 @@ func (t tokenConfig) As(alias string) *tokenConfig {
 
 func (t *tokenConfig) updateTableName(table string) *tokenConfig {
 	t.ALL = field.NewAsterisk(table)
-	t.Name = field.NewString(table, "name")
-	t.Symbol = field.NewString(table, "symbol")
+	t.TokenName = field.NewString(table, "token_name")
+	t.TokenSymbol = field.NewString(table, "token_symbol")
 	t.Decimals = field.NewInt32(table, "decimals")
 	t.Mint = field.NewString(table, "mint")
 	t.CreatedAt = field.NewTime(table, "created_at")
@@ -99,8 +99,8 @@ func (t *tokenConfig) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 
 func (t *tokenConfig) fillFieldMap() {
 	t.fieldMap = make(map[string]field.Expr, 6)
-	t.fieldMap["name"] = t.Name
-	t.fieldMap["symbol"] = t.Symbol
+	t.fieldMap["token_name"] = t.TokenName
+	t.fieldMap["token_symbol"] = t.TokenSymbol
 	t.fieldMap["decimals"] = t.Decimals
 	t.fieldMap["mint"] = t.Mint
 	t.fieldMap["created_at"] = t.CreatedAt

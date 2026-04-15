@@ -49,7 +49,7 @@ func NewTakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *TakeTokenLog
 		rs:                srvCtx.RedSync,
 		rpcClient:         srvCtx.RpcClient,
 		baseClient:        srvCtx.BaseClient,
-		levelDist:         srvCtx.LevelDist.Level,
+		levelDist:         srvCtx.LevelDist.DistLevel,
 		levelRatio:        srvCtx.LevelRatio,
 		levelRatioMap:     srvCtx.LevelRatioMap,
 		serviceConfig:     srvCtx.TakeTokenConfig,
@@ -200,7 +200,7 @@ func (l *TakeTokenLogic) GetRecordByInviteCode(nativeAccount string) (*model.Tak
 	var err error
 	var record model.TakeTokenRecord
 	table := l.db.Table(model.TableNameTakeTokenRecord)
-	err = table.Where("receipt_account = ? and use_invite_code = ? and state = ?", nativeAccount, true, 1).First(&record).Error
+	err = table.Where("receipt_account = ? and use_invite_code = ? and tx_state = ?", nativeAccount, true, 1).First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -239,7 +239,7 @@ func (l *TakeTokenLogic) recordTakeToken(takeTokenTxInfo *types.TakeTokenTxInfo,
 		DexFee:         decodedServiceTx.ToDexInst.Amount,
 		UseInviteCode:  takeTokenTxInfo.InviteCodeValid,
 		InviteCode:     takeTokenTxInfo.InviteCode,
-		State:          0,
+		TxState:        0,
 		Invited:        invited,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),

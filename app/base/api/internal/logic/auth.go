@@ -119,7 +119,7 @@ func (l *AuthLogic) QueryNativeAccountInfoByInviteCode(inviteCode string) (*mode
 func (l *AuthLogic) RegisterNativeAccount(brand, symbol, nativeAccount, inviteCode string) (*model.NativeAccountInfo, error) {
 	// 找到token配置
 	var tokenConfig model.TokenConfig
-	if err := l.db.Model(&tokenConfig).Where("name = ? AND symbol = ?", brand, symbol).First(&tokenConfig).Error; err != nil {
+	if err := l.db.Model(&tokenConfig).Where("token_name = ? AND token_symbol = ?", brand, symbol).First(&tokenConfig).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("can not find token config")
 		}
@@ -189,14 +189,14 @@ func (l *AuthLogic) RegisterNativeAccount(brand, symbol, nativeAccount, inviteCo
 		// 确定邀请关系
 		level := 1
 		if err == nil {
-			level = int(inviterDetermineRecord.Level) + 1
+			level = int(inviterDetermineRecord.InviterLevel) + 1
 		}
 
 		inviteRelation := model.InviteRelation{
 			Inviter: inviterRecord.NativeAccount,
 			Invitee: nativeAccount,
 			Channel:              "InviteCode",
-			Level:                int32(level),
+			InviterLevel:         int32(level),
 			CreatedAt:            time.Now(),
 			UpdatedAt:            time.Now(),
 		}

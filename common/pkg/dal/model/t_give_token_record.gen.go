@@ -17,7 +17,7 @@ type GiveTokenRecord struct {
 	ReceiptAccount string    `gorm:"column:receipt_account;not null" json:"receipt_account"`
 	TxID           string    `gorm:"column:tx_id;not null" json:"tx_id"`
 	Amount         float64   `gorm:"column:amount;not null" json:"amount"`
-	State          int32     `gorm:"column:state" json:"state"`
+	TxState        int32     `gorm:"column:tx_state" json:"tx_state"`
 	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }

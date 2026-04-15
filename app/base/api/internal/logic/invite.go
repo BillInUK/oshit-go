@@ -123,7 +123,7 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 			Inviter: record.Inviter,
 			Invitee: record.Invitee,
 			Channel:              record.Channel,
-			Level:                record.Level,
+			Level:                record.InviterLevel,
 			TxID:                 record.TxID,
 			CreatedAt:            record.CreatedAt.Format(time.RFC3339),
 		})
@@ -155,7 +155,7 @@ func (l *InviteLogic) FindInviteRelationByAccount(req *types.FindInviteRelationB
 		Inviter: record.Inviter,
 		Invitee: record.Invitee,
 		Channel:              record.Channel,
-		Level:                record.Level,
+		Level:                record.InviterLevel,
 		TxID:                 record.TxID,
 		CreatedAt:            record.CreatedAt.Format(time.RFC3339),
 	}, nil
@@ -216,7 +216,7 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 			Inviter: record.Inviter,
 			Invitee: record.Invitee,
 			Channel:              record.Channel,
-			Level:                record.Level,
+			Level:                record.InviterLevel,
 			TxID:                 record.TxID,
 			CreatedAt:            record.CreatedAt.Format(time.RFC3339),
 		})

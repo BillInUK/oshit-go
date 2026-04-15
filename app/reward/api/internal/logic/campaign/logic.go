@@ -38,7 +38,7 @@ type CampaignLogic struct {
 	rs            redsync.Redsync
 	rpcClient     *rpc.Client
 	baseClient    *rewardrpc.BaseClient
-	serviceConfig *model.CampaignExchangeConfig
+	serviceConfig *model.CampaignQuoteConfig
 }
 
 func NewCampaignLogic(ctx context.Context, srvCtx *svc.ServiceContext) *CampaignLogic {
@@ -51,22 +51,22 @@ func NewCampaignLogic(ctx context.Context, srvCtx *svc.ServiceContext) *Campaign
 		rs:            srvCtx.RedSync,
 		rpcClient:     srvCtx.RpcClient,
 		baseClient:    srvCtx.BaseClient,
-		serviceConfig: srvCtx.CampaignExchangeConfig,
+		serviceConfig: srvCtx.CampaignQuoteConfig,
 	}
 }
 
-func (l *CampaignLogic) GetExchangeQuotaInfo(ctx context.Context, userId uint64) (*model.UserDailyExchangeQuota, *model.GlobalDailyExchangeLimit, error) {
+func (l *CampaignLogic) GetExchangeQuotaInfo(ctx context.Context, userId uint64) (*model.UserDailyQuota, *model.CampaignQuoteLimit, error) {
 	prefix := fmt.Sprintf("%s 查询当天额度信息 - 用户id: %d", l.prefix, userId)
 
 	// 1. 查询当天的全局token兑换额度
 	currentDate := time.Now().UTC().Truncate(24 * time.Hour)
 	q := query.Use(l.db)
-	globalLimitDo := q.GlobalDailyExchangeLimit.WithContext(ctx)
-	globalLimit, err := globalLimitDo.Where(q.GlobalDailyExchangeLimit.QuotaDate.Eq(currentDate)).First()
+	globalLimitDo := q.CampaignQuoteLimit.WithContext(ctx)
+	globalLimit, err := globalLimitDo.Where(q.CampaignQuoteLimit.QuotaDate.Eq(currentDate)).First()
 	if err != nil {
 		// 如果当天没有记录，创建一条默认记录
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			globalLimit = &model.GlobalDailyExchangeLimit{
+			globalLimit = &model.CampaignQuoteLimit{
 				DailyLimit: 50000000,
 				QuotaDate:  currentDate,
 				CreatedAt:  time.Now(),
@@ -83,15 +83,15 @@ func (l *CampaignLogic) GetExchangeQuotaInfo(ctx context.Context, userId uint64)
 
 	// 2. 查询用户的兑换额度是否足够
 	userIdStr := strconv.FormatUint(userId, 10)
-	userQuotaDo := q.UserDailyExchangeQuota.WithContext(ctx)
+	userQuotaDo := q.UserDailyQuota.WithContext(ctx)
 	userQuota, err := userQuotaDo.Where(
-		q.UserDailyExchangeQuota.UserID.Eq(userIdStr),
-		q.UserDailyExchangeQuota.QuotaDate.Eq(currentDate),
+		q.UserDailyQuota.UserID.Eq(userIdStr),
+		q.UserDailyQuota.QuotaDate.Eq(currentDate),
 	).First()
 	if err != nil {
 		// 如果用户当天没有记录，创建一条默认记录
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			userQuota = &model.UserDailyExchangeQuota{
+			userQuota = &model.UserDailyQuota{
 				UserID:         userIdStr,
 				QuotaDate:      currentDate,
 				MaxQuota:       50000000,
@@ -113,11 +113,11 @@ func (l *CampaignLogic) GetExchangeQuotaInfo(ctx context.Context, userId uint64)
 }
 
 // GetTxInfo 获取打包交易信息
-func (l *CampaignLogic) GetTxInfo(ctx context.Context, userId uint64, scoreUIAmount uint64) (*types.CampaignExchangeTxInfo, error) {
+func (l *CampaignLogic) GetTxInfo(ctx context.Context, userId uint64, scoreUIAmount uint64) (*types.CampaignQuoteTxInfo, error) {
 	prefix := fmt.Sprintf("%s 获取兑换交易信息 - 用户id %d 兑换积分额度 %d", l.prefix, userId, scoreUIAmount)
 
 	// 计算本次兑换的token数量（单位：1/1000 token）
-	tokenUIAmount := float64(scoreUIAmount) * l.serviceConfig.Rate / 100
+	tokenUIAmount := float64(scoreUIAmount) * l.serviceConfig.QuoteRate / 100
 	tokenRawAmount := tokenUIAmount * l.srvCtx.TokenDecimal
 
 	// 计算成本费
@@ -130,7 +130,7 @@ func (l *CampaignLogic) GetTxInfo(ctx context.Context, userId uint64, scoreUIAmo
 	costRawFee := tokenUIAmount * quoteSOLPrice * costRate * float64(solana.LAMPORTS_PER_SOL)
 
 	// 返回最终结构体
-	return &types.CampaignExchangeTxInfo{
+	return &types.CampaignQuoteTxInfo{
 		RewardAccount: l.serviceConfig.RewardAccount,
 		Mint:          l.srvCtx.TokenConfig.Mint,
 		Decimals:      l.srvCtx.TokenConfig.Decimals,
@@ -140,7 +140,7 @@ func (l *CampaignLogic) GetTxInfo(ctx context.Context, userId uint64, scoreUIAmo
 	}, nil
 }
 
-//func (l *CampaignLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, req types.CampaignExchangeReq, userId uint64) error {
+//func (l *CampaignLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, req types.CampaignQuoteReq, userId uint64) error {
 //	txIdStr := preCheckedTx.TxId.String()
 //	scoreUIAmount := req.Score
 //	prefix := fmt.Sprintf("%s 处理用户提交交易Id %v -", l.prefix, txIdStr)
@@ -224,7 +224,7 @@ func (l *CampaignLogic) GetTxInfo(ctx context.Context, userId uint64, scoreUIAmo
 //	return nil
 //}
 
-func (l *CampaignLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, req types.CampaignExchangeReq, userId uint64) error {
+func (l *CampaignLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, req types.CampaignQuoteReq, userId uint64) error {
 	userIdStr := strconv.FormatUint(userId, 10)
 	txIdStr := preCheckedTx.TxId.String()
 	scoreUIAmount := req.Score

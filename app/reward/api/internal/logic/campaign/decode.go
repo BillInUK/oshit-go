@@ -10,7 +10,7 @@ import (
 	"oshit-go/common/pkg/entity"
 )
 
-func (l *CampaignLogic) checkSOLTx(txInfo *types.CampaignExchangeTxInfo, decodedTx *entity.DecodedSolanaTransaction, receiptAccount string) (*entity.DecodedServiceTransaction, error) {
+func (l *CampaignLogic) checkSOLTx(txInfo *types.CampaignQuoteTxInfo, decodedTx *entity.DecodedSolanaTransaction, receiptAccount string) (*entity.DecodedServiceTransaction, error) {
 	var err error
 	var prefix = fmt.Sprintf("%s 检查解码后的solana交易 -", l.prefix)
 	var decodedServiceTx *entity.DecodedServiceTransaction

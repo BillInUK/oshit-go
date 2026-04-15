@@ -32,7 +32,7 @@ func newServiceTx(db *gorm.DB, opts ...gen.DOOption) serviceTx {
 	_serviceTx.Service = field.NewString(tableName, "service")
 	_serviceTx.SubService = field.NewString(tableName, "sub_service")
 	_serviceTx.TxID = field.NewString(tableName, "tx_id")
-	_serviceTx.State = field.NewInt32(tableName, "state")
+	_serviceTx.TxState = field.NewInt32(tableName, "tx_state")
 	_serviceTx.RetryCount = field.NewInt32(tableName, "retry_count")
 	_serviceTx.NextRetryTime = field.NewTime(tableName, "next_retry_time")
 	_serviceTx.MaxRetries = field.NewInt32(tableName, "max_retries")
@@ -52,7 +52,7 @@ type serviceTx struct {
 	Service       field.String
 	SubService    field.String
 	TxID          field.String
-	State         field.Int32
+	TxState       field.Int32
 	RetryCount    field.Int32
 	NextRetryTime field.Time
 	MaxRetries    field.Int32
@@ -78,7 +78,7 @@ func (s *serviceTx) updateTableName(table string) *serviceTx {
 	s.Service = field.NewString(table, "service")
 	s.SubService = field.NewString(table, "sub_service")
 	s.TxID = field.NewString(table, "tx_id")
-	s.State = field.NewInt32(table, "state")
+	s.TxState = field.NewInt32(table, "tx_state")
 	s.RetryCount = field.NewInt32(table, "retry_count")
 	s.NextRetryTime = field.NewTime(table, "next_retry_time")
 	s.MaxRetries = field.NewInt32(table, "max_retries")
@@ -115,7 +115,7 @@ func (s *serviceTx) fillFieldMap() {
 	s.fieldMap["service"] = s.Service
 	s.fieldMap["sub_service"] = s.SubService
 	s.fieldMap["tx_id"] = s.TxID
-	s.fieldMap["state"] = s.State
+	s.fieldMap["tx_state"] = s.TxState
 	s.fieldMap["retry_count"] = s.RetryCount
 	s.fieldMap["next_retry_time"] = s.NextRetryTime
 	s.fieldMap["max_retries"] = s.MaxRetries

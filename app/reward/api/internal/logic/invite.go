@@ -218,14 +218,14 @@ func (l *RewardInviteLogic) RecordDetermineInvitationHierarchy(
 	// 如果邀请人没有在邀请关系里面，则Level为1，如果邀请人已经在邀请关系里面了，则Level为邀请人的层级+1
 	var level int32 = 1
 	if inviterRecord != nil {
-		level = inviterRecord.Level + 1
+		level = inviterRecord.InviterLevel + 1
 	}
 	determineInviteRecord := model.InviteRelation{
 		Inviter: inviterNativeAccount,
 		Invitee: inviteeNativeAccount,
 		TxID:                 transferTxId,
 		Channel:              inviteChannel,
-		Level:                level,
+		InviterLevel:         level,
 	}
 	err = l.db.Create(&determineInviteRecord).Error
 	return &determineInviteRecord, err

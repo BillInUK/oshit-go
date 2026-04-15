@@ -13,8 +13,6 @@ const TableNameFundFlow = "t_fund_flow"
 // FundFlow mapped from table <t_fund_flow>
 type FundFlow struct {
 	RecordID    string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	Brand       string    `gorm:"column:brand;not null" json:"brand"`
-	TokenSymbol string    `gorm:"column:token_symbol;not null" json:"token_symbol"`
 	IsToken     bool      `gorm:"column:is_token;not null" json:"is_token"`
 	FromAccount string    `gorm:"column:from_account;not null" json:"from_account"`
 	ToAccount   string    `gorm:"column:to_account;not null" json:"to_account"`

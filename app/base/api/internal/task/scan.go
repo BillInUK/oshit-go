@@ -163,7 +163,7 @@ func (t *TxScanTask) GetTxFetchState(txId string) (*model.ServiceTx, error) {
 // MarkTxFetchState 标记交易获取状态
 func (t *TxScanTask) MarkTxFetchState(txId string, state int) error {
 	table := t.db.Table(model.TableNameServiceTx)
-	if err := table.Where("tx_id = ?", txId).Update("state", state).Error; err != nil {
+	if err := table.Where("tx_id = ?", txId).Update("tx_state", state).Error; err != nil {
 		return err
 	}
 	return nil

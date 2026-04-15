@@ -99,7 +99,7 @@ func (l *LotteryLogic) ExecuteLottery(nativeAccount string) (*model.LotteryRewar
 	// 3. 检查是否存在是否存在未兑换的抽奖记录
 	var pendingReward model.LotteryReward
 	pendingErr := l.db.Table(model.TableNameLotteryReward).
-		Where("native_account = ? AND pending = ? AND state = ?", nativeAccount, false, 0).
+		Where("native_account = ? AND pending = ? AND reward_state = ?", nativeAccount, false, 0).
 		First(&pendingReward).Error
 	if pendingErr == nil {
 		// 已有pending记录
@@ -123,7 +123,7 @@ func (l *LotteryLogic) ExecuteLottery(nativeAccount string) (*model.LotteryRewar
 		NativeAccount: nativeAccount,
 		RewardAmount:  rewardAmountRaw,
 		RewardType:    0,
-		State:         0,
+		RewardState:   0,
 		Pending:       true,
 		RewardDay:     today,
 		CreatedAt:     time.Now(),
@@ -162,7 +162,7 @@ func (l *LotteryLogic) ExecuteLottery(nativeAccount string) (*model.LotteryRewar
 func (l *LotteryLogic) GetUnclaimedRewards(nativeAccount string) ([]*model.LotteryReward, error) {
 	var rewards []*model.LotteryReward
 	err := l.db.Table(model.TableNameLotteryReward).
-		Where("native_account = ? AND pending = ? AND state = ?", nativeAccount, false, 0).
+		Where("native_account = ? AND pending = ? AND reward_state = ?", nativeAccount, false, 0).
 		Find(&rewards).Error
 	if err != nil {
 		return nil, err
@@ -177,7 +177,7 @@ func (l *LotteryLogic) GetTxInfo(ctx context.Context, recordId string) (*types.C
 	// 通过 recordId 查找 pending=true, state=0 的奖励记录
 	var reward model.LotteryReward
 	err := l.db.Table(model.TableNameLotteryReward).
-		Where("record_id = ? AND pending = ? AND state = ?", recordId, true, 0).
+		Where("record_id = ? AND pending = ? AND reward_state = ?", recordId, true, 0).
 		First(&reward).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.New("no pending lottery reward found")
@@ -228,14 +228,14 @@ func (l *LotteryLogic) recordLotteryClaim(txId, rewardId string) error {
 	}
 
 	// 创建 lottery_claim_record 记录
-	claimRecord := model.LotteryClaimRecord{
-		RewardIds: fmt.Sprintf("{%s}", rewardId),
-		TxID:      txId,
-		State:     0,
+	claimRecord := model.LotteryClaim{
+		RewardIds:   fmt.Sprintf("{%s}", rewardId),
+		TxID:        txId,
+		RewardState: 0,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	if err := dbTx.Table(model.TableNameLotteryClaimRecord).Omit("record_id").Create(&claimRecord).Error; err != nil {
+	if err := dbTx.Table(model.TableNameLotteryClaim).Omit("record_id").Create(&claimRecord).Error; err != nil {
 		dbTx.Rollback()
 		return fmt.Errorf("insert lottery claim record error: %v", err)
 	}

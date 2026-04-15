@@ -31,10 +31,10 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 		}
 	}()
 	var err error
-	var exchangeRecord model.CampaignExchangeRecord
+	var exchangeRecord model.CampaignQuoteRecord
 
 	// 根据交易 Id 找到记录
-	if err = dbTx.Table(model.TableNameCampaignExchangeRecord).
+	if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 		Where("tx_id = ?", txId).
 		First(&exchangeRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -47,9 +47,9 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 	}
 
 	if msg.TxSig.Err != nil {
-		if err = dbTx.Table(model.TableNameCampaignExchangeRecord).
+		if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 			Where("tx_id = ?", txId).
-			Update("state", -1).Error; err != nil {
+			Update("quote_state", -1).Error; err != nil {
 			log.Errorf("%s - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", prefix, txId, err)
 			dbTx.Rollback()
 			return
@@ -64,7 +64,7 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 		}
 		// 解冻用户兑换额度
 		currentDate := time.Now().UTC().Truncate(24 * time.Hour)
-		if err = dbTx.Table(model.TableNameUserDailyExchangeQuota).
+		if err = dbTx.Table(model.TableNameUserDailyQuota).
 			Where("user_id = ? and quota_date = ?", exchangeRecord.UserID, currentDate).
 			Updates(map[string]interface{}{
 				"frozen_quota":    gorm.Expr("frozen_quota - ?", exchangeRecord.Amount),
@@ -76,7 +76,7 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 			return
 		}
 		// 恢复全局兑换额度
-		if err = dbTx.Table(model.TableNameGlobalDailyExchangeLimit).
+		if err = dbTx.Table(model.TableNameCampaignQuoteLimit).
 			Where("quota_date = ?", currentDate).
 			Updates(map[string]interface{}{
 				"daily_limit": gorm.Expr("daily_limit + ?", exchangeRecord.Amount),
@@ -87,9 +87,9 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 			return
 		}
 	} else {
-		if err = dbTx.Table(model.TableNameCampaignExchangeRecord).
+		if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 			Where("tx_id = ?", txId).
-			Update("state", 1).Error; err != nil {
+			Update("quote_state", 1).Error; err != nil {
 			log.Errorf("%s - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为成功，错误: %v", prefix, txId, err)
 			dbTx.Rollback()
 			return
@@ -104,7 +104,7 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 		}
 		// 扣除用户冻结额度（冻结额度转为已使用）
 		currentDate := time.Now().UTC().Truncate(24 * time.Hour)
-		if err = dbTx.Table(model.TableNameUserDailyExchangeQuota).
+		if err = dbTx.Table(model.TableNameUserDailyQuota).
 			Where("user_id = ? and quota_date = ?", exchangeRecord.UserID, currentDate).
 			Updates(map[string]interface{}{
 				"frozen_quota": gorm.Expr("frozen_quota - ?", exchangeRecord.Amount),
@@ -144,10 +144,10 @@ func (l *CampaignLogic) HandleExpiredTx(msg entity.NewExpiredTx) {
 		}
 	}()
 	var err error
-	var exchangeRecord model.CampaignExchangeRecord
+	var exchangeRecord model.CampaignQuoteRecord
 
 	// 根据交易 Id 找到记录
-	if err = dbTx.Table(model.TableNameCampaignExchangeRecord).
+	if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 		Where("tx_id = ?", txId).
 		First(&exchangeRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -158,9 +158,9 @@ func (l *CampaignLogic) HandleExpiredTx(msg entity.NewExpiredTx) {
 		dbTx.Rollback()
 		return
 	}
-	if err = dbTx.Table(model.TableNameCampaignExchangeRecord).
+	if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 		Where("tx_id = ?", txId).
-		Update("state", -1).Error; err != nil {
+		Update("quote_state", -1).Error; err != nil {
 		log.Errorf("%s - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", prefix, txId, err)
 		dbTx.Rollback()
 		return
@@ -184,7 +184,7 @@ func (l *CampaignLogic) HandleExpiredTx(msg entity.NewExpiredTx) {
 }
 
 // recordExchangeRecord 记录官网领取token记录
-func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedServiceTransaction, userId uint64, opResult *entity.ScoreOperationResult, tokenAmount float64, userQuota *model.UserDailyExchangeQuota, globalLimit *model.GlobalDailyExchangeLimit) error {
+func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedServiceTransaction, userId uint64, opResult *entity.ScoreOperationResult, tokenAmount float64, userQuota *model.UserDailyQuota, globalLimit *model.CampaignQuoteLimit) error {
 	// 开启事务
 	dbTx := l.db.Begin()
 	if dbTx.Error != nil {
@@ -198,7 +198,7 @@ func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedSer
 	scoreTxId := opResult.OperationResult.Log.TransactionID
 	scoreFlowId := int32(opResult.OperationResult.Log.LogID)
 	amount := decodedServiceTx.TransferTokenInst.Amount
-	exchangeTokenRecord := model.CampaignExchangeRecord{
+	exchangeTokenRecord := model.CampaignQuoteRecord{
 		RewardAccount:  decodedServiceTx.RewardInst.FromNativeAccount,
 		ReceiptAccount: decodedServiceTx.RewardInst.ToNativeAccount,
 		Provider:       "campaign",
@@ -208,11 +208,11 @@ func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedSer
 		TxID:           decodedServiceTx.TxID,
 		Amount:         amount,
 		Score:          score,
-		State:          0,
+		QuoteState:     0,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}
-	if err := dbTx.Table(model.TableNameCampaignExchangeRecord).Create(&exchangeTokenRecord).Error; err != nil {
+	if err := dbTx.Table(model.TableNameCampaignQuoteRecord).Create(&exchangeTokenRecord).Error; err != nil {
 		dbTx.Rollback() // 回滚事务
 		log.Errorf("兑换Campaign积分为token - 插入领取记录表错误: %v", err)
 		return err
@@ -222,7 +222,7 @@ func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedSer
 	userQuota.FrozenQuota += tokenAmount
 	userQuota.AvailableQuota -= tokenAmount
 	userQuota.UpdatedAt = time.Now()
-	if err := dbTx.Table(model.TableNameUserDailyExchangeQuota).Where("id = ?", userQuota.ID).Updates(map[string]interface{}{
+	if err := dbTx.Table(model.TableNameUserDailyQuota).Where("id = ?", userQuota.ID).Updates(map[string]interface{}{
 		"frozen_quota":    userQuota.FrozenQuota,
 		"available_quota": userQuota.AvailableQuota,
 		"updated_at":      userQuota.UpdatedAt,
@@ -235,7 +235,7 @@ func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedSer
 	// 更新全局兑换额度
 	globalLimit.DailyLimit -= tokenAmount
 	globalLimit.UpdatedAt = time.Now()
-	if err := dbTx.Table(model.TableNameGlobalDailyExchangeLimit).Where("id = ?", globalLimit.ID).Updates(map[string]interface{}{
+	if err := dbTx.Table(model.TableNameCampaignQuoteLimit).Where("id = ?", globalLimit.ID).Updates(map[string]interface{}{
 		"daily_limit": globalLimit.DailyLimit,
 		"updated_at":  globalLimit.UpdatedAt,
 	}).Error; err != nil {

@@ -82,8 +82,8 @@ func (h *LotteryHandler) GetRecord(fiberCtx *fiber.Ctx) error {
 		return response.BadRequest(fiberCtx, "txId is required")
 	}
 
-	var record model.LotteryClaimRecord
-	if err := h.srvCtx.DB.Table(model.TableNameLotteryClaimRecord).
+	var record model.LotteryClaim
+	if err := h.srvCtx.DB.Table(model.TableNameLotteryClaim).
 		Where("tx_id = ?", req.TxId).
 		First(&record).Error; err != nil {
 		log.Errorf("%s 查询领取记录错误: %v", h.prefix, err)

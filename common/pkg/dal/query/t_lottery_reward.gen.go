@@ -32,7 +32,7 @@ func newLotteryReward(db *gorm.DB, opts ...gen.DOOption) lotteryReward {
 	_lotteryReward.NativeAccount = field.NewString(tableName, "native_account")
 	_lotteryReward.RewardAmount = field.NewFloat64(tableName, "reward_amount")
 	_lotteryReward.RewardType = field.NewInt32(tableName, "reward_type")
-	_lotteryReward.State = field.NewInt32(tableName, "state")
+	_lotteryReward.RewardState = field.NewInt32(tableName, "reward_state")
 	_lotteryReward.Pending = field.NewBool(tableName, "pending")
 	_lotteryReward.RewardDay = field.NewTime(tableName, "reward_day")
 	_lotteryReward.CreatedAt = field.NewTime(tableName, "created_at")
@@ -51,7 +51,7 @@ type lotteryReward struct {
 	NativeAccount field.String
 	RewardAmount  field.Float64
 	RewardType    field.Int32
-	State         field.Int32
+	RewardState   field.Int32
 	Pending       field.Bool
 	RewardDay     field.Time
 	CreatedAt     field.Time
@@ -76,7 +76,7 @@ func (l *lotteryReward) updateTableName(table string) *lotteryReward {
 	l.NativeAccount = field.NewString(table, "native_account")
 	l.RewardAmount = field.NewFloat64(table, "reward_amount")
 	l.RewardType = field.NewInt32(table, "reward_type")
-	l.State = field.NewInt32(table, "state")
+	l.RewardState = field.NewInt32(table, "reward_state")
 	l.Pending = field.NewBool(table, "pending")
 	l.RewardDay = field.NewTime(table, "reward_day")
 	l.CreatedAt = field.NewTime(table, "created_at")
@@ -114,7 +114,7 @@ func (l *lotteryReward) fillFieldMap() {
 	l.fieldMap["native_account"] = l.NativeAccount
 	l.fieldMap["reward_amount"] = l.RewardAmount
 	l.fieldMap["reward_type"] = l.RewardType
-	l.fieldMap["state"] = l.State
+	l.fieldMap["reward_state"] = l.RewardState
 	l.fieldMap["pending"] = l.Pending
 	l.fieldMap["reward_day"] = l.RewardDay
 	l.fieldMap["created_at"] = l.CreatedAt

@@ -42,14 +42,14 @@ func (l *GiveTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 
 	if msg.TxSig.Err != nil {
 		if err := dbTx.Table(model.TableNameGiveTokenRecord).
-			Where("record_id = ?", giveTokenRecord.RecordID).Update("state", -1).Error; err != nil {
+			Where("record_id = ?", giveTokenRecord.RecordID).Update("tx_state", -1).Error; err != nil {
 			log.Errorf("%s 更新转账交易状态为失败，错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
 		}
 	} else {
 		if err := dbTx.Table(model.TableNameGiveTokenRecord).
-			Where("record_id = ?", giveTokenRecord.RecordID).Update("state", 1).Error; err != nil {
+			Where("record_id = ?", giveTokenRecord.RecordID).Update("tx_state", 1).Error; err != nil {
 			log.Errorf("%s 更新转账交易状态为成功，错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -61,7 +61,7 @@ func (l *GiveTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 			dbTx.Rollback()
 			return err
 		}
-		if err = l.recordFundFlow("OShit", "OShit", decodedServiceTx); err != nil {
+		if err = l.recordFundFlow(decodedServiceTx); err != nil {
 			log.Errorf("%s 记录流水失败: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -102,7 +102,7 @@ func (l *GiveTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		return err
 	}
 
-	if err := table.Where("tx_id = ?", txId).Update("state", -1).Error; err != nil {
+	if err := table.Where("tx_id = ?", txId).Update("tx_state", -1).Error; err != nil {
 		log.Errorf("%s 更新转账交易状态为失败，错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
@@ -117,15 +117,13 @@ func (l *GiveTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 }
 
 // recordFundFlow 记录 give token 的资金流水
-func (l *GiveTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServiceTx *entity.DecodedServiceTransaction) error {
+func (l *GiveTokenLogic) recordFundFlow(decodedServiceTx *entity.DecodedServiceTransaction) error {
 	var fundFlows []model.FundFlow
 	table := l.db.Table(model.TableNameFundFlow)
 
 	// 1. 记录 dex 入账 sol 流水
 	log.Infof("记录官方转账流水 - 记录dex入账sol流水 from %v to %v", decodedServiceTx.FromNativeAccount, decodedServiceTx.ToDexInst.ToNativeAccount)
 	fundFlows = append(fundFlows, model.FundFlow{
-		Brand:       brand,
-		TokenSymbol: tokenSymbol,
 		IsToken:     false,
 		FromAccount: decodedServiceTx.FromNativeAccount,
 		ToAccount:   decodedServiceTx.ToDexInst.ToNativeAccount,
@@ -144,8 +142,6 @@ func (l *GiveTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 		decodedServiceTx.RewardInst.FromNativeAccount, decodedServiceTx.RewardInst.ToNativeAccount,
 		decodedServiceTx.RewardInst.Amount)
 	fundFlows = append(fundFlows, model.FundFlow{
-		Brand:       brand,
-		TokenSymbol: tokenSymbol,
 		IsToken:     true,
 		FromAccount: decodedServiceTx.RewardInst.FromNativeAccount,
 		ToAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
@@ -164,8 +160,6 @@ func (l *GiveTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 		log.Infof("记录官方转账流水 - 记录奖励邀请人出账流水 from %v to %v amount %v",
 			inst.FromNativeAccount, inst.ToNativeAccount, inst.Amount)
 		fundFlows = append(fundFlows, model.FundFlow{
-			Brand:       brand,
-			TokenSymbol: tokenSymbol,
 			IsToken:     true,
 			FromAccount: inst.FromNativeAccount,
 			ToAccount:   inst.ToNativeAccount,

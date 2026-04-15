@@ -30,8 +30,8 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	}()
 
 	// 1. 找到 t_lottery_claim_record
-	var claimRecord model.LotteryClaimRecord
-	if err := dbTx.Table(model.TableNameLotteryClaimRecord).
+	var claimRecord model.LotteryClaim
+	if err := dbTx.Table(model.TableNameLotteryClaim).
 		Where("tx_id = ?", txId).First(&claimRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			dbTx.Rollback()
@@ -47,9 +47,9 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	if msg.TxSig.Err != nil {
 		// 交易失败
 		// 更新 claim_record.state = -1
-		if err := dbTx.Table(model.TableNameLotteryClaimRecord).
+		if err := dbTx.Table(model.TableNameLotteryClaim).
 			Where("record_id = ?", claimRecord.RecordID).
-			Updates(map[string]interface{}{"state": -1, "updated_at": time.Now()}).Error; err != nil {
+			Updates(map[string]interface{}{"reward_state": -1, "updated_at": time.Now()}).Error; err != nil {
 			log.Errorf("%s 更新领取记录状态为失败错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -57,7 +57,7 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		// 更新 t_lottery_reward.state = -1, pending = false
 		if err := dbTx.Table(model.TableNameLotteryReward).
 			Where("record_id = ?", rewardId).
-			Updates(map[string]interface{}{"state": -1, "pending": false, "updated_at": time.Now()}).Error; err != nil {
+			Updates(map[string]interface{}{"reward_state": -1, "pending": false, "updated_at": time.Now()}).Error; err != nil {
 			log.Errorf("%s 更新抽奖奖励状态为失败错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -65,9 +65,9 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	} else {
 		// 交易成功
 		// 更新 claim_record.state = 1
-		if err := dbTx.Table(model.TableNameLotteryClaimRecord).
+		if err := dbTx.Table(model.TableNameLotteryClaim).
 			Where("record_id = ?", claimRecord.RecordID).
-			Updates(map[string]interface{}{"state": 1, "updated_at": time.Now()}).Error; err != nil {
+			Updates(map[string]interface{}{"reward_state": 1, "updated_at": time.Now()}).Error; err != nil {
 			log.Errorf("%s 更新领取记录状态为成功错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -83,7 +83,7 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		}
 		if err := dbTx.Table(model.TableNameLotteryReward).
 			Where("record_id = ?", rewardId).
-			Updates(map[string]interface{}{"state": 1, "pending": false, "updated_at": time.Now()}).Error; err != nil {
+			Updates(map[string]interface{}{"reward_state": 1, "pending": false, "updated_at": time.Now()}).Error; err != nil {
 			log.Errorf("%s 更新抽奖奖励状态为成功错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -100,7 +100,7 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		}
 
 		// 记录流水
-		if err := l.recordFundFlow(dbTx, "OShit", "OShit", txId, &reward, &msg.DecodedTx); err != nil {
+		if err := l.recordFundFlow(dbTx, txId, &reward, &msg.DecodedTx); err != nil {
 			log.Errorf("%s 记录流水失败: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -132,8 +132,8 @@ func (l *LotteryLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	}()
 
 	// 找到 t_lottery_claim_record
-	var claimRecord model.LotteryClaimRecord
-	if err := dbTx.Table(model.TableNameLotteryClaimRecord).
+	var claimRecord model.LotteryClaim
+	if err := dbTx.Table(model.TableNameLotteryClaim).
 		Where("tx_id = ?", txId).First(&claimRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			dbTx.Rollback()
@@ -147,9 +147,9 @@ func (l *LotteryLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	rewardId := strings.Trim(claimRecord.RewardIds, "{}")
 
 	// 更新 claim_record.state = -1
-	if err := dbTx.Table(model.TableNameLotteryClaimRecord).
+	if err := dbTx.Table(model.TableNameLotteryClaim).
 		Where("record_id = ?", claimRecord.RecordID).
-		Updates(map[string]interface{}{"state": -1, "updated_at": time.Now()}).Error; err != nil {
+		Updates(map[string]interface{}{"reward_state": -1, "updated_at": time.Now()}).Error; err != nil {
 		log.Errorf("%s 更新领取记录状态为失败错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
@@ -158,7 +158,7 @@ func (l *LotteryLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	// 更新 t_lottery_reward.state = -1, pending = false
 	if err := dbTx.Table(model.TableNameLotteryReward).
 		Where("record_id = ?", rewardId).
-		Updates(map[string]interface{}{"state": -1, "pending": false, "updated_at": time.Now()}).Error; err != nil {
+		Updates(map[string]interface{}{"reward_state": -1, "pending": false, "updated_at": time.Now()}).Error; err != nil {
 		log.Errorf("%s 更新抽奖奖励状态为失败错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
@@ -175,7 +175,7 @@ func (l *LotteryLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 
 // recordFundFlow 记录抽奖的资金流水（在 dbTx 事务内）
 // 使用 decodedTx 的 TransferInstructions[0] 作为 SOL cost，TransferCheckedInstructions[0] 作为 token reward
-func (l *LotteryLogic) recordFundFlow(dbTx *gorm.DB, brand, tokenSymbol, txId string, reward *model.LotteryReward, decodedTx *entity.DecodedSolanaTransaction) error {
+func (l *LotteryLogic) recordFundFlow(dbTx *gorm.DB, txId string, reward *model.LotteryReward, decodedTx *entity.DecodedSolanaTransaction) error {
 	var fundFlows []model.FundFlow
 
 	// 1. SOL 成本入账流水
@@ -184,8 +184,6 @@ func (l *LotteryLogic) recordFundFlow(dbTx *gorm.DB, brand, tokenSymbol, txId st
 		log.Infof("记录抽奖流水 - 记录SOL成本入账 from %v to %v amount %v",
 			solInst.FromNativeAccount, solInst.ToNativeAccount, solInst.Amount)
 		fundFlows = append(fundFlows, model.FundFlow{
-			Brand:       brand,
-			TokenSymbol: tokenSymbol,
 			IsToken:     false,
 			FromAccount: solInst.FromNativeAccount.String(),
 			ToAccount:   solInst.ToNativeAccount.String(),
@@ -206,8 +204,6 @@ func (l *LotteryLogic) recordFundFlow(dbTx *gorm.DB, brand, tokenSymbol, txId st
 		log.Infof("记录抽奖流水 - 记录token奖励出账 from %v to %v amount %v",
 			tokenInst.FromNativeAccount, tokenInst.ToNativeAccount, tokenInst.Amount)
 		fundFlows = append(fundFlows, model.FundFlow{
-			Brand:       brand,
-			TokenSymbol: tokenSymbol,
 			IsToken:     true,
 			FromAccount: tokenInst.FromNativeAccount.String(),
 			ToAccount:   tokenInst.ToNativeAccount.String(),

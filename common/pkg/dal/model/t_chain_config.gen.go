@@ -12,7 +12,7 @@ const TableNameChainConfig = "t_chain_config"
 
 // ChainConfig mapped from table <t_chain_config>
 type ChainConfig struct {
-	Chain     string    `gorm:"column:chain;not null" json:"chain"`
+	ChainName string    `gorm:"column:chain_name;not null" json:"chain_name"`
 	RPCURL    string    `gorm:"column:rpc_url;not null" json:"rpc_url"`
 	WssURL    string    `gorm:"column:wss_url;not null" json:"wss_url"`
 	Decimals  int32     `gorm:"column:decimals;not null" json:"decimals"`

@@ -29,7 +29,7 @@ func newMainnetRpcConfig(db *gorm.DB, opts ...gen.DOOption) mainnetRpcConfig {
 	tableName := _mainnetRpcConfig.mainnetRpcConfigDo.TableName()
 	_mainnetRpcConfig.ALL = field.NewAsterisk(tableName)
 	_mainnetRpcConfig.RecordID = field.NewString(tableName, "record_id")
-	_mainnetRpcConfig.Chain = field.NewString(tableName, "chain")
+	_mainnetRpcConfig.ChainName = field.NewString(tableName, "chain_name")
 	_mainnetRpcConfig.RPCURL = field.NewString(tableName, "rpc_url")
 	_mainnetRpcConfig.WssURL = field.NewString(tableName, "wss_url")
 	_mainnetRpcConfig.CreatedAt = field.NewTime(tableName, "created_at")
@@ -45,7 +45,7 @@ type mainnetRpcConfig struct {
 
 	ALL       field.Asterisk
 	RecordID  field.String
-	Chain     field.String
+	ChainName field.String
 	RPCURL    field.String
 	WssURL    field.String
 	CreatedAt field.Time
@@ -67,7 +67,7 @@ func (m mainnetRpcConfig) As(alias string) *mainnetRpcConfig {
 func (m *mainnetRpcConfig) updateTableName(table string) *mainnetRpcConfig {
 	m.ALL = field.NewAsterisk(table)
 	m.RecordID = field.NewString(table, "record_id")
-	m.Chain = field.NewString(table, "chain")
+	m.ChainName = field.NewString(table, "chain_name")
 	m.RPCURL = field.NewString(table, "rpc_url")
 	m.WssURL = field.NewString(table, "wss_url")
 	m.CreatedAt = field.NewTime(table, "created_at")
@@ -102,7 +102,7 @@ func (m *mainnetRpcConfig) GetFieldByName(fieldName string) (field.OrderExpr, bo
 func (m *mainnetRpcConfig) fillFieldMap() {
 	m.fieldMap = make(map[string]field.Expr, 6)
 	m.fieldMap["record_id"] = m.RecordID
-	m.fieldMap["chain"] = m.Chain
+	m.fieldMap["chain_name"] = m.ChainName
 	m.fieldMap["rpc_url"] = m.RPCURL
 	m.fieldMap["wss_url"] = m.WssURL
 	m.fieldMap["created_at"] = m.CreatedAt

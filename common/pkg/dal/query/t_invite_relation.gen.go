@@ -32,7 +32,7 @@ func newInviteRelation(db *gorm.DB, opts ...gen.DOOption) inviteRelation {
 	_inviteRelation.Inviter = field.NewString(tableName, "inviter")
 	_inviteRelation.Invitee = field.NewString(tableName, "invitee")
 	_inviteRelation.Channel = field.NewString(tableName, "channel")
-	_inviteRelation.Level = field.NewInt32(tableName, "level")
+	_inviteRelation.InviterLevel = field.NewInt32(tableName, "inviter_level")
 	_inviteRelation.TxID = field.NewString(tableName, "tx_id")
 	_inviteRelation.CreatedAt = field.NewTime(tableName, "created_at")
 	_inviteRelation.UpdatedAt = field.NewTime(tableName, "updated_at")
@@ -50,7 +50,7 @@ type inviteRelation struct {
 	Inviter   field.String
 	Invitee   field.String
 	Channel   field.String
-	Level     field.Int32
+	InviterLevel field.Int32
 	TxID      field.String
 	CreatedAt field.Time
 	UpdatedAt field.Time
@@ -74,7 +74,7 @@ func (i *inviteRelation) updateTableName(table string) *inviteRelation {
 	i.Inviter = field.NewString(table, "inviter")
 	i.Invitee = field.NewString(table, "invitee")
 	i.Channel = field.NewString(table, "channel")
-	i.Level = field.NewInt32(table, "level")
+	i.InviterLevel = field.NewInt32(table, "inviter_level")
 	i.TxID = field.NewString(table, "tx_id")
 	i.CreatedAt = field.NewTime(table, "created_at")
 	i.UpdatedAt = field.NewTime(table, "updated_at")
@@ -111,7 +111,7 @@ func (i *inviteRelation) fillFieldMap() {
 	i.fieldMap["inviter"] = i.Inviter
 	i.fieldMap["invitee"] = i.Invitee
 	i.fieldMap["channel"] = i.Channel
-	i.fieldMap["level"] = i.Level
+	i.fieldMap["inviter_level"] = i.InviterLevel
 	i.fieldMap["tx_id"] = i.TxID
 	i.fieldMap["created_at"] = i.CreatedAt
 	i.fieldMap["updated_at"] = i.UpdatedAt

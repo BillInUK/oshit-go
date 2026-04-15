@@ -37,7 +37,7 @@ func newTakeTokenRecord(db *gorm.DB, opts ...gen.DOOption) takeTokenRecord {
 	_takeTokenRecord.DexFee = field.NewFloat64(tableName, "dex_fee")
 	_takeTokenRecord.UseInviteCode = field.NewBool(tableName, "use_invite_code")
 	_takeTokenRecord.InviteCode = field.NewString(tableName, "invite_code")
-	_takeTokenRecord.State = field.NewInt32(tableName, "state")
+	_takeTokenRecord.TxState = field.NewInt32(tableName, "tx_state")
 	_takeTokenRecord.Invited = field.NewBool(tableName, "invited")
 	_takeTokenRecord.CreatedAt = field.NewTime(tableName, "created_at")
 	_takeTokenRecord.UpdatedAt = field.NewTime(tableName, "updated_at")
@@ -60,7 +60,7 @@ type takeTokenRecord struct {
 	DexFee         field.Float64
 	UseInviteCode  field.Bool
 	InviteCode     field.String
-	State          field.Int32
+	TxState        field.Int32
 	Invited        field.Bool
 	CreatedAt      field.Time
 	UpdatedAt      field.Time
@@ -89,7 +89,7 @@ func (t *takeTokenRecord) updateTableName(table string) *takeTokenRecord {
 	t.DexFee = field.NewFloat64(table, "dex_fee")
 	t.UseInviteCode = field.NewBool(table, "use_invite_code")
 	t.InviteCode = field.NewString(table, "invite_code")
-	t.State = field.NewInt32(table, "state")
+	t.TxState = field.NewInt32(table, "tx_state")
 	t.Invited = field.NewBool(table, "invited")
 	t.CreatedAt = field.NewTime(table, "created_at")
 	t.UpdatedAt = field.NewTime(table, "updated_at")
@@ -131,7 +131,7 @@ func (t *takeTokenRecord) fillFieldMap() {
 	t.fieldMap["dex_fee"] = t.DexFee
 	t.fieldMap["use_invite_code"] = t.UseInviteCode
 	t.fieldMap["invite_code"] = t.InviteCode
-	t.fieldMap["state"] = t.State
+	t.fieldMap["tx_state"] = t.TxState
 	t.fieldMap["invited"] = t.Invited
 	t.fieldMap["created_at"] = t.CreatedAt
 	t.fieldMap["updated_at"] = t.UpdatedAt

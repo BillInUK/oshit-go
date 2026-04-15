@@ -33,7 +33,7 @@ func newGiveTokenRecord(db *gorm.DB, opts ...gen.DOOption) giveTokenRecord {
 	_giveTokenRecord.ReceiptAccount = field.NewString(tableName, "receipt_account")
 	_giveTokenRecord.TxID = field.NewString(tableName, "tx_id")
 	_giveTokenRecord.Amount = field.NewFloat64(tableName, "amount")
-	_giveTokenRecord.State = field.NewInt32(tableName, "state")
+	_giveTokenRecord.TxState = field.NewInt32(tableName, "tx_state")
 	_giveTokenRecord.CreatedAt = field.NewTime(tableName, "created_at")
 	_giveTokenRecord.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -51,7 +51,7 @@ type giveTokenRecord struct {
 	ReceiptAccount field.String
 	TxID           field.String
 	Amount         field.Float64
-	State          field.Int32
+	TxState        field.Int32
 	CreatedAt      field.Time
 	UpdatedAt      field.Time
 
@@ -75,7 +75,7 @@ func (g *giveTokenRecord) updateTableName(table string) *giveTokenRecord {
 	g.ReceiptAccount = field.NewString(table, "receipt_account")
 	g.TxID = field.NewString(table, "tx_id")
 	g.Amount = field.NewFloat64(table, "amount")
-	g.State = field.NewInt32(table, "state")
+	g.TxState = field.NewInt32(table, "tx_state")
 	g.CreatedAt = field.NewTime(table, "created_at")
 	g.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -112,7 +112,7 @@ func (g *giveTokenRecord) fillFieldMap() {
 	g.fieldMap["receipt_account"] = g.ReceiptAccount
 	g.fieldMap["tx_id"] = g.TxID
 	g.fieldMap["amount"] = g.Amount
-	g.fieldMap["state"] = g.State
+	g.fieldMap["tx_state"] = g.TxState
 	g.fieldMap["created_at"] = g.CreatedAt
 	g.fieldMap["updated_at"] = g.UpdatedAt
 }

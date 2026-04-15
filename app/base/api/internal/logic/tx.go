@@ -70,7 +70,7 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 			Service:    req.Service,
 			SubService: req.SubService,
 			TxID:       txID,
-			State:      0,
+			TxState:    0,
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
 		}
@@ -132,7 +132,7 @@ func (l *TxLogic) broadcastTx(recordID string, confirm bool, tx *solana.Transact
 
 func (l *TxLogic) updateServiceTxState(recordID string, state int32) {
 	l.db.Model(&model.ServiceTx{}).Where("record_id = ?", recordID).Updates(map[string]interface{}{
-		"state":      state,
+		"tx_state":   state,
 		"updated_at": time.Now(),
 	})
 }

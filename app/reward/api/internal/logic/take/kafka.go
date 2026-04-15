@@ -83,14 +83,14 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 
 	if msg.TxSig.Err != nil {
 		if err = dbTx.Table(model.TableNameTakeTokenRecord).
-			Where("record_id = ?", takeTokenRecord.RecordID).Update("state", -1).Error; err != nil {
+			Where("record_id = ?", takeTokenRecord.RecordID).Update("tx_state", -1).Error; err != nil {
 			log.Errorf("%s 更新领取交易状态为失败，错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
 		}
 	} else {
 		if err = dbTx.Table(model.TableNameTakeTokenRecord).
-			Where("record_id = ?", takeTokenRecord.RecordID).Update("state", 1).Error; err != nil {
+			Where("record_id = ?", takeTokenRecord.RecordID).Update("tx_state", 1).Error; err != nil {
 			log.Errorf("%s 更新领取交易状态为成功，错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -102,7 +102,7 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 			dbTx.Rollback()
 			return err
 		}
-		err = l.recordFundFlow("OShit", "OShit", decodedServiceTx)
+		err = l.recordFundFlow(decodedServiceTx)
 		if err != nil {
 			log.Errorf("%s 记录流水失败: %v", prefix, err)
 			dbTx.Rollback()
@@ -181,7 +181,7 @@ func (l *TakeTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		dbTx.Rollback()
 		return err
 	}
-	if err = table.Where("tx_id = ?", txId).Update("state", -1).Error; err != nil {
+	if err = table.Where("tx_id = ?", txId).Update("tx_state", -1).Error; err != nil {
 		log.Errorf("%s 更新领取交易状态为失败，错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
@@ -196,7 +196,7 @@ func (l *TakeTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 }
 
 // recordFundFlow 记录领取 token 的资金流水
-func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServiceTx *entity.DecodedServiceTransaction) error {
+func (l *TakeTokenLogic) recordFundFlow(decodedServiceTx *entity.DecodedServiceTransaction) error {
 	var err error
 	var fundFlows []model.FundFlow
 
@@ -206,8 +206,6 @@ func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 	log.Infof("记录官网领取token流水 - 记录dex入账sol流水 from %v to %v", decodedServiceTx.ToDexInst.FromNativeAccount, decodedServiceTx.ToDexInst.ToNativeAccount)
 
 	dexInputFlow := model.FundFlow{
-		Brand:       brand,
-		TokenSymbol: tokenSymbol,
 		IsToken:     false,
 		FromAccount: decodedServiceTx.FromNativeAccount,
 		ToAccount:   decodedServiceTx.ToDexInst.ToNativeAccount,
@@ -228,8 +226,6 @@ func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 		decodedServiceTx.RewardInst.Amount)
 
 	rewardOutputFlow := model.FundFlow{
-		Brand:       brand,
-		TokenSymbol: tokenSymbol,
 		IsToken:     true,
 		FromAccount: decodedServiceTx.RewardInst.FromNativeAccount,
 		ToAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
@@ -250,8 +246,6 @@ func (l *TakeTokenLogic) recordFundFlow(brand, tokenSymbol string, decodedServic
 			inst.FromNativeAccount, inst.ToNativeAccount, inst.Amount)
 
 		outputFlow := model.FundFlow{
-			Brand:       brand,
-			TokenSymbol: tokenSymbol,
 			IsToken:     true,
 			FromAccount: inst.FromNativeAccount,
 			ToAccount:   inst.ToNativeAccount,

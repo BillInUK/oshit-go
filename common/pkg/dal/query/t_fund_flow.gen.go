@@ -29,8 +29,6 @@ func newFundFlow(db *gorm.DB, opts ...gen.DOOption) fundFlow {
 	tableName := _fundFlow.fundFlowDo.TableName()
 	_fundFlow.ALL = field.NewAsterisk(tableName)
 	_fundFlow.RecordID = field.NewString(tableName, "record_id")
-	_fundFlow.Brand = field.NewString(tableName, "brand")
-	_fundFlow.TokenSymbol = field.NewString(tableName, "token_symbol")
 	_fundFlow.IsToken = field.NewBool(tableName, "is_token")
 	_fundFlow.FromAccount = field.NewString(tableName, "from_account")
 	_fundFlow.ToAccount = field.NewString(tableName, "to_account")
@@ -53,8 +51,6 @@ type fundFlow struct {
 
 	ALL         field.Asterisk
 	RecordID    field.String
-	Brand       field.String
-	TokenSymbol field.String
 	IsToken     field.Bool
 	FromAccount field.String
 	ToAccount   field.String
@@ -83,8 +79,6 @@ func (f fundFlow) As(alias string) *fundFlow {
 func (f *fundFlow) updateTableName(table string) *fundFlow {
 	f.ALL = field.NewAsterisk(table)
 	f.RecordID = field.NewString(table, "record_id")
-	f.Brand = field.NewString(table, "brand")
-	f.TokenSymbol = field.NewString(table, "token_symbol")
 	f.IsToken = field.NewBool(table, "is_token")
 	f.FromAccount = field.NewString(table, "from_account")
 	f.ToAccount = field.NewString(table, "to_account")
@@ -120,10 +114,8 @@ func (f *fundFlow) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (f *fundFlow) fillFieldMap() {
-	f.fieldMap = make(map[string]field.Expr, 14)
+	f.fieldMap = make(map[string]field.Expr, 12)
 	f.fieldMap["record_id"] = f.RecordID
-	f.fieldMap["brand"] = f.Brand
-	f.fieldMap["token_symbol"] = f.TokenSymbol
 	f.fieldMap["is_token"] = f.IsToken
 	f.fieldMap["from_account"] = f.FromAccount
 	f.fieldMap["to_account"] = f.ToAccount

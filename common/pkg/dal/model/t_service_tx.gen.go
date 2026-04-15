@@ -16,7 +16,7 @@ type ServiceTx struct {
 	Service       string    `gorm:"column:service;not null" json:"service"`
 	SubService    string    `gorm:"column:sub_service;not null" json:"sub_service"`
 	TxID          string    `gorm:"column:tx_id;not null" json:"tx_id"`
-	State         int32     `gorm:"column:state;not null" json:"state"`
+	TxState       int32     `gorm:"column:tx_state;not null" json:"tx_state"`
 	RetryCount    int32     `gorm:"column:retry_count;not null" json:"retry_count"`
 	NextRetryTime time.Time `gorm:"column:next_retry_time;default:CURRENT_TIMESTAMP" json:"next_retry_time"`
 	MaxRetries    int32     `gorm:"column:max_retries;not null;default:5" json:"max_retries"`

@@ -28,7 +28,7 @@ func newLevelDist(db *gorm.DB, opts ...gen.DOOption) levelDist {
 
 	tableName := _levelDist.levelDistDo.TableName()
 	_levelDist.ALL = field.NewAsterisk(tableName)
-	_levelDist.Level = field.NewInt32(tableName, "level")
+	_levelDist.DistLevel = field.NewInt32(tableName, "dist_level")
 
 	_levelDist.fillFieldMap()
 
@@ -39,7 +39,7 @@ type levelDist struct {
 	levelDistDo levelDistDo
 
 	ALL   field.Asterisk
-	Level field.Int32
+	DistLevel field.Int32
 
 	fieldMap map[string]field.Expr
 }
@@ -56,7 +56,7 @@ func (l levelDist) As(alias string) *levelDist {
 
 func (l *levelDist) updateTableName(table string) *levelDist {
 	l.ALL = field.NewAsterisk(table)
-	l.Level = field.NewInt32(table, "level")
+	l.DistLevel = field.NewInt32(table, "dist_level")
 
 	l.fillFieldMap()
 
@@ -84,7 +84,7 @@ func (l *levelDist) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 
 func (l *levelDist) fillFieldMap() {
 	l.fieldMap = make(map[string]field.Expr, 1)
-	l.fieldMap["level"] = l.Level
+	l.fieldMap["dist_level"] = l.DistLevel
 }
 
 func (l levelDist) clone(db *gorm.DB) levelDist {

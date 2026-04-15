@@ -89,7 +89,7 @@ func (l *GiveTokenLogic) GetTxInfo(ctx context.Context, from, to string, amountU
 
 	// 3. 递归向上查询需要奖励的邀请人
 	sortedItems, sortedClaims, err := l.inviteLogic.BuildSortedInviterItems(
-		from, l.srvCtx.LevelDist.Level, l.srvCtx.LevelRatio, nil,
+		from, l.srvCtx.LevelDist.DistLevel, l.srvCtx.LevelRatio, nil,
 	)
 	if err != nil {
 		log.Errorf("%s 递归向上查询邀请人错误: %v", prefix, err)
@@ -164,7 +164,7 @@ func (l *GiveTokenLogic) getDailyRecords(nativeAccount string) ([]model.GiveToke
 func (l *GiveTokenLogic) takeTokenRecordExist(nativeAccount string) (bool, error) {
 	var record model.TakeTokenRecord
 	table := l.db.Table(model.TableNameTakeTokenRecord)
-	if err := table.Where("receipt_account = ? and state >= 0", nativeAccount).First(&record).Error; err != nil {
+	if err := table.Where("receipt_account = ? and tx_state >= 0", nativeAccount).First(&record).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
 		}
@@ -177,7 +177,7 @@ func (l *GiveTokenLogic) takeTokenRecordExist(nativeAccount string) (bool, error
 func (l *GiveTokenLogic) giveTokenRecordExist(nativeAccount string) (bool, error) {
 	var record model.GiveTokenRecord
 	table := l.db.Table(model.TableNameGiveTokenRecord)
-	if err := table.Where("receipt_account = ? and state >= 0", nativeAccount).First(&record).Error; err != nil {
+	if err := table.Where("receipt_account = ? and tx_state >= 0", nativeAccount).First(&record).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
 		}
@@ -221,7 +221,7 @@ func (l *GiveTokenLogic) accountValid(account string) (bool, error) {
 
 // getUpInviters 查询上级邀请人的以及每个上级邀请人所能拿到的奖励费率
 func (l *GiveTokenLogic) getUpInviters(nativeAccount string) ([]model.InviteRelation, error) {
-	inviteRecords, err := l.inviteLogic.GetUpInviterRecords(nativeAccount, l.srvCtx.LevelDist.Level)
+	inviteRecords, err := l.inviteLogic.GetUpInviterRecords(nativeAccount, l.srvCtx.LevelDist.DistLevel)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (l *GiveTokenLogic) recordGiveToken(serviceTx *entity.DecodedServiceTransac
 		ReceiptAccount: inst.ToNativeAccount,
 		TxID:           serviceTx.TxID,
 		Amount:         inst.Amount,
-		State:          0,
+		TxState:        0,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}

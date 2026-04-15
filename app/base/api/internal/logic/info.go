@@ -37,8 +37,8 @@ func (l *InfoLogic) GetTokenInfo() (*types.GetTokenInfoRsp, error) {
 	}
 
 	return &types.GetTokenInfoRsp{
-		Name:     tokenConfig.Name,
-		Symbol:   tokenConfig.Symbol,
+		Name:     tokenConfig.TokenName,
+		Symbol:   tokenConfig.TokenSymbol,
 		Decimals: tokenConfig.Decimals,
 		Mint:     tokenConfig.Mint,
 	}, nil
