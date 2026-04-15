@@ -62,7 +62,7 @@ func (l *RewardInviteLogic) GetUpInviterRecords(nativeAccount string, depth int3
 			inviter,
 			invitee,
 			channel,
-			level,
+			inviter_level,
 			tx_id,
 			created_at,
 			updated_at,
@@ -79,7 +79,7 @@ func (l *RewardInviteLogic) GetUpInviterRecords(nativeAccount string, depth int3
 			t.inviter,
 			t.invitee,
 			t.channel,
-			t.level,
+			t.inviter_level,
 			t.tx_id,
 			t.created_at,
 			t.updated_at,
@@ -113,7 +113,7 @@ func (l *RewardInviteLogic) GetDownInviteeRecords(nativeAccount string, depth in
 			inviter,
 			invitee,
 			channel,
-			level,
+			inviter_level,
 			tx_id,
 			created_at,
 			updated_at,
@@ -130,7 +130,7 @@ func (l *RewardInviteLogic) GetDownInviteeRecords(nativeAccount string, depth in
 			t.inviter,
 			t.invitee,
 			t.channel,
-			t.level,
+			t.inviter_level,
 			t.tx_id,
 			t.created_at,
 			t.updated_at,
@@ -221,11 +221,11 @@ func (l *RewardInviteLogic) RecordDetermineInvitationHierarchy(
 		level = inviterRecord.InviterLevel + 1
 	}
 	determineInviteRecord := model.InviteRelation{
-		Inviter: inviterNativeAccount,
-		Invitee: inviteeNativeAccount,
-		TxID:                 transferTxId,
-		Channel:              inviteChannel,
-		InviterLevel:         level,
+		Inviter:      inviterNativeAccount,
+		Invitee:      inviteeNativeAccount,
+		TxID:         transferTxId,
+		Channel:      inviteChannel,
+		InviterLevel: level,
 	}
 	err = l.db.Create(&determineInviteRecord).Error
 	return &determineInviteRecord, err

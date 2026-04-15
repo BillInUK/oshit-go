@@ -181,7 +181,7 @@ func (l *TakeTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		dbTx.Rollback()
 		return err
 	}
-	if err = table.Where("tx_id = ?", txId).Update("tx_state", -1).Error; err != nil {
+	if err = dbTx.Model(&model.TakeTokenRecord{}).Where("tx_id = ?", txId).Update("tx_state", -1).Error; err != nil {
 		log.Errorf("%s 更新领取交易状态为失败，错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err

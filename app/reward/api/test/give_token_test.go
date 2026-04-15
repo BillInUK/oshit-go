@@ -101,10 +101,18 @@ func createGiveTokenHexEncodedTx(ctx context.Context, privKey solana.PrivateKey,
 	computePrice := priorityFee.PerComputeUnit.Medium
 	fmt.Printf("compute price: %d\n", computePrice)
 
-	// 奖励邀请人指令
+	// 奖励邀请人指令（若邀请人 ATA 不存在则先创建）
 	var inviterInsts []solana.Instruction
+	var inviterCreateATAInsts []solana.Instruction
 	for _, rewardInfo := range txInfo.RewardInviterInfo {
-		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(rewardInfo.ReceiptAccount), tokenMintAccount)
+		inviterNativeKey := solana.MPK(rewardInfo.ReceiptAccount)
+		inviterTA, _, _ := solana.FindAssociatedTokenAddress(inviterNativeKey, tokenMintAccount)
+		inviterAccountInfo, _ := rpcClient.GetAccountInfo(ctx, inviterTA)
+		if inviterAccountInfo == nil || inviterAccountInfo.Value == nil {
+			inviterCreateATAInsts = append(inviterCreateATAInsts,
+				associatedtokenaccount.NewCreateInstruction(fromPubKey, inviterNativeKey, tokenMintAccount).Build(),
+			)
+		}
 		inst := token.NewTransferCheckedInstructionBuilder().
 			SetAmount(rewardInfo.Amount).
 			SetDecimals(decimals).
@@ -132,6 +140,8 @@ func createGiveTokenHexEncodedTx(ctx context.Context, privKey solana.PrivateKey,
 			associatedtokenaccount.NewCreateInstruction(fromPubKey, toNativeKey, tokenMintAccount).Build(),
 		)
 	}
+	// 为没有 ATA 的邀请人创建 ATA
+	instructions = append(instructions, inviterCreateATAInsts...)
 	instructions = append(instructions,
 		// 转账人转出 token 给接收人
 		token.NewTransferCheckedInstructionBuilder().
@@ -191,7 +201,7 @@ func createGiveTokenHexEncodedTx(ctx context.Context, privKey solana.PrivateKey,
 // ---- GiveToken 测试用例 ----
 
 func TestGetGiveTokenTxInfo(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(AlicePrivate)
+	privKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
 	if err != nil {
 		t.Fatalf("parse private key failed: %v", err)
 	}
@@ -203,7 +213,7 @@ func TestGetGiveTokenTxInfo(t *testing.T) {
 	}
 
 	txInfo, err := getGiveTokenTxInfo(jwtToken, types.GetGiveTokenTxInfoReq{
-		To:     BobNativePubKey,
+		To:     RobertNativePubKey,
 		Amount: 1000,
 	})
 	if err != nil {

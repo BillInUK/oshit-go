@@ -146,21 +146,21 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 
 	// 初始化链配置 - SOL链
 	var chainConfig model.ChainConfig
-	if err := s.DB.Where("chain = ?", "SOL").First(&chainConfig).Error; err != nil {
+	if err := s.DB.Where("chain_name = ?", "solana").First(&chainConfig).Error; err != nil {
 		return fmt.Errorf("can not load solana chain configure of chain SOL from database: %v", err)
 	}
 	s.ChainConfig = &chainConfig
 
 	// 初始化用户钱包RPC配置 - SOL链
 	var userWalletRPCConfig model.UserWalletRpcConfig
-	if err := s.DB.Where("chain = ?", "SOL").First(&userWalletRPCConfig).Error; err != nil {
+	if err := s.DB.Where("chain_name = ?", "solana").First(&userWalletRPCConfig).Error; err != nil {
 		return fmt.Errorf("can not load solana user wallet rpc configure of chain SOL from database: %v", err)
 	}
 	s.UserWalletRPCConfig = &userWalletRPCConfig
 
 	// 初始化主网rpc，用于请求一些只能用主网才能请求的功能，比方说交易所买币，quicknode的手续费统计等
 	var mainnetRPCConfig model.MainnetRpcConfig
-	if err := s.DB.Where("chain = ?", "SOL").First(&mainnetRPCConfig).Error; err != nil {
+	if err := s.DB.Where("chain_name = ?", "solana").First(&mainnetRPCConfig).Error; err != nil {
 		return fmt.Errorf("can not load solana user wallet rpc configure of chain SOL from database: %v", err)
 	}
 	s.MainnetRPCConfig = &mainnetRPCConfig

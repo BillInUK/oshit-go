@@ -162,7 +162,7 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 
 	// 初始化链配置 - SOL链
 	var chainConfig model.ChainConfig
-	if err := s.DB.Where("chain_name = ?", "SOL").First(&chainConfig).Error; err != nil {
+	if err := s.DB.Where("chain_name = ?", "solana").First(&chainConfig).Error; err != nil {
 		return fmt.Errorf("can not load solana chain configure of chain SOL from database: %v", err)
 	}
 	s.ChainConfig = &chainConfig

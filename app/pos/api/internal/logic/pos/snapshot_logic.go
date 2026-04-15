@@ -127,7 +127,7 @@ func (l *PosSnapShotLogic) reConstructInviteRelation() {
 		)
 		-- 更新原表中的 DistLevel 字段
 		update t_invite_relation as t
-		set level = ih.level
+		set inviter_level = ih.level
 		  from invite_hierarchy ih
 		where t.record_id = ih.record_id;
 	`
@@ -313,7 +313,7 @@ func (l *PosSnapShotLogic) rewardStaredUserDeterMineInvite(snapShotDay time.Time
 				select
 					r.inviter,
 					r.invitee,
-					r.level,
+					r.inviter_level,
 					r.invitee as group_id,
 					1 as depth,
 					r.invitee || '-' || r.inviter as path -- 用来追踪路径，避免循环
@@ -330,7 +330,7 @@ func (l *PosSnapShotLogic) rewardStaredUserDeterMineInvite(snapShotDay time.Time
 				select
 					r.inviter,
 					r.invitee,
-					r.level,
+					r.inviter_level,
 					ic.group_id,
 					ic.depth + 1 as depth,
 					ic.path || '-' || r.inviter  -- 添加路径信息

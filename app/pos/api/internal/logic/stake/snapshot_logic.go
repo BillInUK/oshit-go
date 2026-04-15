@@ -339,7 +339,7 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 			select
 				r.inviter,
 				r.invitee,
-				r.level,
+				r.inviter_level,
 				r.invitee as group_id,
 				1 as depth,
 				r.invitee || '-' || r.inviter as path -- 用来追踪路径，避免循环
@@ -356,7 +356,7 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 			select
 				r.inviter,
 				r.invitee,
-				r.level,
+				r.inviter_level,
 				ic.group_id,
 				ic.depth + 1 as depth,
 				ic.path || '-' || r.inviter  -- 添加路径信息
@@ -591,7 +591,7 @@ func (l *StakeSnapShotLogic) distributeInviteRewardsWithRecursiveCTE(tx *gorm.DB
 func (l *StakeSnapShotLogic) expireRewards(snapShotDay time.Time) {
 	var err error
 	table := l.db.Table(model.TableNameStakeReward)
-	if err = table.Where("snap_day < cast(? as date) and reward_state in (?,?,?,?)",
+	if err = table.Where("snap_day < cast(? as date) and reward_type in (?,?,?,?)",
 		snapShotDay,
 		types.StakeInvite,
 		types.StakeStarIndividual,

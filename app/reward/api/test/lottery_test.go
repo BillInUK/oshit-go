@@ -224,7 +224,7 @@ func TestGetUnclaimedLotteryRewards(t *testing.T) {
 	fmt.Printf("=== Unclaimed Lottery Rewards (count=%d) ===\n", len(rewards))
 	for i, r := range rewards {
 		fmt.Printf("[%d] RecordID=%s Amount=%v RewardState=%d Pending=%v RewardDay=%s\n",
-			i, r.RecordID, r.RewardAmount, r.State, r.Pending, r.RewardDay.Format("2006-01-02"))
+			i, r.RecordID, r.RewardAmount, r.RewardState, r.Pending, r.RewardDay.Format("2006-01-02"))
 	}
 }
 
@@ -247,7 +247,7 @@ func TestExecuteLottery(t *testing.T) {
 	fmt.Printf("=== Execute Lottery ===\n")
 	fmt.Printf("RecordID     : %s\n", reward.RecordID)
 	fmt.Printf("RewardAmount : %v\n", reward.RewardAmount)
-	fmt.Printf("RewardState        : %d\n", reward.State)
+	fmt.Printf("RewardState        : %d\n", reward.RewardState)
 	fmt.Printf("Pending      : %v\n", reward.Pending)
 	fmt.Printf("RewardDay    : %s\n", reward.RewardDay.Format("2006-01-02"))
 }

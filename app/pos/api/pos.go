@@ -48,6 +48,6 @@ func main() {
 	handler.RegisterRoutes(app, srvCtx)
 
 	// 启动服务
-	log.Printf("Reward API starting on :%s", appPort)
+	log.Printf("Pos API starting on :%s", appPort)
 	log.Fatal(app.Listen(":" + appPort))
 }

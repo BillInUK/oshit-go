@@ -80,7 +80,7 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 			inviter,
 			invitee,
 			channel,
-			level,
+			inviter_level,
 			tx_id,
 			created_at,
 			1 AS depth
@@ -96,7 +96,7 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 			t.inviter,
 			t.invitee,
 			t.channel,
-			t.level,
+			t.inviter_level,
 			t.tx_id,
 			t.created_at,
 			it.depth + 1 AS depth
@@ -119,13 +119,13 @@ func (l *InviteLogic) GetUpInviterRecords(req *types.RecursiveQueryReq) (*types.
 	responseRecords := make([]types.InviteRelation, 0, len(records))
 	for _, record := range records {
 		responseRecords = append(responseRecords, types.InviteRelation{
-			RecordID:             record.RecordID,
-			Inviter: record.Inviter,
-			Invitee: record.Invitee,
-			Channel:              record.Channel,
-			Level:                record.InviterLevel,
-			TxID:                 record.TxID,
-			CreatedAt:            record.CreatedAt.Format(time.RFC3339),
+			RecordID:  record.RecordID,
+			Inviter:   record.Inviter,
+			Invitee:   record.Invitee,
+			Channel:   record.Channel,
+			Level:     record.InviterLevel,
+			TxID:      record.TxID,
+			CreatedAt: record.CreatedAt.Format(time.RFC3339),
 		})
 	}
 
@@ -151,13 +151,13 @@ func (l *InviteLogic) FindInviteRelationByAccount(req *types.FindInviteRelationB
 	}
 
 	return &types.InviteRelation{
-		RecordID:             record.RecordID,
-		Inviter: record.Inviter,
-		Invitee: record.Invitee,
-		Channel:              record.Channel,
-		Level:                record.InviterLevel,
-		TxID:                 record.TxID,
-		CreatedAt:            record.CreatedAt.Format(time.RFC3339),
+		RecordID:  record.RecordID,
+		Inviter:   record.Inviter,
+		Invitee:   record.Invitee,
+		Channel:   record.Channel,
+		Level:     record.InviterLevel,
+		TxID:      record.TxID,
+		CreatedAt: record.CreatedAt.Format(time.RFC3339),
 	}, nil
 }
 
@@ -173,7 +173,7 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 			inviter,
 			invitee,
 			channel,
-			level,
+			inviter_level,
 			tx_id,
 			created_at,
 			1 AS depth
@@ -189,7 +189,7 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 			t.inviter,
 			t.invitee,
 			t.channel,
-			t.level,
+			t.inviter_level,
 			t.tx_id,
 			t.created_at,
 			it.depth + 1 AS depth
@@ -212,13 +212,13 @@ func (l *InviteLogic) GetDownInviteeRecords(req *types.RecursiveQueryReq) (*type
 	responseRecords := make([]types.InviteRelation, 0, len(records))
 	for _, record := range records {
 		responseRecords = append(responseRecords, types.InviteRelation{
-			RecordID:             record.RecordID,
-			Inviter: record.Inviter,
-			Invitee: record.Invitee,
-			Channel:              record.Channel,
-			Level:                record.InviterLevel,
-			TxID:                 record.TxID,
-			CreatedAt:            record.CreatedAt.Format(time.RFC3339),
+			RecordID:  record.RecordID,
+			Inviter:   record.Inviter,
+			Invitee:   record.Invitee,
+			Channel:   record.Channel,
+			Level:     record.InviterLevel,
+			TxID:      record.TxID,
+			CreatedAt: record.CreatedAt.Format(time.RFC3339),
 		})
 	}
 

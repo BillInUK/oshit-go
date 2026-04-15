@@ -23,18 +23,18 @@ import (
 
 type ServiceContext struct {
 	core_context.CoreContext
-	LevelDist              *model.LevelDist
-	LevelRatio             []model.LevelRatio
-	LevelRatioMap          map[int32]model.LevelRatio
-	DiscountRate           *model.DiscountRate
-	TakeTokenConfig        *model.TakeTokenConfig
-	GiveTokenConfig        *model.GiveTokenConfig
+	LevelDist           *model.LevelDist
+	LevelRatio          []model.LevelRatio
+	LevelRatioMap       map[int32]model.LevelRatio
+	DiscountRate        *model.DiscountRate
+	TakeTokenConfig     *model.TakeTokenConfig
+	GiveTokenConfig     *model.GiveTokenConfig
 	CampaignQuoteConfig *model.CampaignQuoteConfig
-	RewardCodeConfig       *model.RewardCodeConfig
-	RewardKeyMap           map[string]solana.PrivateKey
-	LightHouseAddress      solana.PublicKey
-	TaskMgr                *task.TaskManager
-	CampaignClientV1       *rewardrpc.CampaignClient
+	RewardCodeConfig    *model.RewardCodeConfig
+	RewardKeyMap        map[string]solana.PrivateKey
+	LightHouseAddress   solana.PublicKey
+	TaskMgr             *task.TaskManager
+	CampaignClientV1    *rewardrpc.CampaignClient
 }
 
 const (
@@ -149,7 +149,7 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 
 	// 初始化链配置 - SOL链
 	var chainConfig model.ChainConfig
-	if err := s.DB.Where("chain_name = ?", "SOL").First(&chainConfig).Error; err != nil {
+	if err := s.DB.Where("chain_name = ?", "solana").First(&chainConfig).Error; err != nil {
 		return fmt.Errorf("can not load solana chain configure of chain SOL from database: %v", err)
 	}
 	s.ChainConfig = &chainConfig
