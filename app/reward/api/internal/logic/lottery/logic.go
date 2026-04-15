@@ -89,9 +89,6 @@ func (l *LotteryLogic) ExecuteLottery(nativeAccount string) (*model.LotteryRewar
 	if !stats.NeedLottery {
 		return nil, errors.New("lottery is not required")
 	}
-	if !isLotteryThreshold(stats.TakeCount) {
-		return nil, errors.New("take count does not meet lottery threshold")
-	}
 	if stats.LotteryCount >= 3 {
 		return nil, errors.New("lottery count has reached the maximum limit of 3")
 	}
@@ -267,7 +264,7 @@ func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_ut
 	// 2. 查询抽奖记录
 	var reward model.LotteryReward
 	if err := l.db.Table(model.TableNameLotteryReward).
-		Where("record_id = ? and native_account = ? and pending = ? and state = ?", rewardId, preCheckedTx.From.String(), true, 0).
+		Where("record_id = ? and native_account = ? and pending = ? and reward_state = ?", rewardId, preCheckedTx.From.String(), true, 0).
 		First(&reward).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("lottery reward record not found or already claimed")
