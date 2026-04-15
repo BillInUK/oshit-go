@@ -591,11 +591,11 @@ func (l *StakeSnapShotLogic) distributeInviteRewardsWithRecursiveCTE(tx *gorm.DB
 func (l *StakeSnapShotLogic) expireRewards(snapShotDay time.Time) {
 	var err error
 	table := l.db.Table(model.TableNameStakeReward)
-	if err = table.Where("snap_day < cast(? as date) and reward_state in (?,?,?,?)",
+	if err = table.Where("snap_day < cast(? as date) and reward_type in (?,?,?,?)",
 		snapShotDay,
 		types.StakeInvite,
 		types.StakeStarIndividual,
-		types.StakeStarIndividual,
+		types.StakeStar,
 		types.StakeStarGroup,
 	).Update("reward_state", -1).Error; err != nil {
 		log.Errorf("%s 设置奖励为过期失败错误:%v", l.prefix, err)
