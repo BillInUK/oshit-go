@@ -17,7 +17,7 @@ type RewardCode struct {
 	RewardAmount float64   `gorm:"column:reward_amount;not null" json:"reward_amount"`
 	TxID         string    `gorm:"column:tx_id;default:NULL" json:"tx_id"`
 	TxState      int32     `gorm:"column:tx_state;not null" json:"tx_state"`
-	ExpireTime   time.Time `gorm:"column:expire_time;default:(CURRENT_TIMESTAMP + '24:00:00" json:"expire_time"`
+	ExpireTime   time.Time `gorm:"column:expired_at;default:(CURRENT_TIMESTAMP + '24:00:00')" json:"expired_at"`
 	CreatedAt    time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt    time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
