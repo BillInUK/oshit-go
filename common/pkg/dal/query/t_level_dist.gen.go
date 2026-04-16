@@ -38,7 +38,7 @@ func newLevelDist(db *gorm.DB, opts ...gen.DOOption) levelDist {
 type levelDist struct {
 	levelDistDo levelDistDo
 
-	ALL   field.Asterisk
+	ALL       field.Asterisk
 	DistLevel field.Int32
 
 	fieldMap map[string]field.Expr

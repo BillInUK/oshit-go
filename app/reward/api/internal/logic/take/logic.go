@@ -154,7 +154,7 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	rewardInfo := types.RewardTokenItem{Index: 0, ReceiptAccount: receiptNativeAccount, Amount: rewardAmount}
 	// 在最小集合里面决定每个层级的邀请人领取多少金额
 	for index, claim := range sortedClaims {
-		sortedItems[index].Amount = uint64(float64(rewardAmount) * claim.Ratio)
+		sortedItems[index].Amount = uint64(float64(rewardAmount) * claim.Ratio / 100)
 	}
 
 	// 6. 获取本次奖励的总代币量

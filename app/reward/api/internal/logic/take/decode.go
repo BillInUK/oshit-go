@@ -206,7 +206,7 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 
 	// 计算出来每个级别的上级应该拿到的奖励
 	for index, inviteRecord := range txInfo.RewardInviterInfo {
-		rewardInviterAmount := uint64(float64(rewardTxFromAmount) * rewardClaims[index].Ratio)
+		rewardInviterAmount := uint64(float64(rewardTxFromAmount) * rewardClaims[index].Ratio / 100)
 		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(inviteRecord.ReceiptAccount), tokenMintPubKey)
 		inviterClaimMap[inviterTA.String()] = rewardInviterAmount
 	}

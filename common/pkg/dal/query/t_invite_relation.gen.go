@@ -45,15 +45,15 @@ func newInviteRelation(db *gorm.DB, opts ...gen.DOOption) inviteRelation {
 type inviteRelation struct {
 	inviteRelationDo inviteRelationDo
 
-	ALL       field.Asterisk
-	RecordID  field.String
-	Inviter   field.String
-	Invitee   field.String
-	Channel   field.String
+	ALL          field.Asterisk
+	RecordID     field.String
+	Inviter      field.String
+	Invitee      field.String
+	Channel      field.String
 	InviterLevel field.Int32
-	TxID      field.String
-	CreatedAt field.Time
-	UpdatedAt field.Time
+	TxID         field.String
+	CreatedAt    field.Time
+	UpdatedAt    field.Time
 
 	fieldMap map[string]field.Expr
 }

@@ -78,7 +78,7 @@ func (l *RewardCodeLogic) GetTxInfo(ctx context.Context, rewardCode string) (*ty
 	}
 
 	// 2. 检查奖励码是否已过期
-	if rc.ExpireTime.Before(time.Now()) {
+	if rc.ExpiredAt.Before(time.Now()) {
 		return nil, errors.New("reward code has expired")
 	}
 
@@ -103,7 +103,7 @@ func (l *RewardCodeLogic) GetTxInfo(ctx context.Context, rewardCode string) (*ty
 	}
 
 	// 5. 计算 cost_fee (lamports): reward_amount / tokenDecimal * quoteSOLPrice * costRate * LAMPORTS_PER_SOL
-	costFee := rc.RewardAmount / l.srvCtx.TokenDecimal * quoteSOLPrice * feeConfig.CostRate * float64(solana.LAMPORTS_PER_SOL)
+	costFee := rc.RewardAmount / l.srvCtx.TokenDecimal * quoteSOLPrice * feeConfig.FeeRate / 100 * float64(solana.LAMPORTS_PER_SOL)
 
 	txInfo := &types.RewardCodeTxInfo{
 		RewardAccount: l.rewardCodeConfig.RewardAccount,
@@ -146,7 +146,7 @@ func (l *RewardCodeLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app
 		log.Errorf("%s 查询奖励码错误: %v", prefix, err)
 		return errors.New("query reward code error")
 	}
-	if rc.ExpireTime.Before(time.Now()) {
+	if rc.ExpiredAt.Before(time.Now()) {
 		return errors.New("reward code has expired")
 	}
 

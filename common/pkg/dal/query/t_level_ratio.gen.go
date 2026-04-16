@@ -39,9 +39,9 @@ func newLevelRatio(db *gorm.DB, opts ...gen.DOOption) levelRatio {
 type levelRatio struct {
 	levelRatioDo levelRatioDo
 
-	ALL   field.Asterisk
+	ALL       field.Asterisk
 	DistLevel field.Int32
-	Ratio field.Float64
+	Ratio     field.Float64
 
 	fieldMap map[string]field.Expr
 }

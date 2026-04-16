@@ -69,8 +69,8 @@ func commitLotteryTx(req types.CommitLotteryTxReq) (string, error) {
 	return rsp.Data, nil
 }
 
-func getLotteryRecord(txId string) (*model.LotteryClaimRecord, error) {
-	rsp, err := postJsonRequest[model.LotteryClaimRecord](RewardURL+"/lottery/record", types.GetByTxIdReq{
+func getLotteryRecord(txId string) (*model.LotteryClaim, error) {
+	rsp, err := postJsonRequest[model.LotteryClaim](RewardURL+"/lottery/record", types.GetByTxIdReq{
 		TxId: txId,
 	}, map[string]string{})
 	if err != nil {
@@ -485,6 +485,6 @@ func TestGetLotteryRecord(t *testing.T) {
 	fmt.Printf("RecordID  : %s\n", record.RecordID)
 	fmt.Printf("RewardIds : %s\n", record.RewardIds)
 	fmt.Printf("TxID      : %s\n", record.TxID)
-	fmt.Printf("RewardState     : %d\n", record.State)
+	fmt.Printf("RewardState     : %d\n", record.RewardState)
 	fmt.Printf("CreatedAt : %s\n", record.CreatedAt.Format("2006-01-02 15:04:05"))
 }

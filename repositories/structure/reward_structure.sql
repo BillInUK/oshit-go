@@ -132,7 +132,6 @@ CREATE TABLE public.t_give_token_record
     created_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
 -- 奖励码
 DROP TABLE IF EXISTS public.t_reward_code;
 CREATE TABLE public.t_reward_code
@@ -141,7 +140,7 @@ CREATE TABLE public.t_reward_code
     reward_code   character varying(6)                           NOT NULL,
     reward_amount numeric(78, 0)                                 NOT NULL,
     tx_id         character varying(128)      DEFAULT NULL:: character varying,
-    reward_state         integer                     DEFAULT 0          NOT NULL,
+    tx_state         integer                     DEFAULT 0          NOT NULL,
     expired_at    timestamp without time zone DEFAULT (CURRENT_TIMESTAMP + '24:00:00':: interval),
     created_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP

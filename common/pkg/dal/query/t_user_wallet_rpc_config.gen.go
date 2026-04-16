@@ -29,7 +29,7 @@ func newUserWalletRpcConfig(db *gorm.DB, opts ...gen.DOOption) userWalletRpcConf
 	tableName := _userWalletRpcConfig.userWalletRpcConfigDo.TableName()
 	_userWalletRpcConfig.ALL = field.NewAsterisk(tableName)
 	_userWalletRpcConfig.RecordID = field.NewString(tableName, "record_id")
-	_userWalletRpcConfig.Chain = field.NewString(tableName, "chain")
+	_userWalletRpcConfig.ChainName = field.NewString(tableName, "chain_name")
 	_userWalletRpcConfig.RPCURL = field.NewString(tableName, "rpc_url")
 	_userWalletRpcConfig.WssURL = field.NewString(tableName, "wss_url")
 	_userWalletRpcConfig.CreatedAt = field.NewTime(tableName, "created_at")
@@ -45,7 +45,7 @@ type userWalletRpcConfig struct {
 
 	ALL       field.Asterisk
 	RecordID  field.String
-	Chain     field.String
+	ChainName field.String
 	RPCURL    field.String
 	WssURL    field.String
 	CreatedAt field.Time
@@ -67,7 +67,7 @@ func (u userWalletRpcConfig) As(alias string) *userWalletRpcConfig {
 func (u *userWalletRpcConfig) updateTableName(table string) *userWalletRpcConfig {
 	u.ALL = field.NewAsterisk(table)
 	u.RecordID = field.NewString(table, "record_id")
-	u.Chain = field.NewString(table, "chain")
+	u.ChainName = field.NewString(table, "chain_name")
 	u.RPCURL = field.NewString(table, "rpc_url")
 	u.WssURL = field.NewString(table, "wss_url")
 	u.CreatedAt = field.NewTime(table, "created_at")
@@ -102,7 +102,7 @@ func (u *userWalletRpcConfig) GetFieldByName(fieldName string) (field.OrderExpr,
 func (u *userWalletRpcConfig) fillFieldMap() {
 	u.fieldMap = make(map[string]field.Expr, 6)
 	u.fieldMap["record_id"] = u.RecordID
-	u.fieldMap["chain"] = u.Chain
+	u.fieldMap["chain_name"] = u.ChainName
 	u.fieldMap["rpc_url"] = u.RPCURL
 	u.fieldMap["wss_url"] = u.WssURL
 	u.fieldMap["created_at"] = u.CreatedAt

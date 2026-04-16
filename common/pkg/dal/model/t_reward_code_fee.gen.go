@@ -12,8 +12,8 @@ const TableNameRewardCodeFee = "t_reward_code_fee"
 
 // RewardCodeFee mapped from table <t_reward_code_fee>
 type RewardCodeFee struct {
-	Amount    float64   `gorm:"column:amount;primaryKey" json:"amount"`
-	CostRate  float64   `gorm:"column:cost_rate;not null" json:"cost_rate"`
+	Amount    float64   `gorm:"column:amount;not null" json:"amount"`
+	FeeRate   float64   `gorm:"column:fee_rate;not null" json:"fee_rate"`
 	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }

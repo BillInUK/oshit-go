@@ -33,7 +33,7 @@ func newRewardCode(db *gorm.DB, opts ...gen.DOOption) rewardCode {
 	_rewardCode.RewardAmount = field.NewFloat64(tableName, "reward_amount")
 	_rewardCode.TxID = field.NewString(tableName, "tx_id")
 	_rewardCode.TxState = field.NewInt32(tableName, "tx_state")
-	_rewardCode.ExpireTime = field.NewTime(tableName, "expire_time")
+	_rewardCode.ExpiredAt = field.NewTime(tableName, "expired_at")
 	_rewardCode.CreatedAt = field.NewTime(tableName, "created_at")
 	_rewardCode.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -51,7 +51,7 @@ type rewardCode struct {
 	RewardAmount field.Float64
 	TxID         field.String
 	TxState      field.Int32
-	ExpireTime   field.Time
+	ExpiredAt    field.Time
 	CreatedAt    field.Time
 	UpdatedAt    field.Time
 
@@ -75,7 +75,7 @@ func (r *rewardCode) updateTableName(table string) *rewardCode {
 	r.RewardAmount = field.NewFloat64(table, "reward_amount")
 	r.TxID = field.NewString(table, "tx_id")
 	r.TxState = field.NewInt32(table, "tx_state")
-	r.ExpireTime = field.NewTime(table, "expire_time")
+	r.ExpiredAt = field.NewTime(table, "expired_at")
 	r.CreatedAt = field.NewTime(table, "created_at")
 	r.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -110,7 +110,7 @@ func (r *rewardCode) fillFieldMap() {
 	r.fieldMap["reward_amount"] = r.RewardAmount
 	r.fieldMap["tx_id"] = r.TxID
 	r.fieldMap["tx_state"] = r.TxState
-	r.fieldMap["expire_time"] = r.ExpireTime
+	r.fieldMap["expired_at"] = r.ExpiredAt
 	r.fieldMap["created_at"] = r.CreatedAt
 	r.fieldMap["updated_at"] = r.UpdatedAt
 }

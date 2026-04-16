@@ -9,7 +9,7 @@ const TableNameLevelRatio = "t_level_ratio"
 // LevelRatio mapped from table <t_level_ratio>
 type LevelRatio struct {
 	DistLevel int32   `gorm:"column:dist_level;not null" json:"dist_level"`
-	Ratio float64 `gorm:"column:ratio;not null" json:"ratio"`
+	Ratio     float64 `gorm:"column:ratio;not null" json:"ratio"`
 }
 
 // TableName LevelRatio's table name

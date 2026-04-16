@@ -82,9 +82,9 @@ func (l *GiveTokenLogic) GetTxInfo(ctx context.Context, from, to string, amountU
 	amountRaw := uint64(amountUI * l.srvCtx.TokenDecimal)
 	var rewardAmount float64
 	if toTokenAccountExists {
-		rewardAmount = min(l.serviceConfig.MaxValidReward, float64(amountRaw)*l.serviceConfig.RewardRate)
+		rewardAmount = min(l.serviceConfig.MaxValidReward, float64(amountRaw)*l.serviceConfig.RewardRate/100)
 	} else {
-		rewardAmount = min(l.serviceConfig.MaxValidReward, float64(amountRaw)*l.serviceConfig.ValidRate)
+		rewardAmount = min(l.serviceConfig.MaxValidReward, float64(amountRaw)*l.serviceConfig.ValidRate/100)
 	}
 
 	// 3. 递归向上查询需要奖励的邀请人
@@ -98,7 +98,7 @@ func (l *GiveTokenLogic) GetTxInfo(ctx context.Context, from, to string, amountU
 
 	// 4. 确定每个邀请人的奖励金额
 	for index, claim := range sortedClaims {
-		sortedItems[index].Amount = uint64(rewardAmount * claim.Ratio)
+		sortedItems[index].Amount = uint64(rewardAmount * claim.Ratio / 100)
 	}
 
 	// 5. 计算总奖励金额

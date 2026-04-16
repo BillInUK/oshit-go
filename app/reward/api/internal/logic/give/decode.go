@@ -146,9 +146,9 @@ func (l *GiveTokenLogic) checkRewardFromInst(
 		return errors.New("transfer check reward instruction owner address not reward native address")
 	}
 	// 奖励金额不能大于费率规定的金额
-	amountByRule := min(l.serviceConfig.MaxValidReward, float64(transferAmount)*l.serviceConfig.RewardRate)
+	amountByRule := min(l.serviceConfig.MaxValidReward, float64(transferAmount)*l.serviceConfig.RewardRate/100)
 	if matchRewardRule {
-		amountByRule = min(l.serviceConfig.MaxValidReward, float64(transferAmount)*l.serviceConfig.ValidRate)
+		amountByRule = min(l.serviceConfig.MaxValidReward, float64(transferAmount)*l.serviceConfig.ValidRate/100)
 	}
 	log.Infof("官方转账 - 转账金额 [%d] 交易指令内的奖励金额 [%d] 按照规则应该奖励金额[%d]", transferAmount, decodedInst.Amount, amountByRule)
 	if decodedInst.Amount > uint64(amountByRule) {
@@ -317,7 +317,7 @@ func (l *GiveTokenLogic) checkSOLTx(
 
 	// 计算出来每个级别的上级应该拿到的奖励
 	for index, inviteRecord := range upInvitersInfo {
-		rewardInviterAmount := uint64(float64(rewardTxFromAmount) * l.srvCtx.LevelRatio[index].Ratio)
+		rewardInviterAmount := uint64(float64(rewardTxFromAmount) * l.srvCtx.LevelRatio[index].Ratio / 100)
 		inviterTA, _, _ := solana.FindAssociatedTokenAddress(solana.MPK(inviteRecord.Inviter), tokenMintPubKey)
 		inviterClaimMap[inviterTA.String()] = rewardInviterAmount
 	}

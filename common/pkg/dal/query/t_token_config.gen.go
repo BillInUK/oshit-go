@@ -43,13 +43,13 @@ func newTokenConfig(db *gorm.DB, opts ...gen.DOOption) tokenConfig {
 type tokenConfig struct {
 	tokenConfigDo tokenConfigDo
 
-	ALL       field.Asterisk
+	ALL         field.Asterisk
 	TokenName   field.String
 	TokenSymbol field.String
-	Decimals  field.Int32
-	Mint      field.String
-	CreatedAt field.Time
-	UpdatedAt field.Time
+	Decimals    field.Int32
+	Mint        field.String
+	CreatedAt   field.Time
+	UpdatedAt   field.Time
 
 	fieldMap map[string]field.Expr
 }

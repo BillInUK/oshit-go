@@ -171,7 +171,7 @@ func TestGetRewardCodeInfo(t *testing.T) {
 	fmt.Printf("RewardAmount : %v\n", info.RewardAmount)
 	fmt.Printf("TxID         : %s\n", info.TxID)
 	fmt.Printf("TxState      : %d\n", info.TxState)
-	fmt.Printf("ExpireTime   : %s\n", info.ExpireTime.Format("2006-01-02 15:04:05"))
+	fmt.Printf("ExpireTime   : %s\n", info.ExpiredAt.Format("2006-01-02 15:04:05"))
 }
 
 // TestGetRewardCodeTxInfo 根据奖励码查询交易构建所需信息
@@ -211,7 +211,7 @@ func TestRewardCode(t *testing.T) {
 		t.Fatalf("getRewardCodeInfo failed: %v", err)
 	}
 	fmt.Printf("奖励码信息: RewardAmount=%v TxState=%d ExpireTime=%s\n",
-		info.RewardAmount, info.TxState, info.ExpireTime.Format("2006-01-02 15:04:05"))
+		info.RewardAmount, info.TxState, info.ExpiredAt.Format("2006-01-02 15:04:05"))
 
 	// 3. 获取交易构建参数
 	txInfo, err := getRewardCodeTxInfo(rewardCode)
