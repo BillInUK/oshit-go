@@ -149,28 +149,24 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	} else {
 		rewardAmount = uint64(l.serviceConfig.InviteAmount)
 	}
+	totalRewardAmount := rewardAmount
 
 	// 5. 填写领取奖励信息
 	rewardInfo := types.RewardTokenItem{Index: 0, ReceiptAccount: receiptNativeAccount, Amount: rewardAmount}
 	// 在最小集合里面决定每个层级的邀请人领取多少金额
 	for index, claim := range sortedClaims {
 		sortedItems[index].Amount = uint64(float64(rewardAmount) * claim.Ratio / 100)
+		totalRewardAmount += sortedItems[index].Amount
 	}
 
-	// 6. 获取本次奖励的总代币量
-	totalRewardAmount := takeTxInfo.RewardInfo.Amount
-	for _, item := range takeTxInfo.RewardInviterInfo {
-		totalRewardAmount += item.Amount
-	}
-
-	// 7. 计算所有的token的价格
+	// 6. 计算所有的token的价格
 	quoteSOLPrice, err := l.baseClient.GetTokenQuoteSOLPrice(ctx)
 	if err != nil {
 		log.Errorf("%s 计算奖励金额价格错误: %v", prefix, err)
 		return nil, fmt.Errorf("get toke quote sol price failed")
 	}
 
-	// 8. 填写最终需要返回的交易信息
+	// 7. 填写最终需要返回的交易信息
 	takeTxInfo.RewardAccount = l.serviceConfig.RewardAccount
 	takeTxInfo.Mint = l.srvCtx.TokenConfig.Mint
 	takeTxInfo.CostAccount = l.serviceConfig.CostAccount
@@ -186,6 +182,8 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	takeTxInfo.Invited = invited
 	takeTxInfo.Claims = sortedClaims
 	takeTxInfo.RewardInviterInfo = sortedItems
+
+	fmt.Printf("%s 地址 %s 领取token总计奖励token金额 %d\n", prefix, receiptNativeAccount, totalRewardAmount)
 
 	return &takeTxInfo, nil
 }
