@@ -85,7 +85,7 @@ func (l *StakeSnapShotLogic) ResetStakeSnapShot() error {
 	err := l.db.Exec(`
 		delete from t_stake_snap_shot;
 		delete from t_stake_reward;
-		delete from t_stake_reward_claim_record;
+		delete from t_stake_reward_claim;
 	`).Error
 	if err != nil {
 		return err
@@ -375,8 +375,8 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 			ic.invitee,
 			-- 如果 inviter 为空，说明是顶级节点，level - 1
 			case
-				when ic.inviter is null then ic.level - 1
-			else ic.level
+				when ic.inviter is null then ic.inviter_level - 1
+			else ic.inviter_level
 			end as level
 		from
 			invite_chain ic
@@ -387,9 +387,9 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 		where
 			ss.snap_day = cast(? as date)
 		group by
-			ic.group_id, ic.inviter, ic.invitee, ic.level
+			ic.group_id, ic.inviter, ic.invitee, ic.inviter_level
 		order by
-			ic.group_id, ic.level, ic.invitee, ic.inviter;
+			ic.group_id, ic.inviter_level, ic.invitee, ic.inviter;
 	
 	`, snapShotDay).Scan(&inviteChains).Error
 	if err != nil {

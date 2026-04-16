@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
 	"oshit-go/app/pos/api/internal/logic/pos"
 	"oshit-go/app/pos/api/internal/svc"
 	"oshit-go/app/pos/api/types"
@@ -133,7 +135,19 @@ func (h *PosHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 
 // GetClaimRecord 根据交易Id 获取 pos 奖励领取记录
 func (h *PosHandler) GetClaimRecord(fiberCtx *fiber.Ctx) error {
-	return nil
+	var req types.GetByTxIdReq
+	if err := fiberCtx.BodyParser(&req); err != nil {
+		return response.FailWithMsg(fiberCtx, "invalid request body")
+	}
+	l := pos.NewPosRewardLogic(fiberCtx.Context(), h.srvCtx)
+	record, err := l.GetClaimRecord(req.TxId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return response.OkWithData(fiberCtx, nil)
+		}
+		return response.FailWithMsg(fiberCtx, "get pos claim reward record by tx id error")
+	}
+	return response.OkWithData(fiberCtx, record)
 }
 
 func (h *PosHandler) GetGroupInfo(fiberCtx *fiber.Ctx) error {

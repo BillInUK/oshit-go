@@ -200,11 +200,11 @@ func (l *PosRewardLogic) recordClaimRewardFlow(decodedServiceTx *entity.DecodedS
 	if err = table.Omit("record_id").Clauses(clause.OnConflict{
 		Columns: []clause.Column{
 			{Name: "tx_id"},
-			{Name: "to_native_account"},
+			{Name: "to_account"},
 			{Name: "flow_type"},
 		},
 		DoUpdates: clause.Assignments(map[string]interface{}{
-			"update_time": time.Now(),
+			"updated_at": time.Now(),
 		}),
 	}).CreateInBatches(&fundFlows, batchSize).Error; err != nil {
 		log.Errorf("%s - 记录流水错误: %v", l.prefix, err)

@@ -107,9 +107,9 @@ func NewServiceContext() (*ServiceContext, error) {
 	}
 
 	// 初始化pos配置
-	//if err := srvCtx.initPosConfig(); err != nil {
-	//	fmt.Printf("Init pos config error: %v", err)
-	//}
+	if err := srvCtx.initPosConfig(); err != nil {
+		return nil, err
+	}
 
 	// 初始化stake配置
 	if err := srvCtx.initStakeConfig(); err != nil {
@@ -234,14 +234,15 @@ func (s *ServiceContext) initPosConfig() error {
 	if err := table.Find(&starLevelRules).Order("star_level asc").Error; err != nil {
 		return errors.New("can not load any pos star level rule from database")
 	}
-	for _, r := range s.PosStarLevelRule {
+	s.PosStarLevelRule = make(map[int32]model.PosStarLevelRule)
+	for _, r := range starLevelRules {
 		s.PosStarLevelRule[r.StarLevel] = r
 	}
 
 	// 初始化pos奖励配置
 	var rewardConfig model.PosRewardConfig
 	table = s.DB.Table(model.TableNamePosRewardConfig)
-	if err := table.Find(&s.PosRewardConfig).First(&rewardConfig).Error; err != nil {
+	if err := table.First(&rewardConfig).Error; err != nil {
 		return errors.New("can not load any pos reward config from database")
 	}
 	s.PosRewardConfig = &rewardConfig

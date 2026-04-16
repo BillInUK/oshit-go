@@ -345,7 +345,6 @@ func (l *PosRewardLogic) recordPosClaim(nativeAccount, txId string, rewards []mo
 		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
 		Updates(map[string]interface{}{
 			"pending":    true,
-			"tx_id":      txId,
 			"updated_at": time.Now(),
 		}).Error; err != nil {
 		return fmt.Errorf("mark stake rewards as pending error: %v", err)
@@ -367,4 +366,14 @@ func (l *PosRewardLogic) recordPosClaim(nativeAccount, txId string, rewards []mo
 		return fmt.Errorf("commit transaction error: %v", err)
 	}
 	return nil
+}
+
+func (l *PosRewardLogic) GetClaimRecord(txId string) (*model.PosRewardClaim, error) {
+	var err error
+	var record model.PosRewardClaim
+	table := l.db.Table(model.TableNamePosRewardClaim)
+	if err = table.Where("tx_id = ?", txId).First(&record).Error; err != nil {
+		return nil, err
+	}
+	return &record, nil
 }

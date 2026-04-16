@@ -349,8 +349,8 @@ func (l *PosSnapShotLogic) rewardStaredUserDeterMineInvite(snapShotDay time.Time
 				ic.invitee,
 				-- 如果 Inviter 为空，说明是顶级节点，DistLevel - 1
 				case
-					when ic.inviter is null then ic.level - 1
-					else ic.level
+					when ic.inviter is null then ic.inviter_level - 1
+					else ic.inviter_level
 				end as level,
 				ss.amount,
 				ss.range_base
@@ -363,10 +363,10 @@ func (l *PosSnapShotLogic) rewardStaredUserDeterMineInvite(snapShotDay time.Time
 			where
 				ss.snap_day = cast(? as date)
 			group by
-				ic.group_id, ic.inviter, ic.invitee, ic.level,
+				ic.group_id, ic.inviter, ic.invitee, ic.inviter_level,
 				ss.amount, ss.range_base, ss.star_level, ss.rate
 			order by
-				ic.group_id, ic.level, ic.invitee, ic.inviter;
+				ic.group_id, ic.inviter_level, ic.invitee, ic.inviter;
 	`, snapShotDay).Scan(&inviteChains).Error
 	if err != nil {
 		log.Errorf("pos业务 - 发放邀请关系内的星级用户奖励 - 查询错误: %v", err)
@@ -581,7 +581,7 @@ func (l *PosSnapShotLogic) GetPosGroupHoldAmount(rootAccount string, snapShotDay
 			from t_pos_snap_shot
 			where snap_day = cast(? as date)
 		)
-		from
+		select
 			coalesce(sum(fss.amount), 0) as total_hold_amount
 		from
 			group_accounts gp
