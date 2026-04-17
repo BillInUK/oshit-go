@@ -15,7 +15,7 @@ type StakeTeamRewardDeduction struct {
 	NativeAccount  string    `gorm:"column:native_account;primaryKey" json:"native_account"`
 	TotalDeduction float64   `gorm:"column:total_deduction;not null" json:"total_deduction"`
 	DeductedAmount float64   `gorm:"column:deducted_amount;not null" json:"deducted_amount"`
-	Status         int16     `gorm:"column:status;not null" json:"status"`
+	Remaining      float64   `gorm:"column:remaining;not null" json:"remaining"`
 	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }

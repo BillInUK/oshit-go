@@ -263,23 +263,14 @@ func (l *StakeSnapShotLogic) rewardInviter(rewardMap map[string]model.StakeRewar
 	// 白名单预处理：过滤/调整需要抵扣的记录
 	for _, record := range rewardMap {
 		var deduction model.StakeTeamRewardDeduction
-		found := l.db.Where("native_account = ? AND status = 0", record.NativeAccount).
+		found := l.db.Where("native_account = ? AND remaining > 0", record.NativeAccount).
 			First(&deduction).Error == nil
 
 		if found {
-			remaining := deduction.TotalDeduction - deduction.DeductedAmount
 			originalAmount := record.RewardAmount
 
-			if record.RewardAmount <= remaining {
-				// 全额扣除：不加入批量插入
-				newDeducted := deduction.DeductedAmount + originalAmount
-				updates := map[string]interface{}{
-					"deducted_amount": newDeducted,
-					"updated_at":      time.Now(),
-				}
-				if newDeducted >= deduction.TotalDeduction {
-					updates["status"] = 1
-				}
+			if record.RewardAmount <= deduction.Remaining {
+				// 全额扣除
 				l.db.Table(model.TableNameStakeTeamRewardDeductionLog).Create(
 					&model.StakeTeamRewardDeductionLog{
 						NativeAccount:   record.NativeAccount,
@@ -288,23 +279,27 @@ func (l *StakeSnapShotLogic) rewardInviter(rewardMap map[string]model.StakeRewar
 						OriginalAmount:  originalAmount,
 						DeductionAmount: originalAmount,
 					})
-				l.db.Model(&deduction).Updates(updates)
+				l.db.Model(&deduction).Updates(map[string]interface{}{
+					"deducted_amount": deduction.DeductedAmount + originalAmount,
+					"remaining":       deduction.Remaining - originalAmount,
+					"updated_at":      time.Now(),
+				})
 				continue
 			}
 
-			// 部分扣除：修改金额后加入批量插入
-			record.RewardAmount = originalAmount - remaining
+			// 部分扣除
+			record.RewardAmount = originalAmount - deduction.Remaining
 			l.db.Table(model.TableNameStakeTeamRewardDeductionLog).Create(
 				&model.StakeTeamRewardDeductionLog{
 					NativeAccount:   record.NativeAccount,
 					SnapDay:         record.SnapDay,
 					RewardType:      types.StakeInvite,
 					OriginalAmount:  originalAmount,
-					DeductionAmount: remaining,
+					DeductionAmount: deduction.Remaining,
 				})
 			l.db.Model(&deduction).Updates(map[string]interface{}{
-				"deducted_amount": deduction.TotalDeduction,
-				"status":          1,
+				"deducted_amount": deduction.DeductedAmount + deduction.Remaining,
+				"remaining":       0,
 				"updated_at":      time.Now(),
 			})
 		}
@@ -553,23 +548,14 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 
 		//新增奖励记录插入逻辑判断
 		var deduction model.StakeTeamRewardDeduction
-		found := l.db.Where("native_account = ? AND status = 0", rewardItem.NativeAccount).
+		found := l.db.Where("native_account = ? AND remaining > 0", rewardItem.NativeAccount).
 			First(&deduction).Error == nil
 
 		if found {
-			remaining := deduction.TotalDeduction - deduction.DeductedAmount
 			originalAmount := rewardItem.RewardAmount
 
-			if rewardItem.RewardAmount <= remaining {
-				// 全额扣除（含恰好扣完）：不插入 t_stake_reward
-				newDeducted := deduction.DeductedAmount + originalAmount
-				updates := map[string]interface{}{
-					"deducted_amount": newDeducted,
-					"updated_at":      time.Now(),
-				}
-				if newDeducted >= deduction.TotalDeduction {
-					updates["status"] = 1
-				}
+			if rewardItem.RewardAmount <= deduction.Remaining {
+				// 全额扣除
 				l.db.Table(model.TableNameStakeTeamRewardDeductionLog).Create(
 					&model.StakeTeamRewardDeductionLog{
 						NativeAccount:   rewardItem.NativeAccount,
@@ -578,27 +564,29 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 						OriginalAmount:  originalAmount,
 						DeductionAmount: originalAmount,
 					})
-				l.db.Model(&deduction).Updates(updates)
-				continue // 跳过 INSERT t_stake_reward
-
-			} else {
-				// 部分扣除：只保留可领部分，写流水，标记白名单扣完
-				rewardItem.RewardAmount = originalAmount - remaining
-				l.db.Table(model.TableNameStakeTeamRewardDeductionLog).Create(
-					&model.StakeTeamRewardDeductionLog{
-						NativeAccount:   rewardItem.NativeAccount,
-						SnapDay:         rewardItem.SnapDay,
-						RewardType:      types.StakeStarGroup,
-						OriginalAmount:  originalAmount,
-						DeductionAmount: remaining,
-					})
 				l.db.Model(&deduction).Updates(map[string]interface{}{
-					"deducted_amount": deduction.TotalDeduction,
-					"status":          1,
+					"deducted_amount": deduction.DeductedAmount + originalAmount,
+					"remaining":       deduction.Remaining - originalAmount,
 					"updated_at":      time.Now(),
 				})
-				// 不 continue，继续插入可领部分
+				continue
 			}
+
+			// 部分扣除
+			rewardItem.RewardAmount = originalAmount - deduction.Remaining
+			l.db.Table(model.TableNameStakeTeamRewardDeductionLog).Create(
+				&model.StakeTeamRewardDeductionLog{
+					NativeAccount:   rewardItem.NativeAccount,
+					SnapDay:         rewardItem.SnapDay,
+					RewardType:      types.StakeStarGroup,
+					OriginalAmount:  originalAmount,
+					DeductionAmount: deduction.Remaining,
+				})
+			l.db.Model(&deduction).Updates(map[string]interface{}{
+				"deducted_amount": deduction.DeductedAmount + deduction.Remaining,
+				"remaining":       0,
+				"updated_at":      time.Now(),
+			})
 		}
 
 		if err = table.Clauses(
