@@ -26,6 +26,15 @@ type FreezeRequest struct {
 	Score        uint64 `json:"score"`
 }
 
+type UnFreezeRequest struct {
+	UserID       uint64 `json:"userId"`
+	TxID         string `json:"txId"`
+	FlowID       uint64 `json:"flowId"`
+	SourceSys    string `json:"sourceSys"`
+	BusinessName string `json:"businessName"`
+	Reason       string `json:"reason"`
+}
+
 type ConsumeFrozenRequest struct {
 	UserID       uint64 `json:"userId"`
 	TxID         string `json:"txId"`

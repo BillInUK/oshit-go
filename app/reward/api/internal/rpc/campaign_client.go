@@ -112,7 +112,7 @@ func (c *CampaignClient) UnfreezeScore(
 ) (*entity.ScoreOperationResult, error) {
 	apiPath := "/score/internal/op/unfreeze"
 
-	requestBody := entity.ScoreRequest{
+	requestBody := entity.UnFreezeRequest{
 		UserID:       userId,
 		TxID:         txId,
 		FlowID:       flowId,

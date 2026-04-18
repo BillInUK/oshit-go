@@ -26,7 +26,7 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 			// 打印堆栈信息
 			stack := debug.Stack()
 			// 打印错误日志和堆栈信息
-			log.Errorf("%s - 处理RocketMQ消息时发生错误: %v\n堆栈信息:\n%s", prefix, r, string(stack))
+			log.Errorf("%s - 处理Kafka消息时发生错误: %v\n堆栈信息:\n%s", prefix, r, string(stack))
 			// 回滚事务
 			dbTx.Rollback()
 		}
@@ -42,7 +42,7 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 			dbTx.Rollback()
 			return
 		}
-		log.Errorf("%s - 处理RocketMQ消息，根据交易 Id %s 查找领取记录错误: %v", prefix, txId, err)
+		log.Errorf("%s - 处理Kafka消息，根据交易 Id %s 查找领取记录错误: %v", prefix, txId, err)
 		dbTx.Rollback()
 		return
 	}
@@ -51,16 +51,16 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 		if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 			Where("tx_id = ?", txId).
 			Update("quote_state", constants.QuoteStateFailed).Error; err != nil {
-			log.Errorf("%s - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", prefix, txId, err)
+			log.Errorf("%s - 处理Kafka消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", prefix, txId, err)
 			dbTx.Rollback()
 			return
 		}
 		// 解冻积分
 		userId, _ := strconv.ParseUint(exchangeRecord.UserID, 10, 64)
-		flowId, _ := strconv.ParseUint(exchangeRecord.ScoreTxID, 10, 64)
+		flowId := uint64(exchangeRecord.ScoreFlowID)
 		if _, err := l.srvCtx.CampaignClientV1.UnfreezeScore(userId, txId, flowId, ExchangeSys, ExchangeBiz, ReasonUnFreeze); err != nil {
 			dbTx.Rollback()
-			log.Errorf("%s - 处理RocketMQ消息，交易 Id %s 失败，解冻积分错误: %v", prefix, txId, err)
+			log.Errorf("%s - 处理Kafka消息，交易 Id %s 失败，解冻积分错误: %v", prefix, txId, err)
 			return
 		}
 		// 解冻用户兑换额度
@@ -73,7 +73,7 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 				"updated_at":      time.Now(),
 			}).Error; err != nil {
 			dbTx.Rollback()
-			log.Errorf("%s - 处理RocketMQ消息，交易 Id %s 失败，解冻用户兑换额度错误: %v", prefix, txId, err)
+			log.Errorf("%s - 处理Kafka消息，交易 Id %s 失败，解冻用户兑换额度错误: %v", prefix, txId, err)
 			return
 		}
 		// 恢复全局兑换额度
@@ -84,14 +84,14 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 				"updated_at":  time.Now(),
 			}).Error; err != nil {
 			dbTx.Rollback()
-			log.Errorf("%s - 处理RocketMQ消息，交易 Id %s 失败，恢复全局兑换额度错误: %v", prefix, txId, err)
+			log.Errorf("%s - 处理Kafka消息，交易 Id %s 失败，恢复全局兑换额度错误: %v", prefix, txId, err)
 			return
 		}
 	} else {
 		if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 			Where("tx_id = ?", txId).
 			Update("quote_state", constants.QuoteStateSuccess).Error; err != nil {
-			log.Errorf("%s - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为成功，错误: %v", prefix, txId, err)
+			log.Errorf("%s - 处理Kafka消息，根据交易 Id %s 更新领取交易状态为成功，错误: %v", prefix, txId, err)
 			dbTx.Rollback()
 			return
 		}
@@ -100,7 +100,7 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 		flowId := exchangeRecord.ScoreFlowID
 		if _, err := l.srvCtx.CampaignClientV1.ConsumeFrozenScore(userId, txId, uint64(flowId), ExchangeSys, ExchangeBiz, ReasonConsumeFreeze); err != nil {
 			dbTx.Rollback()
-			log.Errorf("%s - 处理RocketMQ消息，交易 Id %s 成功，消耗解冻积分错误: %v", prefix, txId, err)
+			log.Errorf("%s - 处理Kafka消息，交易 Id %s 成功，消耗解冻积分错误: %v", prefix, txId, err)
 			return
 		}
 		// 扣除用户冻结额度（冻结额度转为已使用）
@@ -112,7 +112,7 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 				"updated_at":   time.Now(),
 			}).Error; err != nil {
 			dbTx.Rollback()
-			log.Errorf("%s - 处理RocketMQ消息，交易 Id %s 成功，扣除用户冻结额度错误: %v", prefix, txId, err)
+			log.Errorf("%s - 处理Kafka消息，交易 Id %s 成功，扣除用户冻结额度错误: %v", prefix, txId, err)
 			return
 		}
 		log.Infof("%s - 更新记录为成功，交易ID %s，社交媒体 %v，用户Id %v", prefix, txId, exchangeRecord.Provider, exchangeRecord.UserID)
@@ -139,7 +139,7 @@ func (l *CampaignLogic) HandleExpiredTx(msg entity.NewExpiredTx) {
 			// 打印堆栈信息
 			stack := debug.Stack()
 			// 打印错误日志和堆栈信息
-			log.Errorf("%s - 处理RocketMQ消息时发生错误: %v\n堆栈信息:\n%s", prefix, r, string(stack))
+			log.Errorf("%s - 处理Kafka消息时发生错误: %v\n堆栈信息:\n%s", prefix, r, string(stack))
 			// 回滚事务
 			dbTx.Rollback()
 		}
@@ -155,24 +155,24 @@ func (l *CampaignLogic) HandleExpiredTx(msg entity.NewExpiredTx) {
 			dbTx.Rollback()
 			return
 		}
-		log.Errorf("%s - 处理RocketMQ消息，根据交易 Id %s 查找领取记录错误: %v", prefix, txId, err)
+		log.Errorf("%s - 处理Kafka消息，根据交易 Id %s 查找领取记录错误: %v", prefix, txId, err)
 		dbTx.Rollback()
 		return
 	}
 	if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 		Where("tx_id = ?", txId).
 		Update("quote_state", constants.QuoteStateFailed).Error; err != nil {
-		log.Errorf("%s - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", prefix, txId, err)
+		log.Errorf("%s - 处理Kafka消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", prefix, txId, err)
 		dbTx.Rollback()
 		return
 	}
 
 	// 解冻积分
 	userId, _ := strconv.ParseUint(exchangeRecord.UserID, 10, 64)
-	flowId, _ := strconv.ParseUint(exchangeRecord.ScoreTxID, 10, 64)
+	flowId := uint64(exchangeRecord.ScoreFlowID)
 	if _, err := l.srvCtx.CampaignClientV1.UnfreezeScore(userId, txId, flowId, ExchangeSys, ExchangeBiz, ReasonUnFreeze); err != nil {
 		dbTx.Rollback()
-		log.Errorf("%s - 处理RocketMQ消息，交易 Id %s 失败，解冻积分错误: %v", prefix, txId, err)
+		log.Errorf("%s - 处理Kafka消息，交易 Id %s 失败，解冻积分错误: %v", prefix, txId, err)
 		return
 	}
 

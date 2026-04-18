@@ -26,7 +26,7 @@ func (l *PosRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	defer func() {
 		if r := recover(); r != nil {
 			dbTx.Rollback()
-			log.Errorf("Pos业务 - 处理RocketMQ消息时发生错误: %v", r)
+			log.Errorf("Pos业务 - 处理Kafka消息时发生错误: %v", r)
 		}
 	}()
 
@@ -37,7 +37,7 @@ func (l *PosRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 			dbTx.Rollback()
 			return err
 		}
-		log.Errorf("Pos业务 - 处理RocketMQ消息，根据交易 Id %s 查找领取记录错误: %v", txId, err)
+		log.Errorf("Pos业务 - 处理Kafka消息，根据交易 Id %s 查找领取记录错误: %v", txId, err)
 		dbTx.Rollback()
 		return err
 	}
@@ -46,7 +46,7 @@ func (l *PosRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	if msg.TxSig.Err != nil {
 		if err = dbTx.Table(model.TableNamePosRewardClaim).
 			Where("record_id = ?", claimRecord.RecordID).Update("tx_state", constants.TxStateFailed).Error; err != nil {
-			log.Errorf("Pos业务 - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", txId, err)
+			log.Errorf("Pos业务 - 处理Kafka消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", txId, err)
 			dbTx.Rollback()
 			return err
 		}
@@ -69,7 +69,7 @@ func (l *PosRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	} else {
 		if err = dbTx.Table(model.TableNamePosRewardClaim).
 			Where("record_id = ?", claimRecord.RecordID).Update("tx_state", constants.TxStateSuccess).Error; err != nil {
-			log.Errorf("pos业务 - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为成功，错误: %v", txId, err)
+			log.Errorf("pos业务 - 处理Kafka消息，根据交易 Id %s 更新领取交易状态为成功，错误: %v", txId, err)
 			dbTx.Rollback()
 			return err
 		}
@@ -123,19 +123,19 @@ func (l *PosRewardLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	defer func() {
 		if r := recover(); r != nil {
 			dbTx.Rollback()
-			log.Errorf("Pos业务 - 处理RocketMQ消息时发生错误: %v", r)
+			log.Errorf("Pos业务 - 处理Kafka消息时发生错误: %v", r)
 		}
 	}()
 
 	// 根据交易 Id 找到记录
 	table := dbTx.Table(model.TableNamePosRewardClaim)
 	if err = table.Where("tx_id = ?", txId).First(&claimRecord).Error; err != nil {
-		log.Errorf("Pos业务 - 处理RocketMQ消息，根据交易 Id %s 查找领取记录错误: %v", txId, err)
+		log.Errorf("Pos业务 - 处理Kafka消息，根据交易 Id %s 查找领取记录错误: %v", txId, err)
 		dbTx.Rollback()
 		return err
 	}
 	if err = table.Where("tx_id = ?", txId).Update("tx_state", constants.TxStateFailed).Error; err != nil {
-		log.Errorf("Pos业务 - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", txId, err)
+		log.Errorf("Pos业务 - 处理Kafka消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", txId, err)
 		dbTx.Rollback()
 		return err
 	}

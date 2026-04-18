@@ -19,6 +19,17 @@ import (
 	"strconv"
 )
 
+const (
+	serviceKeyDecryptAlgo = "PBEWithHMACSHA512AndAES_256"
+	serviceKeyDecryptPwd  = "fktYimwMl3OfUF3m"
+	rsaPublicKey          = `-----BEGIN PUBLIC KEY-----
+							MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCym6SwEHnkHqpVcS9sxP4I2D4b
+							aSxPflUNtEqE0dmLfbA8kZw7Rs8eGkUj4kOEMSZA4y4jtp1wn0QJJF31Obop60j1
+							9j3KtTuSLBY9xuJoGNMxzYZCybzxcp+h2olUsp0SrjEfs/Z6ePY0k+5+0umwbvM4
+							+7CsfFwcASSNYuCbrwIDAQAB
+							-----END PUBLIC KEY-----`
+)
+
 type ServiceContext struct {
 	core_context.CoreContext
 }
@@ -114,18 +125,6 @@ func initRedis(cfg config.RedisConfig) (*redis.UniversalClient, error) {
 
 	return &client, nil
 }
-
-const (
-	serviceKeyDecryptAlgo = "PBEWithHMACSHA512AndAES_256"
-	serviceKeyDecryptPwd  = "fktYimwMl3OfUF3m"
-)
-
-const rsaPublicKey = `-----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCym6SwEHnkHqpVcS9sxP4I2D4b
-aSxPflUNtEqE0dmLfbA8kZw7Rs8eGkUj4kOEMSZA4y4jtp1wn0QJJF31Obop60j1
-9j3KtTuSLBY9xuJoGNMxzYZCybzxcp+h2olUsp0SrjEfs/Z6ePY0k+5+0umwbvM4
-+7CsfFwcASSNYuCbrwIDAQAB
------END PUBLIC KEY-----`
 
 func (s *ServiceContext) initRSAPublicKey() error {
 	pubKey, err := utils.ParseRsaPublicKeyFromPemStr(rsaPublicKey)
