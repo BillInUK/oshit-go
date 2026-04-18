@@ -29,6 +29,28 @@ func (h *CampaignHandler) GetExchangeConfig(fiberCtx *fiber.Ctx) error {
 	return response.OkWithData(fiberCtx, h.srvCtx.CampaignQuoteConfig)
 }
 
+// GetUserScore 查询用户的活动积分
+func (h *CampaignHandler) GetUserScore(fiberCtx *fiber.Ctx) error {
+	xAcJwt := fiberCtx.Get("x-ac-jwt")
+	if xAcJwt == "" {
+		return response.FailWithMsg(fiberCtx, "x-ac-jwt token is required")
+	}
+
+	// 1. 获取campaign的 userId 是否存在
+	userId, err := h.srvCtx.CampaignClientV1.LoginTokenToUserID(xAcJwt)
+	if err != nil {
+		log.Errorf("%s 根据x-ac-jwt获取用户id错误: %v", h.prefix, err)
+		return response.UnAuthorizedError(fiberCtx, "can not get user id")
+	}
+
+	// 2. 获取用户的总积分
+	scoreData, err := h.srvCtx.CampaignClientV1.QueryScore(userId)
+	if err != nil {
+		return response.FailWithMsg(fiberCtx, "get user score data failed")
+	}
+	return response.OkWithData(fiberCtx, scoreData)
+}
+
 // GetExchangeLimit 查询campaign用户兑换token额度和全局额度
 func (h *CampaignHandler) GetExchangeLimit(fiberCtx *fiber.Ctx) error {
 	xAcJwt := fiberCtx.Get("x-ac-jwt")
