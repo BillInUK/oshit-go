@@ -3,13 +3,6 @@ package stake
 import (
 	"context"
 	"fmt"
-	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/go-redsync/redsync/v4"
-	"github.com/gofiber/fiber/v2/log"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	posrpc "oshit-go/app/pos/api/internal/rpc"
 	"oshit-go/app/pos/api/internal/svc"
 	"oshit-go/app/pos/api/internal/task"
@@ -18,6 +11,14 @@ import (
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"time"
+
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/go-redsync/redsync/v4"
+	"github.com/gofiber/fiber/v2/log"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type StakeSnapShotLogic struct {
@@ -598,7 +599,7 @@ func (l *StakeSnapShotLogic) expireRewards(snapShotDay time.Time) {
 		types.StakeStarIndividual,
 		types.StakeStarIndividual,
 		types.StakeStarGroup,
-	).Update("reward_state", constants.RewardStateFailed).Error; err != nil {
+	).Update("reward_state", constants.RewardStateExpired).Error; err != nil {
 		log.Errorf("%s 设置奖励为过期失败错误:%v", l.prefix, err)
 	}
 }

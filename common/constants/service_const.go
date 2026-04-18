@@ -20,6 +20,7 @@ const (
 type RewardState int32
 
 const (
+	RewardStateExpired RewardState = -2
 	RewardStateFailed  RewardState = -1
 	RewardStateInit    RewardState = 0
 	RewardStateClaimed RewardState = 1

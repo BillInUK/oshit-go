@@ -72,7 +72,7 @@ func (l *RewardCodeLogic) GetTxInfo(ctx context.Context, rewardCode string) (*ty
 	// 1. 根据奖励码查询 t_reward_code，要求 tx_state=0（未使用）
 	var rc model.RewardCode
 	err := l.db.Table(model.TableNameRewardCode).
-		Where("reward_code = ? AND tx_state = ?", rewardCode, constants.TxStateInit).
+		Where("reward_code = ?", rewardCode).
 		First(&rc).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.New("reward code not found or already used")
@@ -83,7 +83,7 @@ func (l *RewardCodeLogic) GetTxInfo(ctx context.Context, rewardCode string) (*ty
 	}
 
 	// 2. 检查奖励码是否已过期
-	if rc.ExpiredAt.Before(time.Now()) {
+	if rc.RewardState < 0 || rc.ExpiredAt.Before(time.Now()) {
 		return nil, errors.New("reward code has expired")
 	}
 
@@ -142,7 +142,7 @@ func (l *RewardCodeLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app
 	// 2. 再次查询奖励码确认仍可用（锁内二次校验）
 	var rc model.RewardCode
 	err := l.db.Table(model.TableNameRewardCode).
-		Where("reward_code = ? AND tx_state = ?", rewardCode, constants.TxStateInit).
+		Where("reward_code = ?", rewardCode).
 		First(&rc).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("reward code not found or already used")
@@ -151,7 +151,7 @@ func (l *RewardCodeLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app
 		log.Errorf("%s 查询奖励码错误: %v", prefix, err)
 		return errors.New("query reward code error")
 	}
-	if rc.ExpiredAt.Before(time.Now()) {
+	if rc.RewardState < 0 || rc.ExpiredAt.Before(time.Now()) {
 		return errors.New("reward code has expired")
 	}
 

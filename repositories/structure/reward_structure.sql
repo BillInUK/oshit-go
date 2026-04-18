@@ -139,8 +139,9 @@ CREATE TABLE public.t_reward_code
     record_id     ulid                        DEFAULT gen_ulid() NOT NULL,
     reward_code   character varying(6)                           NOT NULL,
     reward_amount numeric(78, 0)                                 NOT NULL,
+    reward_state  integer                     DEFAULT 0          NOT NULL,
     tx_id         character varying(128)      DEFAULT NULL:: character varying,
-    tx_state         integer                     DEFAULT 0          NOT NULL,
+    tx_state      integer                     DEFAULT 0          NOT NULL,
     expired_at    timestamp without time zone DEFAULT (CURRENT_TIMESTAMP + '24:00:00':: interval),
     created_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP

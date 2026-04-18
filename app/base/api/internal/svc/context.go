@@ -23,11 +23,11 @@ const (
 	serviceKeyDecryptAlgo = "PBEWithHMACSHA512AndAES_256"
 	serviceKeyDecryptPwd  = "fktYimwMl3OfUF3m"
 	rsaPublicKey          = `-----BEGIN PUBLIC KEY-----
-							MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCym6SwEHnkHqpVcS9sxP4I2D4b
-							aSxPflUNtEqE0dmLfbA8kZw7Rs8eGkUj4kOEMSZA4y4jtp1wn0QJJF31Obop60j1
-							9j3KtTuSLBY9xuJoGNMxzYZCybzxcp+h2olUsp0SrjEfs/Z6ePY0k+5+0umwbvM4
-							+7CsfFwcASSNYuCbrwIDAQAB
-							-----END PUBLIC KEY-----`
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCym6SwEHnkHqpVcS9sxP4I2D4b
+aSxPflUNtEqE0dmLfbA8kZw7Rs8eGkUj4kOEMSZA4y4jtp1wn0QJJF31Obop60j1
+9j3KtTuSLBY9xuJoGNMxzYZCybzxcp+h2olUsp0SrjEfs/Z6ePY0k+5+0umwbvM4
++7CsfFwcASSNYuCbrwIDAQAB
+-----END PUBLIC KEY-----`
 )
 
 type ServiceContext struct {

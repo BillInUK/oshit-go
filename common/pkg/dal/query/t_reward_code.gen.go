@@ -31,6 +31,7 @@ func newRewardCode(db *gorm.DB, opts ...gen.DOOption) rewardCode {
 	_rewardCode.RecordID = field.NewString(tableName, "record_id")
 	_rewardCode.RewardCode = field.NewString(tableName, "reward_code")
 	_rewardCode.RewardAmount = field.NewFloat64(tableName, "reward_amount")
+	_rewardCode.RewardState = field.NewInt32(tableName, "reward_state")
 	_rewardCode.TxID = field.NewString(tableName, "tx_id")
 	_rewardCode.TxState = field.NewInt32(tableName, "tx_state")
 	_rewardCode.ExpiredAt = field.NewTime(tableName, "expired_at")
@@ -49,6 +50,7 @@ type rewardCode struct {
 	RecordID     field.String
 	RewardCode   field.String
 	RewardAmount field.Float64
+	RewardState  field.Int32
 	TxID         field.String
 	TxState      field.Int32
 	ExpiredAt    field.Time
@@ -73,6 +75,7 @@ func (r *rewardCode) updateTableName(table string) *rewardCode {
 	r.RecordID = field.NewString(table, "record_id")
 	r.RewardCode = field.NewString(table, "reward_code")
 	r.RewardAmount = field.NewFloat64(table, "reward_amount")
+	r.RewardState = field.NewInt32(table, "reward_state")
 	r.TxID = field.NewString(table, "tx_id")
 	r.TxState = field.NewInt32(table, "tx_state")
 	r.ExpiredAt = field.NewTime(table, "expired_at")
@@ -104,10 +107,11 @@ func (r *rewardCode) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *rewardCode) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 8)
+	r.fieldMap = make(map[string]field.Expr, 9)
 	r.fieldMap["record_id"] = r.RecordID
 	r.fieldMap["reward_code"] = r.RewardCode
 	r.fieldMap["reward_amount"] = r.RewardAmount
+	r.fieldMap["reward_state"] = r.RewardState
 	r.fieldMap["tx_id"] = r.TxID
 	r.fieldMap["tx_state"] = r.TxState
 	r.fieldMap["expired_at"] = r.ExpiredAt

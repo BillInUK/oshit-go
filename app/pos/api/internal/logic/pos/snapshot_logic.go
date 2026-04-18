@@ -2,14 +2,6 @@ package pos
 
 import (
 	"context"
-	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/go-redsync/redsync/v4"
-	"github.com/gofiber/fiber/v2/log"
-	"github.com/pkg/errors"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	posrpc "oshit-go/app/pos/api/internal/rpc"
 	"oshit-go/app/pos/api/internal/svc"
 	"oshit-go/app/pos/api/internal/task"
@@ -19,6 +11,15 @@ import (
 	"oshit-go/common/pkg/entity"
 	"strings"
 	"time"
+
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/go-redsync/redsync/v4"
+	"github.com/gofiber/fiber/v2/log"
+	"github.com/pkg/errors"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type PosSnapShotLogic struct {
@@ -141,7 +142,7 @@ func (l *PosSnapShotLogic) reConstructInviteRelation() {
 func (l *PosSnapShotLogic) expireLastDayPosReward(snapShotDay time.Time) {
 	var err error
 	table := l.db.Table(model.TableNamePosReward)
-	if err = table.Where("snap_day < cast(? as date)", snapShotDay).Update("reward_state", constants.RewardStateFailed).Error; err != nil {
+	if err = table.Where("snap_day < cast(? as date)", snapShotDay).Update("reward_state", constants.RewardStateExpired).Error; err != nil {
 		log.Errorf("pos业务 - 设置奖励为过期失败错误:%v", err)
 	}
 }

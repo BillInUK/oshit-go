@@ -33,8 +33,8 @@ func (t *RewardCodeExpireTask) Start() {
 
 func (t *RewardCodeExpireTask) run() {
 	result := t.db.Table(model.TableNameRewardCode).
-		Where("tx_state = ? AND expired_at < ?", constants.TxStateInit, time.Now()).
-		Update("tx_state", constants.TxStateExpired)
+		Where("reward_state = ? AND expired_at < ?", constants.RewardStateInit, time.Now()).
+		Update("reward_state", constants.RewardStateExpired)
 
 	if result.Error != nil {
 		log.Errorf("RewardCodeExpireTask: 更新过期奖励码状态失败: %v", result.Error)
