@@ -33,9 +33,9 @@ func newFundFlow(db *gorm.DB, opts ...gen.DOOption) fundFlow {
 	_fundFlow.FromAccount = field.NewString(tableName, "from_account")
 	_fundFlow.ToAccount = field.NewString(tableName, "to_account")
 	_fundFlow.TxID = field.NewString(tableName, "tx_id")
-	_fundFlow.Direction = field.NewInt16(tableName, "direction")
-	_fundFlow.ServiceType = field.NewInt16(tableName, "service_type")
-	_fundFlow.FlowType = field.NewInt16(tableName, "flow_type")
+	_fundFlow.Direction = field.NewString(tableName, "direction")
+	_fundFlow.ServiceType = field.NewString(tableName, "service_type")
+	_fundFlow.FlowType = field.NewString(tableName, "flow_type")
 	_fundFlow.Decimals = field.NewInt16(tableName, "decimals")
 	_fundFlow.Amount = field.NewFloat64(tableName, "amount")
 	_fundFlow.CreatedAt = field.NewTime(tableName, "created_at")
@@ -55,9 +55,9 @@ type fundFlow struct {
 	FromAccount field.String
 	ToAccount   field.String
 	TxID        field.String
-	Direction   field.Int16
-	ServiceType field.Int16
-	FlowType    field.Int16
+	Direction   field.String
+	ServiceType field.String
+	FlowType    field.String
 	Decimals    field.Int16
 	Amount      field.Float64
 	CreatedAt   field.Time
@@ -83,9 +83,9 @@ func (f *fundFlow) updateTableName(table string) *fundFlow {
 	f.FromAccount = field.NewString(table, "from_account")
 	f.ToAccount = field.NewString(table, "to_account")
 	f.TxID = field.NewString(table, "tx_id")
-	f.Direction = field.NewInt16(table, "direction")
-	f.ServiceType = field.NewInt16(table, "service_type")
-	f.FlowType = field.NewInt16(table, "flow_type")
+	f.Direction = field.NewString(table, "direction")
+	f.ServiceType = field.NewString(table, "service_type")
+	f.FlowType = field.NewString(table, "flow_type")
 	f.Decimals = field.NewInt16(table, "decimals")
 	f.Amount = field.NewFloat64(table, "amount")
 	f.CreatedAt = field.NewTime(table, "created_at")

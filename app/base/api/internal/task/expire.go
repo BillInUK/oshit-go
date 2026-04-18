@@ -74,7 +74,7 @@ func (t *TxExpireTask) scanExpiredTransactions() {
 
 	var expiredTxs []model.ServiceTx
 	if err := t.db.WithContext(ctx).
-		Where(`tx_state = ? AND created_at <= ?`, 0, fiveMinutesAgo).
+		Where(`tx_state = ? AND created_at <= ?`, constants.TxStateInit, fiveMinutesAgo).
 		Find(&expiredTxs).Error; err != nil {
 		log.Errorf("%s 查询过期的交易错误: %v", t.prefix, err)
 		return

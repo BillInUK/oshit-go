@@ -14,6 +14,7 @@ import (
 	"oshit-go/app/pos/api/internal/svc"
 	"oshit-go/app/pos/api/types"
 	app_utils "oshit-go/app/utils"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/utils"
 	"strings"
@@ -40,7 +41,10 @@ type StakeRewardLogic struct {
 	starLevelRule map[int32]model.StakeStarLevelRule  // 星级评定规则
 
 	// 快照逻辑
-	snapShotLogic *StakeSnapShotLogic
+	snapShotLogic    *StakeSnapShotLogic
+	service          constants.ServiceName
+	subService       constants.SubServiceName
+	leaderSubService constants.SubServiceName
 }
 
 func NewStakeRewardLogic(ctx context.Context, srvCtx *svc.ServiceContext) *StakeRewardLogic {
@@ -59,6 +63,9 @@ func NewStakeRewardLogic(ctx context.Context, srvCtx *svc.ServiceContext) *Stake
 		decimals:          uint8(srvCtx.TokenConfig.Decimals),
 		LightHouseAddress: srvCtx.LightHouseAddress,
 		snapShotLogic:     NewStakeSnapShotLogic(ctx, srvCtx),
+		service:           constants.ServicePos,
+		subService:        constants.SubServiceStakeReward,
+		leaderSubService:  constants.SubServiceStakeLeaderReward,
 	}
 }
 
@@ -83,7 +90,7 @@ func (l *StakeRewardLogic) GetRewardRecord(nativeAccount string) ([]model.StakeR
 	var rewards []model.StakeReward
 
 	table := l.db.Table(model.TableNameStakeReward)
-	query := table.Where("native_account = ? and reward_state = ? and pending  = ?", nativeAccount, 0, false)
+	query := table.Where("native_account = ? and reward_state = ? and pending  = ?", nativeAccount, constants.RewardStateInit, false)
 
 	// 查询数据并获取总数
 	if err := query.Order("created_at desc").Find(&rewards).Error; err != nil {
@@ -114,7 +121,7 @@ func (l *StakeRewardLogic) GetTxInfo(nativeAccount string) (*types.ClaimStakeRew
 	// 查询所有可领取奖励（reward_state=0, pending=false）
 	var rewards []model.StakeReward
 	if err := l.db.Table(model.TableNameStakeReward).
-		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
+		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, constants.RewardStateInit, false).
 		Find(&rewards).Error; err != nil {
 		return nil, fmt.Errorf("query stake rewards error: %v", err)
 	}
@@ -171,7 +178,7 @@ func (l *StakeRewardLogic) recordStakeClaim(nativeAccount, txId string, rewards 
 
 	// 1. 标记奖励为 pending
 	if err := dbTx.Table(model.TableNameStakeReward).
-		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
+		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, constants.RewardStateInit, false).
 		Updates(map[string]interface{}{
 			"pending":    true,
 			"tx_id":      txId,
@@ -184,7 +191,7 @@ func (l *StakeRewardLogic) recordStakeClaim(nativeAccount, txId string, rewards 
 	claimRecord := model.StakeRewardClaim{
 		RewardIds: rewardIdsStr,
 		TxID:      txId,
-		TxState:   0,
+		TxState:   int32(constants.TxStateInit),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -226,7 +233,7 @@ func (l *StakeRewardLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *ap
 	// 3. 再次查询本次可领取奖励（用于 recordStakeClaim）
 	var rewards []model.StakeReward
 	if err := l.db.Table(model.TableNameStakeReward).
-		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
+		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, constants.RewardStateInit, false).
 		Find(&rewards).Error; err != nil {
 		log.Errorf("%s 查询奖励记录错误: %v", prefix, err)
 		return "", errors.New("query stake rewards error")
@@ -246,7 +253,7 @@ func (l *StakeRewardLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *ap
 	}
 
 	// 6. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "StakeReward")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return "", errors.New(utils.FilterAndTranslateSOLError(err))
@@ -294,7 +301,7 @@ func (l *StakeRewardLogic) recordLeaderClaim(nativeAccount, txId string, rewards
 	rewardIdsStr := "{" + strings.Join(rewardIds, ",") + "}"
 
 	if err := dbTx.Table(model.TableNameStakeLeaderReward).
-		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
+		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, constants.RewardStateInit, false).
 		Updates(map[string]interface{}{
 			"pending":    true,
 			"tx_id":      txId,
@@ -307,7 +314,7 @@ func (l *StakeRewardLogic) recordLeaderClaim(nativeAccount, txId string, rewards
 		NativeAccount: nativeAccount,
 		RewardIds:     rewardIdsStr,
 		TxID:          txId,
-		TxState:       0,
+		TxState:       int32(constants.TxStateInit),
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
@@ -352,7 +359,7 @@ func (l *StakeRewardLogic) ProcessLeaderCommitTx(ctx context.Context, preChecked
 	// 3. 查询本次可领取奖励（用于 recordLeaderClaim）
 	var rewards []model.StakeLeaderReward
 	if err := l.db.Table(model.TableNameStakeLeaderReward).
-		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
+		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, constants.RewardStateInit, false).
 		Find(&rewards).Error; err != nil {
 		log.Errorf("%s 查询奖励记录错误: %v", prefix, err)
 		return "", errors.New("query leader rewards error")
@@ -372,7 +379,7 @@ func (l *StakeRewardLogic) ProcessLeaderCommitTx(ctx context.Context, preChecked
 	}
 
 	// 6. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "StakeLeaderReward")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.leaderSubService)
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return "", errors.New(utils.FilterAndTranslateSOLError(err))
@@ -401,7 +408,7 @@ func (l *StakeRewardLogic) getLeaderTxInfo(nativeAccount string) (*types.LeaderR
 	var totalReward float64
 	if err := l.db.Table(model.TableNameStakeLeaderReward).
 		Select("coalesce(sum(reward_amount), 0)").
-		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
+		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, constants.RewardStateInit, false).
 		Scan(&totalReward).Error; err != nil {
 		return nil, fmt.Errorf("查询区域经理未领取奖励总额错误: %v", err)
 	}

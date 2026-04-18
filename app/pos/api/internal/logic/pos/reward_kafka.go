@@ -45,20 +45,20 @@ func (l *PosRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 
 	if msg.TxSig.Err != nil {
 		if err = dbTx.Table(model.TableNamePosRewardClaim).
-			Where("record_id = ?", claimRecord.RecordID).Update("tx_state", -1).Error; err != nil {
+			Where("record_id = ?", claimRecord.RecordID).Update("tx_state", constants.TxStateFailed).Error; err != nil {
 			log.Errorf("Pos业务 - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", txId, err)
 			dbTx.Rollback()
 			return err
 		}
 		// 将奖励记录的状态设置处理完成
 		table = dbTx.Table(model.TableNamePosReward)
-		if err = table.Where("record_id IN ? ", claimRecord.RewardIds).Updates(map[string]interface{}{"reward_state": 0, "pending": false}).Error; err != nil {
+		if err = table.Where("record_id IN ? ", claimRecord.RewardIds).Updates(map[string]interface{}{"reward_state": constants.RewardStateInit, "pending": false}).Error; err != nil {
 			log.Errorf("pos业务 - 更新奖励记录为处理中，错误: %v", err)
 			return err
 		}
 		if len(rewardIds) > 0 {
 			if err = table.Where("record_id IN ? ", rewardIds).Updates(map[string]interface{}{
-				"reward_state": 0,
+				"reward_state": constants.RewardStateInit,
 				"pending":      false,
 				"updated_at":   time.Now(),
 			}).Error; err != nil {
@@ -68,7 +68,7 @@ func (l *PosRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		}
 	} else {
 		if err = dbTx.Table(model.TableNamePosRewardClaim).
-			Where("record_id = ?", claimRecord.RecordID).Update("tx_state", 1).Error; err != nil {
+			Where("record_id = ?", claimRecord.RecordID).Update("tx_state", constants.TxStateSuccess).Error; err != nil {
 			log.Errorf("pos业务 - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为成功，错误: %v", txId, err)
 			dbTx.Rollback()
 			return err
@@ -78,7 +78,7 @@ func (l *PosRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		table = dbTx.Table(model.TableNamePosReward)
 		if len(rewardIds) > 0 {
 			if err = table.Where("record_id IN ? ", rewardIds).Updates(map[string]interface{}{
-				"reward_state": 1,
+				"reward_state": constants.RewardStateClaimed,
 				"pending":      false,
 				"updated_at":   time.Now(),
 			}).Error; err != nil {
@@ -134,7 +134,7 @@ func (l *PosRewardLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		dbTx.Rollback()
 		return err
 	}
-	if err = table.Where("tx_id = ?", txId).Update("tx_state", -1).Error; err != nil {
+	if err = table.Where("tx_id = ?", txId).Update("tx_state", constants.TxStateFailed).Error; err != nil {
 		log.Errorf("Pos业务 - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", txId, err)
 		dbTx.Rollback()
 		return err
@@ -142,7 +142,7 @@ func (l *PosRewardLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	// 将奖励记录的状态设置处理完成
 	rewardIds := utils.ParseDbArray(claimRecord.RewardIds)
 	table = dbTx.Table(model.TableNamePosReward)
-	if err = table.Where("record_id IN ? ", rewardIds).Updates(map[string]interface{}{"tx_state": 0, "pending": false}).Error; err != nil {
+	if err = table.Where("record_id IN ? ", rewardIds).Updates(map[string]interface{}{"tx_state": constants.TxStateInit, "pending": false}).Error; err != nil {
 		log.Errorf("pos业务 - 更新奖励记录为处理中，错误: %v", err)
 		dbTx.Rollback()
 		return err
@@ -168,9 +168,9 @@ func (l *PosRewardLogic) recordClaimRewardFlow(decodedServiceTx *entity.DecodedS
 		FromAccount: decodedServiceTx.FromNativeAccount,
 		ToAccount:   decodedServiceTx.ToDexInst.ToNativeAccount,
 		TxID:        decodedServiceTx.TxID,
-		Direction:   constants.FlowInput,
-		ServiceType: constants.ServicePosDaily,
-		FlowType:    constants.FlowPosCost,
+		Direction:   constants.FlowInput.String(),
+		ServiceType: constants.FundFlowServicePosDaily.String(),
+		FlowType:    constants.FlowPosCost.String(),
 		Decimals:    9,
 		Amount:      float64(decodedServiceTx.ToDexInst.Amount),
 		CreatedAt:   time.Now(),
@@ -183,9 +183,9 @@ func (l *PosRewardLogic) recordClaimRewardFlow(decodedServiceTx *entity.DecodedS
 		FromAccount: decodedServiceTx.RewardInst.FromNativeAccount,
 		ToAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
 		TxID:        decodedServiceTx.TxID,
-		Direction:   constants.FlowOutput,
-		ServiceType: constants.ServicePosDaily,
-		FlowType:    constants.FlowPosReceipt,
+		Direction:   constants.FlowOutput.String(),
+		ServiceType: constants.FundFlowServicePosDaily.String(),
+		FlowType:    constants.FlowPosReceipt.String(),
 		Decimals:    int16(decodedServiceTx.RewardInst.Decimals),
 		Amount:      decodedServiceTx.RewardInst.Amount,
 		CreatedAt:   time.Now(),

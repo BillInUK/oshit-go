@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"runtime/debug"
@@ -39,12 +40,12 @@ func (l *RewardCodeLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		return err
 	}
 
-	var newState int32
+	var newState constants.TxState
 	if msg.TxSig.Err != nil {
-		newState = -1
+		newState = constants.TxStateFailed
 		log.Infof("%s 交易失败，设置 tx_state=-1", prefix)
 	} else {
-		newState = 1
+		newState = constants.TxStateSuccess
 		log.Infof("%s 交易成功，设置 tx_state=1", prefix)
 	}
 
@@ -80,7 +81,7 @@ func (l *RewardCodeLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 
 	if err := dbTx.Table(model.TableNameRewardCode).
 		Where("tx_id = ?", txId).
-		Update("tx_state", -1).Error; err != nil {
+		Update("tx_state", constants.TxStateFailed).Error; err != nil {
 		log.Errorf("%s 更新奖励码状态为失败错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err

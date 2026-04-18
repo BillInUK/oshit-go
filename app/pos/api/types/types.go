@@ -1,6 +1,9 @@
 package types
 
-import "github.com/gagliardetto/solana-go"
+import (
+	"github.com/gagliardetto/solana-go"
+	"oshit-go/common/constants"
+)
 
 const (
 	PosFixedIncome  = 0 // Pos 持币固定收益
@@ -75,7 +78,7 @@ type PosRewardDetail struct {
 	StarredRewardBase     float64 `json:"starredRewardBase"`     // 星级奖励当中个人部分
 	StarredRewardFromTeam float64 `json:"starredRewardFromTeam"` // 星级奖励当中的团队部分
 	TotalRewardAmount     float64 `json:"totalRewardAmount"`     // 当日可以领取的总奖励
-	RewardState           int32   `json:"rewardState"`           // 奖励状态 -1.已经过期 0.未领取 1.已经领取
+	RewardState           constants.RewardState `json:"rewardState"`           // 奖励状态 -1.已经过期 0.未领取 1.已经领取
 	Pending               bool    `json:"pending"`               // 奖励处理状态 0.未领取 1.处理中
 }
 

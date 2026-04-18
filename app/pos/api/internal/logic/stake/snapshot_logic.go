@@ -14,6 +14,7 @@ import (
 	"oshit-go/app/pos/api/internal/svc"
 	"oshit-go/app/pos/api/internal/task"
 	"oshit-go/app/pos/api/types"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"time"
@@ -181,7 +182,7 @@ func (l *StakeSnapShotLogic) rewardOrdinaryStaker(snapShotDay time.Time) (map[st
 				Rate:          rateConfig.FixRate,
 				RewardAmount:  rewardAmount,
 				RewardType:    types.StakeFixed,
-				RewardState:   0,
+				RewardState:   int32(constants.RewardStateInit),
 				Pending:       false,
 				Starred:       false,
 				SnapDay:       snapShotDay,
@@ -482,7 +483,7 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 					Rate:          node.Rate,
 					RewardAmount:  node.Base / 365,
 					RewardType:    types.StakeStarGroup,
-					RewardState:   0,
+					RewardState:   int32(constants.RewardStateInit),
 					Pending:       false,
 					Starred:       node.StarLevel > 0,
 					SnapDay:       snapShotDay,
@@ -597,7 +598,7 @@ func (l *StakeSnapShotLogic) expireRewards(snapShotDay time.Time) {
 		types.StakeStarIndividual,
 		types.StakeStarIndividual,
 		types.StakeStarGroup,
-	).Update("reward_state", -1).Error; err != nil {
+	).Update("reward_state", constants.RewardStateFailed).Error; err != nil {
 		log.Errorf("%s 设置奖励为过期失败错误:%v", l.prefix, err)
 	}
 }

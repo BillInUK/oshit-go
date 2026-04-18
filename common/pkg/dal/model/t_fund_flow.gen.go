@@ -17,9 +17,9 @@ type FundFlow struct {
 	FromAccount string    `gorm:"column:from_account;not null" json:"from_account"`
 	ToAccount   string    `gorm:"column:to_account;not null" json:"to_account"`
 	TxID        string    `gorm:"column:tx_id;not null" json:"tx_id"`
-	Direction   int16     `gorm:"column:direction;not null" json:"direction"`
-	ServiceType int16     `gorm:"column:service_type;not null" json:"service_type"`
-	FlowType    int16     `gorm:"column:flow_type;not null" json:"flow_type"`
+	Direction   string    `gorm:"column:direction;not null" json:"direction"`
+	ServiceType string    `gorm:"column:service_type;not null" json:"service_type"`
+	FlowType    string    `gorm:"column:flow_type;not null" json:"flow_type"`
 	Decimals    int16     `gorm:"column:decimals;not null" json:"decimals"`
 	Amount      float64   `gorm:"column:amount;not null" json:"amount"`
 	CreatedAt   time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`

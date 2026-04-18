@@ -97,7 +97,8 @@ func (t *KafkaConsumerTask) handleScannedTx(tx entity.NewScannedTx) {
 	}
 	handler, ok := t.scannedHandlers[tx.Service]
 	if !ok {
-		log.Warnf("KafkaConsumerTask: 未找到 service=%s 的已扫描交易处理器", tx.Service)
+		// 其他服务（如 pos-api）共用同一 topic 但使用独立消费者组，会收到彼此的消息，正常跳过即可
+		log.Infof("KafkaConsumerTask: 跳过非本服务消息 service=%s subService=%s", tx.Service, tx.SubService)
 		return
 	}
 	if err := handler(context.Background(), tx); err != nil {
@@ -114,7 +115,7 @@ func (t *KafkaConsumerTask) handleExpiredTx(tx entity.NewExpiredTx) {
 	}
 	handler, ok := t.expiredHandlers[tx.Service]
 	if !ok {
-		log.Warnf("KafkaConsumerTask: 未找到 service=%s 的超时交易处理器", tx.Service)
+		log.Infof("KafkaConsumerTask: 跳过非本服务消息 service=%s subService=%s", tx.Service, tx.SubService)
 		return
 	}
 	if err := handler(context.Background(), tx); err != nil {

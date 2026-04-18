@@ -14,6 +14,7 @@ import (
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
 	app_utils "oshit-go/app/utils"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/dal/query"
 	"oshit-go/common/utils"
@@ -39,6 +40,8 @@ type CampaignLogic struct {
 	rpcClient     *rpc.Client
 	baseClient    *rewardrpc.BaseClient
 	serviceConfig *model.CampaignQuoteConfig
+	service       constants.ServiceName
+	subService    constants.SubServiceName
 }
 
 func NewCampaignLogic(ctx context.Context, srvCtx *svc.ServiceContext) *CampaignLogic {
@@ -52,6 +55,8 @@ func NewCampaignLogic(ctx context.Context, srvCtx *svc.ServiceContext) *Campaign
 		rpcClient:     srvCtx.RpcClient,
 		baseClient:    srvCtx.BaseClient,
 		serviceConfig: srvCtx.CampaignQuoteConfig,
+		service:       constants.ServiceReward,
+		subService:    constants.SubServiceExchangeToken,
 	}
 }
 
@@ -281,7 +286,7 @@ func (l *CampaignLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_u
 	}
 
 	// 7. 通过 base 模块的dubbo接口签名并异步广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "ExchangeToken")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 调用base模块dubbo接口发送交易失败,错误: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))

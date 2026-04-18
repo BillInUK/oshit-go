@@ -14,6 +14,7 @@ import (
 	"oshit-go/app/pos/api/internal/svc"
 	"oshit-go/app/pos/api/types"
 	app_utils "oshit-go/app/utils"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/utils"
 	"strings"
@@ -35,6 +36,8 @@ type PosRewardLogic struct {
 	// 业务相关参数
 	serviceConfig *model.PosRewardConfig
 	snapShotLogic *PosSnapShotLogic
+	service       constants.ServiceName
+	subService    constants.SubServiceName
 }
 
 func NewPosRewardLogic(ctx context.Context, srvCtx *svc.ServiceContext) *PosRewardLogic {
@@ -53,6 +56,8 @@ func NewPosRewardLogic(ctx context.Context, srvCtx *svc.ServiceContext) *PosRewa
 		// 业务相关参数
 		serviceConfig: srvCtx.PosRewardConfig,
 		snapShotLogic: NewPosSnapShotLogic(ctx, srvCtx),
+		service:       constants.ServicePos,
+		subService:    constants.SubServicePosReward,
 	}
 }
 
@@ -93,7 +98,7 @@ func (l *PosRewardLogic) GetRewardStat(nativeAccount string) (*types.PosRewardDe
 		detail.RewardAmount = 0
 	}
 	detail.RewardAmount = reward.RewardAmount
-	detail.RewardState = reward.RewardState
+	detail.RewardState = constants.RewardState(reward.RewardState)
 	detail.Pending = reward.Pending
 
 	// 查询奖励当中的星级部分
@@ -156,7 +161,7 @@ func (l *PosRewardLogic) GetRewardStat(nativeAccount string) (*types.PosRewardDe
 func (l *PosRewardLogic) GetRewards(nativeAccount string) ([]model.PosReward, error) {
 	var rewards []model.PosReward
 	table := l.db.Table(model.TableNamePosReward)
-	err := table.Where("native_account = ? and reward_state = ? AND pending = ?", nativeAccount, 0, false).Find(&rewards).Error
+	err := table.Where("native_account = ? and reward_state = ? AND pending = ?", nativeAccount, constants.RewardStateInit, false).Find(&rewards).Error
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +229,7 @@ func (l *PosRewardLogic) GetTxInfo(nativeAccount string) (*types.ClaimPosRewardT
 	totalRewardAmount := 0.0
 	if err := l.db.Table(model.TableNamePosReward).
 		Select(`COALESCE(SUM(reward_amount), 0) AS reward_amount`).
-		Where(`native_account= ? AND reward_state = ? AND pending = ? AND snap_day = CAST(? AS DATE)`, nativeAccount, 0, false, time.Now()).
+		Where(`native_account= ? AND reward_state = ? AND pending = ? AND snap_day = CAST(? AS DATE)`, nativeAccount, constants.RewardStateInit, false, time.Now()).
 		Scan(&totalRewardAmount).Error; err != nil {
 		log.Errorf("%s 获取POS奖励交易信息 - 查询地址: %s 当日所有质押奖励错误: %v", l.prefix, nativeAccount, err)
 		return nil, err
@@ -282,7 +287,7 @@ func (l *PosRewardLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 	// 3. 再次查询本次可领取奖励（用于 recordStakeClaim）
 	var rewards []model.PosReward
 	if err := l.db.Table(model.TableNamePosReward).
-		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
+		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, constants.RewardStateInit, false).
 		Find(&rewards).Error; err != nil {
 		log.Errorf("%s 查询奖励记录错误: %v", prefix, err)
 		return "", errors.New("query pos rewards error")
@@ -302,7 +307,7 @@ func (l *PosRewardLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 	}
 
 	// 6. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "PosReward")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return "", errors.New(utils.FilterAndTranslateSOLError(err))
@@ -342,7 +347,7 @@ func (l *PosRewardLogic) recordPosClaim(nativeAccount, txId string, rewards []mo
 
 	// 1. 标记奖励为 pending
 	if err := dbTx.Table(model.TableNamePosReward).
-		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, 0, false).
+		Where("native_account = ? AND reward_state = ? AND pending = ?", nativeAccount, constants.RewardStateInit, false).
 		Updates(map[string]interface{}{
 			"pending":    true,
 			"updated_at": time.Now(),
@@ -354,7 +359,7 @@ func (l *PosRewardLogic) recordPosClaim(nativeAccount, txId string, rewards []mo
 	claimRecord := model.PosRewardClaim{
 		RewardIds: rewardIdsStr,
 		TxID:      txId,
-		TxState:   0,
+		TxState:   int32(constants.TxStateInit),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

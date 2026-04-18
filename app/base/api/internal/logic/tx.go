@@ -13,6 +13,7 @@ import (
 
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 )
 
@@ -70,7 +71,7 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 			Service:    req.Service,
 			SubService: req.SubService,
 			TxID:       txID,
-			TxState:    0,
+			TxState:    int32(constants.TxStateInit),
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
 		}
@@ -122,7 +123,7 @@ func (l *TxLogic) broadcastTx(recordID string, confirm bool, tx *solana.Transact
 	if _, err := l.svcCtx.RpcClient.SendTransaction(ctx, tx); err != nil {
 		log.Errorf("broadcast tx record[%v] error: %v", tx.Signatures[0], err)
 		if confirm && recordID != "" {
-			l.updateServiceTxState(recordID, -1)
+			l.updateServiceTxState(recordID, constants.TxStateFailed)
 		}
 		return
 	}
@@ -130,7 +131,7 @@ func (l *TxLogic) broadcastTx(recordID string, confirm bool, tx *solana.Transact
 	log.Infof("broadcast tx record[%v] success", tx.Signatures[0])
 }
 
-func (l *TxLogic) updateServiceTxState(recordID string, state int32) {
+func (l *TxLogic) updateServiceTxState(recordID string, state constants.TxState) {
 	l.db.Model(&model.ServiceTx{}).Where("record_id = ?", recordID).Updates(map[string]interface{}{
 		"tx_state":   state,
 		"updated_at": time.Now(),

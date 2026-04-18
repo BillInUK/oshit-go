@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gagliardetto/solana-go"
+	"oshit-go/common/constants"
 	basepb "oshit-go/common/pkg/pb/base"
 )
 
@@ -101,7 +102,7 @@ func (c *BaseClient) GetUSDTQuoteSOLPrice(ctx context.Context) (float64, error) 
 
 // SendTransaction 将 Solana 交易序列化后发给 base 模块签名并异步广播
 // service / subService 用于在 t_service_key 中查找对应私钥
-func (c *BaseClient) SendTransaction(ctx context.Context, tx *solana.Transaction, service, subService string) (string, error) {
+func (c *BaseClient) SendTransaction(ctx context.Context, tx *solana.Transaction, service constants.ServiceName, subService constants.SubServiceName) (string, error) {
 	txBytes, err := tx.MarshalBinary()
 	if err != nil {
 		return "", fmt.Errorf("marshal transaction error: %v", err)
@@ -110,8 +111,8 @@ func (c *BaseClient) SendTransaction(ctx context.Context, tx *solana.Transaction
 
 	rsp, err := c.svc.SendTransaction(ctx, &basepb.SendTransactionReq{
 		EncodedTx:  encodedTx,
-		Service:    service,
-		SubService: subService,
+		Service:    service.String(),
+		SubService: subService.String(),
 	})
 	if err != nil {
 		return "", err

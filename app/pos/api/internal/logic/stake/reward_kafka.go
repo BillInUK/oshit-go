@@ -31,7 +31,7 @@ func (l *StakeRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		table := dbTx.Table(model.TableNameStakeReward)
 		if err = table.Where("tx_id = ? ", txId).Updates(map[string]interface{}{
 			"tx_id":        nil,
-			"reward_state": 0,
+			"reward_state": constants.RewardStateInit,
 			"pending":      false,
 			"updated_at":   time.Now(),
 		}).Error; err != nil {
@@ -42,7 +42,7 @@ func (l *StakeRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		// 更新 t_stake_reward_claim_record 的交易状态为已成功
 		table := dbTx.Table(model.TableNameStakeRewardClaim)
 		if err = table.Where("tx_id = ?", txId).Updates(map[string]interface{}{
-			"tx_state":   1,
+			"tx_state":   constants.TxStateSuccess,
 			"updated_at": time.Now(),
 		}).Error; err != nil {
 			log.Errorf("%s 更新claim record状态失败，错误: %v", l.prefix, err)
@@ -51,7 +51,7 @@ func (l *StakeRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		// 将关联的 t_stake_reward 记录标记为已领取
 		table = dbTx.Table(model.TableNameStakeReward)
 		if err = table.Where("tx_id = ?", txId).Updates(map[string]interface{}{
-			"reward_state": 1,
+			"reward_state": constants.RewardStateClaimed,
 			"pending":      false,
 			"updated_at":   time.Now(),
 		}).Error; err != nil {
@@ -100,7 +100,7 @@ func (l *StakeRewardLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	// 将 t_stake_reward_claim_record 标记为失败
 	claimTable := dbTx.Table(model.TableNameStakeRewardClaim)
 	if err = claimTable.Where("tx_id = ?", txId).Updates(map[string]interface{}{
-		"tx_state":   -1,
+		"tx_state":   constants.TxStateFailed,
 		"updated_at": time.Now(),
 	}).Error; err != nil {
 		log.Errorf("%s 更新claim record为失败，错误: %v", l.prefix, err)
@@ -111,7 +111,7 @@ func (l *StakeRewardLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	table := dbTx.Table(model.TableNameStakeReward)
 	if err = table.Where("tx_id = ?", txId).Updates(map[string]interface{}{
 		"tx_id":        nil,
-		"reward_state": 0,
+		"reward_state": constants.RewardStateInit,
 		"pending":      false,
 		"updated_at":   time.Now(),
 	}).Error; err != nil {
@@ -147,7 +147,7 @@ func (l *StakeRewardLogic) HandleLeaderScannedTx(msg entity.NewScannedTx) error 
 			Where("tx_id = ?", txId).
 			Updates(map[string]interface{}{
 				"tx_id":        nil,
-				"reward_state": 0,
+				"reward_state": constants.RewardStateInit,
 				"pending":      false,
 				"updated_at":   time.Now(),
 			}).Error; err != nil {
@@ -157,7 +157,7 @@ func (l *StakeRewardLogic) HandleLeaderScannedTx(msg entity.NewScannedTx) error 
 		if err := dbTx.Table(model.TableNameStakeLeaderRewardClaim).
 			Where("tx_id = ?", txId).
 			Updates(map[string]interface{}{
-				"tx_state":   -1,
+				"tx_state":   constants.TxStateFailed,
 				"updated_at": time.Now(),
 			}).Error; err != nil {
 			log.Errorf("%s HandleLeaderScannedTx - 更新claim record失败 txId=%s: %v", l.prefix, txId, err)
@@ -168,7 +168,7 @@ func (l *StakeRewardLogic) HandleLeaderScannedTx(msg entity.NewScannedTx) error 
 		if err := dbTx.Table(model.TableNameStakeLeaderRewardClaim).
 			Where("tx_id = ?", txId).
 			Updates(map[string]interface{}{
-				"tx_state":   1,
+				"tx_state":   constants.TxStateSuccess,
 				"updated_at": time.Now(),
 			}).Error; err != nil {
 			log.Errorf("%s HandleLeaderScannedTx - 更新claim record状态失败 txId=%s: %v", l.prefix, txId, err)
@@ -177,7 +177,7 @@ func (l *StakeRewardLogic) HandleLeaderScannedTx(msg entity.NewScannedTx) error 
 		if err := dbTx.Table(model.TableNameStakeLeaderReward).
 			Where("tx_id = ?", txId).
 			Updates(map[string]interface{}{
-				"reward_state": 1,
+				"reward_state": constants.RewardStateClaimed,
 				"pending":      false,
 				"updated_at":   time.Now(),
 			}).Error; err != nil {
@@ -218,7 +218,7 @@ func (l *StakeRewardLogic) HandleLeaderExpiredTx(msg entity.NewExpiredTx) error 
 	if err := dbTx.Table(model.TableNameStakeLeaderRewardClaim).
 		Where("tx_id = ?", txId).
 		Updates(map[string]interface{}{
-			"tx_state":   -1,
+			"tx_state":   constants.TxStateFailed,
 			"updated_at": time.Now(),
 		}).Error; err != nil {
 		log.Errorf("%s HandleLeaderExpiredTx - 更新claim record失败 txId=%s: %v", l.prefix, txId, err)
@@ -228,7 +228,7 @@ func (l *StakeRewardLogic) HandleLeaderExpiredTx(msg entity.NewExpiredTx) error 
 		Where("tx_id = ?", txId).
 		Updates(map[string]interface{}{
 			"tx_id":        nil,
-			"reward_state": 0,
+			"reward_state": constants.RewardStateInit,
 			"pending":      false,
 			"updated_at":   time.Now(),
 		}).Error; err != nil {
@@ -250,9 +250,9 @@ func (l *StakeRewardLogic) recordLeaderClaimFlow(txId string, decodedServiceTx *
 		FromAccount: decodedServiceTx.RewardInst.FromNativeAccount,
 		ToAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
 		TxID:        txId,
-		Direction:   constants.FlowOutput,
-		ServiceType: constants.ServiceStake,
-		FlowType:    constants.FlowStakeReceipt,
+		Direction:   constants.FlowOutput.String(),
+		ServiceType: constants.FundFlowServiceStake.String(),
+		FlowType:    constants.FlowStakeReceipt.String(),
 		Decimals:    int16(decodedServiceTx.RewardInst.Decimals),
 		Amount:      decodedServiceTx.RewardInst.Amount,
 		CreatedAt:   time.Now(),
@@ -285,9 +285,9 @@ func (l *StakeRewardLogic) recordClaimRewardFlow(decodedServiceTx *entity.Decode
 		FromAccount: decodedServiceTx.FromNativeAccount,
 		ToAccount:   decodedServiceTx.ToDexInst.ToNativeAccount,
 		TxID:        decodedServiceTx.TxID,
-		Direction:   constants.FlowInput,
-		ServiceType: constants.ServiceStake,
-		FlowType:    constants.FlowStakeCost,
+		Direction:   constants.FlowInput.String(),
+		ServiceType: constants.FundFlowServiceStake.String(),
+		FlowType:    constants.FlowStakeCost.String(),
 		Decimals:    9,
 		Amount:      float64(decodedServiceTx.ToDexInst.Amount),
 		CreatedAt:   time.Now(),
@@ -300,9 +300,9 @@ func (l *StakeRewardLogic) recordClaimRewardFlow(decodedServiceTx *entity.Decode
 		FromAccount: decodedServiceTx.RewardInst.FromNativeAccount,
 		ToAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
 		TxID:        decodedServiceTx.TxID,
-		Direction:   constants.FlowOutput,
-		ServiceType: constants.ServiceStake,
-		FlowType:    constants.FlowStakeReceipt,
+		Direction:   constants.FlowOutput.String(),
+		ServiceType: constants.FundFlowServiceStake.String(),
+		FlowType:    constants.FlowStakeReceipt.String(),
 		Decimals:    int16(decodedServiceTx.RewardInst.Decimals),
 		Amount:      decodedServiceTx.RewardInst.Amount,
 		CreatedAt:   time.Now(),

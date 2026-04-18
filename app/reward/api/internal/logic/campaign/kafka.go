@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"runtime/debug"
@@ -49,7 +50,7 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 	if msg.TxSig.Err != nil {
 		if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 			Where("tx_id = ?", txId).
-			Update("quote_state", -1).Error; err != nil {
+			Update("quote_state", constants.QuoteStateFailed).Error; err != nil {
 			log.Errorf("%s - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", prefix, txId, err)
 			dbTx.Rollback()
 			return
@@ -89,7 +90,7 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 	} else {
 		if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 			Where("tx_id = ?", txId).
-			Update("quote_state", 1).Error; err != nil {
+			Update("quote_state", constants.QuoteStateSuccess).Error; err != nil {
 			log.Errorf("%s - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为成功，错误: %v", prefix, txId, err)
 			dbTx.Rollback()
 			return
@@ -160,7 +161,7 @@ func (l *CampaignLogic) HandleExpiredTx(msg entity.NewExpiredTx) {
 	}
 	if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 		Where("tx_id = ?", txId).
-		Update("quote_state", -1).Error; err != nil {
+		Update("quote_state", constants.QuoteStateFailed).Error; err != nil {
 		log.Errorf("%s - 处理RocketMQ消息，根据交易 Id %s 更新领取交易状态为失败，错误: %v", prefix, txId, err)
 		dbTx.Rollback()
 		return
@@ -208,7 +209,7 @@ func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedSer
 		TxID:           decodedServiceTx.TxID,
 		Amount:         amount,
 		Score:          score,
-		QuoteState:     0,
+		QuoteState:     int32(constants.QuoteStateInit),
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}

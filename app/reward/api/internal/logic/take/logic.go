@@ -15,6 +15,7 @@ import (
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
 	app_utils "oshit-go/app/utils"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"oshit-go/common/utils"
@@ -37,6 +38,8 @@ type TakeTokenLogic struct {
 	rpcClient         *rpc.Client
 	LightHouseAddress solana.PublicKey
 	inviteLogic       *logic.RewardInviteLogic
+	service           constants.ServiceName
+	subService        constants.SubServiceName
 }
 
 func NewTakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *TakeTokenLogic {
@@ -56,6 +59,8 @@ func NewTakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *TakeTokenLog
 		decimals:          uint8(srvCtx.TokenConfig.Decimals),
 		LightHouseAddress: srvCtx.LightHouseAddress,
 		inviteLogic:       logic.NewRewardInviteLogic(ctx, srvCtx.DB),
+		service:           constants.ServiceReward,
+		subService:        constants.SubServiceTakeToken,
 	}
 }
 
@@ -198,7 +203,7 @@ func (l *TakeTokenLogic) GetRecordByInviteCode(nativeAccount string) (*model.Tak
 	var err error
 	var record model.TakeTokenRecord
 	table := l.db.Table(model.TableNameTakeTokenRecord)
-	err = table.Where("receipt_account = ? and use_invite_code = ? and tx_state = ?", nativeAccount, true, 1).First(&record).Error
+	err = table.Where("receipt_account = ? and use_invite_code = ? and tx_state = ?", nativeAccount, true, constants.TxStateSuccess).First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -216,8 +221,8 @@ func (l *TakeTokenLogic) recordTakeToken(takeTokenTxInfo *types.TakeTokenTxInfo,
 
 	// 记录领取的交易ID
 	txRecord := model.ServiceTx{
-		Service:    "Reward",
-		SubService: "TakeToken",
+		Service:    l.service.String(),
+		SubService: l.subService.String(),
 		TxID:       decodedServiceTx.TxID,
 		CreatedAt:  time.Now(),
 	}
@@ -237,7 +242,7 @@ func (l *TakeTokenLogic) recordTakeToken(takeTokenTxInfo *types.TakeTokenTxInfo,
 		DexFee:         decodedServiceTx.ToDexInst.Amount,
 		UseInviteCode:  takeTokenTxInfo.InviteCodeValid,
 		InviteCode:     takeTokenTxInfo.InviteCode,
-		TxState:        0,
+		TxState:        int32(constants.TxStateInit),
 		Invited:        invited,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
@@ -320,7 +325,7 @@ func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 	}
 
 	// 6. 通过 base 模块的dubbo接口签名并异步广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "TakeToken")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 调用base模块dubbo接口发送交易失败,错误: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))

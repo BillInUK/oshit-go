@@ -6,6 +6,7 @@ import (
 	"oshit-go/app/pos/api/internal/logic/pos"
 	"oshit-go/app/pos/api/internal/logic/stake"
 	"oshit-go/app/pos/api/internal/svc"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/entity"
 )
 
@@ -25,17 +26,17 @@ func registerTasks(srvCtx *svc.ServiceContext) {
 	})
 
 	// 已确认交易：统一注册为 "Pos"，内部按 SubService 路由
-	srvCtx.TaskMgr.RegisterScannedTxHandler("Pos", func(ctx context.Context, msg entity.NewScannedTx) error {
+	srvCtx.TaskMgr.RegisterScannedTxHandler(constants.ServicePos.String(), func(ctx context.Context, msg entity.NewScannedTx) error {
 		switch msg.SubService {
-		case "PosReward":
+		case constants.SubServicePosReward.String():
 			return pos.NewPosRewardLogic(ctx, srvCtx).HandleScannedTx(msg)
-		case "StakeToken":
+		case constants.SubServiceStakeToken.String():
 			return stake.NewStakeLogic(ctx, srvCtx).HandleStakeTx(msg)
-		case "MarketBuyToken":
+		case constants.SubServiceMarketBuyToken.String():
 			return stake.NewStakeLogic(ctx, srvCtx).HandleMarketBuyTx(msg)
-		case "StakeReward":
+		case constants.SubServiceStakeReward.String():
 			return stake.NewStakeRewardLogic(ctx, srvCtx).HandleScannedTx(msg)
-		case "StakeLeaderReward":
+		case constants.SubServiceStakeLeaderReward.String():
 			return stake.NewStakeRewardLogic(ctx, srvCtx).HandleLeaderScannedTx(msg)
 		default:
 			log.Warnf("registerTasks: 未知 SubService=%s 的已扫描交易，跳过", msg.SubService)
@@ -44,13 +45,13 @@ func registerTasks(srvCtx *svc.ServiceContext) {
 	})
 
 	// 超时交易：统一注册为 "Pos"，内部按 SubService 路由
-	srvCtx.TaskMgr.RegisterExpiredTxHandler("Pos", func(ctx context.Context, msg entity.NewExpiredTx) error {
+	srvCtx.TaskMgr.RegisterExpiredTxHandler(constants.ServicePos.String(), func(ctx context.Context, msg entity.NewExpiredTx) error {
 		switch msg.SubService {
-		case "PosReward":
+		case constants.SubServicePosReward.String():
 			return pos.NewPosRewardLogic(ctx, srvCtx).HandleExpiredTx(msg)
-		case "StakeReward":
+		case constants.SubServiceStakeReward.String():
 			return stake.NewStakeRewardLogic(ctx, srvCtx).HandleExpiredTx(msg)
-		case "StakeLeaderReward":
+		case constants.SubServiceStakeLeaderReward.String():
 			return stake.NewStakeRewardLogic(ctx, srvCtx).HandleLeaderExpiredTx(msg)
 		default:
 			log.Warnf("registerTasks: 未知 SubService=%s 的超时交易，跳过", msg.SubService)

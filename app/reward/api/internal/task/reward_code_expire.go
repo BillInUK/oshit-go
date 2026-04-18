@@ -3,6 +3,7 @@ package task
 import (
 	"github.com/gofiber/fiber/v2/log"
 	"gorm.io/gorm"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"time"
 )
@@ -32,8 +33,8 @@ func (t *RewardCodeExpireTask) Start() {
 
 func (t *RewardCodeExpireTask) run() {
 	result := t.db.Table(model.TableNameRewardCode).
-		Where("tx_state = ? AND expired_at < ?", 0, time.Now()).
-		Update("tx_state", -2)
+		Where("tx_state = ? AND expired_at < ?", constants.TxStateInit, time.Now()).
+		Update("tx_state", constants.TxStateExpired)
 
 	if result.Error != nil {
 		log.Errorf("RewardCodeExpireTask: 更新过期奖励码状态失败: %v", result.Error)

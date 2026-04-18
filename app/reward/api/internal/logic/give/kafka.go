@@ -42,14 +42,14 @@ func (l *GiveTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 
 	if msg.TxSig.Err != nil {
 		if err := dbTx.Table(model.TableNameGiveTokenRecord).
-			Where("record_id = ?", giveTokenRecord.RecordID).Update("tx_state", -1).Error; err != nil {
+			Where("record_id = ?", giveTokenRecord.RecordID).Update("tx_state", constants.TxStateFailed).Error; err != nil {
 			log.Errorf("%s 更新转账交易状态为失败，错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
 		}
 	} else {
 		if err := dbTx.Table(model.TableNameGiveTokenRecord).
-			Where("record_id = ?", giveTokenRecord.RecordID).Update("tx_state", 1).Error; err != nil {
+			Where("record_id = ?", giveTokenRecord.RecordID).Update("tx_state", constants.TxStateSuccess).Error; err != nil {
 			log.Errorf("%s 更新转账交易状态为成功，错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -102,7 +102,7 @@ func (l *GiveTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		return err
 	}
 
-	if err := dbTx.Model(&model.GiveTokenRecord{}).Where("tx_id = ?", txId).Update("tx_state", -1).Error; err != nil {
+	if err := dbTx.Model(&model.GiveTokenRecord{}).Where("tx_id = ?", txId).Update("tx_state", constants.TxStateFailed).Error; err != nil {
 		log.Errorf("%s 更新转账交易状态为失败，错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
@@ -128,9 +128,9 @@ func (l *GiveTokenLogic) recordFundFlow(decodedServiceTx *entity.DecodedServiceT
 		FromAccount: decodedServiceTx.FromNativeAccount,
 		ToAccount:   decodedServiceTx.ToDexInst.ToNativeAccount,
 		TxID:        decodedServiceTx.TxID,
-		Direction:   constants.FlowInput,
-		ServiceType: constants.ServiceGiveToken,
-		FlowType:    constants.FlowGiveTokenCost,
+		Direction:   constants.FlowInput.String(),
+		ServiceType: constants.FundFlowServiceGiveToken.String(),
+		FlowType:    constants.FlowGiveTokenCost.String(),
 		Decimals:    9,
 		Amount:      decodedServiceTx.ToDexInst.Amount,
 		CreatedAt:   time.Now(),
@@ -146,9 +146,9 @@ func (l *GiveTokenLogic) recordFundFlow(decodedServiceTx *entity.DecodedServiceT
 		FromAccount: decodedServiceTx.RewardInst.FromNativeAccount,
 		ToAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
 		TxID:        decodedServiceTx.TxID,
-		Direction:   constants.FlowOutput,
-		ServiceType: constants.ServiceGiveToken,
-		FlowType:    constants.FlowGiveTokenReceipt,
+		Direction:   constants.FlowOutput.String(),
+		ServiceType: constants.FundFlowServiceGiveToken.String(),
+		FlowType:    constants.FlowGiveTokenReceipt.String(),
 		Decimals:    int16(decodedServiceTx.RewardInst.Decimals),
 		Amount:      decodedServiceTx.RewardInst.Amount,
 		CreatedAt:   time.Now(),
@@ -164,9 +164,9 @@ func (l *GiveTokenLogic) recordFundFlow(decodedServiceTx *entity.DecodedServiceT
 			FromAccount: inst.FromNativeAccount,
 			ToAccount:   inst.ToNativeAccount,
 			TxID:        decodedServiceTx.TxID,
-			Direction:   constants.FlowOutput,
-			ServiceType: constants.ServiceGiveToken,
-			FlowType:    constants.FlowGiveTokenInviter,
+			Direction:   constants.FlowOutput.String(),
+			ServiceType: constants.FundFlowServiceGiveToken.String(),
+			FlowType:    constants.FlowGiveTokenInviter.String(),
 			Decimals:    int16(inst.Decimals),
 			Amount:      inst.Amount,
 			CreatedAt:   time.Now(),

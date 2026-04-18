@@ -14,6 +14,7 @@ import (
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
 	app_utils "oshit-go/app/utils"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/utils"
 	"time"
@@ -29,6 +30,8 @@ type LotteryLogic struct {
 	rpcClient       *rpc.Client
 	baseClient      *rewardrpc.BaseClient
 	takeTokenConfig *model.TakeTokenConfig
+	service         constants.ServiceName
+	subService      constants.SubServiceName
 }
 
 func NewLotteryLogic(ctx context.Context, srvCtx *svc.ServiceContext) *LotteryLogic {
@@ -42,6 +45,8 @@ func NewLotteryLogic(ctx context.Context, srvCtx *svc.ServiceContext) *LotteryLo
 		rpcClient:       srvCtx.RpcClient,
 		baseClient:      srvCtx.BaseClient,
 		takeTokenConfig: srvCtx.TakeTokenConfig,
+		service:         constants.ServiceReward,
+		subService:      constants.SubServiceLottery,
 	}
 }
 
@@ -96,7 +101,7 @@ func (l *LotteryLogic) ExecuteLottery(nativeAccount string) (*model.LotteryRewar
 	// 3. 检查是否存在是否存在未兑换的抽奖记录
 	var pendingReward model.LotteryReward
 	pendingErr := l.db.Table(model.TableNameLotteryReward).
-		Where("native_account = ? AND pending = ? AND reward_state = ?", nativeAccount, false, 0).
+		Where("native_account = ? AND pending = ? AND reward_state = ?", nativeAccount, false, constants.RewardStateInit).
 		First(&pendingReward).Error
 	if pendingErr == nil {
 		// 已有pending记录
@@ -120,7 +125,7 @@ func (l *LotteryLogic) ExecuteLottery(nativeAccount string) (*model.LotteryRewar
 		NativeAccount: nativeAccount,
 		RewardAmount:  rewardAmountRaw,
 		RewardType:    0,
-		RewardState:   0,
+		RewardState:   int32(constants.RewardStateInit),
 		Pending:       true,
 		RewardDay:     today,
 		CreatedAt:     time.Now(),
@@ -159,7 +164,7 @@ func (l *LotteryLogic) ExecuteLottery(nativeAccount string) (*model.LotteryRewar
 func (l *LotteryLogic) GetUnclaimedRewards(nativeAccount string) ([]*model.LotteryReward, error) {
 	var rewards []*model.LotteryReward
 	err := l.db.Table(model.TableNameLotteryReward).
-		Where("native_account = ? AND pending = ? AND reward_state = ?", nativeAccount, false, 0).
+		Where("native_account = ? AND pending = ? AND reward_state = ?", nativeAccount, false, constants.RewardStateInit).
 		Find(&rewards).Error
 	if err != nil {
 		return nil, err
@@ -174,7 +179,7 @@ func (l *LotteryLogic) GetTxInfo(ctx context.Context, recordId string) (*types.C
 	// 通过 recordId 查找 pending=true, state=0 的奖励记录
 	var reward model.LotteryReward
 	err := l.db.Table(model.TableNameLotteryReward).
-		Where("record_id = ? AND pending = ? AND reward_state = ?", recordId, true, 0).
+		Where("record_id = ? AND pending = ? AND reward_state = ?", recordId, true, constants.RewardStateInit).
 		First(&reward).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.New("no pending lottery reward found")
@@ -214,8 +219,8 @@ func (l *LotteryLogic) recordLotteryClaim(txId, rewardId string) error {
 	}
 	// 创建 service_tx 记录
 	txRecord := model.ServiceTx{
-		Service:    "Reward",
-		SubService: "Lottery",
+		Service:    l.service.String(),
+		SubService: l.subService.String(),
 		TxID:       txId,
 		CreatedAt:  time.Now(),
 	}
@@ -228,9 +233,9 @@ func (l *LotteryLogic) recordLotteryClaim(txId, rewardId string) error {
 	claimRecord := model.LotteryClaim{
 		RewardIds:   fmt.Sprintf("{%s}", rewardId),
 		TxID:        txId,
-		RewardState: 0,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		RewardState: int32(constants.RewardStateInit),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	if err := dbTx.Table(model.TableNameLotteryClaim).Omit("record_id").Create(&claimRecord).Error; err != nil {
 		dbTx.Rollback()
@@ -264,7 +269,7 @@ func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_ut
 	// 2. 查询抽奖记录
 	var reward model.LotteryReward
 	if err := l.db.Table(model.TableNameLotteryReward).
-		Where("record_id = ? and native_account = ? and pending = ? and reward_state = ?", rewardId, preCheckedTx.From.String(), true, 0).
+		Where("record_id = ? and native_account = ? and pending = ? and reward_state = ?", rewardId, preCheckedTx.From.String(), true, constants.RewardStateInit).
 		First(&reward).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("lottery reward record not found or already claimed")
@@ -294,7 +299,7 @@ func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_ut
 	}
 
 	// 6. 发送交易给 base 模块
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "Lottery")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 发送交易失败,错误: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))

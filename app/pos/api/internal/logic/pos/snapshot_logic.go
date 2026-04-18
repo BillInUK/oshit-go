@@ -14,6 +14,7 @@ import (
 	"oshit-go/app/pos/api/internal/svc"
 	"oshit-go/app/pos/api/internal/task"
 	"oshit-go/app/pos/api/types"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"strings"
@@ -140,7 +141,7 @@ func (l *PosSnapShotLogic) reConstructInviteRelation() {
 func (l *PosSnapShotLogic) expireLastDayPosReward(snapShotDay time.Time) {
 	var err error
 	table := l.db.Table(model.TableNamePosReward)
-	if err = table.Where("snap_day < cast(? as date)", snapShotDay).Update("reward_state", -1).Error; err != nil {
+	if err = table.Where("snap_day < cast(? as date)", snapShotDay).Update("reward_state", constants.RewardStateFailed).Error; err != nil {
 		log.Errorf("pos业务 - 设置奖励为过期失败错误:%v", err)
 	}
 }
@@ -178,7 +179,7 @@ func (l *PosSnapShotLogic) rewardOrdinaryUser(snapShotDay time.Time) {
 			Rate:          missionConfig.Rate,
 			RewardAmount:  reward.Base * rate / 365,
 			RewardType:    types.PosFixedIncome,
-			RewardState:   0,
+			RewardState:   int32(constants.RewardStateInit),
 			Pending:       false,
 			Starred:       false,
 			SnapDay:       snapShotDay,
@@ -265,7 +266,7 @@ func (l *PosSnapShotLogic) rewardStaredUserOrphan(snapShotDay time.Time) {
 			Rate:          holdRate,
 			RewardAmount:  r.Amount * starRate / 100 * holdRate / 100 / 365,
 			RewardType:    types.PosFixedIncome,
-			RewardState:   0,
+			RewardState:   int32(constants.RewardStateInit),
 			Pending:       false,
 			Starred:       true,
 			SnapDay:       snapShotDay,
@@ -443,7 +444,7 @@ func (l *PosSnapShotLogic) rewardStaredUserDeterMineInvite(snapShotDay time.Time
 					Rate:          holdRate,
 					RewardAmount:  node.Base * holdRate / 100 / 365,
 					RewardType:    types.PosFixedIncome,
-					RewardState:   0,
+					RewardState:   int32(constants.RewardStateInit),
 					Pending:       false,
 					Starred:       node.StarLevel > 0,
 					SnapDay:       snapShotDay,

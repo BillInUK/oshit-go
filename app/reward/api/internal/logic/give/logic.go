@@ -15,6 +15,7 @@ import (
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
 	app_utils "oshit-go/app/utils"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"oshit-go/common/utils"
@@ -32,6 +33,8 @@ type GiveTokenLogic struct {
 	baseClient    *rewardrpc.BaseClient
 	serviceConfig *model.GiveTokenConfig
 	inviteLogic   *logic.RewardInviteLogic
+	service       constants.ServiceName
+	subService    constants.SubServiceName
 }
 
 func NewGiveTokenLogic(ctx context.Context, srvCtx *svc.ServiceContext) *GiveTokenLogic {
@@ -46,6 +49,8 @@ func NewGiveTokenLogic(ctx context.Context, srvCtx *svc.ServiceContext) *GiveTok
 		baseClient:    srvCtx.BaseClient,
 		serviceConfig: srvCtx.GiveTokenConfig,
 		inviteLogic:   logic.NewRewardInviteLogic(ctx, srvCtx.DB),
+		service:       constants.ServiceReward,
+		subService:    constants.SubServiceGiveToken,
 	}
 }
 
@@ -164,7 +169,7 @@ func (l *GiveTokenLogic) getDailyRecords(nativeAccount string) ([]model.GiveToke
 func (l *GiveTokenLogic) takeTokenRecordExist(nativeAccount string) (bool, error) {
 	var record model.TakeTokenRecord
 	table := l.db.Table(model.TableNameTakeTokenRecord)
-	if err := table.Where("receipt_account = ? and tx_state >= 0", nativeAccount).First(&record).Error; err != nil {
+	if err := table.Where("receipt_account = ? and tx_state >= ?", nativeAccount, constants.TxStateInit).First(&record).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
 		}
@@ -177,7 +182,7 @@ func (l *GiveTokenLogic) takeTokenRecordExist(nativeAccount string) (bool, error
 func (l *GiveTokenLogic) giveTokenRecordExist(nativeAccount string) (bool, error) {
 	var record model.GiveTokenRecord
 	table := l.db.Table(model.TableNameGiveTokenRecord)
-	if err := table.Where("receipt_account = ? and tx_state >= 0", nativeAccount).First(&record).Error; err != nil {
+	if err := table.Where("receipt_account = ? and tx_state >= ?", nativeAccount, constants.TxStateInit).First(&record).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
 		}
@@ -238,8 +243,8 @@ func (l *GiveTokenLogic) recordGiveToken(serviceTx *entity.DecodedServiceTransac
 	}
 
 	txRecord := model.ServiceTx{
-		Service:    "Reward",
-		SubService: "GiveToken",
+		Service:    l.service.String(),
+		SubService: l.subService.String(),
 		TxID:       serviceTx.TxID,
 		CreatedAt:  time.Now(),
 	}
@@ -255,7 +260,7 @@ func (l *GiveTokenLogic) recordGiveToken(serviceTx *entity.DecodedServiceTransac
 		ReceiptAccount: inst.ToNativeAccount,
 		TxID:           serviceTx.TxID,
 		Amount:         inst.Amount,
-		TxState:        0,
+		TxState:        int32(constants.TxStateInit),
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}
@@ -325,7 +330,7 @@ func (l *GiveTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 	}
 
 	// 6. 通过 base 模块的dubbo接口签名并异步广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "GiveToken")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 调用base模块dubbo接口发送交易失败,错误: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))

@@ -4,43 +4,91 @@ const (
 	TxFetchInit    = 0  // 交易获取状态
 	TxFetchFailed  = -1 //交易获取状态 - 失败
 	TxFetchSuccess = 1  // 交易获取状态 - 成功
+)
 
-	ServiceAirDrop       = 0 // 业务类型 - 空投
-	ServiceTakeToken     = 1 // 业务类型 - 官方领取奖励
-	ServiceTransferToken = 2 // 业务类型 - 非官方转账
-	ServiceGiveToken     = 3 // 业务类型 - 官方转账
-	ServiceSwapNewToken  = 4 // 业务类型 - 兑换旧Token到新Token
-	ServicePosDaily      = 5 // 业务类型 - POS每日奖励
-	ServiceGame          = 6 // 业务类型 - Game
-	ServiceStake         = 7 // 业务类型 - Stake
+// TxState represents transaction confirmation state.
+type TxState int32
 
-	FlowInput  = 0 // 流水方向 - 入账
-	FlowOutput = 1 // 流水方向 - 出账
+const (
+	TxStateExpired TxState = -2
+	TxStateFailed  TxState = -1
+	TxStateInit    TxState = 0
+	TxStateSuccess TxState = 1
+)
 
-	FlowAirDropGasFee = 0 // 流水类型 - 出账 - 空投token时的gas费
-	FlowAirDropToken  = 1 // 流水类型 - 出账 - 空投token出账
+// RewardState represents reward claim state.
+type RewardState int32
 
-	FlowTakTokenCost     = 0 // 流水类型 - 入账 - 官网领取奖励时转给dex的sol
-	FlowTakeTokenReceipt = 1 // 流水类型 - 出账 - 官网领取奖励token出账给领取人
-	FlowTakeTokenInviter = 2 // 流水类型 - 出账 - 官网领取奖励token出账给领取人上级邀请人
+const (
+	RewardStateFailed  RewardState = -1
+	RewardStateInit    RewardState = 0
+	RewardStateClaimed RewardState = 1
+)
 
-	FlowUnOfficialTransferGasFee     = 0 // 流水类型 - 出账 - 发放非官方奖励时的gas费
-	FlowUnOfficialTokenReward        = 1 // 流水类型 - 出账 - 发放非官方奖励给转账人的token
-	FlowUnOfficialTokenRewardInviter = 2 // 流水类型 - 出装 - 发放非官方奖励给转账人上级邀请人的token
+// QuoteState represents campaign quote state.
+type QuoteState int32
 
-	FlowGiveTokenCost    = 0 // 流水类型 - 入账 - 官方转账时的转给dex的sol
-	FlowGiveTokenReceipt = 1 // 流水类型 - 出账 - 官方转账时奖励转账人的token
-	FlowGiveTokenInviter = 2 // 流水类型 - 出账 - 官方转账时奖励转账人上级邀请人的的token
+const (
+	QuoteStateFailed  QuoteState = -1
+	QuoteStateInit    QuoteState = 0
+	QuoteStateSuccess QuoteState = 1
+)
 
-	FlowSwapNewToken = 0 // 流水类型 - 出账 - swap旧token到新token的转账
+// FlowDirection represents fund flow direction (input or output).
+type FlowDirection struct {
+	slug string
+}
 
-	FlowPosCost      = 0 // 流水类型 - 入账 - POS领取奖励时转给dex的sol
-	FlowStakeCost    = 0 // 流水类型 - 入账 - POS领取奖励时转给dex的sol
-	FlowPosReceipt   = 1 // 流水类型 - 出账 - POS领取奖励token出账给领取人
-	FlowStakeReceipt = 2 // 流水类型 - 出账 - POS领取奖励token出账给领取人
+func (d FlowDirection) String() string { return d.slug }
 
-	ServiceLottery = 8 // 业务类型 - 抽奖
+var (
+	FlowInput  = FlowDirection{"input"}
+	FlowOutput = FlowDirection{"output"}
+)
 
-	FlowLotteryCost    = 0 // 流水类型 - 入账 - 抽奖时转给dex的sol
-	FlowLotteryReceipt = 1 // 流水类型 - 出账 - 抽奖奖励token出账给用户
+// FundFlowServiceType represents the business service type for fund flows.
+type FundFlowServiceType struct {
+	slug string
+}
+
+func (s FundFlowServiceType) String() string { return s.slug }
+
+var (
+	FundFlowServiceAirDrop   = FundFlowServiceType{"AirDrop"}
+	FundFlowServiceTakeToken = FundFlowServiceType{"TakeToken"}
+	FundFlowServiceGiveToken = FundFlowServiceType{"GiveToken"}
+	FundFlowServicePosDaily  = FundFlowServiceType{"PosDaily"}
+	FundFlowServiceStake     = FundFlowServiceType{"Stake"}
+	FundFlowServiceLottery   = FundFlowServiceType{"Lottery"}
+)
+
+// FundFlowType represents the specific fund flow type within a service.
+type FundFlowType struct {
+	slug string
+}
+
+func (f FundFlowType) String() string { return f.slug }
+
+var (
+	// TakeToken flows
+	FlowTakeTokenCost    = FundFlowType{"take_token_cost"}
+	FlowTakeTokenReceipt = FundFlowType{"take_token_receipt"}
+	FlowTakeTokenInviter = FundFlowType{"take_token_inviter"}
+
+	// GiveToken flows
+	FlowGiveTokenCost    = FundFlowType{"give_token_cost"}
+	FlowGiveTokenReceipt = FundFlowType{"give_token_receipt"}
+	FlowGiveTokenInviter = FundFlowType{"give_token_inviter"}
+
+	// POS flows
+	FlowPosCost    = FundFlowType{"pos_cost"}
+	FlowPosReceipt = FundFlowType{"pos_receipt"}
+
+	// Stake flows
+	FlowStakeCost    = FundFlowType{"stake_cost"}
+	FlowStakeReceipt = FundFlowType{"stake_receipt"}
+
+	// Lottery flows
+	FlowLotteryCost    = FundFlowType{"lottery_cost"}
+	FlowLotteryReceipt = FundFlowType{"lottery_receipt"}
 )

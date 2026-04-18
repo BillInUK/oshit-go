@@ -14,6 +14,7 @@ import (
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
 	app_utils "oshit-go/app/utils"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/utils"
 	"time"
@@ -29,6 +30,8 @@ type RewardCodeLogic struct {
 	rpcClient        *rpc.Client
 	baseClient       *rewardrpc.BaseClient
 	rewardCodeConfig *model.RewardCodeConfig
+	service          constants.ServiceName
+	subService       constants.SubServiceName
 }
 
 func NewRewardCodeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *RewardCodeLogic {
@@ -42,6 +45,8 @@ func NewRewardCodeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *Reward
 		rpcClient:        srvCtx.RpcClient,
 		baseClient:       srvCtx.BaseClient,
 		rewardCodeConfig: srvCtx.RewardCodeConfig,
+		service:          constants.ServiceReward,
+		subService:       constants.SubServiceRewardCode,
 	}
 }
 
@@ -67,7 +72,7 @@ func (l *RewardCodeLogic) GetTxInfo(ctx context.Context, rewardCode string) (*ty
 	// 1. 根据奖励码查询 t_reward_code，要求 tx_state=0（未使用）
 	var rc model.RewardCode
 	err := l.db.Table(model.TableNameRewardCode).
-		Where("reward_code = ? AND tx_state = ?", rewardCode, 0).
+		Where("reward_code = ? AND tx_state = ?", rewardCode, constants.TxStateInit).
 		First(&rc).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.New("reward code not found or already used")
@@ -137,7 +142,7 @@ func (l *RewardCodeLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app
 	// 2. 再次查询奖励码确认仍可用（锁内二次校验）
 	var rc model.RewardCode
 	err := l.db.Table(model.TableNameRewardCode).
-		Where("reward_code = ? AND tx_state = ?", rewardCode, 0).
+		Where("reward_code = ? AND tx_state = ?", rewardCode, constants.TxStateInit).
 		First(&rc).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("reward code not found or already used")
@@ -171,7 +176,7 @@ func (l *RewardCodeLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app
 	}
 
 	// 6. 发送交易给 base 模块
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Reward", "RewardCode")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 发送交易失败,错误: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))

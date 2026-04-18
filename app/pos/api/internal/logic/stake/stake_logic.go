@@ -18,6 +18,7 @@ import (
 	"oshit-go/app/pos/api/internal/svc"
 	"oshit-go/app/pos/api/types"
 	app_utils "oshit-go/app/utils"
+	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"oshit-go/common/utils"
@@ -42,6 +43,8 @@ type StakeLogic struct {
 	leaderRewardConfig *model.StakeLeaderRewardConfig
 	fixConfig          map[int32]model.StakeFixRateConfig
 	totalLeaders       []model.StakeTotalLeader
+	service            constants.ServiceName
+	subService         constants.SubServiceName
 }
 
 func NewStakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *StakeLogic {
@@ -62,6 +65,8 @@ func NewStakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *StakeLogic 
 		leaderRewardConfig: srvCtx.LeaderRewardConfig,
 		fixConfig:          srvCtx.StakeFixConfig,
 		totalLeaders:       srvCtx.TotalAreaLeaders,
+		service:            constants.ServicePos,
+		subService:         constants.SubServiceStakeToken,
 	}
 }
 
@@ -78,7 +83,7 @@ func (l *StakeLogic) ProcessStakeToken(ctx context.Context, preCheckedTx *app_ut
 	txIdStr := preCheckedTx.TxId.String()
 
 	// 1. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "StakeToken")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))
@@ -99,7 +104,7 @@ func (l *StakeLogic) ProcessUnStakeToken(ctx context.Context, preCheckedTx *app_
 	txIdStr := preCheckedTx.TxId.String()
 
 	// 1. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "StakeToken")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))
@@ -120,7 +125,7 @@ func (l *StakeLogic) ProcessReStakeToken(ctx context.Context, preCheckedTx *app_
 	txIdStr := preCheckedTx.TxId.String()
 
 	// 1. 发送给 base 模块签名 + 广播
-	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Pos", "StakeToken")
+	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 发送交易失败: %v", prefix, err)
 		return errors.New(utils.FilterAndTranslateSOLError(err))
@@ -448,7 +453,7 @@ func (l *StakeLogic) rewardLeaders(dbTx *gorm.DB, staker string, areaLeader *mod
 			BaseAmount:    float64(baseAmount),
 			StakeShare:    10,
 			RewardAmount:  float64(uint64(float64(baseAmount) * 0.10)),
-			RewardState:   0,
+			RewardState:   int32(constants.RewardStateInit),
 			Pending:       false,
 			CreatedAt:     now,
 			UpdatedAt:     now,
@@ -462,7 +467,7 @@ func (l *StakeLogic) rewardLeaders(dbTx *gorm.DB, staker string, areaLeader *mod
 			BaseAmount:    float64(baseAmount),
 			StakeShare:    7,
 			RewardAmount:  float64(uint64(float64(baseAmount) * 0.07)),
-			RewardState:   0,
+			RewardState:   int32(constants.RewardStateInit),
 			Pending:       false,
 			CreatedAt:     now,
 			UpdatedAt:     now,
@@ -476,7 +481,7 @@ func (l *StakeLogic) rewardLeaders(dbTx *gorm.DB, staker string, areaLeader *mod
 				BaseAmount:    float64(baseAmount),
 				StakeShare:    3,
 				RewardAmount:  float64(uint64(float64(baseAmount) * 0.03)),
-				RewardState:   0,
+				RewardState:   int32(constants.RewardStateInit),
 				Pending:       false,
 				CreatedAt:     now,
 				UpdatedAt:     now,
@@ -497,7 +502,7 @@ func (l *StakeLogic) rewardLeaders(dbTx *gorm.DB, staker string, areaLeader *mod
 				BaseAmount:    float64(baseAmount),
 				StakeShare:    totalLeader.StakeShare,
 				RewardAmount:  float64(reward),
-				RewardState:   0,
+				RewardState:   int32(constants.RewardStateInit),
 				Pending:       false,
 				CreatedAt:     now,
 				UpdatedAt:     now,
@@ -587,7 +592,7 @@ func (l *StakeLogic) GetLeaderInfo(nativeAccount string) (*model.StakeLeader, er
 func (l *StakeLogic) GetLeaderRewards(nativeAccount string) ([]model.StakeLeaderReward, error) {
 	var rewards []model.StakeLeaderReward
 	err := l.db.Table(model.TableNameStakeLeaderReward).
-		Where("native_account = ? and state = ? and pending = ?", nativeAccount, 0, false).
+		Where("native_account = ? and state = ? and pending = ?", nativeAccount, constants.RewardStateInit, false).
 		Order("created_at asc").
 		Find(&rewards).Error
 	if err != nil {
@@ -601,7 +606,7 @@ func (l *StakeLogic) GetLeaderTxInfo(account solana.PublicKey) (*types.LeaderRew
 	var totalReward float64
 	err := l.db.Table(model.TableNameStakeLeaderReward).
 		Select("coalesce(sum(reward_amount), 0)").
-		Where("native_account = ? and reward_state = ? and pending = ?", account.String(), 0, false).
+		Where("native_account = ? and reward_state = ? and pending = ?", account.String(), constants.RewardStateInit, false).
 		Scan(&totalReward).Error
 	if err != nil {
 		return nil, fmt.Errorf("查询区域经理未领取奖励总额错误: %v", err)
