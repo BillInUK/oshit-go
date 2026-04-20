@@ -13,9 +13,9 @@ insert into t_native_account_info(native_account,token_account,invite_code)value
 insert into t_native_account_info(native_account,token_account,invite_code)values('H5WmBY45gxP8rj7gecLXsv6yNHqHFXNH4Acmp2U9E2Tb','ERYPoieDaHoh9jz1Gbmi9whHLd1QyWPKANvtZTnECufw','8XXZCPr4');
 
 -- 如果需要调试，可以将长质押时间的合约替换成短质押时间的合约
-update t_service_info set address='As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws' where address='CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6';
-update t_tx_scan_info set native_account='As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws',pda_account='As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws' where native_account='CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6';
-update t_tx_scan_info set until_tx_id='fNm9y9puUxhdshZv8Ft1o9DFNUE18eYQZ1ZBccHNQpVnGRXDRceuXGmQGhqt25Q9quFVoskKz4fHoL2NByF3KBJ',slot=454099465 where native_account='CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6';
+-- update t_service_info set address='As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws' where address='CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6';
+-- update t_tx_scan_info set native_account='As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws',pda_account='As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws' where native_account='CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6';
+-- update t_tx_scan_info set until_tx_id='fNm9y9puUxhdshZv8Ft1o9DFNUE18eYQZ1ZBccHNQpVnGRXDRceuXGmQGhqt25Q9quFVoskKz4fHoL2NByF3KBJ',slot=454099465 where native_account='CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6';
 
 
 -- 邀请关系建立

@@ -56,7 +56,7 @@ func NewCampaignLogic(ctx context.Context, srvCtx *svc.ServiceContext) *Campaign
 		baseClient:    srvCtx.BaseClient,
 		serviceConfig: srvCtx.CampaignQuoteConfig,
 		service:       constants.ServiceReward,
-		subService:    constants.SubServiceExchangeToken,
+		subService:    constants.SubServiceCampaignQuote,
 	}
 }
 

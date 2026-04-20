@@ -18,7 +18,7 @@ type TakeTokenRecord struct {
 	CostAccount    string    `gorm:"column:cost_account;not null" json:"cost_account"`
 	TxID           string    `gorm:"column:tx_id;not null" json:"tx_id"`
 	Amount         float64   `gorm:"column:amount;not null" json:"amount"`
-	DexFee         float64   `gorm:"column:dex_fee;not null" json:"dex_fee"`
+	CostFee        float64   `gorm:"column:cost_fee;not null" json:"cost_fee"`
 	UseInviteCode  bool      `gorm:"column:use_invite_code;not null" json:"use_invite_code"`
 	InviteCode     string    `gorm:"column:invite_code" json:"invite_code"`
 	TxState        int32     `gorm:"column:tx_state" json:"tx_state"`

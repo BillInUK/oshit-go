@@ -175,8 +175,8 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	takeTxInfo.RewardAccount = l.serviceConfig.RewardAccount
 	takeTxInfo.Mint = l.srvCtx.TokenConfig.Mint
 	takeTxInfo.CostAccount = l.serviceConfig.CostAccount
-	takeTxInfo.DexFeeRate = l.serviceConfig.DexFeeRate
-	takeTxInfo.MaxDexFee = l.serviceConfig.MaxDexFee
+	takeTxInfo.CostFeeRate = l.serviceConfig.CostFeeRate
+	takeTxInfo.MaxCostFee = l.serviceConfig.MaxCostFee
 	takeTxInfo.Decimals = int32(l.srvCtx.TokenConfig.Decimals)
 	takeTxInfo.InviteCode = inviteCode
 	takeTxInfo.RewardInfo = rewardInfo
@@ -239,7 +239,7 @@ func (l *TakeTokenLogic) recordTakeToken(takeTokenTxInfo *types.TakeTokenTxInfo,
 		CostAccount:    decodedServiceTx.ToDexInst.ToNativeAccount,
 		TxID:           decodedServiceTx.TxID,
 		Amount:         l.serviceConfig.Amount,
-		DexFee:         decodedServiceTx.ToDexInst.Amount,
+		CostFee:        decodedServiceTx.ToDexInst.Amount,
 		UseInviteCode:  takeTokenTxInfo.InviteCodeValid,
 		InviteCode:     takeTokenTxInfo.InviteCode,
 		TxState:        int32(constants.TxStateInit),

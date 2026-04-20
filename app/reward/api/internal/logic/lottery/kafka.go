@@ -49,7 +49,7 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		// 更新 claim_record.state = -1
 		if err := dbTx.Table(model.TableNameLotteryClaim).
 			Where("record_id = ?", claimRecord.RecordID).
-			Updates(map[string]interface{}{"reward_state": constants.RewardStateFailed, "updated_at": time.Now()}).Error; err != nil {
+			Updates(map[string]interface{}{"tx_state": constants.TxStateFailed, "updated_at": time.Now()}).Error; err != nil {
 			log.Errorf("%s 更新领取记录状态为失败错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -57,7 +57,7 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		// 更新 t_lottery_reward.state = -1, pending = false
 		if err := dbTx.Table(model.TableNameLotteryReward).
 			Where("record_id = ?", rewardId).
-			Updates(map[string]interface{}{"reward_state": constants.RewardStateFailed, "pending": false, "updated_at": time.Now()}).Error; err != nil {
+			Updates(map[string]interface{}{"reward_state": constants.TxStateFailed, "pending": false, "updated_at": time.Now()}).Error; err != nil {
 			log.Errorf("%s 更新抽奖奖励状态为失败错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -67,7 +67,7 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		// 更新 claim_record.state = 1
 		if err := dbTx.Table(model.TableNameLotteryClaim).
 			Where("record_id = ?", claimRecord.RecordID).
-			Updates(map[string]interface{}{"reward_state": constants.RewardStateClaimed, "updated_at": time.Now()}).Error; err != nil {
+			Updates(map[string]interface{}{"tx_state": constants.TxStateSuccess, "updated_at": time.Now()}).Error; err != nil {
 			log.Errorf("%s 更新领取记录状态为成功错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -149,7 +149,7 @@ func (l *LotteryLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	// 更新 claim_record.state = -1
 	if err := dbTx.Table(model.TableNameLotteryClaim).
 		Where("record_id = ?", claimRecord.RecordID).
-		Updates(map[string]interface{}{"reward_state": constants.RewardStateFailed, "updated_at": time.Now()}).Error; err != nil {
+		Updates(map[string]interface{}{"tx_state": constants.TxStateFailed, "updated_at": time.Now()}).Error; err != nil {
 		log.Errorf("%s 更新领取记录状态为失败错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
@@ -189,8 +189,8 @@ func (l *LotteryLogic) recordFundFlow(dbTx *gorm.DB, txId string, reward *model.
 			ToAccount:   solInst.ToNativeAccount.String(),
 			TxID:        txId,
 			Direction:   constants.FlowInput.String(),
-			ServiceType: constants.FundFlowServiceLottery.String(),
-			FlowType:    constants.FlowLotteryCost.String(),
+			ServiceType: constants.SubServiceLottery.String(),
+			FlowType:    constants.FlowCost.String(),
 			Decimals:    9,
 			Amount:      float64(solInst.Amount),
 			CreatedAt:   time.Now(),
@@ -209,8 +209,8 @@ func (l *LotteryLogic) recordFundFlow(dbTx *gorm.DB, txId string, reward *model.
 			ToAccount:   tokenInst.ToNativeAccount.String(),
 			TxID:        txId,
 			Direction:   constants.FlowOutput.String(),
-			ServiceType: constants.FundFlowServiceLottery.String(),
-			FlowType:    constants.FlowLotteryReceipt.String(),
+			ServiceType: constants.SubServiceLottery.String(),
+			FlowType:    constants.FlowReceipt.String(),
 			Decimals:    int16(tokenInst.Decimals),
 			Amount:      float64(tokenInst.Amount),
 			CreatedAt:   time.Now(),

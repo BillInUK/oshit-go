@@ -1,206 +1,225 @@
+-- 奖励层级配置表
 -- 旧工程 t_sol_transfer_reward_distribution
 DROP TABLE IF EXISTS public.t_level_dist;
 CREATE TABLE public.t_level_dist
 (
-    invite_level integer NOT NULL
+    dist_level integer NOT NULL -- 对应 Level
 );
 
+-- 奖励层级费率配置表
 -- 旧工程 t_sol_transfer_reward_claim
 DROP TABLE IF EXISTS public.t_level_ratio;
 CREATE TABLE public.t_level_ratio
 (
-    invite_level integer       NOT NULL,
-    ratio numeric(5, 2) NOT NULL
+    dist_level integer       NOT NULL, -- 对应 Level
+    ratio      numeric(5, 2) NOT NULL  -- 对应 ClaimRatio
 );
 
+-- 奖励成本费扣减表
 -- 旧工程 t_reward_discount_rate
 DROP TABLE IF EXISTS public.t_discount_rate;
 CREATE TABLE public.t_discount_rate
 (
     record_id public.ulid DEFAULT public.gen_ulid() NOT NULL,
-    rate      numeric(3, 2)                         NOT NULL
+    rate      numeric(3, 2)                         NOT NULL -- 对应 Rate
 );
 
+-- take token 奖励配置表
 -- 旧工程 t_sol_official_give_token_reward_rule
 DROP TABLE IF EXISTS public.t_take_token_config;
 CREATE TABLE public.t_take_token_config
 (
     record_id      public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    invite_code    character varying(16)       DEFAULT NULL::character varying,
-    reward_account character varying(64)                                 NOT NULL,
-    cost_account   character varying(64)                                 NOT NULL,
-    amount         numeric(78, 0)                                        NOT NULL,
-    invite_amount  numeric(78, 0)                                        NOT NULL,
-    dex_fee_rate   numeric(78, 0)                                        NOT NULL,
-    max_dex_fee    numeric(78, 0)                                        NOT NULL,
-    is_default     boolean                     DEFAULT false,
-    reward_inviter boolean                     DEFAULT true,
-    invited        boolean                     DEFAULT true,
+    invite_code    character varying(16)       DEFAULT NULL::character varying,    -- 邀请码，默认规则为空，对应 InviteCode
+    reward_account character varying(64)                                 NOT NULL, -- 下发奖励的solana地址，对应 RewardNativeAccount
+    cost_account   character varying(64)                                 NOT NULL, -- 接收成本费的solana地址，对应 DexNativeAccount
+    amount         numeric(78, 0)                                        NOT NULL, -- 奖励金额，对应 Amount
+    invite_amount  numeric(78, 0)                                        NOT NULL, -- 确定邀请关系奖励金额，对应 InviteAmount
+    cost_fee_rate   numeric(78, 0)                                        NOT NULL, -- 成本费费率，对应 DexFeeRate
+    max_cost_fee    numeric(78, 0)                                        NOT NULL, -- 最大成本费，对应 MaxDexFee
+    is_default     boolean                     DEFAULT false,                      -- 是否是默认规则，对应 Default
+    reward_inviter boolean                     DEFAULT true,                       -- 是否奖励邀请人，对应 RewardInviter
+    invited        boolean                     DEFAULT true,                       -- 是否确定邀请关系，对应 DetermineInvite
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- take token 记录表
 -- 旧工程 t_sol_official_give_token_record
 DROP TABLE IF EXISTS public.t_take_token_record;
 CREATE TABLE public.t_take_token_record
 (
     record_id       public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    reward_account  character varying(64)                                 NOT NULL,
-    receipt_account character varying(64)                                 NOT NULL,
-    cost_account    character varying(64)                                 NOT NULL,
-    tx_id           character varying(128)                                NOT NULL,
-    amount                 numeric(78, 0)                                        NOT NULL,
-    dex_fee                numeric(78, 0)                                        NOT NULL,
-    use_invite_code        boolean                                               NOT NULL,
-    invite_code            character varying(16),
-    tx_state                  integer,
-    invited                boolean,
-    created_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    reward_account  character varying(64)                                 NOT NULL, -- 下发奖励的solana地址，对应 RewardNativeAccount
+    receipt_account character varying(64)                                 NOT NULL, -- 接收奖励的地址，对应 ReceiptNativeAccount
+    cost_account    character varying(64)                                 NOT NULL, -- 接收成本费的地址，对应 DexNativeAccount
+    tx_id           character varying(128)                                NOT NULL, -- 获取奖励交易id，对应 RewardTxId
+    amount          numeric(78, 0)                                        NOT NULL, -- 奖励金额，对应 Amount
+    cost_fee         numeric(78, 0)                                        NOT NULL, -- 成本费，对应 DexFee
+    use_invite_code boolean                                               NOT NULL, -- 是否使用邀请码，UseInviteCode
+    invite_code     character varying(16),                                          -- 邀请码，InviteCode
+    tx_state        integer,                                                        -- 交易状态，State
+    invited         boolean,                                                        -- 是否确定邀请关系，DetermineInvite
+    created_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 当日take token和lottery统计表
 -- 旧工程 t_daily_claim_stats
 DROP TABLE IF EXISTS public.t_daily_claim_stats;
 CREATE TABLE public.t_daily_claim_stats
 (
-    record_id       public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    native_account character varying(64)                                 NOT NULL,
-    take_date      date                                                  NOT NULL,
-    take_count     integer                     DEFAULT 0                 NOT NULL,
-    need_lottery    boolean                     DEFAULT false             NOT NULL,
-    last_take_time  timestamp without time zone,
-    total_lottery   numeric(78, 0)              DEFAULT 0                 NOT NULL,
-    total_take      numeric(78, 0)              DEFAULT 0                 NOT NULL,
-    lottery_count   integer                     DEFAULT 0                 NOT NULL,
-    created_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    record_id      public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    native_account character varying(64)                                 NOT NULL, -- take token和lottery的地址，对应 NativeAccount
+    take_date      date                                                  NOT NULL, -- take token的日期，对应 TakeShitDate
+    take_count     integer                     DEFAULT 0                 NOT NULL, -- take token的次数，对应 TakeShitCount
+    need_lottery   boolean                     DEFAULT false             NOT NULL, -- 是否需要抽奖，对应 NeedLottery
+    last_take_time timestamp without time zone,                                    -- 上次take token的时间，LastTakeTime
+    total_lottery  numeric(78, 0)              DEFAULT 0                 NOT NULL, -- 总计 take token 的金额
+    total_take     numeric(78, 0)              DEFAULT 0                 NOT NULL, -- 总计 lottery 的金额
+    lottery_count  integer                     DEFAULT 0                 NOT NULL, -- 抽奖次数
+    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 ALTER TABLE t_daily_claim_stats
     ADD CONSTRAINT uq_daily_claim_stats_account_date UNIQUE (native_account, take_date);
 
+-- 抽奖奖励发放表
 -- 旧工程 t_reward_lottery
 DROP TABLE IF EXISTS public.t_lottery_reward;
 CREATE TABLE public.t_lottery_reward
 (
     record_id      public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    native_account character varying(64)                                 NOT NULL,
-    reward_amount  numeric(78, 0),
-    reward_type    integer,
-    reward_state          integer                     DEFAULT 0,
-    pending        boolean                     DEFAULT false,
-    reward_day     date                                                  NOT NULL,
+    native_account character varying(64)                                 NOT NULL, -- lottery的地址，对应 NativeAccount
+    reward_amount  numeric(78, 0),                                                 -- 奖励金额，对应 RewardAmount
+    reward_type    integer,                                                        -- 奖励类型，对应 RewardType
+    reward_state   integer                     DEFAULT 0,                          -- 奖励状态，对应 State
+    pending        boolean                     DEFAULT false,                      -- 奖励是否被处理中，对应 Pending
+    reward_day     date                                                  NOT NULL, -- 奖励当天，对应 Day
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 领取抽奖奖励记录表
 -- 旧工程 t_reward_lottery_claim_record
 DROP TABLE IF EXISTS public.t_lottery_claim;
 CREATE TABLE public.t_lottery_claim
 (
-    record_id  public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    reward_ids public.ulid[]                                         NOT NULL,
-    tx_id      character varying(128),
-    reward_state      integer                     DEFAULT 0,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    record_id    public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
+    reward_ids   public.ulid[]                                         NOT NULL, -- 领取的抽奖奖励记录id，对应 RewardIds
+    tx_id        character varying(128),                                         -- 抽奖的交易id，对应 TxId
+    tx_state integer                     DEFAULT 0,                          -- 奖励状态,对应 State
+    created_at   timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at   timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- give token 奖励配置
 -- 旧工程 t_sol_transfer_token_reward_rule
 DROP TABLE IF EXISTS public.t_give_token_config;
 CREATE TABLE public.t_give_token_config
 (
-    reward_account   character varying(64) NOT NULL,
-    cost_account     character varying(64) NOT NULL,
-    reward_rate      numeric(78, 0)        NOT NULL,
-    max_valid_reward numeric(78, 0)        NOT NULL,
-    valid_rate       NUMERIC(10, 6)        NOT NULL,
+    reward_account   character varying(64) NOT NULL, -- 发放奖励的 solana 地址，对应 RewardNativeAccount
+    cost_account     character varying(64) NOT NULL, -- 接收成本费的 solana 地址，对应 DexNativeAccount
+    reward_rate      numeric(5, 2)        NOT NULL, -- 普通地址奖励费率，对应 RewardRate
+    max_valid_reward numeric(78, 0)        NOT NULL, -- 有效地址最大奖励金额，对应 MaxValidAddressRewardPerTx
+    valid_rate       numeric(10, 6)        NOT NULL, -- 有效地址奖励费率，对应 RewardValidAddressRate
     created_at       timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at       timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- give token 记录表
 -- 旧工程 t_sol_transfer_checked_record
 DROP TABLE IF EXISTS public.t_give_token_record;
 CREATE TABLE public.t_give_token_record
 (
     record_id       public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    from_account    character varying(64)                                 NOT NULL,
-    receipt_account character varying(64)                                 NOT NULL,
-    tx_id           character varying(128)                                NOT NULL,
-    amount          numeric(78, 0)                                        NOT NULL,
-    tx_state           integer,
+    from_account    character varying(64)                                 NOT NULL, -- 发送 token 的 solana 地址， 对应 FromNativeAccount
+    receipt_account character varying(64)                                 NOT NULL, -- 接收 token 的 solana 地址，对应 ReceiptNativeAccount
+    tx_id           character varying(128)                                NOT NULL, -- give token 活动的solana交易id，对应 TransferTxId
+    amount          numeric(78, 0)                                        NOT NULL, -- give token 的金额，对应 TransferAmount
+    tx_state        integer,                                                        -- 交易状态，对应 State
     created_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
--- 奖励码
-DROP TABLE IF EXISTS public.t_reward_code;
-CREATE TABLE public.t_reward_code
-(
-    record_id     ulid                        DEFAULT gen_ulid() NOT NULL,
-    reward_code   character varying(6)                           NOT NULL,
-    reward_amount numeric(78, 0)                                 NOT NULL,
-    reward_state  integer                     DEFAULT 0          NOT NULL,
-    tx_id         character varying(128)      DEFAULT NULL:: character varying,
-    tx_state      integer                     DEFAULT 0          NOT NULL,
-    expired_at    timestamp without time zone DEFAULT (CURRENT_TIMESTAMP + '24:00:00':: interval),
-    created_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
 
 -- 奖励码奖励规则
+-- 旧工程 t_reward_code_rule
 DROP TABLE IF EXISTS public.t_reward_code_config;
 CREATE TABLE public.t_reward_code_config
 (
     record_id      ulid                        DEFAULT gen_ulid() NOT NULL,
-    reward_account character varying(64)                          NOT NULL,
-    cost_account   character varying(64)                          NOT NULL,
+    reward_account character varying(64)                          NOT NULL, -- 下发奖励的地址，对应 RewardNativeAccount
+    cost_account   character varying(64)                          NOT NULL, -- 接收成本费的地址，对应 DexNativeAccount
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (record_id)
 );
 
+-- 奖励码
+-- 旧工程 t_reward_code
+-- todo: 看一下 NativeAccount 字段是否有必要
+DROP TABLE IF EXISTS public.t_reward_code;
+CREATE TABLE public.t_reward_code
+(
+    record_id      ulid                        DEFAULT gen_ulid() NOT NULL,
+    reward_code    character varying(6)                           NOT NULL,      -- 奖励码，对应 RewardCode
+    reward_amount  numeric(78, 0)                                 NOT NULL,      -- 奖励金额，对应 RewardAmount
+    reward_state   integer                     DEFAULT 0          NOT NULL,      -- 奖励状态，对应 State
+    native_account character varying(64)       DEFAULT NULL,                     -- 领取奖励码的solana地址i，对应 NativeAccount
+    tx_id          character varying(128)      DEFAULT NULL:: character varying, -- 交易id，对应 TxId
+    tx_state       integer                     DEFAULT 0          NOT NULL,
+    expired_at     timestamp without time zone DEFAULT (CURRENT_TIMESTAMP + '24:00:00':: interval),
+    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
 
 -- 奖励码兑换费率表
+-- 旧工程 t_reward_code_fee
 DROP TABLE IF EXISTS public.t_reward_code_fee;
 CREATE TABLE public.t_reward_code_fee
 (
-    amount     numeric(78, 0) NOT NULL,
-    fee_rate   numeric(78, 0) NOT NULL,
+    amount     numeric(78, 0) NOT NULL, -- 奖励码金额，对应 Amount
+    fee_rate   numeric(78, 0) NOT NULL, -- 奖励码费率，对应 CostFeeRate
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 -- campaign积分兑换
+-- 对应旧工程 t_sol_campaign_exchange_score_rule
 DROP TABLE IF EXISTS public.t_campaign_quote_config;
 CREATE TABLE public.t_campaign_quote_config
 (
     record_id      ulid                        DEFAULT gen_ulid() NOT NULL,
-    reward_account character varying(64)                          NOT NULL,
-    cost_account   character varying(64)                          NOT NULL,
-    quote_rate           numeric(5, 2)                                  NOT NULL,
-    cost_rate      numeric(5, 2)                                  NOT NULL,
+    reward_account character varying(64)                          NOT NULL, -- 发放奖励的地址，对应 RewardNativeAccount
+    cost_account   character varying(64)                          NOT NULL, -- 接收成本费的地址，对应 CostRate
+    quote_rate     numeric(5, 2)                                  NOT NULL, -- 兑换费率，对应 Rate
+    cost_rate      numeric(5, 2)                                  NOT NULL, -- 成本费率，对应 CostRate
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 全局每日兑换限额表
+-- 对应旧工程 t_global_daily_exchange_limit
+-- todo: 添加 session，增加每天兑换2次的做法
 DROP TABLE IF EXISTS t_campaign_quote_limit;
 CREATE TABLE t_campaign_quote_limit
 (
     id          BIGSERIAL PRIMARY KEY,
-    daily_limit NUMERIC(78, 0) NOT NULL  DEFAULT 0,            -- 每日全局最大兑换量（单位：1/1000 token）
-    quota_date  DATE           NOT NULL  DEFAULT CURRENT_DATE, -- 日期
+    daily_limit NUMERIC(78, 0) NOT NULL  DEFAULT 0,            -- 每日全局最大兑换量（单位：1/1000 token），对应 daily_limit
+    quota_date  DATE           NOT NULL  DEFAULT CURRENT_DATE, -- 兑换日期
     created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE (quota_date)
 );
 
 -- 用户每日兑换额度表
+-- 对应旧工程 t_user_daily_exchange_quota
 DROP TABLE IF EXISTS t_user_daily_quota;
 CREATE TABLE t_user_daily_quota
 (
     id              BIGSERIAL PRIMARY KEY,
-    user_id         VARCHAR(64)    NOT NULL,                   -- 用户ID（与t_sol_exchange_campaign_score_to_token_record中的UserId对应）
+    user_id         VARCHAR(64)    NOT NULL,                   -- 用户ID（与 t_sol_exchange_campaign_score_to_token_record 中的UserId对应）
     quota_date      DATE           NOT NULL,                   -- 日期（天）
     max_quota       NUMERIC(78, 0) NOT NULL  DEFAULT 50000000, -- 最大兑换额度（默认500000，token decimals=3，数据库存50000000）
     frozen_quota    NUMERIC(78, 0) NOT NULL  DEFAULT 0,        -- 冻结兑换额度
@@ -211,20 +230,21 @@ CREATE TABLE t_user_daily_quota
 );
 
 -- 兑换社交媒体积分为token的记录
+-- 旧工程表 t_sol_exchange_campaign_score_to_token_record
 DROP TABLE IF EXISTS public.t_campaign_quote_record;
 CREATE TABLE public.t_campaign_quote_record
 (
-    record_id       ulid           NOT NULL     DEFAULT gen_ulid(),-- 记录Id
-    reward_account  VARCHAR(64)    NOT NULL,-- 发放奖励的native account
-    receipt_account VARCHAR(64)    NOT NULL,-- 接收奖励的native account
-    provider        VARCHAR(64)    NOT NULL,-- 社交媒体
-    user_id         VARCHAR(64)    NOT NULL,-- 用户ID
-    tx_id           VARCHAR(128)   NOT NULL,-- 奖励token的txId
-    score_flow_id   INT            NOT NULL,-- 积分流水Id
-    score_tx_id     VARCHAR(128)   NOT NULL,-- 积分交易Id
-    amount          NUMERIC(78, 0) NOT NULL,-- 获取的token额度
-    score           NUMERIC(78, 0) NOT NULL,-- 兑换的积分额度
-    quote_state           INT,-- 状态,-1.失败 0.初始化 1.成功
+    record_id       ulid           NOT NULL     DEFAULT gen_ulid(), -- 记录Id
+    reward_account  VARCHAR(64)    NOT NULL,                        -- 发放奖励的native account，对应 RewardNativeAccount
+    receipt_account VARCHAR(64)    NOT NULL,                        -- 接收奖励的native account，对应 ReceiptNativeAccount
+    provider        VARCHAR(64)    NOT NULL,                        -- 社交媒体，对应 Provider
+    user_id         VARCHAR(64)    NOT NULL,                        -- 用户ID，对应 UserId
+    tx_id           VARCHAR(128)   NOT NULL,                        -- 奖励token的txId，对应 ExchangeTxId
+    score_flow_id   INT            NOT NULL,                        -- 积分流水Id，对应 ScoreFlowId
+    score_tx_id     VARCHAR(128)   NOT NULL,                        -- 积分交易Id，对应 ScoreTxId
+    amount          NUMERIC(78, 0) NOT NULL,                        -- 获取的token额度，对应 Amount
+    score           NUMERIC(78, 0) NOT NULL,                        -- 兑换的积分额度，对应 Score
+    quote_state     INT,                                            -- 状态,-1.失败 0.初始化 1.成功，对应 State
     created_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (record_id)

@@ -25,9 +25,7 @@ insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,c
 insert into public.t_stake_reward_config
 (program_id,reward_account,cost_account,quote_token_amount,cost_fee_rate,created_at,updated_at)
 values
-    ('As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws','H5WmBY45gxP8rj7gecLXsv6yNHqHFXNH4Acmp2U9E2Tb','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',500000,110,now(),now());
+    ('CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6','H5WmBY45gxP8rj7gecLXsv6yNHqHFXNH4Acmp2U9E2Tb','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',500000,110,now(),now());
 
 -- 插入区域经理配置
 insert into public.t_stake_leader_reward_config(reward_account)values('2yRkofKW7xKRbN79MHKGX8HFyuHZEtTJDhTwAQjJHnMX');
-
-

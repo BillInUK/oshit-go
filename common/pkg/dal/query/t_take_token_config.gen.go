@@ -34,8 +34,8 @@ func newTakeTokenConfig(db *gorm.DB, opts ...gen.DOOption) takeTokenConfig {
 	_takeTokenConfig.CostAccount = field.NewString(tableName, "cost_account")
 	_takeTokenConfig.Amount = field.NewFloat64(tableName, "amount")
 	_takeTokenConfig.InviteAmount = field.NewFloat64(tableName, "invite_amount")
-	_takeTokenConfig.DexFeeRate = field.NewFloat64(tableName, "dex_fee_rate")
-	_takeTokenConfig.MaxDexFee = field.NewFloat64(tableName, "max_dex_fee")
+	_takeTokenConfig.CostFeeRate = field.NewFloat64(tableName, "cost_fee_rate")
+	_takeTokenConfig.MaxCostFee = field.NewFloat64(tableName, "max_cost_fee")
 	_takeTokenConfig.IsDefault = field.NewBool(tableName, "is_default")
 	_takeTokenConfig.RewardInviter = field.NewBool(tableName, "reward_inviter")
 	_takeTokenConfig.Invited = field.NewBool(tableName, "invited")
@@ -57,8 +57,8 @@ type takeTokenConfig struct {
 	CostAccount   field.String
 	Amount        field.Float64
 	InviteAmount  field.Float64
-	DexFeeRate    field.Float64
-	MaxDexFee     field.Float64
+	CostFeeRate   field.Float64
+	MaxCostFee    field.Float64
 	IsDefault     field.Bool
 	RewardInviter field.Bool
 	Invited       field.Bool
@@ -86,8 +86,8 @@ func (t *takeTokenConfig) updateTableName(table string) *takeTokenConfig {
 	t.CostAccount = field.NewString(table, "cost_account")
 	t.Amount = field.NewFloat64(table, "amount")
 	t.InviteAmount = field.NewFloat64(table, "invite_amount")
-	t.DexFeeRate = field.NewFloat64(table, "dex_fee_rate")
-	t.MaxDexFee = field.NewFloat64(table, "max_dex_fee")
+	t.CostFeeRate = field.NewFloat64(table, "cost_fee_rate")
+	t.MaxCostFee = field.NewFloat64(table, "max_cost_fee")
 	t.IsDefault = field.NewBool(table, "is_default")
 	t.RewardInviter = field.NewBool(table, "reward_inviter")
 	t.Invited = field.NewBool(table, "invited")
@@ -128,8 +128,8 @@ func (t *takeTokenConfig) fillFieldMap() {
 	t.fieldMap["cost_account"] = t.CostAccount
 	t.fieldMap["amount"] = t.Amount
 	t.fieldMap["invite_amount"] = t.InviteAmount
-	t.fieldMap["dex_fee_rate"] = t.DexFeeRate
-	t.fieldMap["max_dex_fee"] = t.MaxDexFee
+	t.fieldMap["cost_fee_rate"] = t.CostFeeRate
+	t.fieldMap["max_cost_fee"] = t.MaxCostFee
 	t.fieldMap["is_default"] = t.IsDefault
 	t.fieldMap["reward_inviter"] = t.RewardInviter
 	t.fieldMap["invited"] = t.Invited

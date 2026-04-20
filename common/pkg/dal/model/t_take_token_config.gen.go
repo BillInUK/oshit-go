@@ -18,8 +18,8 @@ type TakeTokenConfig struct {
 	CostAccount   string    `gorm:"column:cost_account;not null" json:"cost_account"`
 	Amount        float64   `gorm:"column:amount;not null" json:"amount"`
 	InviteAmount  float64   `gorm:"column:invite_amount;not null" json:"invite_amount"`
-	DexFeeRate    float64   `gorm:"column:dex_fee_rate;not null" json:"dex_fee_rate"`
-	MaxDexFee     float64   `gorm:"column:max_dex_fee;not null" json:"max_dex_fee"`
+	CostFeeRate   float64   `gorm:"column:cost_fee_rate;not null" json:"cost_fee_rate"`
+	MaxCostFee    float64   `gorm:"column:max_cost_fee;not null" json:"max_cost_fee"`
 	IsDefault     bool      `gorm:"column:is_default" json:"is_default"`
 	RewardInviter bool      `gorm:"column:reward_inviter;default:true" json:"reward_inviter"`
 	Invited       bool      `gorm:"column:invited;default:true" json:"invited"`

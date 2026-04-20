@@ -189,7 +189,7 @@ func (l *RewardCodeLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app
 	// 7. 记录交易 ID 到 t_reward_code（tx_state 保持 0，等待 kafka 确认后更新）
 	if err := l.db.Table(model.TableNameRewardCode).
 		Where("record_id = ?", rc.RecordID).
-		Update("tx_id", txIdStr).Error; err != nil {
+		Updates(map[string]interface{}{"native_account": decodedTx.FromNativeAccount, "tx_id": txIdStr}).Error; err != nil {
 		log.Errorf("%s 更新奖励码 tx_id 错误: %v", prefix, err)
 		return errors.New("record reward code tx id error")
 	}

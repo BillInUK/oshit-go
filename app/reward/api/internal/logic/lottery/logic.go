@@ -3,13 +3,6 @@ package lottery
 import (
 	"context"
 	"fmt"
-	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/go-redsync/redsync/v4"
-	"github.com/gofiber/fiber/v2/log"
-	"github.com/pkg/errors"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 	rewardrpc "oshit-go/app/reward/api/internal/rpc"
 	"oshit-go/app/reward/api/internal/svc"
 	"oshit-go/app/reward/api/types"
@@ -18,6 +11,14 @@ import (
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/utils"
 	"time"
+
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/go-redsync/redsync/v4"
+	"github.com/gofiber/fiber/v2/log"
+	"github.com/pkg/errors"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 type LotteryLogic struct {
@@ -231,11 +232,11 @@ func (l *LotteryLogic) recordLotteryClaim(txId, rewardId string) error {
 
 	// 创建 lottery_claim_record 记录
 	claimRecord := model.LotteryClaim{
-		RewardIds:   fmt.Sprintf("{%s}", rewardId),
-		TxID:        txId,
-		RewardState: int32(constants.RewardStateInit),
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		RewardIds: fmt.Sprintf("{%s}", rewardId),
+		TxID:      txId,
+		TxState:   int32(constants.RewardStateInit),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 	if err := dbTx.Table(model.TableNameLotteryClaim).Omit("record_id").Create(&claimRecord).Error; err != nil {
 		dbTx.Rollback()

@@ -47,22 +47,6 @@ var (
 	FlowOutput = FlowDirection{"output"}
 )
 
-// FundFlowServiceType represents the business service type for fund flows.
-type FundFlowServiceType struct {
-	slug string
-}
-
-func (s FundFlowServiceType) String() string { return s.slug }
-
-var (
-	FundFlowServiceAirDrop   = FundFlowServiceType{"AirDrop"}
-	FundFlowServiceTakeToken = FundFlowServiceType{"TakeToken"}
-	FundFlowServiceGiveToken = FundFlowServiceType{"GiveToken"}
-	FundFlowServicePosDaily  = FundFlowServiceType{"PosDaily"}
-	FundFlowServiceStake     = FundFlowServiceType{"Stake"}
-	FundFlowServiceLottery   = FundFlowServiceType{"Lottery"}
-)
-
 // FundFlowType represents the specific fund flow type within a service.
 type FundFlowType struct {
 	slug string
@@ -71,25 +55,7 @@ type FundFlowType struct {
 func (f FundFlowType) String() string { return f.slug }
 
 var (
-	// TakeToken flows
-	FlowTakeTokenCost    = FundFlowType{"take_token_cost"}
-	FlowTakeTokenReceipt = FundFlowType{"take_token_receipt"}
-	FlowTakeTokenInviter = FundFlowType{"take_token_inviter"}
-
-	// GiveToken flows
-	FlowGiveTokenCost    = FundFlowType{"give_token_cost"}
-	FlowGiveTokenReceipt = FundFlowType{"give_token_receipt"}
-	FlowGiveTokenInviter = FundFlowType{"give_token_inviter"}
-
-	// POS flows
-	FlowPosCost    = FundFlowType{"pos_cost"}
-	FlowPosReceipt = FundFlowType{"pos_receipt"}
-
-	// Stake flows
-	FlowStakeCost    = FundFlowType{"stake_cost"}
-	FlowStakeReceipt = FundFlowType{"stake_receipt"}
-
-	// Lottery flows
-	FlowLotteryCost    = FundFlowType{"lottery_cost"}
-	FlowLotteryReceipt = FundFlowType{"lottery_receipt"}
+	FlowCost    = FundFlowType{"cost"}
+	FlowReceipt = FundFlowType{"receipt"}
+	FlowInviter = FundFlowType{"inviter"}
 )

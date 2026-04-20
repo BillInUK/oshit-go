@@ -8,9 +8,8 @@ type ServiceName struct {
 func (s ServiceName) String() string { return s.slug }
 
 var (
-	ServiceReward   = ServiceName{"Reward"}
-	ServicePos      = ServiceName{"Pos"}
-	ServiceCampaign = ServiceName{"Campaign"}
+	ServiceReward = ServiceName{"reward"}
+	ServicePos    = ServiceName{"pos"}
 )
 
 // SubServiceName is a typed sub-service name enum.
@@ -21,15 +20,14 @@ type SubServiceName struct {
 func (s SubServiceName) String() string { return s.slug }
 
 var (
-	SubServiceTakeToken         = SubServiceName{"TakeToken"}
-	SubServiceGiveToken         = SubServiceName{"GiveToken"}
-	SubServiceLottery           = SubServiceName{"Lottery"}
-	SubServiceRewardCode        = SubServiceName{"RewardCode"}
-	SubServicePosReward         = SubServiceName{"PosReward"}
-	SubServiceStakeToken        = SubServiceName{"StakeToken"}
-	SubServiceStakeReward       = SubServiceName{"StakeReward"}
-	SubServiceStakeLeaderReward = SubServiceName{"StakeLeaderReward"}
-	SubServiceMarketBuyToken    = SubServiceName{"MarketBuyToken"}
-	SubServiceCampaignQuote     = SubServiceName{"CampaignQuote"}
-	SubServiceExchangeToken     = SubServiceName{"ExchangeToken"}
+	SubServiceTakeToken         = SubServiceName{"take token"}
+	SubServiceGiveToken         = SubServiceName{"give token"}
+	SubServiceLottery           = SubServiceName{"lottery"}
+	SubServiceRewardCode        = SubServiceName{"reward code"}
+	SubServicePosReward         = SubServiceName{"pos reward"}
+	SubServiceStakeToken        = SubServiceName{"stake token"}
+	SubServiceStakeReward       = SubServiceName{"stake reward"}
+	SubServiceStakeLeaderReward = SubServiceName{"stake leader reward"}
+	SubServiceMarketBuyToken    = SubServiceName{"market buy token"}
+	SubServiceCampaignQuote     = SubServiceName{"campaign quote"}
 )

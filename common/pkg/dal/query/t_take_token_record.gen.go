@@ -34,7 +34,7 @@ func newTakeTokenRecord(db *gorm.DB, opts ...gen.DOOption) takeTokenRecord {
 	_takeTokenRecord.CostAccount = field.NewString(tableName, "cost_account")
 	_takeTokenRecord.TxID = field.NewString(tableName, "tx_id")
 	_takeTokenRecord.Amount = field.NewFloat64(tableName, "amount")
-	_takeTokenRecord.DexFee = field.NewFloat64(tableName, "dex_fee")
+	_takeTokenRecord.CostFee = field.NewFloat64(tableName, "cost_fee")
 	_takeTokenRecord.UseInviteCode = field.NewBool(tableName, "use_invite_code")
 	_takeTokenRecord.InviteCode = field.NewString(tableName, "invite_code")
 	_takeTokenRecord.TxState = field.NewInt32(tableName, "tx_state")
@@ -57,7 +57,7 @@ type takeTokenRecord struct {
 	CostAccount    field.String
 	TxID           field.String
 	Amount         field.Float64
-	DexFee         field.Float64
+	CostFee        field.Float64
 	UseInviteCode  field.Bool
 	InviteCode     field.String
 	TxState        field.Int32
@@ -86,7 +86,7 @@ func (t *takeTokenRecord) updateTableName(table string) *takeTokenRecord {
 	t.CostAccount = field.NewString(table, "cost_account")
 	t.TxID = field.NewString(table, "tx_id")
 	t.Amount = field.NewFloat64(table, "amount")
-	t.DexFee = field.NewFloat64(table, "dex_fee")
+	t.CostFee = field.NewFloat64(table, "cost_fee")
 	t.UseInviteCode = field.NewBool(table, "use_invite_code")
 	t.InviteCode = field.NewString(table, "invite_code")
 	t.TxState = field.NewInt32(table, "tx_state")
@@ -128,7 +128,7 @@ func (t *takeTokenRecord) fillFieldMap() {
 	t.fieldMap["cost_account"] = t.CostAccount
 	t.fieldMap["tx_id"] = t.TxID
 	t.fieldMap["amount"] = t.Amount
-	t.fieldMap["dex_fee"] = t.DexFee
+	t.fieldMap["cost_fee"] = t.CostFee
 	t.fieldMap["use_invite_code"] = t.UseInviteCode
 	t.fieldMap["invite_code"] = t.InviteCode
 	t.fieldMap["tx_state"] = t.TxState

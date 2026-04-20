@@ -26,8 +26,8 @@ type GiveTokenTxInfo struct {
 	RewardAccount string  `json:"rewardAccount"`
 	Mint          string  `json:"mint"`
 	CostAccount   string  `json:"costAccount"`
-	DexFeeRate    float64 `json:"dexFeeRate"`
-	MaxDexFee     float64 `json:"maxDexFee"`
+	CostFeeRate   float64 `json:"costFeeRate"`
+	MaxCostFee    float64 `json:"maxCostFee"`
 	Decimals      int32   `json:"decimals"`
 	QuoteSOLPrice float64 `json:"quoteSOLPrice"`
 
@@ -56,8 +56,8 @@ type TakeTokenTxInfo struct {
 	RewardAccount   string  `json:"rewardAccount"`
 	Mint            string  `json:"mint"`
 	CostAccount     string  `json:"costAccount"`
-	DexFeeRate      float64 `json:"dexFeeRate"`
-	MaxDexFee       float64 `json:"maxDexFee"`
+	CostFeeRate     float64 `json:"costFeeRate"`
+	MaxCostFee      float64 `json:"maxCostFee"`
 	Decimals        int32   `json:"decimals"`
 	InviteCode      string  `json:"inviteCode"`
 	InviteCodeValid bool    `json:"inviteCodeValid"`

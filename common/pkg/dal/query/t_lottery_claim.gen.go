@@ -31,7 +31,7 @@ func newLotteryClaim(db *gorm.DB, opts ...gen.DOOption) lotteryClaim {
 	_lotteryClaim.RecordID = field.NewString(tableName, "record_id")
 	_lotteryClaim.RewardIds = field.NewString(tableName, "reward_ids")
 	_lotteryClaim.TxID = field.NewString(tableName, "tx_id")
-	_lotteryClaim.RewardState = field.NewInt32(tableName, "reward_state")
+	_lotteryClaim.TxState = field.NewInt32(tableName, "tx_state")
 	_lotteryClaim.CreatedAt = field.NewTime(tableName, "created_at")
 	_lotteryClaim.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -43,13 +43,13 @@ func newLotteryClaim(db *gorm.DB, opts ...gen.DOOption) lotteryClaim {
 type lotteryClaim struct {
 	lotteryClaimDo lotteryClaimDo
 
-	ALL         field.Asterisk
-	RecordID    field.String
-	RewardIds   field.String
-	TxID        field.String
-	RewardState field.Int32
-	CreatedAt   field.Time
-	UpdatedAt   field.Time
+	ALL       field.Asterisk
+	RecordID  field.String
+	RewardIds field.String
+	TxID      field.String
+	TxState   field.Int32
+	CreatedAt field.Time
+	UpdatedAt field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -69,7 +69,7 @@ func (l *lotteryClaim) updateTableName(table string) *lotteryClaim {
 	l.RecordID = field.NewString(table, "record_id")
 	l.RewardIds = field.NewString(table, "reward_ids")
 	l.TxID = field.NewString(table, "tx_id")
-	l.RewardState = field.NewInt32(table, "reward_state")
+	l.TxState = field.NewInt32(table, "tx_state")
 	l.CreatedAt = field.NewTime(table, "created_at")
 	l.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -104,7 +104,7 @@ func (l *lotteryClaim) fillFieldMap() {
 	l.fieldMap["record_id"] = l.RecordID
 	l.fieldMap["reward_ids"] = l.RewardIds
 	l.fieldMap["tx_id"] = l.TxID
-	l.fieldMap["reward_state"] = l.RewardState
+	l.fieldMap["tx_state"] = l.TxState
 	l.fieldMap["created_at"] = l.CreatedAt
 	l.fieldMap["updated_at"] = l.UpdatedAt
 }

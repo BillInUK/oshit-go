@@ -12,15 +12,16 @@ const TableNameRewardCode = "t_reward_code"
 
 // RewardCode mapped from table <t_reward_code>
 type RewardCode struct {
-	RecordID     string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	RewardCode   string    `gorm:"column:reward_code;not null" json:"reward_code"`
-	RewardAmount float64   `gorm:"column:reward_amount;not null" json:"reward_amount"`
-	RewardState  int32     `gorm:"column:reward_state;not null" json:"reward_state"`
-	TxID         string    `gorm:"column:tx_id;default:NULL" json:"tx_id"`
-	TxState      int32     `gorm:"column:tx_state;not null" json:"tx_state"`
-	ExpiredAt    time.Time `gorm:"column:expired_at;default:(CURRENT_TIMESTAMP + '24:00:00" json:"expired_at"`
-	CreatedAt    time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt    time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
+	RewardCode    string    `gorm:"column:reward_code;not null" json:"reward_code"`
+	RewardAmount  float64   `gorm:"column:reward_amount;not null" json:"reward_amount"`
+	RewardState   int32     `gorm:"column:reward_state;not null" json:"reward_state"`
+	NativeAccount string    `gorm:"column:native_account;default:NULL" json:"native_account"`
+	TxID          string    `gorm:"column:tx_id;default:NULL" json:"tx_id"`
+	TxState       int32     `gorm:"column:tx_state;not null" json:"tx_state"`
+	ExpiredAt     time.Time `gorm:"column:expired_at;default:(CURRENT_TIMESTAMP + '24:00:00" json:"expired_at"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
 // TableName RewardCode's table name
