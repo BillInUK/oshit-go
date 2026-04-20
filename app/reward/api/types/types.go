@@ -3,9 +3,9 @@ package types
 import "oshit-go/common/pkg/dal/model"
 
 type RewardTokenItem struct {
-	Index          int    `json:"index"`
-	ReceiptAccount string `json:"receiptAccount"`
-	Amount         uint64 `json:"amount"`
+	Index          int    `json:"index"`          // 奖励项索引，防止返回的回复里面json数组乱序，前端可以依据该字段进行重新排列奖励项
+	ReceiptAccount string `json:"receiptAccount"` // 接收奖励的 solana 地址
+	Amount         uint64 `json:"amount"`         // 奖励 token的金额
 }
 
 type GetByTxIdReq struct {
@@ -13,8 +13,8 @@ type GetByTxIdReq struct {
 }
 
 type GetGiveTokenTxInfoReq struct {
-	To     string  `json:"to"`
-	Amount float64 `json:"amount"`
+	To     string  `json:"to"`     // 接收 solana 地址
+	Amount float64 `json:"amount"` // 用户转出 token的数量
 }
 
 type CommitGiveTokenTxInfoReq struct {
@@ -23,28 +23,28 @@ type CommitGiveTokenTxInfoReq struct {
 }
 
 type GiveTokenTxInfo struct {
-	RewardAccount string  `json:"rewardAccount"`
-	Mint          string  `json:"mint"`
-	CostAccount   string  `json:"costAccount"`
-	CostFeeRate   float64 `json:"costFeeRate"`
-	MaxCostFee    float64 `json:"maxCostFee"`
-	Decimals      int32   `json:"decimals"`
-	QuoteSOLPrice float64 `json:"quoteSOLPrice"`
+	RewardAccount string  `json:"rewardAccount"` // 服务端下发奖励的地址
+	Mint          string  `json:"mint"`          // token 地址
+	CostAccount   string  `json:"costAccount"`   // 接收成本费的地址
+	CostFeeRate   float64 `json:"costFeeRate"`   // 成本费费率
+	MaxCostFee    float64 `json:"maxCostFee"`    // 最大成本费
+	Decimals      int32   `json:"decimals"`      // token金额的精度
+	QuoteSOLPrice float64 `json:"quoteSOLPrice"` // token兑换solana的价格
 
-	TotalReward     float64 `json:"totalReward"`
-	QuotedSOLAmount float64 `json:"quotedSOLAmount"`
+	TotalReward     float64 `json:"totalReward"`     // 整笔交易下发的token奖励总额
+	QuotedSOLAmount float64 `json:"quotedSOLAmount"` // token兑换solana的金额
 
-	Claims            []model.LevelRatio `json:"claims"`
-	GiveInfo          RewardTokenItem    `json:"giveInfo"`
-	RewardInfo        RewardTokenItem    `json:"rewardInfo"`
-	RewardInviterInfo []RewardTokenItem  `json:"rewardInviterInfo"`
+	Claims            []model.LevelRatio `json:"claims"`            // 向上奖励邀请人的级别以及每个级别的奖励费率
+	GiveInfo          RewardTokenItem    `json:"giveInfo"`          // give token 业务发起人 转给 to 地址的奖励项
+	RewardInfo        RewardTokenItem    `json:"rewardInfo"`        // 奖励 give token 业务发起人的奖励项
+	RewardInviterInfo []RewardTokenItem  `json:"rewardInviterInfo"` // 奖励 give token 业务发起人的邀请人的奖励项
 }
 
 type GetTakeTokenTxInfoReq struct {
-	InviteCode     string  `json:"inviteCode"`
-	Custom         bool    `json:"custom"`
-	CustomAmount   float64 `json:"customAmount"`
-	ReceiptAccount string  `json:"receiptAccount"`
+	InviteCode     string  `json:"inviteCode"`     // 可选，邀请码
+	Custom         bool    `json:"custom"`         // 是否使用自定义金额（暂未使用）
+	CustomAmount   float64 `json:"customAmount"`   // 自定义金额（暂未使用）
+	ReceiptAccount string  `json:"receiptAccount"` // 领取奖励的 native account
 }
 
 type CommitTakeTokenTxInfoReq struct {
@@ -53,23 +53,23 @@ type CommitTakeTokenTxInfoReq struct {
 }
 
 type TakeTokenTxInfo struct {
-	RewardAccount   string  `json:"rewardAccount"`
-	Mint            string  `json:"mint"`
-	CostAccount     string  `json:"costAccount"`
-	CostFeeRate     float64 `json:"costFeeRate"`
-	MaxCostFee      float64 `json:"maxCostFee"`
-	Decimals        int32   `json:"decimals"`
-	InviteCode      string  `json:"inviteCode"`
-	InviteCodeValid bool    `json:"inviteCodeValid"`
-	Invited         bool    `json:"invited"`
-	QuoteSOLPrice   float64 `json:"quoteSOLPrice"`
+	RewardAccount   string  `json:"rewardAccount"`   // 下发奖励的 solana 地址
+	Mint            string  `json:"mint"`            // token 地址
+	CostAccount     string  `json:"costAccount"`     // 接收solana成本费的地址
+	CostFeeRate     float64 `json:"costFeeRate"`     // 成本费率
+	MaxCostFee      float64 `json:"maxCostFee"`      // 最大成本费
+	Decimals        int32   `json:"decimals"`        // token 金额的精度
+	InviteCode      string  `json:"inviteCode"`      // 邀请码
+	InviteCodeValid bool    `json:"inviteCodeValid"` // 邀请码是否有效
+	Invited         bool    `json:"invited"`         // take token 后是否确定邀请关系
+	QuoteSOLPrice   float64 `json:"quoteSOLPrice"`   // token 兑换solana的价格
 
-	TotalReward     float64 `json:"totalReward"`
-	QuotedSOLAmount float64 `json:"quotedSOLAmount"`
+	TotalReward     float64 `json:"totalReward"`     // 整笔交易奖励的token总额
+	QuotedSOLAmount float64 `json:"quotedSOLAmount"` // token 兑换 solana 的金额
 
-	Claims            []model.LevelRatio `json:"claims"`
-	RewardInfo        RewardTokenItem    `json:"rewardInfo"`
-	RewardInviterInfo []RewardTokenItem  `json:"rewardInviterInfo"`
+	Claims            []model.LevelRatio `json:"claims"`            // 向上奖励邀请人的级别以及每个级别的奖励费率
+	RewardInfo        RewardTokenItem    `json:"rewardInfo"`        // 发起 take token 流程地址的奖励项
+	RewardInviterInfo []RewardTokenItem  `json:"rewardInviterInfo"` // 发起 take token 流程地址的邀请人的奖励项
 }
 
 type GetLotteryStatusReq struct {
