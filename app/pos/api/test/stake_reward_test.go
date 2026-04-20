@@ -433,7 +433,7 @@ func TestClaimStakeReward(t *testing.T) {
 	if err != nil {
 		t.Fatalf("commitStakeRewardTx failed: %v", err)
 	}
-	fmt.Printf("交易提交成功: https://solscan.io/tx/%s?cluster=devnet\n", txId)
+	fmt.Printf("交易提交成功: https://explorer.solana.com/tx/%s?cluster=devnet\n", txId)
 
 	// 6. 轮询 claim record，等待链上确认（最多 3 分钟）
 	fmt.Println("轮询链上确认状态...")

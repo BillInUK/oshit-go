@@ -212,5 +212,5 @@ func TestTakeToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("commitTakeTokenTx failed: %v", err)
 	}
-	fmt.Printf("请求成功: https://solscan.io/tx/%s?cluster=devnet\n", txId)
+	fmt.Printf("请求成功: https://explorer.solana.com/tx/%s?cluster=devnet\n", txId)
 }

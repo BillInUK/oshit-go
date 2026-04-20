@@ -312,7 +312,7 @@ func TestLottery(t *testing.T) {
 	if err != nil {
 		t.Fatalf("commitLotteryTx failed: %v", err)
 	}
-	fmt.Printf("请求成功: https://solscan.io/tx/%s?cluster=devnet\n", txId)
+	fmt.Printf("请求成功: https://explorer.solana.com/tx/%s?cluster=devnet\n", txId)
 }
 
 // ---- Take & Lottery 联合测试辅助函数 ----
@@ -331,7 +331,7 @@ func doOneTakeToken(t *testing.T, n int, privKey solana.PrivateKey, inviteCode s
 	if err != nil {
 		t.Fatalf("第 %d 次 commitTakeTokenTx failed: %v", n, err)
 	}
-	fmt.Printf("  第 %d 次 take token: https://solscan.io/tx/%s?cluster=devnet\n", n, txId)
+	fmt.Printf("  第 %d 次 take token: https://explorer.solana.com/tx/%s?cluster=devnet\n", n, txId)
 	return txId
 }
 
@@ -406,7 +406,7 @@ func doFullLotteryFlow(t *testing.T, privKey solana.PrivateKey) {
 	if err != nil {
 		t.Fatalf("commitLotteryTx failed: %v", err)
 	}
-	fmt.Printf("  lottery tx: https://solscan.io/tx/%s?cluster=devnet\n", lotteryTxId)
+	fmt.Printf("  lottery tx: https://explorer.solana.com/tx/%s?cluster=devnet\n", lotteryTxId)
 }
 
 // TestTakeAndLottery 模拟连续 take token，分别在第 5、10、20 次触发抽奖

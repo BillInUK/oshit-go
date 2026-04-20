@@ -234,7 +234,7 @@ func TestRewardCode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("commitRewardCodeTx failed: %v", err)
 	}
-	fmt.Printf("交易已提交: https://solscan.io/tx/%s?cluster=devnet\n", txId)
+	fmt.Printf("交易已提交: https://explorer.solana.com/tx/%s?cluster=devnet\n", txId)
 
 	// 6. 轮询等待链上确认（通过查询奖励码 tx_state 判断）
 	fmt.Println("轮询等待链上确认...")

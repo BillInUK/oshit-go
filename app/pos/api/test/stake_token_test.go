@@ -258,7 +258,7 @@ func stakingSendAndConfirm(
 	if err != nil {
 		t.Fatalf("[%s] SendTransaction 失败: %v", label, err)
 	}
-	fmt.Printf("[%s] 已提交: https://solscan.io/tx/%s?cluster=devnet\n", label, sig.String())
+	fmt.Printf("[%s] 已提交: https://explorer.solana.com/tx/%s?cluster=devnet\n", label, sig.String())
 
 	// 轮询等待确认（最多 60 秒）
 	for i := 0; i < 30; i++ {
@@ -606,7 +606,7 @@ func TestSubmitStakeTokenViaBackend(t *testing.T) {
 		t.Fatalf("后端返回错误: code=%d msg=%s", rsp.Code, rsp.Msg)
 	}
 	fmt.Printf("后端接受成功 (code=%d)，等待链上确认...\n", rsp.Code)
-	fmt.Printf("Solscan: https://solscan.io/tx/%s?cluster=devnet\n", txId)
+	fmt.Printf("Solscan: https://explorer.solana.com/tx/%s?cluster=devnet\n", txId)
 
 	// 6. 轮询链上确认（最多 60 秒）
 	userSig, err := solana.SignatureFromBase58(txId)
@@ -741,7 +741,7 @@ func TestUnstakeAll(t *testing.T) {
 		if rsp.Code != 200 {
 			t.Fatalf("[%s] 后端返回错误: code=%d msg=%s", label, rsp.Code, rsp.Msg)
 		}
-		fmt.Printf("[%s] 后端接受成功，等待链上确认... https://solscan.io/tx/%s?cluster=devnet\n", label, txId)
+		fmt.Printf("[%s] 后端接受成功，等待链上确认... https://explorer.solana.com/tx/%s?cluster=devnet\n", label, txId)
 
 		// 轮询链上确认（最多 60 秒）
 		userSig, err := solana.SignatureFromBase58(txId)
@@ -884,7 +884,7 @@ func TestRestakeAll(t *testing.T) {
 		if rsp.Code != 200 {
 			t.Fatalf("[%s] 后端返回错误: code=%d msg=%s", label, rsp.Code, rsp.Msg)
 		}
-		fmt.Printf("[%s] 后端接受成功，等待链上确认... https://solscan.io/tx/%s?cluster=devnet\n", label, txId)
+		fmt.Printf("[%s] 后端接受成功，等待链上确认... https://explorer.solana.com/tx/%s?cluster=devnet\n", label, txId)
 
 		// 轮询链上确认（最多 60 秒）
 		userSig, err := solana.SignatureFromBase58(txId)
