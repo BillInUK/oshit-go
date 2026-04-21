@@ -276,3 +276,33 @@ create table public.t_stake_leader_reward_claim
 create index on public.t_stake_leader_reward_claim (tx_id);
 create index on public.t_stake_leader_reward_claim (tx_state, created_at);
 create index on public.t_stake_leader_reward_claim (native_account, tx_state);
+
+-- 抵扣名单配置表（追回多发的 StakeInvite / StakeStarGroup 奖励）
+DROP TABLE IF EXISTS "public"."t_stake_team_reward_deduction";
+CREATE TABLE "public"."t_stake_team_reward_deduction"
+(
+    native_account varchar        NOT NULL,
+    total          numeric(78, 0) NOT NULL,                                -- 总计需要扣减的额度，业务不改变该值
+    deducted       numeric(78, 0) NOT NULL DEFAULT 0,                      -- 已经扣减的额度
+    remaining      numeric(78, 0) NOT NULL DEFAULT 0,                      -- 还剩余需要扣减的额度，初始值等于 total，扣减后从该值扣减
+    created_at     timestamptz    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamptz    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT t_stake_team_reward_deduction_pkey PRIMARY KEY (native_account)
+);
+
+-- 每日扣除明细表
+DROP TABLE IF EXISTS "public"."t_stake_team_reward_deduction_log";
+CREATE TABLE "public"."t_stake_team_reward_deduction_log"
+(
+    record_id      varchar        NOT NULL DEFAULT gen_ulid(),
+    native_account varchar        NOT NULL,                                -- 被扣减奖励的地址
+    snap_day       date           NOT NULL,                                -- 快照日期
+    reward_type    int4           NOT NULL,                                -- 奖励类型 1=邀请奖励 4=团队奖励
+    original       numeric(78, 0) NOT NULL,                                -- 本来需要发放的奖励额度
+    deduction      numeric(78, 0) NOT NULL,                                -- 扣减的额度
+    created_at     timestamptz    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamptz    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT t_stake_team_reward_deduction_log_pkey PRIMARY KEY (record_id)
+);
+create index on public.t_stake_team_reward_deduction_log (native_account);
+create index on public.t_stake_team_reward_deduction_log (snap_day);

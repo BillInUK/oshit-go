@@ -229,8 +229,6 @@ func (l *StakeSnapShotLogic) rewardOrdinaryStaker(snapShotDay time.Time) (map[st
 // Rate: 费率
 // RewardAmount: 经过本函数将被设置为邀请人奖励
 func (l *StakeSnapShotLogic) rewardInviter(rewardMap map[string]model.StakeReward) (map[string]model.StakeReward, error) {
-	var rewardRecords []model.StakeReward
-
 	// 清空所有的奖励金额，并将Base设置为每日固定利息
 	for inviter, _ := range rewardMap {
 		inviterRecord := rewardMap[inviter]
@@ -261,24 +259,15 @@ func (l *StakeSnapShotLogic) rewardInviter(rewardMap map[string]model.StakeRewar
 		}
 	}
 
-	// 将邀请项目组织成数组
+	// 逐条写入：先做扣减检查，再在事务内同步写奖励记录和扣减日志
 	for _, record := range rewardMap {
-		rewardRecords = append(rewardRecords, record)
-	}
-
-	// 批量插入邀请人奖励数据
-	if err := l.db.Clauses(
-		clause.OnConflict{
-			Columns: []clause.Column{
-				{Name: "native_account"},
-				{Name: "snap_day"},
-				{Name: "reward_type"},
-				{Name: "starred"},
-			},
-			DoNothing: true, // 如果冲突则跳过
-		}).CreateInBatches(rewardRecords, 1000).Error; err != nil {
-		log.Errorf("%s 批量插入每日固定利息奖励记录失败: %v", l.prefix, err)
-		return rewardMap, err
+		if record.RewardAmount <= 0 {
+			continue
+		}
+		if err := l.writeRewardWithDeduction(record); err != nil {
+			log.Errorf("%s 写入邀请人奖励失败 地址 %s: %v", l.prefix, record.NativeAccount, err)
+			return rewardMap, err
+		}
 	}
 
 	return rewardMap, nil
@@ -502,18 +491,11 @@ func (l *StakeSnapShotLogic) rewardGroup(rewardMap map[string]model.StakeReward,
 		}
 	}
 
-	table := l.db.Table(model.TableNameStakeReward)
 	for _, rewardItem := range totalRewardMap {
-		if err = table.Clauses(
-			clause.OnConflict{
-				Columns: []clause.Column{
-					{Name: "native_account"},
-					{Name: "snap_day"},
-					{Name: "reward_type"},
-					{Name: "starred"},
-				},
-				DoNothing: true, // 如果冲突则跳过
-			}).Create(&rewardItem).Error; err != nil {
+		if rewardItem.RewardAmount <= 0 {
+			continue
+		}
+		if err = l.writeRewardWithDeduction(rewardItem); err != nil {
 			log.Errorf("%s 新增邀请关系内星级用户固定奖励 - 插入奖励记录错误: %v", l.prefix, err)
 			break
 		}
@@ -794,4 +776,104 @@ func (l *StakeSnapShotLogic) calculateStakeBase(records []types.InviteNode, inde
 	// 更新记录的Base值
 	records[index].Base = base
 	return
+}
+
+// writeRewardWithDeduction 将奖励写入 t_stake_reward，对 StakeInvite / StakeStarGroup 类型先做扣减检查。
+// 三种情况：
+//  1. 无扣减记录或 remaining==0：直接写入原始奖励
+//  2. remaining >= rewardAmount：全额扣减，跳过奖励写入
+//  3. 0 < remaining < rewardAmount：部分扣减，写入 rewardAmount - remaining
+//
+// 扣减发生时，在同一事务内更新 t_stake_team_reward_deduction 并写扣减日志。
+func (l *StakeSnapShotLogic) writeRewardWithDeduction(reward model.StakeReward) error {
+	needDeductionCheck := reward.RewardType == int32(types.StakeInvite) || reward.RewardType == int32(types.StakeStarGroup)
+	if !needDeductionCheck {
+		// 非扣减类型，直接插入
+		return l.insertRewardRecord(l.db, reward)
+	}
+
+	return l.db.Transaction(func(tx *gorm.DB) error {
+		// 查询扣减配置，SELECT ... FOR UPDATE 防止并发
+		var deduction model.StakeTeamRewardDeduction
+		err := tx.Set("gorm:query_option", "FOR UPDATE").
+			Where("native_account = ?", reward.NativeAccount).
+			First(&deduction).Error
+
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				// 情况1：无扣减记录，直接写入原始奖励
+				return l.insertRewardRecord(tx, reward)
+			}
+			return fmt.Errorf("查询扣减配置失败 地址 %s: %w", reward.NativeAccount, err)
+		}
+
+		if deduction.Remaining <= 0 {
+			// 情况1：remaining 已耗尽，直接写入原始奖励
+			return l.insertRewardRecord(tx, reward)
+		}
+
+		originalAmount := reward.RewardAmount
+
+		if deduction.Remaining >= originalAmount {
+			// 情况2：全额扣减，跳过奖励写入
+			deductAmount := originalAmount
+			if err = l.applyDeduction(tx, &deduction, deductAmount, reward, originalAmount); err != nil {
+				return err
+			}
+			log.Infof("%s 地址 %s 奖励类型 %d 快照日 %v 全额扣减 %.0f，跳过奖励发放",
+				l.prefix, reward.NativeAccount, reward.RewardType, reward.SnapDay, deductAmount)
+			return nil
+		}
+
+		// 情况3：部分扣减，发放 rewardAmount - remaining
+		deductAmount := deduction.Remaining
+		reward.RewardAmount = originalAmount - deductAmount
+		if err = l.applyDeduction(tx, &deduction, deductAmount, reward, originalAmount); err != nil {
+			return err
+		}
+		log.Infof("%s 地址 %s 奖励类型 %d 快照日 %v 部分扣减 %.0f，实际发放 %.0f",
+			l.prefix, reward.NativeAccount, reward.RewardType, reward.SnapDay, deductAmount, reward.RewardAmount)
+		return l.insertRewardRecord(tx, reward)
+	})
+}
+
+// applyDeduction 在事务内更新扣减主表并写入扣减日志。
+func (l *StakeSnapShotLogic) applyDeduction(tx *gorm.DB, deduction *model.StakeTeamRewardDeduction, deductAmount float64, reward model.StakeReward, originalAmount float64) error {
+	// 更新 t_stake_team_reward_deduction
+	if err := tx.Model(deduction).Updates(map[string]interface{}{
+		"deducted":   gorm.Expr("deducted + ?", deductAmount),
+		"remaining":  gorm.Expr("remaining - ?", deductAmount),
+		"updated_at": time.Now(),
+	}).Error; err != nil {
+		return fmt.Errorf("更新扣减配置失败 地址 %s: %w", reward.NativeAccount, err)
+	}
+
+	// 写入扣减日志
+	logRecord := model.StakeTeamRewardDeductionLog{
+		NativeAccount: reward.NativeAccount,
+		SnapDay:       reward.SnapDay,
+		RewardType:    reward.RewardType,
+		Original:      originalAmount,
+		Deduction:     deductAmount,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+	if err := tx.Create(&logRecord).Error; err != nil {
+		return fmt.Errorf("写入扣减日志失败 地址 %s: %w", reward.NativeAccount, err)
+	}
+	return nil
+}
+
+// insertRewardRecord 将奖励记录写入 t_stake_reward，冲突则跳过。
+func (l *StakeSnapShotLogic) insertRewardRecord(tx *gorm.DB, reward model.StakeReward) error {
+	return tx.Table(model.TableNameStakeReward).Clauses(
+		clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "native_account"},
+				{Name: "snap_day"},
+				{Name: "reward_type"},
+				{Name: "starred"},
+			},
+			DoNothing: true,
+		}).Create(&reward).Error
 }
