@@ -28,21 +28,21 @@ type ServiceContext struct {
 	TaskMgr           *task.TaskManager
 
 	// pos业务配置
-	PosStarLevelRule map[int32]model.PosStarLevelRule
-	PosRewardConfig  *model.PosRewardConfig
-	PosWhiteListMap  map[string]model.PosStarWhitelist
+	PosStarLevelRule map[int32]model.PosStarLevelRule  // pos 星级用户等级配置
+	PosRewardConfig  *model.PosRewardConfig            // pos 奖励发放配置
+	PosWhiteListMap  map[string]model.PosStarWhitelist // pos 星级用户白名单
 
 	// stake业务配置
-	StakeAmmConfig     *model.StakeAmmConfig
-	StakeRewardConfig  *model.StakeRewardConfig
-	LeaderRewardConfig *model.StakeLeaderRewardConfig
-	StakeFixConfig     map[int32]model.StakeFixRateConfig
-	StakeInviteRate    map[int32]model.StakeInviteRate
-	StakeStarLevelRule map[int32]model.StakeStarLevelRule
-	TotalAreaLeaders   []model.StakeTotalLeader
-	StakeTokenPoolMap  map[string]model.StakeTokenPool
-	StakeDistLevel     int32
-	StakeStarWhitelist map[string]model.StakeStarWhitelist
+	StakeAmmConfig     *model.StakeAmmConfig               // stake amm 做市地址
+	StakeRewardConfig  *model.StakeRewardConfig            // stake 普通用户奖励发放配置
+	LeaderRewardConfig *model.StakeLeaderRewardConfig      // stake 区域经理(领导)奖励发放配置
+	StakeFixConfig     map[int32]model.StakeFixRateConfig  // stake 每日固定利息配置
+	StakeInviteRate    map[int32]model.StakeInviteRate     // stake 邀请人奖励配置
+	StakeStarLevelRule map[int32]model.StakeStarLevelRule  // stake 星级用户配置
+	TotalAreaLeaders   []model.StakeTotalLeader            // stake 总区域经理(领导)配置
+	StakeTokenPoolMap  map[string]model.StakeTokenPool     // stake token 池配置
+	StakeDistLevel     int32                               // stake 奖励层级配置
+	StakeStarWhitelist map[string]model.StakeStarWhitelist // stake 星级用户白名单
 }
 
 func NewServiceContext() (*ServiceContext, error) {

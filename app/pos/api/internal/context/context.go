@@ -13,24 +13,24 @@ import (
 )
 
 type CoreContext struct {
-	Config  *config.Config
-	DB      *gorm.DB
-	Redis   redis.UniversalClient
-	RedSync redsync.Redsync
-	Ctx     context.Context
+	Config  *config.Config        // 从配置文件读取的基础配置
+	DB      *gorm.DB              // postgres 数据库句柄
+	Redis   redis.UniversalClient // redis 句柄
+	RedSync redsync.Redsync       // redlock 句柄
+	Ctx     context.Context       // 上下文句柄
 
 	// 全局变量
-	RpcClient         *rpc.Client
-	LightHouseAddress solana.PublicKey
-	TokenDecimal      float64
-	KafkaProducer          interface{} // *kafka.Writer，在kafka.go中定义
-	KafkaConsumer          interface{} // *kafka.Reader，消费 ServiceTransaction（base 模块）
-	SnapShotKafkaConsumer  interface{} // *kafka.Reader，消费 PosTopic + StakeTopic
-	BaseClient        *posrpc.BaseClient
+	RpcClient             *rpc.Client        // solana rpc 客户端
+	LightHouseAddress     solana.PublicKey   // light house 指令
+	TokenDecimal          float64            // token 精度基数
+	KafkaProducer         interface{}        // *kafka.Writer，在kafka.go中定义
+	KafkaConsumer         interface{}        // *kafka.Reader，消费 ServiceTransaction（base 模块）
+	SnapShotKafkaConsumer interface{}        // *kafka.Reader，消费 PosTopic + StakeTopic
+	BaseClient            *posrpc.BaseClient // base 模块dubbo 客户端
 
 	// 配置表数据
-	SystemConfig *model.SystemConfig
-	ChainConfig  *model.ChainConfig
-	TokenConfig  *model.TokenConfig
-	FeeTolerance *model.FeeTolerance
+	SystemConfig *model.SystemConfig // 系统配置
+	ChainConfig  *model.ChainConfig  // 链配置
+	TokenConfig  *model.TokenConfig  // token配置
+	FeeTolerance *model.FeeTolerance // 手续费容错配置
 }

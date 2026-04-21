@@ -351,9 +351,29 @@ sequenceDiagram
 9. oshit-go 将广播到 blockchain 的 txId 返回给 user
 10. user 根据 txId 周期性的去查询业务状态 (GetRecord)，如果获取到 state 为1，则结束业务
 
-## 8. 约束
+## 8. 约束与术语
 
-### 8.1 api和数据表
+### 8.1 术语
+
+* solana 地址
+  solana 区块链的system account,用户随机生成1个私钥，然后私钥生成公钥，公钥就是solana地址
+  
+* native account
+  跟solana地址一样  
+
+* token account
+  pda 账户，根据solana地址和token的地址生成的pda账户
+
+* pda account
+  跟solana的pda一样
+
+* 用户
+  在系统里面，用户等于solana地址
+
+* 地址
+  solana区块链的地址
+
+### 8.2 api和数据表
 
 * 数据表的
     * 数据库表的命名和字段命名尽量保持简洁和简短
