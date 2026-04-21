@@ -47,6 +47,11 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 		return
 	}
 
+	// 从记录里取下单时的场次和用户SGT自然日，保证跨日回调时恢复到正确的记录
+	globalQuotaDate := exchangeRecord.CreatedAt.UTC().Truncate(24 * time.Hour)
+	recordSession := exchangeRecord.Session
+	userQuotaDate := exchangeRecord.UserQuotaDate
+
 	if msg.TxSig.Err != nil {
 		if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 			Where("tx_id = ?", txId).
@@ -63,10 +68,9 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 			log.Errorf("%s - 处理Kafka消息，交易 Id %s 失败，解冻积分错误: %v", prefix, txId, err)
 			return
 		}
-		// 解冻用户兑换额度
-		currentDate := time.Now().UTC().Truncate(24 * time.Hour)
+		// 解冻用户兑换额度（使用下单时的SGT自然日定位用户额度记录）
 		if err = dbTx.Table(model.TableNameUserDailyQuota).
-			Where("user_id = ? and quota_date = ?", exchangeRecord.UserID, currentDate).
+			Where("user_id = ? AND quota_date = ?", exchangeRecord.UserID, userQuotaDate).
 			Updates(map[string]interface{}{
 				"frozen_quota":    gorm.Expr("frozen_quota - ?", exchangeRecord.Amount),
 				"available_quota": gorm.Expr("available_quota + ?", exchangeRecord.Amount),
@@ -76,9 +80,9 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 			log.Errorf("%s - 处理Kafka消息，交易 Id %s 失败，解冻用户兑换额度错误: %v", prefix, txId, err)
 			return
 		}
-		// 恢复全局兑换额度
+		// 恢复全局兑换额度（使用下单时的 quota_date + session 定位对应场次记录）
 		if err = dbTx.Table(model.TableNameCampaignQuoteLimit).
-			Where("quota_date = ?", currentDate).
+			Where("quota_date = ? AND session = ?", globalQuotaDate, recordSession).
 			Updates(map[string]interface{}{
 				"daily_limit": gorm.Expr("daily_limit + ?", exchangeRecord.Amount),
 				"updated_at":  time.Now(),
@@ -103,10 +107,9 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 			log.Errorf("%s - 处理Kafka消息，交易 Id %s 成功，消耗解冻积分错误: %v", prefix, txId, err)
 			return
 		}
-		// 扣除用户冻结额度（冻结额度转为已使用）
-		currentDate := time.Now().UTC().Truncate(24 * time.Hour)
+		// 扣除用户冻结额度（使用下单时的SGT自然日定位用户额度记录）
 		if err = dbTx.Table(model.TableNameUserDailyQuota).
-			Where("user_id = ? and quota_date = ?", exchangeRecord.UserID, currentDate).
+			Where("user_id = ? AND quota_date = ?", exchangeRecord.UserID, userQuotaDate).
 			Updates(map[string]interface{}{
 				"frozen_quota": gorm.Expr("frozen_quota - ?", exchangeRecord.Amount),
 				"updated_at":   time.Now(),
@@ -172,7 +175,33 @@ func (l *CampaignLogic) HandleExpiredTx(msg entity.NewExpiredTx) {
 	flowId := uint64(exchangeRecord.ScoreFlowID)
 	if _, err := l.srvCtx.CampaignClientV1.UnfreezeScore(userId, txId, flowId, ExchangeSys, ExchangeBiz, ReasonUnFreeze); err != nil {
 		dbTx.Rollback()
-		log.Errorf("%s - 处理Kafka消息，交易 Id %s 失败，解冻积分错误: %v", prefix, txId, err)
+		log.Errorf("%s - 处理Kafka消息，交易 Id %s 超时，解冻积分错误: %v", prefix, txId, err)
+		return
+	}
+
+	// 解冻用户兑换额度（使用下单时的SGT自然日定位用户额度记录）
+	globalQuotaDate := exchangeRecord.CreatedAt.UTC().Truncate(24 * time.Hour)
+	if err = dbTx.Table(model.TableNameUserDailyQuota).
+		Where("user_id = ? AND quota_date = ?", exchangeRecord.UserID, exchangeRecord.UserQuotaDate).
+		Updates(map[string]interface{}{
+			"frozen_quota":    gorm.Expr("frozen_quota - ?", exchangeRecord.Amount),
+			"available_quota": gorm.Expr("available_quota + ?", exchangeRecord.Amount),
+			"updated_at":      time.Now(),
+		}).Error; err != nil {
+		dbTx.Rollback()
+		log.Errorf("%s - 处理Kafka消息，交易 Id %s 超时，解冻用户兑换额度错误: %v", prefix, txId, err)
+		return
+	}
+
+	// 恢复全局兑换额度（使用下单时的 quota_date + session 定位对应场次记录）
+	if err = dbTx.Table(model.TableNameCampaignQuoteLimit).
+		Where("quota_date = ? AND session = ?", globalQuotaDate, exchangeRecord.Session).
+		Updates(map[string]interface{}{
+			"daily_limit": gorm.Expr("daily_limit + ?", exchangeRecord.Amount),
+			"updated_at":  time.Now(),
+		}).Error; err != nil {
+		dbTx.Rollback()
+		log.Errorf("%s - 处理Kafka消息，交易 Id %s 超时，恢复全局兑换额度错误: %v", prefix, txId, err)
 		return
 	}
 
@@ -210,6 +239,8 @@ func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedSer
 		Amount:         amount,
 		Score:          score,
 		QuoteState:     int32(constants.QuoteStateInit),
+		Session:        globalLimit.Session,    // 记录下单时的全局场次，Kafka回调时恢复对应session额度
+		UserQuotaDate:  userQuota.QuotaDate,    // 记录下单时的SGT自然日，Kafka回调时恢复用户额度
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}
@@ -233,7 +264,7 @@ func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedSer
 		return err
 	}
 
-	// 更新全局兑换额度
+	// 更新全局兑换额度（按 id 精确定位本场次记录）
 	globalLimit.DailyLimit -= tokenAmount
 	globalLimit.UpdatedAt = time.Now()
 	if err := dbTx.Table(model.TableNameCampaignQuoteLimit).Where("id = ?", globalLimit.ID).Updates(map[string]interface{}{
@@ -244,6 +275,7 @@ func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedSer
 		log.Errorf("兑换Campaign积分为token - 更新全局兑换额度错误: %v", err)
 		return err
 	}
+
 
 	// 提交事务
 	if err := dbTx.Commit().Error; err != nil {

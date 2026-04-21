@@ -13,10 +13,11 @@ const TableNameCampaignQuoteLimit = "t_campaign_quote_limit"
 // CampaignQuoteLimit mapped from table <t_campaign_quote_limit>
 type CampaignQuoteLimit struct {
 	ID         int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
-	DailyLimit float64   `gorm:"column:daily_limit;not null" json:"daily_limit"`
+	DailyLimit float64   `gorm:"column:daily_limit;not null;default:500000000" json:"daily_limit"`
 	QuotaDate  time.Time `gorm:"column:quota_date;not null;default:CURRENT_DATE" json:"quota_date"`
 	CreatedAt  time.Time `gorm:"column:created_at;default:now()" json:"created_at"`
 	UpdatedAt  time.Time `gorm:"column:updated_at;default:now()" json:"updated_at"`
+	Session    int16     `gorm:"column:session;not null" json:"session"`
 }
 
 // TableName CampaignQuoteLimit's table name

@@ -25,6 +25,8 @@ type CampaignQuoteRecord struct {
 	QuoteState     int32     `gorm:"column:quote_state" json:"quote_state"`
 	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	Session        int16     `gorm:"column:session;not null" json:"session"`
+	UserQuotaDate  time.Time `gorm:"column:user_quota_date;not null;default:CURRENT_DATE" json:"user_quota_date"`
 }
 
 // TableName CampaignQuoteRecord's table name

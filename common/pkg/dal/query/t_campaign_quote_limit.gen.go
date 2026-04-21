@@ -33,6 +33,7 @@ func newCampaignQuoteLimit(db *gorm.DB, opts ...gen.DOOption) campaignQuoteLimit
 	_campaignQuoteLimit.QuotaDate = field.NewTime(tableName, "quota_date")
 	_campaignQuoteLimit.CreatedAt = field.NewTime(tableName, "created_at")
 	_campaignQuoteLimit.UpdatedAt = field.NewTime(tableName, "updated_at")
+	_campaignQuoteLimit.Session = field.NewInt16(tableName, "session")
 
 	_campaignQuoteLimit.fillFieldMap()
 
@@ -48,6 +49,7 @@ type campaignQuoteLimit struct {
 	QuotaDate  field.Time
 	CreatedAt  field.Time
 	UpdatedAt  field.Time
+	Session    field.Int16
 
 	fieldMap map[string]field.Expr
 }
@@ -69,6 +71,7 @@ func (c *campaignQuoteLimit) updateTableName(table string) *campaignQuoteLimit {
 	c.QuotaDate = field.NewTime(table, "quota_date")
 	c.CreatedAt = field.NewTime(table, "created_at")
 	c.UpdatedAt = field.NewTime(table, "updated_at")
+	c.Session = field.NewInt16(table, "session")
 
 	c.fillFieldMap()
 
@@ -97,12 +100,13 @@ func (c *campaignQuoteLimit) GetFieldByName(fieldName string) (field.OrderExpr, 
 }
 
 func (c *campaignQuoteLimit) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 5)
+	c.fieldMap = make(map[string]field.Expr, 6)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["daily_limit"] = c.DailyLimit
 	c.fieldMap["quota_date"] = c.QuotaDate
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
+	c.fieldMap["session"] = c.Session
 }
 
 func (c campaignQuoteLimit) clone(db *gorm.DB) campaignQuoteLimit {

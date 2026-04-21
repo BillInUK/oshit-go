@@ -15,9 +15,9 @@ type UserDailyQuota struct {
 	ID             int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
 	UserID         string    `gorm:"column:user_id;not null" json:"user_id"`
 	QuotaDate      time.Time `gorm:"column:quota_date;not null" json:"quota_date"`
-	MaxQuota       float64   `gorm:"column:max_quota;not null;default:50000000" json:"max_quota"`
+	MaxQuota       float64   `gorm:"column:max_quota;not null;default:30000000" json:"max_quota"`
 	FrozenQuota    float64   `gorm:"column:frozen_quota;not null" json:"frozen_quota"`
-	AvailableQuota float64   `gorm:"column:available_quota;not null;default:50000000" json:"available_quota"`
+	AvailableQuota float64   `gorm:"column:available_quota;not null;default:30000000" json:"available_quota"`
 	CreatedAt      time.Time `gorm:"column:created_at;default:now()" json:"created_at"`
 	UpdatedAt      time.Time `gorm:"column:updated_at;default:now()" json:"updated_at"`
 }

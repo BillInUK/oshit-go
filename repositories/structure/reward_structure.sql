@@ -199,31 +199,31 @@ CREATE TABLE public.t_campaign_quote_config
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
--- 全局每日兑换限额表
+-- 全局每日兑换限额表（每天分2个session，SGT 08:00/20:00 各重置一次）
 -- 对应旧工程 t_global_daily_exchange_limit
--- todo: 添加 session，增加每天兑换2次的做法
 DROP TABLE IF EXISTS t_campaign_quote_limit;
 CREATE TABLE t_campaign_quote_limit
 (
     id          BIGSERIAL PRIMARY KEY,
-    daily_limit NUMERIC(78, 0) NOT NULL  DEFAULT 0,            -- 每日全局最大兑换量（单位：1/1000 token），对应 daily_limit
-    quota_date  DATE           NOT NULL  DEFAULT CURRENT_DATE, -- 兑换日期
+    daily_limit NUMERIC(78, 0) NOT NULL  DEFAULT 500000000,   -- 每个session全局可兑换量（原始值，500000 token * 1000 = 500000000）
+    quota_date  DATE           NOT NULL  DEFAULT CURRENT_DATE, -- UTC自然日（与session共同定位唯一记录）
+    session     SMALLINT       NOT NULL  DEFAULT 0,            -- 0=早上场次(UTC 00:00-11:59 / SGT 08:00-19:59), 1=晚上场次(UTC 12:00-23:59 / SGT 20:00-07:59)
     created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE (quota_date)
+    UNIQUE (quota_date, session)
 );
 
--- 用户每日兑换额度表
+-- 用户每日兑换额度表（按SGT自然日计算，不随session重置）
 -- 对应旧工程 t_user_daily_exchange_quota
 DROP TABLE IF EXISTS t_user_daily_quota;
 CREATE TABLE t_user_daily_quota
 (
     id              BIGSERIAL PRIMARY KEY,
-    user_id         VARCHAR(64)    NOT NULL,                   -- 用户ID（与 t_sol_exchange_campaign_score_to_token_record 中的UserId对应）
-    quota_date      DATE           NOT NULL,                   -- 日期（天）
-    max_quota       NUMERIC(78, 0) NOT NULL  DEFAULT 50000000, -- 最大兑换额度（默认500000，token decimals=3，数据库存50000000）
-    frozen_quota    NUMERIC(78, 0) NOT NULL  DEFAULT 0,        -- 冻结兑换额度
-    available_quota NUMERIC(78, 0) NOT NULL  DEFAULT 50000000, -- 可用兑换额度（初始等于max_quota）
+    user_id         VARCHAR(64)    NOT NULL,                   -- 用户ID
+    quota_date      DATE           NOT NULL,                   -- SGT自然日（UTC+8），用于跨场次累计限额
+    max_quota       NUMERIC(78, 0) NOT NULL  DEFAULT 30000000, -- 每日最大兑换额度（30000 token * 1000 = 30000000）
+    frozen_quota    NUMERIC(78, 0) NOT NULL  DEFAULT 0,        -- 冻结兑换额度（交易待确认中）
+    available_quota NUMERIC(78, 0) NOT NULL  DEFAULT 30000000, -- 可用兑换额度
     created_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE (user_id, quota_date)
@@ -245,6 +245,8 @@ CREATE TABLE public.t_campaign_quote_record
     amount          NUMERIC(78, 0) NOT NULL,                        -- 获取的token额度，对应 Amount
     score           NUMERIC(78, 0) NOT NULL,                        -- 兑换的积分额度，对应 Score
     quote_state     INT,                                            -- 状态,-1.失败 0.初始化 1.成功，对应 State
+    session         SMALLINT       NOT NULL     DEFAULT 0,          -- 下单时的全局场次（0=早/1=晚），用于Kafka回调时精确恢复对应session额度
+    user_quota_date DATE           NOT NULL     DEFAULT CURRENT_DATE, -- 下单时用户所在的SGT自然日，用于Kafka回调时精确恢复用户额度
     created_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (record_id)

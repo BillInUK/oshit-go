@@ -41,6 +41,8 @@ func newCampaignQuoteRecord(db *gorm.DB, opts ...gen.DOOption) campaignQuoteReco
 	_campaignQuoteRecord.QuoteState = field.NewInt32(tableName, "quote_state")
 	_campaignQuoteRecord.CreatedAt = field.NewTime(tableName, "created_at")
 	_campaignQuoteRecord.UpdatedAt = field.NewTime(tableName, "updated_at")
+	_campaignQuoteRecord.Session = field.NewInt16(tableName, "session")
+	_campaignQuoteRecord.UserQuotaDate = field.NewTime(tableName, "user_quota_date")
 
 	_campaignQuoteRecord.fillFieldMap()
 
@@ -64,6 +66,8 @@ type campaignQuoteRecord struct {
 	QuoteState     field.Int32
 	CreatedAt      field.Time
 	UpdatedAt      field.Time
+	Session        field.Int16
+	UserQuotaDate  field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -93,6 +97,8 @@ func (c *campaignQuoteRecord) updateTableName(table string) *campaignQuoteRecord
 	c.QuoteState = field.NewInt32(table, "quote_state")
 	c.CreatedAt = field.NewTime(table, "created_at")
 	c.UpdatedAt = field.NewTime(table, "updated_at")
+	c.Session = field.NewInt16(table, "session")
+	c.UserQuotaDate = field.NewTime(table, "user_quota_date")
 
 	c.fillFieldMap()
 
@@ -121,7 +127,7 @@ func (c *campaignQuoteRecord) GetFieldByName(fieldName string) (field.OrderExpr,
 }
 
 func (c *campaignQuoteRecord) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 13)
+	c.fieldMap = make(map[string]field.Expr, 15)
 	c.fieldMap["record_id"] = c.RecordID
 	c.fieldMap["reward_account"] = c.RewardAccount
 	c.fieldMap["receipt_account"] = c.ReceiptAccount
@@ -135,6 +141,8 @@ func (c *campaignQuoteRecord) fillFieldMap() {
 	c.fieldMap["quote_state"] = c.QuoteState
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
+	c.fieldMap["session"] = c.Session
+	c.fieldMap["user_quota_date"] = c.UserQuotaDate
 }
 
 func (c campaignQuoteRecord) clone(db *gorm.DB) campaignQuoteRecord {

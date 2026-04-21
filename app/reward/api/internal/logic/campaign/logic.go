@@ -60,25 +60,56 @@ func NewCampaignLogic(ctx context.Context, srvCtx *svc.ServiceContext) *Campaign
 	}
 }
 
+// currentSession 根据当前 UTC 时间返回全局场次和 UTC 自然日起点。
+// session=0: UTC 00:00-11:59（SGT 08:00-19:59，早上场次）
+// session=1: UTC 12:00-23:59（SGT 20:00-07:59，晚上场次）
+func currentSession() (session int16, globalQuotaDate time.Time) {
+	utcNow := time.Now().UTC()
+	globalQuotaDate = utcNow.Truncate(24 * time.Hour)
+	if utcNow.Hour() < 12 {
+		session = 0
+	} else {
+		session = 1
+	}
+	return
+}
+
+// sgtNaturalDay 返回当前时刻对应的新加坡时间（SGT, UTC+8）自然日起点（以 UTC 零点表示）。
+// 用于用户每日限额的日期维度，不随 session 重置。
+func sgtNaturalDay() time.Time {
+	sgLoc := time.FixedZone("SGT", 8*60*60)
+	sgtNow := time.Now().In(sgLoc)
+	y, m, d := sgtNow.Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
+}
+
 func (l *CampaignLogic) GetExchangeQuotaInfo(ctx context.Context, userId uint64) (*model.UserDailyQuota, *model.CampaignQuoteLimit, error) {
 	prefix := fmt.Sprintf("%s 查询当天额度信息 - 用户id: %d", l.prefix, userId)
 
-	// 1. 查询当天的全局token兑换额度
-	currentDate := time.Now().UTC().Truncate(24 * time.Hour)
+	// 1. 确定当前场次和各维度日期
+	session, globalQuotaDate := currentSession()
+	userQuotaDate := sgtNaturalDay()
+
 	q := query.Use(l.db)
+
+	// 2. 查询当前场次的全局额度，不存在则懒创建
 	globalLimitDo := q.CampaignQuoteLimit.WithContext(ctx)
-	globalLimit, err := globalLimitDo.Where(q.CampaignQuoteLimit.QuotaDate.Eq(currentDate)).First()
+	globalLimit, err := globalLimitDo.Where(
+		q.CampaignQuoteLimit.QuotaDate.Eq(globalQuotaDate),
+		q.CampaignQuoteLimit.Session.Eq(int16(session)),
+	).First()
 	if err != nil {
-		// 如果当天没有记录，创建一条默认记录
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			globalLimit = &model.CampaignQuoteLimit{
-				DailyLimit: 50000000,
-				QuotaDate:  currentDate,
+				DailyLimit: 500000000,
+				QuotaDate:  globalQuotaDate,
+				Session:    session,
 				CreatedAt:  time.Now(),
 				UpdatedAt:  time.Now(),
 			}
 			if err = globalLimitDo.Create(globalLimit); err != nil {
-
+				log.Errorf("%s 创建全局兑换限额记录错误: %v", prefix, err)
+				return nil, nil, fmt.Errorf("create global daily limit error")
 			}
 		} else {
 			log.Errorf("%s 查询全局兑换限额错误: %v", prefix, err)
@@ -86,27 +117,27 @@ func (l *CampaignLogic) GetExchangeQuotaInfo(ctx context.Context, userId uint64)
 		}
 	}
 
-	// 2. 查询用户的兑换额度是否足够
+	// 3. 查询用户当天（SGT自然日）额度，不存在则懒创建
 	userIdStr := strconv.FormatUint(userId, 10)
 	userQuotaDo := q.UserDailyQuota.WithContext(ctx)
 	userQuota, err := userQuotaDo.Where(
 		q.UserDailyQuota.UserID.Eq(userIdStr),
-		q.UserDailyQuota.QuotaDate.Eq(currentDate),
+		q.UserDailyQuota.QuotaDate.Eq(userQuotaDate),
 	).First()
 	if err != nil {
-		// 如果用户当天没有记录，创建一条默认记录
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			userQuota = &model.UserDailyQuota{
 				UserID:         userIdStr,
-				QuotaDate:      currentDate,
-				MaxQuota:       50000000,
+				QuotaDate:      userQuotaDate,
+				MaxQuota:       30000000,
 				FrozenQuota:    0,
-				AvailableQuota: 50000000,
+				AvailableQuota: 30000000,
 				CreatedAt:      time.Now(),
 				UpdatedAt:      time.Now(),
 			}
 			if err = userQuotaDo.Create(userQuota); err != nil {
-
+				log.Errorf("%s 创建用户兑换额度记录错误: %v", prefix, err)
+				return nil, nil, fmt.Errorf("create user daily quota error")
 			}
 		} else {
 			log.Errorf("%s 查询用户兑换额度错误: %v", prefix, err)
