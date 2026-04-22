@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/spf13/viper"
+	"os"
 )
 
 type Config struct {
@@ -56,7 +57,11 @@ type KafkaConfig struct {
 }
 
 func LoadConfig() (*Config, error) {
-	viper.SetConfigFile("./etc/base.yaml")
+	path := os.Getenv("APP_CONF")
+	if path == "" {
+		path = "./etc/application.yaml"
+	}
+	viper.SetConfigFile(path)
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {

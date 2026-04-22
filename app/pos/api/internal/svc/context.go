@@ -207,7 +207,13 @@ func (s *ServiceContext) initBaseClient() error {
 		return fmt.Errorf("nacos server config is empty")
 	}
 	nacosAddr := fmt.Sprintf("%s:%d", nacosServers[0].Host, nacosServers[0].Port)
-	cli, err := posrpc.NewBaseClient(nacosAddr, s.Config.App.Name)
+	cli, err := posrpc.NewBaseClient(
+		nacosAddr,
+		s.Config.App.Name,
+		s.Config.Nacos.ClientConfig.NamespaceId,
+		s.Config.Nacos.ClientConfig.Username,
+		s.Config.Nacos.ClientConfig.Password,
+	)
 	if err != nil {
 		return fmt.Errorf("init base client error: %w", err)
 	}

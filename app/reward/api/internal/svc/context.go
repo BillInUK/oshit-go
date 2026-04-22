@@ -31,10 +31,10 @@ type ServiceContext struct {
 	GiveTokenConfig     *model.GiveTokenConfig
 	CampaignQuoteConfig *model.CampaignQuoteConfig
 	RewardCodeConfig    *model.RewardCodeConfig
-	RewardKeyMap        map[string]solana.PrivateKey
-	LightHouseAddress   solana.PublicKey
-	TaskMgr             *task.TaskManager
-	CampaignClientV1    *rewardrpc.CampaignClient
+	//RewardKeyMap        map[string]solana.PrivateKey
+	LightHouseAddress solana.PublicKey
+	TaskMgr           *task.TaskManager
+	CampaignClientV1  *rewardrpc.CampaignClient
 }
 
 const (
@@ -232,27 +232,27 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 	s.RewardCodeConfig = &rewardCodeConfig
 
 	// 加载私钥
-	s.RewardKeyMap = make(map[string]solana.PrivateKey)
+	//s.RewardKeyMap = make(map[string]solana.PrivateKey)
 	// 初始化所有业务的发送奖励私钥
-	table := s.DB.Table(model.TableNameRewardKeyConfig)
-	var rewardKeyConfigs []model.RewardKeyConfig
-	if err := table.Find(&rewardKeyConfigs).Error; err != nil {
-		return fmt.Errorf("can not load encrypted reward key config from database")
-	}
-	if len(rewardKeyConfigs) == 0 {
-		panic("can not load any reward key from database")
-	}
-	for _, keyConfig := range rewardKeyConfigs {
-		privateKey, err := utils.JasyptDecrypt(keyConfig.EncryptedKey, decryptPwd, decryptAlgo)
-		if err != nil {
-			return fmt.Errorf("decrypt service %s private key from database error: %v", keyConfig.Service, err)
-		}
-		if decryptedKey, err := solana.PrivateKeyFromBase58(privateKey); err != nil {
-			return fmt.Errorf("malformed service %s private key error: %v", keyConfig.Service, err)
-		} else {
-			s.RewardKeyMap[keyConfig.Service] = decryptedKey
-		}
-	}
+	//table := s.DB.Table(model.TableNameRewardKeyConfig)
+	//var rewardKeyConfigs []model.RewardKeyConfig
+	//if err := table.Find(&rewardKeyConfigs).Error; err != nil {
+	//	return fmt.Errorf("can not load encrypted reward key config from database")
+	//}
+	//if len(rewardKeyConfigs) == 0 {
+	//	panic("can not load any reward key from database")
+	//}
+	//for _, keyConfig := range rewardKeyConfigs {
+	//	privateKey, err := utils.JasyptDecrypt(keyConfig.EncryptedKey, decryptPwd, decryptAlgo)
+	//	if err != nil {
+	//		return fmt.Errorf("decrypt service %s private key from database error: %v", keyConfig.Service, err)
+	//	}
+	//	if decryptedKey, err := solana.PrivateKeyFromBase58(privateKey); err != nil {
+	//		return fmt.Errorf("malformed service %s private key error: %v", keyConfig.Service, err)
+	//	} else {
+	//		s.RewardKeyMap[keyConfig.Service] = decryptedKey
+	//	}
+	//}
 	return nil
 }
 
@@ -276,7 +276,13 @@ func (s *ServiceContext) initBaseClient() error {
 		return fmt.Errorf("nacos server config is empty")
 	}
 	nacosAddr := fmt.Sprintf("%s:%d", nacosServers[0].Host, nacosServers[0].Port)
-	cli, err := rewardrpc.NewBaseClient(nacosAddr, s.Config.App.Name)
+	cli, err := rewardrpc.NewBaseClient(
+		nacosAddr,
+		s.Config.App.Name,
+		s.Config.Nacos.ClientConfig.NamespaceId,
+		s.Config.Nacos.ClientConfig.Username,
+		s.Config.Nacos.ClientConfig.Password,
+	)
 	if err != nil {
 		return fmt.Errorf("init base client error: %w", err)
 	}

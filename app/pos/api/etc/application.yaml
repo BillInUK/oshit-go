@@ -23,6 +23,8 @@ kafka:
     group_id: "pos-service"
     topics:
       - "ServiceTransaction"
+      - "StakeTopic"
+      - "PosTopic"
 
 nacos:
   server_config:                    # Nacos服务端配置（集群模式可添加多个server_config）

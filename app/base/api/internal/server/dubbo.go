@@ -18,12 +18,21 @@ func StartDubboServer(svcCtx *svc.ServiceContext) {
 	cfg := svcCtx.Config.Dubbo
 	nacosAddr := fmt.Sprintf("%s:%d", cfg.Nacos.Host, cfg.Nacos.Port)
 
+	registryOpts := []registry.Option{
+		registry.WithNacos(),
+		registry.WithAddress(nacosAddr),
+	}
+	if cfg.Nacos.Namespace != "" {
+		registryOpts = append(registryOpts, registry.WithNamespace(cfg.Nacos.Namespace))
+	}
+	if cfg.Nacos.Username != "" {
+		registryOpts = append(registryOpts, registry.WithUsername(cfg.Nacos.Username))
+		registryOpts = append(registryOpts, registry.WithPassword(cfg.Nacos.Password))
+	}
+
 	ins, err := dubbo.NewInstance(
 		dubbo.WithName(cfg.Protocol.Name),
-		dubbo.WithRegistry(
-			registry.WithNacos(),
-			registry.WithAddress(nacosAddr),
-		),
+		dubbo.WithRegistry(registryOpts...),
 		dubbo.WithProtocol(
 			protocol.WithTriple(),
 			protocol.WithPort(cfg.Protocol.Port),

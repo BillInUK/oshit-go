@@ -36,8 +36,11 @@ const (
 	DavidPrivate      = "4LRdCeZ4EYHsGtRr99zbh6WLZCa7jACVuhunzrbgyKvP4NxKuHPnaJ52t1AKzREbaD5n2NMsKYkdPMcnYRMacjgU"
 	DavidNativePubKey = "JAZtFeZfLeeVtWS4vrruCpTa5LdASRDJuMe7yLKbkJk"
 
-	BaseURL = "http://localhost:1100/base"
-	PosURL  = "http://localhost:1300/snap"
+	//BaseURL = "http://localhost:1100/base"
+	//SnapURL  = "http://localhost:1300/snap"
+
+	BaseURL = "https://beta.testnet.oshit.io/meme/base/api/v1"
+	SnapURL = "https://beta.testnet.oshit.io/meme/snap/api/v1"
 
 	systemTransferCU uint64 = 500 // System.Transfer 固定预留 CU
 )
@@ -182,7 +185,7 @@ func getInstUnits() (*InstUnitsRsp, error) {
 // getStakeRewardRecords 查询未领取的 stake 奖励列表（需要 JWT）
 func getStakeRewardRecords(jwtToken string) ([]model.StakeReward, error) {
 	rsp, err := postJsonRequest[[]model.StakeReward](
-		PosURL+"/stake/reward/record",
+		SnapURL+"/stake/reward/record",
 		struct{}{},
 		map[string]string{"Authorization": "Bearer " + jwtToken},
 	)
@@ -195,7 +198,7 @@ func getStakeRewardRecords(jwtToken string) ([]model.StakeReward, error) {
 // getStakeRewardTxInfo 获取领取交易所需参数（需要 JWT）
 func getStakeRewardTxInfo(jwtToken string) (*types.ClaimStakeRewardTxInfo, error) {
 	rsp, err := postJsonRequest[types.ClaimStakeRewardTxInfo](
-		PosURL+"/stake/reward/tx-info",
+		SnapURL+"/stake/reward/tx-info",
 		struct{}{},
 		map[string]string{"Authorization": "Bearer " + jwtToken},
 	)
@@ -208,7 +211,7 @@ func getStakeRewardTxInfo(jwtToken string) (*types.ClaimStakeRewardTxInfo, error
 // commitStakeRewardTx 提交已签名的领取交易
 func commitStakeRewardTx(encodedTx string) (string, error) {
 	rsp, err := postJsonRequest[string](
-		PosURL+"/stake/reward/commit-tx",
+		SnapURL+"/stake/reward/commit-tx",
 		types.CommitStakeRewardTxReq{EncodedTx: encodedTx},
 		nil,
 	)
@@ -221,7 +224,7 @@ func commitStakeRewardTx(encodedTx string) (string, error) {
 // getStakeClaimRecord 根据 txId 查询领取记录
 func getStakeClaimRecord(txId string) (*model.StakeRewardClaim, error) {
 	rsp, err := postJsonRequest[model.StakeRewardClaim](
-		PosURL+"/stake/reward/claim-record",
+		SnapURL+"/stake/reward/claim-record",
 		struct {
 			TxId string `json:"txId"`
 		}{TxId: txId},

@@ -1,5 +1,5 @@
 -- 质押AMM配置
-insert into public.t_stake_amm_config(quote_token,public_key)values('SOL','46uzvWDstrwNtEpBSFrcVPx4ZaTMDpjarQYWpq82Z58p');
+insert into public.t_stake_amm_config(quote_token,public_key)values('solana','46uzvWDstrwNtEpBSFrcVPx4ZaTMDpjarQYWpq82Z58p');
 -- 质押池配置
 insert into public.t_stake_token_pool(source_account,from_token_account)values('Raydium','Gh6MjRrJFBU9HcYMYKBbaD8fX1dv3CjGtDDhtVThD9v3');
 -- 质押每日固定利息

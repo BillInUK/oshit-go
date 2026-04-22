@@ -1,34 +1,23 @@
-.PHONY: build run test clean
+.PHONY: build build-base build-reward build-pos clean
 
-# 构建所有服务
-build:
-	@echo "Building all services..."
-	cd app/account/api && go build -o ../../../bin/account-api ./account.go
-	cd app/account/rpc && go build -o ../../../bin/account-rpc ./account.go
-	cd app/order/api && go build -o ../../../bin/order-api ./order.go
-	cd app/order/rpc && go build -o ../../../bin/order-rpc ./order.go
+# 交叉编译目标：Linux amd64（部署到服务器）
+GOOS   := linux
+GOARCH := amd64
+OUTDIR := ./dist
 
-# 运行所有服务
-run: build
-	@echo "Starting all services..."
-	./bin/account-api &
-	./bin/account-rpc &
-	./bin/order-api &
-	./bin/order-rpc &
-	@echo "All services started"
+build: build-base build-reward build-pos
 
-# 清理
+build-base:
+	@echo "Building base..."
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o $(OUTDIR)/base ./app/base/api
+
+build-reward:
+	@echo "Building reward..."
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o $(OUTDIR)/reward ./app/reward/api
+
+build-pos:
+	@echo "Building pos..."
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o $(OUTDIR)/pos ./app/pos/api
+
 clean:
-	rm -rf bin/*
-	find . -name "*.out" -delete
-
-# 测试
-test:
-	go test ./...
-
-# Docker 构建
-docker-build:
-	docker build -f deploy/dockerfiles/Dockerfile-accountapi -t account-api:latest .
-	docker build -f deploy/dockerfiles/Dockerfile-accountrpc -t account-rpc:latest .
-	docker build -f deploy/dockerfiles/Dockerfile-orderapi -t order-api:latest .
-	docker build -f deploy/dockerfiles/Dockerfile-orderrpc -t order-rpc:latest .
+	rm -rf $(OUTDIR)

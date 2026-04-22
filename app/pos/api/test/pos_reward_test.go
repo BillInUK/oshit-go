@@ -23,7 +23,7 @@ import (
 // getPosRewardConfig 查询 pos 奖励配置（无需 JWT）
 func getPosRewardConfig() (*model.PosRewardConfig, error) {
 	rsp, err := postJsonRequest[model.PosRewardConfig](
-		PosURL+"/pos/reward/config",
+		SnapURL+"/pos/reward/config",
 		struct{}{},
 		nil,
 	)
@@ -36,7 +36,7 @@ func getPosRewardConfig() (*model.PosRewardConfig, error) {
 // getPosRewardRecords 查询当日未领取的 pos 奖励列表（需要 JWT）
 func getPosRewardRecords(jwtToken string) ([]model.PosReward, error) {
 	rsp, err := postJsonRequest[[]model.PosReward](
-		PosURL+"/pos/reward/record",
+		SnapURL+"/pos/reward/record",
 		struct{}{},
 		map[string]string{"Authorization": "Bearer " + jwtToken},
 	)
@@ -49,7 +49,7 @@ func getPosRewardRecords(jwtToken string) ([]model.PosReward, error) {
 // getPosRewardTxInfo 获取领取交易所需参数（需要 JWT）
 func getPosRewardTxInfo(jwtToken string) (*types.ClaimPosRewardTxInfo, error) {
 	rsp, err := postJsonRequest[types.ClaimPosRewardTxInfo](
-		PosURL+"/pos/reward/tx-info",
+		SnapURL+"/pos/reward/tx-info",
 		struct{}{},
 		map[string]string{"Authorization": "Bearer " + jwtToken},
 	)
@@ -62,7 +62,7 @@ func getPosRewardTxInfo(jwtToken string) (*types.ClaimPosRewardTxInfo, error) {
 // commitPosRewardTx 提交已签名的领取交易
 func commitPosRewardTx(encodedTx string) (string, error) {
 	rsp, err := postJsonRequest[string](
-		PosURL+"/pos/reward/commit-tx",
+		SnapURL+"/pos/reward/commit-tx",
 		types.CommitPosRewardTxReq{EncodedTx: encodedTx},
 		nil,
 	)
@@ -75,7 +75,7 @@ func commitPosRewardTx(encodedTx string) (string, error) {
 // getPosClaimRecord 根据 txId 查询 pos 奖励领取记录
 func getPosClaimRecord(txId string) (*model.PosRewardClaim, error) {
 	rsp, err := postJsonRequest[model.PosRewardClaim](
-		PosURL+"/pos/reward/claim-record",
+		SnapURL+"/pos/reward/claim-record",
 		struct {
 			TxId string `json:"txId"`
 		}{TxId: txId},

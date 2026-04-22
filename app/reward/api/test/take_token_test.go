@@ -24,6 +24,7 @@ const (
 // ---- TakeToken API 调用 ----
 
 func getTakeTokenTxInfo(req types.GetTakeTokenTxInfoReq) (*types.TakeTokenTxInfo, error) {
+	fmt.Printf("request url  %s\n", RewardURL+"/take/tx-info")
 	rsp, err := postJsonRequest[types.TakeTokenTxInfo](RewardURL+"/take/tx-info", req, map[string]string{})
 	if err != nil {
 		return nil, err

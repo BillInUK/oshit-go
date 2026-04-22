@@ -23,6 +23,8 @@ kafka:
   brokers:
     - "localhost:9092"
 
+# testnet g5vlO5g_S6y0pIOujou96w
+
 dubbo:
   protocol:
     name: "base-api"

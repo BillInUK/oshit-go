@@ -20,7 +20,7 @@ import (
 // ============================================================
 
 const (
-	StakingProgramIDStr = "As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws"
+	StakingProgramIDStr = "CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6"
 
 	// devnet 测试环境下管理员与用户使用同一密钥
 	StakingAdminPrivate = "5LCaLqUSWKaD95BsR6sNQ4A62rCoADsxVsfYqhirEsGa5eNmDZwx1vxWoDTgio8eKT3K9HHwj7b5KfaVjYEsin6a"
@@ -595,7 +595,7 @@ func TestSubmitStakeTokenViaBackend(t *testing.T) {
 
 	// 5. 提交到后端接口
 	rsp, err := postJsonRequest[any](
-		PosURL+"/stake/token/stake",
+		SnapURL+"/stake/token/stake",
 		types.EncodedTxReq{EncodedTx: encodedHex},
 		nil,
 	)
@@ -731,7 +731,7 @@ func TestUnstakeAll(t *testing.T) {
 
 		// 提交到后端 /snap/stake/token/unstake
 		rsp, err := postJsonRequest[any](
-			PosURL+"/stake/token/unstake",
+			SnapURL+"/stake/token/unstake",
 			types.EncodedTxReq{EncodedTx: encodedHex},
 			nil,
 		)
@@ -874,7 +874,7 @@ func TestRestakeAll(t *testing.T) {
 
 		// 提交到后端 /snap/stake/token/restake
 		rsp, err := postJsonRequest[any](
-			PosURL+"/stake/token/restake",
+			SnapURL+"/stake/token/restake",
 			types.EncodedTxReq{EncodedTx: encodedHex},
 			nil,
 		)

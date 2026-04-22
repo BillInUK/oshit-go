@@ -22,13 +22,23 @@ type BaseClient struct {
 //
 // nacosAddr 格式: "127.0.0.1:8848"
 // serviceName 对应 base 模块 dubbo.name 配置，例如 "base-rpc"
-func NewBaseClient(nacosAddr, serviceName string) (*BaseClient, error) {
+// namespace / username / password: 为空时不传（本地开发无需鉴权）
+func NewBaseClient(nacosAddr, serviceName, namespace, username, password string) (*BaseClient, error) {
+	registryOpts := []registry.Option{
+		registry.WithNacos(),
+		registry.WithAddress(nacosAddr),
+	}
+	if namespace != "" {
+		registryOpts = append(registryOpts, registry.WithNamespace(namespace))
+	}
+	if username != "" {
+		registryOpts = append(registryOpts, registry.WithUsername(username))
+		registryOpts = append(registryOpts, registry.WithPassword(password))
+	}
+
 	ins, err := dubbo.NewInstance(
 		dubbo.WithName(serviceName),
-		dubbo.WithRegistry(
-			registry.WithNacos(),
-			registry.WithAddress(nacosAddr),
-		),
+		dubbo.WithRegistry(registryOpts...),
 		dubbo.WithLogger(logger.WithLevel("warn")),
 	)
 	if err != nil {

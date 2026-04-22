@@ -41,8 +41,10 @@ const (
 	RobertPrivate      = "MzJGrbzW1yqSzAAbGLHbSkHKmGFS6kuhACV8wFxePqSwe6rTsv7N3eRVozdJcJSBQAPT6rjtnmoCFxv6YuA5hGq"
 	RobertNativePubKey = "6HLScqNL4EQWLk8DTcB4hXUrHjDkVbeP2a3Sc5VtHozM"
 
-	BaseURL   = "http://localhost:1100/base"
-	RewardURL = "http://localhost:1200/reward"
+	//BaseURL = "http://localhost:1100/base"
+	//RewardURL = "http://localhost:1200/reward"
+	BaseURL   = "https://beta.testnet.oshit.io/meme/base/api/v1"
+	RewardURL = "https://beta.testnet.oshit.io/meme/reward/api/v1"
 )
 
 var rpcClient = rpc.New(RpcUrl)
