@@ -625,7 +625,7 @@ func (l *PosSnapShotLogic) GetGroupTotalFixReward(rootAccount string, snapShotDa
 			select distinct(account)
 			from invite_tree
 		),filtered_rewards as (
-			select * from t_sol_pos_reward where snap_day=cast(? as date) and reward_type=0
+			select * from t_pos_reward where snap_day=cast(? as date) and reward_type=0
 		)
 		select
 			coalesce(sum(fr.reward_amount), 0) as total_reward_amount

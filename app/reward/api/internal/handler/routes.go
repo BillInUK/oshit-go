@@ -6,6 +6,7 @@ import (
 )
 
 func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
+	// 新工程测试环境的 base url: https://beta.testnet.oshit.io/meme/reward/api/v1
 	api := fiberApp.Group("/reward")
 	takeTokenHandler := NewTakeTokenHandler(srvCtx)
 	giveTokenHandler := NewGiveTokenHandler(srvCtx)

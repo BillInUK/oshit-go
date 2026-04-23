@@ -6,6 +6,7 @@ import (
 )
 
 func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
+	// 新工程测试环境的 base url: https://beta.testnet.oshit.io/meme/base/api/v1
 	api := fiberApp.Group("/base")
 
 	/*
@@ -32,11 +33,18 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 	*/
 
 	// 初始化所有handler
+	rpcHandler := NewRpcHandler(srvCtx)
 	authHandler := NewAuthHandler(srvCtx)
 	infoHandler := NewInfoHandler(srvCtx)
 	feeHandler := NewFeeHandler(srvCtx)
 	priceHandler := NewPriceHandler(srvCtx)
 	inviteHandler := NewInviteHandler(srvCtx)
+
+	// rpc路由
+	rpc := api.Group("/rpc")
+	{
+		rpc.Post("/solana", JWTAuthMiddleware, rpcHandler.SolanaRpc) // 旧工程 /sol/config/rpc
+	}
 
 	// 认证路由
 	auth := api.Group("/auth")

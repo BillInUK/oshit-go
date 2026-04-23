@@ -6,6 +6,7 @@ import (
 )
 
 func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
+	// 新工程测试环境的 base url: https://beta.testnet.oshit.io/meme/snap/api/v1
 	api := fiberApp.Group("/snap")
 	posHandler := NewPosHandler(srvCtx)
 	stakeHandler := NewStakeHandler(srvCtx)
@@ -18,7 +19,7 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 		pos.Post("/shot/reset", posHandler.ResetSnapShot) // 旧工程  	/sol/pos/resetStakeSnapShot
 
 		pos.Post("/reward/group-info", JWTAuthMiddleware, posHandler.GetGroupInfo) // 旧工程 /sol/pos/queryGroupInfo
-		pos.Post("/reward/stat", JWTAuthMiddleware, posHandler.GetRewardStat)     // 旧工程 /sol/pos/queryPosRewardDetail
+		pos.Post("/reward/stat", JWTAuthMiddleware, posHandler.GetRewardStat)      // 旧工程 /sol/pos/queryPosRewardDetail
 
 		pos.Post("/reward/config", posHandler.GetConfig)                          // 旧工程 /sol/pos/querySolPosRewardRule 查询pos奖励发放规则
 		pos.Post("/reward/record", JWTAuthMiddleware, posHandler.GetRewardRecord) // 旧工程 /sol/pos/queryPosRewards
