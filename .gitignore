@@ -1,7 +1,11 @@
 .claude/settings.local.json
+.vscode
 .idea/.gitignore
 .idea/dataSources.xml
 .idea/modules.xml
 .idea/oshit-go.iml
 .idea/sqldialects.xml
 .idea/vcs.xml
+ app/base/api/micro-server
+ app/reward/api/micro-server
+ app/pos/api/micro-server
