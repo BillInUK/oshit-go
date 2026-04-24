@@ -173,7 +173,7 @@ VALUES ('pos', 'market buy token', 'HtNfUbDaBamCBPWCFiESkXpewvwVLkwrSWRjjV8FNT7i
 
 INSERT INTO public.t_tx_scan_info
 (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
-VALUES ('pos', 'stake token', 'As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws', 'As9Z52f8Sioqr22KpS4xdzrhicwGwAu6x5SxVaHfvLws', '3BUhdNDeSNFRXLCF4Y3fnVUXE4VXTwXguXPZ6pZteaQqZ9RqZhRTUazXbPUZ6kCtMBXXBsNEaXyUacvL4icqV8mH', '', '454568185', NOW(),NOW());
+VALUES ('pos', 'stake token', 'CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6', 'CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6', '3BUhdNDeSNFRXLCF4Y3fnVUXE4VXTwXguXPZ6pZteaQqZ9RqZhRTUazXbPUZ6kCtMBXXBsNEaXyUacvL4icqV8mH', '', '454568185', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
 (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
@@ -184,23 +184,100 @@ INSERT INTO public.t_tx_scan_info
 VALUES ('pos', 'stake leader reward', '2yRkofKW7xKRbN79MHKGX8HFyuHZEtTJDhTwAQjJHnMX', 'HqAp7uFZAckGA9jKFCZXg7rq1GX9CB2kwpGBKoq5geg6', '29dZDL5PFTaBYdqUz7E3gFBJsLzMsHckgwSiga2y1c2RBL95t2RL4y6PRepaZkfQcqxQhRCpe2RKPDn7UUyL9U7p', '', '453414783',NOW(),NOW());
 
 -- reward服务初始化数据
+delete from t_level_dist;
 insert into t_level_dist(dist_level)values(2);
+
+delete from t_level_ratio;
 insert into t_level_ratio(dist_level,ratio)values(1,10);
 insert into t_level_ratio(dist_level,ratio)values(2,1);
+
+delete from t_discount_rate;
 insert into t_discount_rate(rate)values(1.25);
 
 -- take token 配置
+delete from t_take_token_config;
 insert into public.t_take_token_config(invite_code,reward_account,cost_account,amount,invite_amount,cost_fee_rate,max_cost_fee,is_default,reward_inviter,invited,created_at,updated_at)values(NULL,'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', '6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K', 500000, 1500000, 200,400,true,true,true,NOW(),NOW());
 
 -- give token 配置
+delete from t_give_token_config;
 insert into public.t_give_token_config(reward_account,cost_account,reward_rate,max_valid_reward,valid_rate,created_at,updated_at)values('AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',200,4000000,300,NOW(),NOW());
 
 -- reward code
+delete from t_reward_code_config;
 INSERT INTO public.t_reward_code_config(reward_account,cost_account)VALUES('584AMuM1HkV4wRMMVPZuZy9g9mZbSAcTF7QiBrHJaZFE','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K');
+
+delete from t_reward_code_fee;
 INSERT INTO public.t_reward_code_fee(amount,fee_rate)VALUES(5000000,8);
 INSERT INTO public.t_reward_code_fee(amount,fee_rate)VALUES(1000000,20);
 INSERT INTO public.t_reward_code_fee(amount,fee_rate)VALUES(500000,30);
 
 -- campaign 配置
+delete from t_campaign_quote_config;
 INSERT INTO t_campaign_quote_config(reward_account,cost_account,quote_rate,cost_rate)VALUES('2NVji8RvQAFhg4YJKuxqhdMjWMLJmWbKm5MBvSJmTUHL','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',500,17);
+
+
+-- pos奖励配置
+delete from t_pos_reward_config;
+INSERT INTO t_pos_reward_config(reward_account,cost_account,cost_fee_rate,max_cost_fee,quote_token_amount,created_at,updated_at)VALUES('C2E7K1fDUzpihX77xMNnhYNidRHkWnLMTRejWRvfjkDH','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',200,40000,500000,NOW(),NOW());
+
+-- pos星级配置
+delete from t_pos_star_level_rule;
+INSERT INTO t_pos_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)VALUES(1000000,10000000,1,10,NOW(),NOW());
+INSERT INTO t_pos_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)VALUES(2000000,20000000,2,20,NOW(),NOW());
+INSERT INTO t_pos_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)VALUES(3000000,30000000,3,30,NOW(),NOW());
+INSERT INTO t_pos_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)VALUES(4000000,40000000,4,40,NOW(),NOW());
+INSERT INTO t_pos_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)VALUES(5000000,50000000,5,50,NOW(),NOW());
+
+-- pos任务配置
+delete from t_pos_mission_config;
+INSERT INTO t_pos_mission_config (reward_type,starred,rate,created_at,updated_at) VALUES (1, false, 10.00, NOW(),NOW());
+INSERT INTO t_pos_mission_config (reward_type,starred,rate,created_at,updated_at) VALUES (2, false, 10.00, NOW(),NOW());
+INSERT INTO t_pos_mission_config (reward_type,starred,rate,created_at,updated_at) VALUES (3, false, 10.00, NOW(),NOW());
+INSERT INTO t_pos_mission_config (reward_type,starred,rate,created_at,updated_at) VALUES (1, true,  10.00, NOW(),NOW());
+INSERT INTO t_pos_mission_config (reward_type,starred,rate,created_at,updated_at) VALUES (2, true,  10.00, NOW(),NOW());
+INSERT INTO t_pos_mission_config (reward_type,starred,rate,created_at,updated_at) VALUES (3, true,  10.00, NOW(),NOW());
+INSERT INTO t_pos_mission_config (reward_type,starred,rate,created_at,updated_at) VALUES (0, false, 15.00, NOW(),NOW());
+INSERT INTO t_pos_mission_config (reward_type,starred,rate,created_at,updated_at) VALUES (0, true,  15.00, NOW(),NOW());
+
+-- 质押AMM配置
+delete from t_stake_amm_config;
+insert into public.t_stake_amm_config(quote_token,public_key)values('solana','46uzvWDstrwNtEpBSFrcVPx4ZaTMDpjarQYWpq82Z58p');
+
+-- 质押池配置
+delete from t_stake_token_pool;
+insert into public.t_stake_token_pool(source_account,from_token_account)values('Raydium','Gh6MjRrJFBU9HcYMYKBbaD8fX1dv3CjGtDDhtVThD9v3');
+
+-- 质押每日固定利息
+delete from t_stake_fix_rate_config;
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000,0,70,100,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000,1,100,100,now(),now());
+
+-- 邀请奖励级别
+delete from t_stake_invite_dist;
+insert into public.t_stake_invite_dist(dist_level)values(2);
+
+-- 邀请奖励每个级别的奖励费率
+delete from t_stake_invite_rate;
+insert into public.t_stake_invite_rate(dist_level,rate)values(1,10);
+insert into public.t_stake_invite_rate(dist_level,rate)values(2,5);
+
+-- 质押星级配置
+delete from t_stake_star_level_rule;
+insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(100000000,0,1,8,now(),now());
+insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(200000000,0,2,16,now(),now());
+insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(300000000,0,3,24,now(),now());
+insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(400000000,0,4,32,now(),now());
+insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(500000000,0,5,40,now(),now());
+insert into public.t_stake_star_level_rule(amount,group_amount,star_level,rate,created_at,updated_at)values(600000000,0,6,48,now(),now());
+
+-- 质押奖励发放配置表
+delete from t_stake_reward_config;
+insert into public.t_stake_reward_config
+(program_id,reward_account,cost_account,quote_token_amount,cost_fee_rate,created_at,updated_at)
+values
+    ('CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6','H5WmBY45gxP8rj7gecLXsv6yNHqHFXNH4Acmp2U9E2Tb','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',500000,110,now(),now());
+
+-- 插入区域经理配置
+delete from t_stake_leader_reward_config;
+insert into public.t_stake_leader_reward_config(reward_account)values('2yRkofKW7xKRbN79MHKGX8HFyuHZEtTJDhTwAQjJHnMX');
 
