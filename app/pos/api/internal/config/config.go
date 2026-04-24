@@ -39,8 +39,10 @@ type KafkaConfig struct {
 }
 
 type KafkaConsumerConfig struct {
-	GroupID string   `mapstructure:"group_id"`
-	Topics  []string `mapstructure:"topics"`
+	GroupID        string   `mapstructure:"group_id"`
+	Topic          string   `mapstructure:"topic"`           // ServiceTransaction topic
+	SnapshotTopics []string `mapstructure:"snapshot_topics"` // PosTopic + StakeTopic
+	Topics         []string `mapstructure:"topics"`          // 兼容旧配置
 }
 
 // NacosServerConfig Nacos服务端配置结构体（匹配yaml中的server_config）

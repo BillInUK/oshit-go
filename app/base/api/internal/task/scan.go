@@ -33,8 +33,6 @@ const (
 	txHandleLockFmt = "base:sol:tx-handle:%s:lock"  // args: txSig
 )
 
-const subServiceMarketBuyToken = "MarketBuyToken"
-
 // marketBuyTokenProgramID Raydium 相关市场购买程序地址，用于识别 MarketBuyToken 交易
 const marketBuyTokenProgramID = "HtNfUbDaBamCBPWCFiESkXpewvwVLkwrSWRjjV8FNT7i"
 
@@ -83,7 +81,7 @@ func NewTxScanTask(taskCtx *TaskContext) *TxScanTask {
 // getRpcClient 根据 subService 选择合适的 RPC 客户端
 // MarketBuyToken 强制使用主网 RPC，其余业务使用默认 RPC
 func (t *TxScanTask) getRpcClient(subService string) *rpc.Client {
-	if subService == subServiceMarketBuyToken && t.mainnetRpcClient != nil {
+	if subService == constants.SubServiceMarketBuyToken.String() && t.mainnetRpcClient != nil {
 		return t.mainnetRpcClient
 	}
 	return t.rpcClient
@@ -322,7 +320,7 @@ func (t *TxScanTask) handleServiceTx(service, subService string, txSig rpc.Trans
 	}
 
 	// MarketBuyToken 走独立的解析流程（DEX inner instruction）
-	if subService == subServiceMarketBuyToken {
+	if subService == constants.SubServiceMarketBuyToken.String() {
 		t.handleMarketBuyTokenTx(prefix, service, subService, txSig, tr)
 		return
 	}

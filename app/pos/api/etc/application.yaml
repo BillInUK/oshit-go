@@ -21,8 +21,8 @@ kafka:
     - "localhost:9092"
   consumer:
     group_id: "pos-service"
-    topics:
-      - "ServiceTransaction"
+    topic: "ServiceTransaction"
+    snapshot_topics:
       - "StakeTopic"
       - "PosTopic"
 
