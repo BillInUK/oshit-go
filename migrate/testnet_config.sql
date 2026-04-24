@@ -1,9 +1,43 @@
+-- 基础配置
+delete from t_system_config;
+insert into t_system_config(env)values(1);
+
+delete from t_aws_config;
+insert into t_aws_config
+(access_key_id,secret_access_key,region)
+values
+    ('AKIAUBM64K3O3GFSHN7W','7eGqmuBxHO8x82s8gU6pjQRVtU4bkCgE5XC8qTvI','ap-southeast-1');
+
+delete from t_chain_config;
+insert into t_chain_config
+(chain_name,rpc_url,wss_url,decimals,symbol)
+values
+    ('solana','https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/','wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/',9,'SOL');
+
+delete from t_token_config;
+insert into t_token_config
+(token_name,token_symbol,decimals,mint)
+values
+    ('OShit','OShit',3,'wtnrTujJqBRUknLRhQQcUSwzAzx8LvcxKXEuBwvFnJM');
+
+delete from t_fee_tolerance;
+insert into t_fee_tolerance(max_less_rate)values(0.05);
+
+delete from t_user_wallet_rpc_config;
+insert into t_user_wallet_rpc_config
+(chain_name,rpc_url,wss_url)
+values
+    ('solana','https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/','wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/');
+
+delete from t_mainnet_rpc_config;
 insert into t_mainnet_rpc_config
 (chain_name,rpc_url,wss_url)
 values
     ('solana','https://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043','wss://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043');
 
 -- 业务配置
+delete from t_service_info;
+
 insert into t_service_info
 (service,sub_service,address,webhook,mq_group,mq_topic,hook_type,tx_source,confirm,multi_sign,created_at,updated_at)
 values
@@ -54,6 +88,9 @@ insert into t_service_info
 values
     ('pos','market buy token','HtNfUbDaBamCBPWCFiESkXpewvwVLkwrSWRjjV8FNT7i','','Stake','ServiceTransaction',1,0,true,true,now(),now());
 
+-- 业务私钥
+delete from t_service_key;
+
 insert into t_service_key
 (service,sub_service,encrypted_key,created_at,updated_at)
 values
@@ -100,6 +137,8 @@ values
     ('pos','stake leader reward','al2M3Q+0pu2FDePJvtnaCE4mtPZnTck1BXGcSCZtWgiSPXOveWaSuMKo6i4qapQcHqdMdWp6i3aPjkx/R96aC/AF5Je13r7Lmokpf7/LlxcoZzt+nJxtEmVlTDS1jful93CCIBjp0Yx+b0k1Cf4jWx6FQu9KdkzRqXBIoggoHuw=',NOW(),NOW());
 
 -- 业务交易扫描表
+delete from t_tx_scan_info;
+
 INSERT INTO public.t_tx_scan_info
 (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES ('reward', 'take token', 'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', 'EHEu46gQMTFw1ieiok5XVYLV9MrKUFyk6sRLDjUpEQAd', '5mgtNggkqkKUTu4WweeArYTq55epKxof1WE8KH25c1k5QSA1esrNa99pLyFHuixpemoUj9pRPKtejzmbM1aGHWbm', '', '454355929', NOW(),NOW());
@@ -144,8 +183,24 @@ INSERT INTO public.t_tx_scan_info
 (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES ('pos', 'stake leader reward', '2yRkofKW7xKRbN79MHKGX8HFyuHZEtTJDhTwAQjJHnMX', 'HqAp7uFZAckGA9jKFCZXg7rq1GX9CB2kwpGBKoq5geg6', '29dZDL5PFTaBYdqUz7E3gFBJsLzMsHckgwSiga2y1c2RBL95t2RL4y6PRepaZkfQcqxQhRCpe2RKPDn7UUyL9U7p', '', '453414783',NOW(),NOW());
 
-insert into public.t_stake_leader_reward_config(reward_account)values('2yRkofKW7xKRbN79MHKGX8HFyuHZEtTJDhTwAQjJHnMX');
+-- reward服务初始化数据
+insert into t_level_dist(dist_level)values(2);
+insert into t_level_ratio(dist_level,ratio)values(1,10);
+insert into t_level_ratio(dist_level,ratio)values(2,1);
+insert into t_discount_rate(rate)values(1.25);
 
-update t_chain_config set chain_name='solana';
-update t_stake_amm_config set quote_token='solana';
-update t_user_wallet_rpc_config set chain_name='solana';
+-- take token 配置
+insert into public.t_take_token_config(invite_code,reward_account,cost_account,amount,invite_amount,cost_fee_rate,max_cost_fee,is_default,reward_inviter,invited,created_at,updated_at)values(NULL,'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', '6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K', 500000, 1500000, 200,400,true,true,true,NOW(),NOW());
+
+-- give token 配置
+insert into public.t_give_token_config(reward_account,cost_account,reward_rate,max_valid_reward,valid_rate,created_at,updated_at)values('AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',200,4000000,300,NOW(),NOW());
+
+-- reward code
+INSERT INTO public.t_reward_code_config(reward_account,cost_account)VALUES('584AMuM1HkV4wRMMVPZuZy9g9mZbSAcTF7QiBrHJaZFE','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K');
+INSERT INTO public.t_reward_code_fee(amount,fee_rate)VALUES(5000000,8);
+INSERT INTO public.t_reward_code_fee(amount,fee_rate)VALUES(1000000,20);
+INSERT INTO public.t_reward_code_fee(amount,fee_rate)VALUES(500000,30);
+
+-- campaign 配置
+INSERT INTO t_campaign_quote_config(reward_account,cost_account,quote_rate,cost_rate)VALUES('2NVji8RvQAFhg4YJKuxqhdMjWMLJmWbKm5MBvSJmTUHL','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',500,17);
+

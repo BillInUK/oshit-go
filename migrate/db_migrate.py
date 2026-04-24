@@ -76,18 +76,18 @@ def _safe_row(row):
 # ─── 数据库连接配置 ──────────────────────────────────────────────
 
 SOURCE_DB = dict(
-    host="47.129.64.247",
+    host="172.31.3.251",
     port=5432,
-    user="ob_meme",
-    password="cVhLd86q3Qo6kz+s",
+    user="postgres",
+    password="xxxxx",
     dbname="meme_db",
 )
 
 TARGET_DB = dict(
-    host="localhost",
+    host="172.31.3.251",
     port=5432,
     user="postgres",
-    password="postgres",
+    password="xxxxx",
     dbname="oshit_db",
 )
 
