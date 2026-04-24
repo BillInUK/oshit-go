@@ -46,6 +46,7 @@ CREATE TABLE public.t_take_token_config
 
 -- take token 记录表
 -- 旧工程 t_sol_official_give_token_record
+-- 预演导出只需要导出前 1000 条
 DROP TABLE IF EXISTS public.t_take_token_record;
 CREATE TABLE public.t_take_token_record
 (
@@ -74,10 +75,10 @@ CREATE TABLE public.t_daily_claim_stats
     take_date      date                                                  NOT NULL, -- take token的日期，对应 TakeShitDate
     take_count     integer                     DEFAULT 0                 NOT NULL, -- take token的次数，对应 TakeShitCount
     need_lottery   boolean                     DEFAULT false             NOT NULL, -- 是否需要抽奖，对应 NeedLottery
-    last_take_time timestamp without time zone,                                    -- 上次take token的时间，LastTakeTime
-    total_lottery  numeric(78, 0)              DEFAULT 0                 NOT NULL, -- 总计 take token 的金额
-    total_take     numeric(78, 0)              DEFAULT 0                 NOT NULL, -- 总计 lottery 的金额
-    lottery_count  integer                     DEFAULT 0                 NOT NULL, -- 抽奖次数
+    last_take_time timestamp without time zone,                                    -- 上次take token的时间，对应 LastTakeTime
+    total_lottery  numeric(78, 0)              DEFAULT 0                 NOT NULL, -- 总计 take token 的金额，对应 TotalLottery
+    total_take     numeric(78, 0)              DEFAULT 0                 NOT NULL, -- 总计 lottery 的金额，对应 TotalTake
+    lottery_count  integer                     DEFAULT 0                 NOT NULL, -- 抽奖次数，对应 LotteryCount
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
@@ -87,6 +88,7 @@ ALTER TABLE t_daily_claim_stats
 
 -- 抽奖奖励发放表
 -- 旧工程 t_reward_lottery
+-- 预演导出只需要导出前 1000 条
 DROP TABLE IF EXISTS public.t_lottery_reward;
 CREATE TABLE public.t_lottery_reward
 (
@@ -103,6 +105,7 @@ CREATE TABLE public.t_lottery_reward
 
 -- 领取抽奖奖励记录表
 -- 旧工程 t_reward_lottery_claim_record
+-- 预演导出只需要导出前 1000 条
 DROP TABLE IF EXISTS public.t_lottery_claim;
 CREATE TABLE public.t_lottery_claim
 (
@@ -130,6 +133,7 @@ CREATE TABLE public.t_give_token_config
 
 -- give token 记录表
 -- 旧工程 t_sol_transfer_checked_record
+-- 预演导出只需要导出前 1000 条
 DROP TABLE IF EXISTS public.t_give_token_record;
 CREATE TABLE public.t_give_token_record
 (
@@ -158,7 +162,6 @@ CREATE TABLE public.t_reward_code_config
 
 -- 奖励码
 -- 旧工程 t_reward_code
--- todo: 看一下 NativeAccount 字段是否有必要
 DROP TABLE IF EXISTS public.t_reward_code;
 CREATE TABLE public.t_reward_code
 (
@@ -192,7 +195,7 @@ CREATE TABLE public.t_campaign_quote_config
 (
     record_id      ulid                        DEFAULT gen_ulid() NOT NULL,
     reward_account character varying(64)                          NOT NULL, -- 发放奖励的地址，对应 RewardNativeAccount
-    cost_account   character varying(64)                          NOT NULL, -- 接收成本费的地址，对应 CostRate
+    cost_account   character varying(64)                          NOT NULL, -- 接收成本费的地址，对应 DexNativeAccount
     quote_rate     numeric(5, 2)                                  NOT NULL, -- 兑换费率，对应 Rate
     cost_rate      numeric(5, 2)                                  NOT NULL, -- 成本费率，对应 CostRate
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
@@ -231,6 +234,7 @@ CREATE TABLE t_user_daily_quota
 
 -- 兑换社交媒体积分为token的记录
 -- 旧工程表 t_sol_exchange_campaign_score_to_token_record
+-- 预演导出只需要导出前 1000 条
 DROP TABLE IF EXISTS public.t_campaign_quote_record;
 CREATE TABLE public.t_campaign_quote_record
 (

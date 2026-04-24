@@ -172,6 +172,7 @@ CREATE TABLE public.t_service_info
 
 -- 业务私钥
 -- 新工程整合旧工程里面 t_reward_key_config,t_pos_reward_key_config 两张表过来
+-- 需要手动导入
 DROP TABLE IF EXISTS public.t_service_key;
 CREATE TABLE public.t_service_key
 (
@@ -184,6 +185,7 @@ CREATE TABLE public.t_service_key
 
 -- 业务交易扫描表
 -- 新工程整合旧工程里面的 t_reward_scan_info, t_pos_scan_info等几张表
+-- 需要手动导入
 DROP TABLE IF EXISTS public.t_tx_scan_info;
 CREATE TABLE public.t_tx_scan_info
 (
@@ -200,6 +202,8 @@ CREATE TABLE public.t_tx_scan_info
 
 -- 业务交易表
 -- 新工程整合旧工程里面的 t_reward_tx,t_pos_tx等几张表
+-- 预演只需要导出 tx_state=0的数据1000条
+-- 后续需要增加 ttl 机制减少表体积
 DROP TABLE IF EXISTS public.t_service_tx;
 CREATE TABLE public.t_service_tx
 (
@@ -217,6 +221,7 @@ CREATE TABLE public.t_service_tx
 
 -- 旧工程 t_sol_fund_flow
 -- 需要导入并且搞分表，减少单表体积
+-- 预演导出只需要导出前 1000 条
 DROP TABLE IF EXISTS public.t_fund_flow;
 CREATE TABLE public.t_fund_flow
 (

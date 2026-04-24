@@ -61,6 +61,7 @@ CREATE INDEX ON public.t_pos_mission_config (reward_type);
 
 -- POS 每日快照表
 -- 旧工程 t_sol_pos_snap_shot
+-- 预演导出只需要导出前 1000 条
 DROP TABLE IF EXISTS public.t_pos_snap_shot;
 CREATE TABLE public.t_pos_snap_shot
 (
@@ -79,6 +80,7 @@ CREATE UNIQUE INDEX ON public.t_pos_snap_shot (native_account, snap_day);
 
 -- POS 奖励明细表
 -- 旧工程 t_sol_pos_reward
+-- 预演导出只需要导出前 1000 条
 DROP TABLE IF EXISTS public.t_pos_reward;
 CREATE TABLE public.t_pos_reward
 (
@@ -104,6 +106,7 @@ CREATE UNIQUE INDEX ON public.t_pos_reward (native_account, snap_day, reward_typ
 
 -- POS 奖励领取表
 -- 旧工程 t_sol_pos_reward_claim_record
+-- 预演导出只需要导出前 1000 条
 DROP TABLE IF EXISTS public.t_pos_reward_claim;
 CREATE TABLE public.t_pos_reward_claim
 (
