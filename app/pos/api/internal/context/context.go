@@ -2,14 +2,15 @@ package context
 
 import (
 	"context"
+	"oshit-go/app/pos/api/internal/config"
+	posrpc "oshit-go/app/pos/api/internal/rpc"
+	"oshit-go/common/pkg/dal/model"
+
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/go-redsync/redsync/v4"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-	"oshit-go/app/pos/api/internal/config"
-	posrpc "oshit-go/app/pos/api/internal/rpc"
-	"oshit-go/common/pkg/dal/model"
 )
 
 type CoreContext struct {
