@@ -22,6 +22,7 @@ import (
 	"oshit-go/common/pkg/entity"
 	"oshit-go/common/utils"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -29,8 +30,8 @@ const txScanKafkaTopic = "ServiceTransaction"
 
 // 分布式锁 key 格式
 const (
-	txScanLockFmt   = "base:sol:tx-scan:%s-%s:lock" // args: service, subService
-	txHandleLockFmt = "base:sol:tx-handle:%s:lock"  // args: txSig
+	txScanLockFmt   = "base:sol:tx-scan:%s-%s-%s:lock" // args: service, subService, pdaAccount
+	txHandleLockFmt = "base:sol:tx-handle:%s:lock"     // args: txSig
 )
 
 // marketBuyTokenProgramID Raydium 相关市场购买程序地址，用于识别 MarketBuyToken 交易
@@ -48,6 +49,18 @@ type TxScanTask struct {
 	mainnetRpcClient *rpc.Client
 	rpcURL           string
 	kafkaWriter      *kafka.Writer
+	mu               sync.Mutex
+	runningScans     map[string]context.CancelFunc
+}
+
+type ScanConfig struct {
+	Service          string
+	SubService       string
+	Enabled          bool
+	NativeAccount    string
+	PdaAccount       string
+	InitialUntilTxID string
+	InitialSlot      uint64
 }
 
 // NewTxScanTask 创建交易扫描任务
@@ -75,6 +88,7 @@ func NewTxScanTask(taskCtx *TaskContext) *TxScanTask {
 		mainnetRpcClient: mainnetRpcClient,
 		rpcURL:           rpcURL,
 		kafkaWriter:      kafkaWriter,
+		runningScans:     make(map[string]context.CancelFunc),
 	}
 }
 
@@ -93,9 +107,100 @@ func (t *TxScanTask) Start() {
 	if err != nil {
 		panic(err)
 	}
+	configs := make([]ScanConfig, 0, len(scanInfo))
 	for _, info := range scanInfo {
-		go t.startTxScanTasks(info.Service, info.SubService)
+		configs = append(configs, ScanConfig{
+			Service:          info.Service,
+			SubService:       info.SubService,
+			Enabled:          true,
+			NativeAccount:    info.NativeAccount,
+			PdaAccount:       info.PdaAccount,
+			InitialUntilTxID: info.UntilTxID,
+			InitialSlot:      uint64(info.Slot),
+		})
 	}
+	if err := t.Reconcile(configs); err != nil {
+		panic(err)
+	}
+}
+
+func scanTaskKey(service, subService, pdaAccount string) string {
+	return fmt.Sprintf("%s:%s:%s", service, subService, pdaAccount)
+}
+
+func (t *TxScanTask) Reconcile(configs []ScanConfig) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	desired := make(map[string]ScanConfig, len(configs))
+	for _, cfg := range configs {
+		if cfg.Service == "" || cfg.SubService == "" || cfg.PdaAccount == "" {
+			return fmt.Errorf("invalid scan config: service/subService/pdaAccount required")
+		}
+		key := scanTaskKey(cfg.Service, cfg.SubService, cfg.PdaAccount)
+		desired[key] = cfg
+
+		if !cfg.Enabled {
+			if cancel, ok := t.runningScans[key]; ok {
+				cancel()
+				delete(t.runningScans, key)
+				log.Infof("停止扫描任务 [%s]", key)
+			}
+			continue
+		}
+
+		if err := t.ensureScanCheckpoint(cfg); err != nil {
+			return err
+		}
+		if _, ok := t.runningScans[key]; ok {
+			continue
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		t.runningScans[key] = cancel
+		go t.startTxScanTasks(ctx, cfg.Service, cfg.SubService, cfg.PdaAccount)
+		log.Infof("启动扫描任务 [%s]", key)
+	}
+
+	for key, cancel := range t.runningScans {
+		cfg, ok := desired[key]
+		if !ok || !cfg.Enabled {
+			cancel()
+			delete(t.runningScans, key)
+			log.Infof("停止扫描任务 [%s]", key)
+		}
+	}
+
+	return nil
+}
+
+func (t *TxScanTask) ensureScanCheckpoint(cfg ScanConfig) error {
+	var count int64
+	err := t.db.Model(&model.TxScanInfo{}).
+		Where("service = ? and sub_service = ? and pda_account = ?", cfg.Service, cfg.SubService, cfg.PdaAccount).
+		Count(&count).Error
+	if err != nil {
+		return fmt.Errorf("query scan checkpoint [%s/%s/%s] error: %v", cfg.Service, cfg.SubService, cfg.PdaAccount, err)
+	}
+	if count > 0 {
+		return nil
+	}
+
+	record := model.TxScanInfo{
+		Service:       cfg.Service,
+		SubService:    cfg.SubService,
+		NativeAccount: cfg.NativeAccount,
+		PdaAccount:    cfg.PdaAccount,
+		UntilTxID:     cfg.InitialUntilTxID,
+		Slot:          float64(cfg.InitialSlot),
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+	if err := t.db.Create(&record).Error; err != nil {
+		return fmt.Errorf("create scan checkpoint [%s/%s/%s] error: %v", cfg.Service, cfg.SubService, cfg.PdaAccount, err)
+	}
+	log.Infof("创建扫描检查点 [%s/%s/%s] untilTxId=%s slot=%d", cfg.Service, cfg.SubService, cfg.PdaAccount, cfg.InitialUntilTxID, cfg.InitialSlot)
+	return nil
 }
 
 func (t *TxScanTask) QueryAllScanInfo() ([]model.TxScanInfo, error) {
@@ -109,11 +214,11 @@ func (t *TxScanTask) QueryAllScanInfo() ([]model.TxScanInfo, error) {
 	return records, nil
 }
 
-func (t *TxScanTask) QueryScanInfo(service, subService string) (*model.TxScanInfo, error) {
+func (t *TxScanTask) QueryScanInfo(service, subService, pdaAccount string) (*model.TxScanInfo, error) {
 	var err error
 	var record model.TxScanInfo
 	db := t.db.Table(model.TableNameTxScanInfo)
-	err = db.Where("service = ? and sub_service = ?", service, subService).First(&record).Error
+	err = db.Where("service = ? and sub_service = ? and pda_account = ?", service, subService, pdaAccount).First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -189,19 +294,25 @@ func (t *TxScanTask) getLatestTransaction(ctx context.Context, rpcClient *rpc.Cl
 }
 
 // startTxScanTasks 开启单独的协程扫描业务相关交易
-func (t *TxScanTask) startTxScanTasks(service, subService string) {
+func (t *TxScanTask) startTxScanTasks(ctx context.Context, service, subService, pdaAccountStr string) {
 	prefix := fmt.Sprintf("%s服务 - %s业务", service, subService)
-	lockKey := fmt.Sprintf(txScanLockFmt, service, subService)
-	ctx := context.Background()
+	lockKey := fmt.Sprintf(txScanLockFmt, service, subService, pdaAccountStr)
 
 	// 初始化配置（无需加锁）
-	initScanInfo, err := t.QueryScanInfo(service, subService)
+	initScanInfo, err := t.QueryScanInfo(service, subService, pdaAccountStr)
 	if err != nil || initScanInfo == nil {
-		panic(fmt.Sprintf("%s 初始化配置错误: %v", prefix, err))
+		log.Errorf("%s 初始化配置错误: %v", prefix, err)
+		return
 	}
-	pdaAccountStr := initScanInfo.PdaAccount
 
 	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("%s 扫描任务退出", prefix)
+			return
+		default:
+		}
+
 		func() {
 			// 每个循环独立作用域
 			// 1. 获取分布式锁
@@ -264,7 +375,14 @@ func (t *TxScanTask) startTxScanTasks(service, subService string) {
 			}
 		}()
 
-		time.Sleep(3 * time.Second)
+		timer := time.NewTimer(3 * time.Second)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			log.Infof("%s 扫描任务退出", prefix)
+			return
+		case <-timer.C:
+		}
 	}
 }
 

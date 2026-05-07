@@ -129,25 +129,33 @@ type TaskContext struct {
 ```
 main()
  └── svc.NewServiceContext()
-      ├── config.LoadConfig()              → viper 读 ./etc/pos.yaml
+      ├── config.LoadConfig()              → viper 读 ./etc/application.yaml
       ├── initDatabase()                   → GORM postgres 连接
       ├── initRedis()                      → go-redis UniversalClient（支持 Sentinel）
       ├── redsync.New(pool)                → 分布式锁
-      ├── initDatabaseConfigs()            → 从 DB 加载全局配置：
+      ├── initDatabaseConfigs()            → 从 DB 兜底加载全局配置：
       │    SystemConfig / ChainConfig / TokenConfig / FeeTolerance / LightHouseAddress
+      ├── initNacosConfigClient()          → 初始化 Nacos config client
+      ├── initNacosRuntimeConfigs()        → 优先从 Nacos 覆盖 DB 兜底配置：
+      │    base-runtime.yaml  → SystemConfig / ChainConfig / TokenConfig / FeeTolerance / LightHouseAddress
+      │    pos-runtime.yaml   → PosRewardConfig / PosStarLevelRule / PosWhiteListMap
+      │                         StakeRewardConfig / LeaderRewardConfig / StakeFixConfig
+      │                         StakeInviteRate / StakeDistLevel / StakeStarLevelRule
+      │                         StakeStarWhitelist / StakeAmmConfig / TotalAreaLeaders / StakeTokenPoolMap
       ├── initSolanaRPC()                  → rpc.New(ChainConfig.RPCURL)
       ├── initKafkaProducer()              → kafka-go writer
       ├── initKafkaConsumer()              → kafka-go reader（消费 ServiceTransaction topic）
       ├── initSnapShotKafkaConsumer()      → kafka-go reader（消费 PosTopic + StakeTopic 快照消息）
       ├── initBaseClient()                 → 通过 Nacos 初始化 Dubbo Triple BaseClient
-      ├── initPosConfig()                  → 加载 pos 业务配置：
+      ├── initPosConfig()                  → 从 DB 兜底加载 pos 业务配置（Nacos 已覆盖时为二次确认）
       │    PosStarLevelRule / PosRewardConfig / PosWhiteListMap
-      ├── initStakeConfig()                → 加载 stake 业务配置：
+      ├── initStakeConfig()                → 从 DB 兜底加载 stake 业务配置（Nacos 已覆盖时为二次确认）
       │    StakeAmmConfig / StakeRewardConfig / LeaderRewardConfig
       │    StakeFixConfig / StakeInviteRate / StakeStarLevelRule
       │    TotalAreaLeaders / StakeTokenPoolMap / StakeDistLevel / StakeStarWhitelist
       ├── utils.InitDTokenManager()        → 初始化 dtoken JWT 鉴权管理器
-      └── startTasks()                     → 创建 TaskManager（尚未启动任务）
+      ├── startTasks()                     → 创建 TaskManager（尚未启动任务）
+      └── listenNacosConfigs()             → 监听 base-runtime.yaml / pos-runtime.yaml 变更并热更新
 
 main()
  ├── registerTasks(srvCtx)                → 注册 Kafka 消息处理器并启动后台任务
@@ -164,6 +172,58 @@ main()
  ├── handler.RegisterRoutes(app, srvCtx)
  └── app.Listen(":1300")
 ```
+
+## 5.1 Nacos 配置
+
+pos 当前订阅两个 Nacos dataId，Group 均为 `oshit-go`：
+
+| Data ID | 用途 | 来源 |
+|---|---|---|
+| `base-runtime.yaml` | 全局链、Token、环境、手续费容错、LightHouse 地址配置 | 与 base / reward 服务共用 |
+| `pos-runtime.yaml` | pos/stake 自身业务规则配置 | `migrate/pos-runtime.yaml` |
+
+`base-runtime.yaml` 中 pos 使用的字段：
+
+```yaml
+system:
+  env: 1
+chain:
+  chain_name: "solana"
+  rpc_url: "..."
+  wss_url: "..."
+  decimals: 9
+  symbol: "SOL"
+token:
+  token_name: "OShit"
+  token_symbol: "OShit"
+  decimals: 3
+  mint: "..."
+fee_tolerance:
+  max_less_rate: 0.05
+lighthouse_address: "..."
+```
+
+`pos-runtime.yaml` 包含以下业务规则（详见 `migrate/pos-runtime.yaml`）：
+
+| 配置项 | 说明 |
+|---|---|
+| `pos_reward` | pos 奖励发放配置（reward_account / cost_account / cost_fee_rate 等） |
+| `pos_star_level_rule` | pos 星级评定规则（1~5 星，个人持币 + 团队持币双重门槛） |
+| `pos_star_whitelist` | pos 星级白名单（运营手动配置，优先级高于规则） |
+| `stake_reward` | 质押奖励发放配置（program_id / reward_account / cost_account 等） |
+| `stake_leader_reward` | 区域经理奖励发放配置（reward_account） |
+| `stake_fix_rate` | 每日固定利息配置（按 stake_type 区分 180天/360天） |
+| `stake_invite_dist` | 邀请奖励最大追溯层级 |
+| `stake_invite_rate` | 各层级邀请奖励费率 |
+| `stake_star_level_rule` | 质押星级评定规则（1~6 星） |
+| `stake_star_whitelist` | 质押星级白名单 |
+| `stake_amm` | AMM 做市地址配置 |
+| `stake_total_leaders` | 总区域经理配置（固定 2 人） |
+| `stake_token_pool` | token 池地址映射 |
+
+启动时 pos 会先从 DB 读取这些配置作为兜底，再读取 Nacos 覆盖内存配置。Nacos 读取失败或 dataId 内容为空时，服务继续使用 DB 兜底配置启动。
+
+Nacos listener 会热更新内存中的全局配置和 pos 业务规则。已经进入执行过程的单次请求或 Kafka 消息处理可能继续使用创建逻辑对象时持有的旧配置；新的请求和新的处理流程会使用更新后的配置。
 
 ---
 
@@ -220,10 +280,6 @@ pub fn restake(ctx: Context<ReStake>, stake_index: u8, stake_type: u8) -> Result
 ---
 
 # 8. 其他
-
-
-
-
 
 
 

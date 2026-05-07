@@ -80,6 +80,12 @@ func NewServiceContext() (*ServiceContext, error) {
 		return nil, err
 	}
 
+	if err := srvCtx.initNacosConfigClient(); err != nil {
+		fmt.Printf("Init nacos config client error: %v\n", err)
+	} else if err := srvCtx.initNacosRuntimeConfigs(); err != nil {
+		fmt.Printf("Init nacos runtime configs error: %v\n", err)
+	}
+
 	// 初始化Solana RPC客户端
 	srvCtx.initSolanaRPC()
 
@@ -108,6 +114,10 @@ func NewServiceContext() (*ServiceContext, error) {
 
 	// 初始化任务管理器
 	srvCtx.startTasks()
+
+	if err := srvCtx.listenNacosConfigs(); err != nil {
+		fmt.Printf("Listen nacos configs error: %v\n", err)
+	}
 
 	return srvCtx, nil
 }

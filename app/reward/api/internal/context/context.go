@@ -5,11 +5,13 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/go-redsync/redsync/v4"
+	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"oshit-go/app/reward/api/internal/config"
 	rewardrpc "oshit-go/app/reward/api/internal/rpc"
 	"oshit-go/common/pkg/dal/model"
+	"sync"
 )
 
 type CoreContext struct {
@@ -18,6 +20,9 @@ type CoreContext struct {
 	Redis   redis.UniversalClient
 	RedSync redsync.Redsync
 	Ctx     context.Context
+
+	NacosConfigClient config_client.IConfigClient
+	ConfigMu          sync.RWMutex
 
 	// 全局变量
 	RpcClient         *rpc.Client

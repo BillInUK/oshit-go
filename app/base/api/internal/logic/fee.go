@@ -3,12 +3,10 @@ package logic
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
-	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"strconv"
 )
@@ -98,9 +96,8 @@ func (l *FeeLogic) GetInstUnits() (*types.ComputeUnitConsumedRsp, error) {
 
 // GetFeeTolerance 获取手续费容错
 func (l *FeeLogic) GetFeeTolerance() (*types.GetFeeToleranceRsp, error) {
-	var ft model.FeeTolerance
-	if err := l.srvCtx.DB.WithContext(l.ctx).First(&ft).Error; err != nil {
-		return nil, fmt.Errorf("query fee tolerance error: %v", err)
-	}
+	l.srvCtx.ConfigMu.RLock()
+	ft := l.srvCtx.FeeTolerance
+	l.srvCtx.ConfigMu.RUnlock()
 	return &types.GetFeeToleranceRsp{MaxLessRate: ft.MaxLessRate}, nil
 }

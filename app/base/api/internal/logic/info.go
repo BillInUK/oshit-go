@@ -3,11 +3,9 @@ package logic
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"oshit-go/app/base/api/internal/svc"
 	"oshit-go/app/base/api/internal/types"
-	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/dal/query"
 )
 
@@ -27,13 +25,11 @@ func NewInfoLogic(ctx context.Context, srvCtx *svc.ServiceContext) *InfoLogic {
 
 // GetTokenInfo 获取token信息
 func (l *InfoLogic) GetTokenInfo() (*types.GetTokenInfoRsp, error) {
-	var tokenConfig model.TokenConfig
-	if err := l.db.Model(&tokenConfig).
-		First(&tokenConfig).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("token config not found")
-		}
-		return nil, errors.New("query token info error")
+	l.srvCtx.ConfigMu.RLock()
+	tokenConfig := l.srvCtx.TokenConfig
+	l.srvCtx.ConfigMu.RUnlock()
+	if tokenConfig == nil {
+		return nil, fmt.Errorf("token config not found")
 	}
 
 	return &types.GetTokenInfoRsp{

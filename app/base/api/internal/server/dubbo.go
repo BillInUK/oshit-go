@@ -21,6 +21,9 @@ func StartDubboServer(svcCtx *svc.ServiceContext) {
 	registryOpts := []registry.Option{
 		registry.WithNacos(),
 		registry.WithAddress(nacosAddr),
+		registry.WithRegisterInterface(),
+		registry.WithoutUseAsMetaReport(),
+		registry.WithoutUseAsConfigCenter(),
 	}
 	if cfg.Nacos.Namespace != "" {
 		registryOpts = append(registryOpts, registry.WithNamespace(cfg.Nacos.Namespace))

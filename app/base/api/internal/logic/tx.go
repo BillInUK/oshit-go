@@ -35,16 +35,21 @@ func NewTxLogic(ctx context.Context, svcCtx *svc.ServiceContext) *TxLogic {
 // 最后异步广播（不重试），同步返回 record_id 和 tx_id。
 func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTransactionRsp, error) {
 	// 1. 查询服务配置
+	l.svcCtx.ConfigMu.RLock()
 	subSvcInfoMap, ok := l.svcCtx.ServiceInfoMap[req.Service]
 	if !ok {
+		l.svcCtx.ConfigMu.RUnlock()
 		return nil, fmt.Errorf("no service info configured for service [%s]", req.Service)
 	}
 	serviceInfo, ok := subSvcInfoMap[req.SubService]
 	if !ok {
+		l.svcCtx.ConfigMu.RUnlock()
 		return nil, fmt.Errorf("no service info configured for service [%s] subService [%s]", req.Service, req.SubService)
 	}
 	multiSign := serviceInfo.MultiSign
 	confirm := serviceInfo.Confirm
+	serviceKeyMap := l.svcCtx.ServiceKeyMap
+	l.svcCtx.ConfigMu.RUnlock()
 
 	// 2. base64 解码
 	txBytes, err := base64.StdEncoding.DecodeString(req.EncodedTx)
@@ -83,7 +88,7 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 
 	// 6. 若 multi_sign=true，用服务私钥在索引1处补签
 	if multiSign {
-		subSvcMap, ok := l.svcCtx.ServiceKeyMap[req.Service]
+		subSvcMap, ok := serviceKeyMap[req.Service]
 		if !ok {
 			return nil, fmt.Errorf("no key configured for service [%s]", req.Service)
 		}
@@ -120,7 +125,18 @@ func (l *TxLogic) broadcastTx(recordID string, confirm bool, tx *solana.Transact
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	if _, err := l.svcCtx.RpcClient.SendTransaction(ctx, tx); err != nil {
+	l.svcCtx.ConfigMu.RLock()
+	rpcClient := l.svcCtx.RpcClient
+	l.svcCtx.ConfigMu.RUnlock()
+	if rpcClient == nil {
+		log.Errorf("broadcast tx record[%v] error: rpc client is nil", tx.Signatures[0])
+		if confirm && recordID != "" {
+			l.updateServiceTxState(recordID, constants.TxStateFailed)
+		}
+		return
+	}
+
+	if _, err := rpcClient.SendTransaction(ctx, tx); err != nil {
 		log.Errorf("broadcast tx record[%v] error: %v", tx.Signatures[0], err)
 		if confirm && recordID != "" {
 			l.updateServiceTxState(recordID, constants.TxStateFailed)

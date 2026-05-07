@@ -78,9 +78,16 @@ func NewServiceContext() (*ServiceContext, error) {
 		},
 	}
 
-	// 初始化数据库配置
+	// 初始化数据库配置（DB 兜底）
 	if err := srvCtx.initDatabaseConfigs(); err != nil {
 		return nil, err
+	}
+
+	// 初始化 Nacos 配置中心，用 Nacos 配置覆盖 DB 兜底配置
+	if err := srvCtx.initNacosConfigClient(); err != nil {
+		fmt.Printf("Init nacos config client error, fallback to database configs: %v\n", err)
+	} else if err := srvCtx.initNacosRuntimeConfigs(); err != nil {
+		fmt.Printf("Init nacos runtime configs error: %v\n", err)
 	}
 
 	// 初始化Solana RPC客户端
@@ -121,6 +128,11 @@ func NewServiceContext() (*ServiceContext, error) {
 
 	// 初始化任务管理器
 	srvCtx.startTasks()
+
+	// 监听 Nacos 配置变更（热更新）
+	if err := srvCtx.listenNacosConfigs(); err != nil {
+		fmt.Printf("Listen nacos configs error: %v\n", err)
+	}
 
 	return srvCtx, nil
 }

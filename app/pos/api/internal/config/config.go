@@ -70,10 +70,16 @@ type NacosSubscribeConfig struct {
 	Group  string `mapstructure:"group"`
 }
 
+type NacosSubscribeConfigs struct {
+	BaseRuntime NacosSubscribeConfig `mapstructure:"base_runtime"`
+	PosRuntime  NacosSubscribeConfig `mapstructure:"pos_runtime"`
+}
+
 type NacosConfig struct {
-	ServerConfig    []NacosServerConfig  `mapstructure:"server_config"`
-	ClientConfig    NacosClientConfig    `mapstructure:"client_config"`
-	SubscribeConfig NacosSubscribeConfig `mapstructure:"subscribe_config"`
+	ServerConfig     []NacosServerConfig   `mapstructure:"server_config"`
+	ClientConfig     NacosClientConfig     `mapstructure:"client_config"`
+	SubscribeConfig  NacosSubscribeConfig  `mapstructure:"subscribe_config"`
+	SubscribeConfigs NacosSubscribeConfigs `mapstructure:"subscribe_configs"`
 }
 
 // NacosOrderCfg 原有业务配置结构体

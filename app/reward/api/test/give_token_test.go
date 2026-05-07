@@ -34,6 +34,10 @@ func commitGiveTokenTx(req types.CommitGiveTokenTxInfoReq) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	fmt.Printf("response code: %d, msg: %s, data: %s\n", rsp.Code, rsp.Msg, rsp.Data)
+	if rsp.Code != 0 {
+		return "", fmt.Errorf("business error: code=%d msg=%s", rsp.Code, rsp.Msg)
+	}
 	return rsp.Data, nil
 }
 

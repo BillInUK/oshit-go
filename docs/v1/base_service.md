@@ -89,8 +89,10 @@ type CoreContext struct {
     LightHouseAddress   solana.PublicKey
     TokenDecimal        float64        // 10^decimals
     KafkaProducer       interface{}    // 实际类型 *kafka.Writer（避免循环依赖）
+    NacosConfigClient   config_client.IConfigClient
 
-    // 配置表数据（启动时从 DB 加载，全程只读）
+    // 运行配置（启动时先从 DB 兜底加载，再优先用 Nacos 覆盖；部分配置支持 Nacos listener 热更新）
+    ConfigMu            sync.RWMutex
     SystemConfig        *model.SystemConfig
     ChainConfig         *model.ChainConfig
     UserWalletRPCConfig *model.UserWalletRpcConfig
@@ -113,6 +115,7 @@ base 服务的业务上下文在 `internal/svc/context.go` 中定义
 ```go
 type ServiceContext struct {
 	core_context.CoreContext
+	TaskMgr *task.TaskManager
 }
 ```
 
@@ -137,29 +140,50 @@ type TaskContext struct {
 ```
 main()
  └── svc.NewServiceContext()
-      ├── config.LoadConfig()           → viper 读 ./etc/base.yaml
+      ├── config.LoadConfig()           → viper 读 ./etc/application.yaml
       ├── initDatabase()                → GORM postgres 连接
       ├── initRedis()                   → go-redis UniversalClient（支持 Sentinel）
       ├── redsync.New(pool)             → 分布式锁
       ├── initRSAPublicKey()            → 硬编码 RSA 公钥（用于消息验证）
-      ├── initDatabaseConfigs()         → 从 DB 加载全局配置表到 CoreContext：
+      ├── initDatabaseConfigs()         → 从 DB 兜底加载全局配置表到 CoreContext：
       │    SystemConfig / ChainConfig / UserWalletRPCConfig / MainnetRPCConfig
       │    TokenConfig / FeeTolerance / AwsConfig / LightHouseAddress
       │    ServiceInfoMap（从 t_service_info 加载，二维索引 [service][subService]）
-      ├── initServiceKeys()             → 从 t_service_key 加载加密私钥
+      ├── initServiceKeys()             → 从 DB 兜底加载 t_service_key 加密私钥
       │    解密算法: PBEWithHMACSHA512AndAES_256，密码: fktYimwMl3OfUF3m
       │    存入 CoreContext.ServiceKeyMap[service][subService] = solana.PrivateKey
+      ├── initNacosConfigClient()       → 初始化 Nacos config client
+      ├── initNacosRuntimeAndRegistry() → 优先从 Nacos 覆盖 DB 兜底配置：
+      │    base-runtime.yaml: chain/token/system/fee_tolerance/aws/lighthouse
+      │    base-service-registry.yaml: service_info/service_key/scan 静态注册配置
       ├── initSolanaRPC()               → rpc.New(ChainConfig.RPCURL)，分别初始化
       │    RpcClient（服务端）和 UserWalletRpcClient（给前端用）
       ├── initKafkaProducer()           → kafka-go writer
       ├── utils.InitDTokenManager()     → 初始化 dtoken JWT 鉴权管理器
-      └── startTasks()                  → goroutine: TaskManager.StartAllTasks()
+      ├── startTasks()                  → TaskManager.StartAllTasks()
+      ├── ReconcileScanConfigs()        → 若 Nacos 有 service registry，按 Nacos 静态配置对齐扫描任务
+      └── listenNacosConfigs()          → 监听 Nacos runtime / service registry 变更
 
 main()
  ├── go server.StartDubboServer(svcCtx)   → Dubbo Triple on :20880 + Nacos 注册
  └── handler.RegisterRoutes(app, svcCtx)
      app.Listen(":1100")
 ```
+
+### 6.1 Nacos 配置
+
+base 当前使用两个 Nacos dataId：
+
+| dataId | 说明 | 是否热更新 |
+|---|---|---|
+| `base-runtime.yaml` | 全局基础配置：`system`、`chain`、`user_wallet_rpc`、`mainnet_rpc`、`token`、`fee_tolerance`、`aws`、`lighthouse_address` | 是。会更新内存配置，并重建 `RpcClient` / `UserWalletRpcClient` |
+| `base-service-registry.yaml` | 业务注册配置：`service_info` 静态字段、加密服务私钥、scan 静态字段 | 是。会原子替换 `ServiceInfoMap` / `ServiceKeyMap`，并 reconcile 扫描任务 |
+
+Nacos 加载失败或 dataId 为空时，base 保留 DB 兜底配置，保证本地开发和配置未迁移环境仍可启动。
+
+`base-service-registry.yaml` 中的 `scan.initial_until_tx_id` 和 `scan.initial_slot` 只在 DB 中不存在对应扫描检查点时生效；已有检查点不会被 Nacos 覆盖。
+
+`base-runtime.yaml` 主要用于稳定基础配置。虽然 listener 会更新 ServiceContext 中的配置与 RPC client，但已启动的后台任务在构造时会持有自己的 RPC client，链配置类变更仍建议通过重启服务生效。
 
 ---
 
@@ -221,6 +245,8 @@ main()
 
 服务接口：`base.BaseService`（proto 定义在 `app/pb/base/`）
 注册中心：Nacos `127.0.0.1:8848`，协议：Triple
+
+Dubbo 注册中心使用接口级注册（`registry-type=interface` / `registry.WithRegisterInterface()`），并关闭 registry 作为 config center 与 metadata report 的默认用途。这样 base 只向 Nacos naming 注册 RPC 服务，不会向 Nacos config 写入 `base.BaseService` / mapping 类配置。reward、pos 中连接 base 的客户端也使用相同的接口级发现方式。
 
 所有方法均委托给对应 `logic` 层实现：
 
@@ -302,11 +328,16 @@ Redis 值为 `entity.FeeDetail` 的 JSON：`{Low, Medium, High, Extreme uint64}`
 
 **职责**：扫描链上与各业务地址相关的新交易，找到后发 Kafka 通知 reward 等下游服务。
 
-**初始化**：读取 `t_tx_scan_info` 表全部记录，每条记录启动独立 goroutine。
+**初始化与动态变更**：
+- 启动时先读取 `t_tx_scan_info` 表已有检查点，每条记录启动独立 goroutine。
+- 若 Nacos `base-service-registry.yaml` 存在，则按 Nacos 的 scan 静态配置执行 `ReconcileScanConfigs`：
+  - `scan.enabled=true` 且任务未运行：确保 DB 检查点存在，不存在时用 `initial_until_tx_id` / `initial_slot` 创建，然后启动 goroutine。
+  - `scan.enabled=false` 或 Nacos 删除该 scan：取消对应 goroutine，但保留 DB 检查点。
+  - 已存在 DB 检查点时，不覆盖 `until_tx_id` / `slot`。
 
 **扫描循环**（每 3s 一轮）：
 ```
-1. 获取 redsync 分布式锁（base:sol:tx-scan:{service}-{subService}:lock，WithTries(1)）
+1. 获取 redsync 分布式锁（base:sol:tx-scan:{service}-{subService}-{pdaAccount}:lock，WithTries(1)）
 2. DB 事务 + FOR UPDATE NOWAIT 行级锁定 t_tx_scan_info 记录
 3. 调用 getSignaturesForAddress(pdaAccount, until=untilTxId, limit=300, Finalized)
 4. 按 slot 降序排序，取最新交易
@@ -314,6 +345,11 @@ Redis 值为 `entity.FeeDetail` 的 JSON：`{Low, Medium, High, Extreme uint64}`
 6. 提交 DB 事务（释放行锁）
 7. 对 slot > 旧 slot 的每笔交易，goroutine: handleServiceTx()
 ```
+
+**扫描检查点边界**：
+- Nacos 保存静态扫描定义：`service` / `sub_service` / `native_account` / `pda_account` / `enabled` / 初始化检查点。
+- DB 的 `t_tx_scan_info` 保存运行进度：`until_tx_id` / `slot`。
+- 若需要回滚检查点，必须通过显式运维操作更新 DB，不应通过修改 Nacos 的 `initial_until_tx_id` / `initial_slot` 隐式覆盖运行进度。
 
 **handleServiceTx 流程**：
 ```

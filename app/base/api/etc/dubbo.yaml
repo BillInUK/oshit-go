@@ -13,16 +13,9 @@ dubbo:
       password: lJPQwjjO9k
       namespace: public
       group: DEFAULT_GROUP
-
-  # 配置中心配置（Nacos，必选DataId与nacos_config.go中订阅的一致）
-  config-center:
-    protocol: nacos
-    address: 127.0.0.1:8848
-    username: nacos
-    password: lJPQwjjO9k
-    namespace: public
-    group: DEFAULT_GROUP
-    data-id: base-api-config  # 核心必选：与Nacos控制台、nacos_config.go一致
+      registry-type: interface
+      use-as-meta-report: false
+      use-as-config-center: false
 
   # 消费端核心配置（纯消费端专属，匹配原硬编码规则）
   consumer:
@@ -57,8 +50,3 @@ dubbo:
   provider:
     services: { }                   # 空map，避免遍历nil触发panic
     filter: -grpc_health, -grpc_reflection # 过滤内置服务，消除WARN
-
-  # 元数据服务配置（固定端口，消除随机端口WARN）
-  metadata-report:
-    protocol: dubbo
-    address: 127.0.0.1:63467

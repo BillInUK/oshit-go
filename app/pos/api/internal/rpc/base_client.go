@@ -27,6 +27,9 @@ func NewBaseClient(nacosAddr, serviceName, namespace, username, password string)
 	registryOpts := []registry.Option{
 		registry.WithNacos(),
 		registry.WithAddress(nacosAddr),
+		registry.WithRegisterInterface(),
+		registry.WithoutUseAsMetaReport(),
+		registry.WithoutUseAsConfigCenter(),
 	}
 	if namespace != "" {
 		registryOpts = append(registryOpts, registry.WithNamespace(namespace))

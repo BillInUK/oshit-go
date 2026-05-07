@@ -36,11 +36,11 @@ const (
 	DavidPrivate      = "4LRdCeZ4EYHsGtRr99zbh6WLZCa7jACVuhunzrbgyKvP4NxKuHPnaJ52t1AKzREbaD5n2NMsKYkdPMcnYRMacjgU"
 	DavidNativePubKey = "JAZtFeZfLeeVtWS4vrruCpTa5LdASRDJuMe7yLKbkJk"
 
-	//BaseURL = "http://localhost:1100/base"
-	//SnapURL  = "http://localhost:1300/snap"
+	BaseURL = "http://localhost:1100/base"
+	SnapURL = "http://localhost:1300/snap"
 
-	BaseURL = "https://beta.testnet.oshit.io/meme/base/api/v1"
-	SnapURL = "https://beta.testnet.oshit.io/meme/snap/api/v1"
+	//BaseURL = "https://beta.testnet.oshit.io/meme/base/api/v1"
+	//SnapURL = "https://beta.testnet.oshit.io/meme/snap/api/v1"
 
 	systemTransferCU uint64 = 500 // System.Transfer 固定预留 CU
 )

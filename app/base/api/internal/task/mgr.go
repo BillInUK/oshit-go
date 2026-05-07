@@ -1,7 +1,8 @@
 package task
 
 type TaskManager struct {
-	taskCtx *TaskContext
+	taskCtx    *TaskContext
+	txScanTask *TxScanTask
 }
 
 func NewTaskManager(taskCtx *TaskContext) *TaskManager {
@@ -26,9 +27,16 @@ func (m *TaskManager) StartAllTasks() {
 	holdersTask := NewHoldersTask(m.taskCtx)
 	holdersTask.Start()
 
-	txScanTask := NewTxScanTask(m.taskCtx)
-	txScanTask.Start()
+	m.txScanTask = NewTxScanTask(m.taskCtx)
+	m.txScanTask.Start()
 
 	txExpireTask := NewTxExpireTask(m.taskCtx)
 	txExpireTask.Start()
+}
+
+func (m *TaskManager) ReconcileScanConfigs(configs []ScanConfig) error {
+	if m.txScanTask == nil {
+		return nil
+	}
+	return m.txScanTask.Reconcile(configs)
 }

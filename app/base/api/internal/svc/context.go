@@ -32,6 +32,7 @@ aSxPflUNtEqE0dmLfbA8kZw7Rs8eGkUj4kOEMSZA4y4jtp1wn0QJJF31Obop60j1
 
 type ServiceContext struct {
 	core_context.CoreContext
+	TaskMgr *task.TaskManager
 }
 
 func NewServiceContext() (*ServiceContext, error) {
@@ -82,6 +83,15 @@ func NewServiceContext() (*ServiceContext, error) {
 		return nil, err
 	}
 
+	// 初始化 Nacos 配置中心，并用 Nacos 配置覆盖 DB 启动配置（本地未配置时回退 DB）
+	if err := svcCtx.initNacosConfigClient(); err != nil {
+		fmt.Printf("Init nacos config client error, fallback to database configs: %v\n", err)
+	}
+	initialScanConfigs, err := svcCtx.initNacosRuntimeAndRegistry()
+	if err != nil {
+		return nil, err
+	}
+
 	// 初始化Solana RPC客户端
 	svcCtx.initSolanaRPC()
 
@@ -95,6 +105,14 @@ func NewServiceContext() (*ServiceContext, error) {
 
 	// 初始化任务管理器
 	svcCtx.startTasks()
+	if initialScanConfigs != nil && svcCtx.TaskMgr != nil {
+		if err := svcCtx.TaskMgr.ReconcileScanConfigs(initialScanConfigs); err != nil {
+			return nil, err
+		}
+	}
+	if err := svcCtx.listenNacosConfigs(); err != nil {
+		fmt.Printf("Listen nacos configs error: %v\n", err)
+	}
 
 	return svcCtx, nil
 }
@@ -254,7 +272,8 @@ func (s *ServiceContext) startTasks() {
 		CoreContext: s.CoreContext,
 	}
 	taskMgr := task.NewTaskManager(taskCtx)
-	go taskMgr.StartAllTasks()
+	s.TaskMgr = taskMgr
+	taskMgr.StartAllTasks()
 }
 
 func (s *ServiceContext) Close() error {

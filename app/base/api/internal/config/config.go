@@ -11,6 +11,7 @@ type Config struct {
 	Redis    RedisConfig    `mapstructure:"redis"`
 	Kafka    KafkaConfig    `mapstructure:"kafka"`
 	Dubbo    DubboConfig    `mapstructure:"dubbo"`
+	Nacos    NacosConfig    `mapstructure:"nacos"`
 }
 
 type DubboConfig struct {
@@ -24,12 +25,44 @@ type ProtocolConfig struct {
 }
 
 type NacosConfig struct {
-	Host      string `mapstructure:"host"`
-	Port      int    `mapstructure:"port"`
-	GrpcPort  int    `mapstructure:"grpc-port"`
-	Namespace string `mapstructure:"namespace"`
-	Username  string `mapstructure:"username"`
-	Password  string `mapstructure:"password"`
+	Host             string                `mapstructure:"host"`
+	Port             int                   `mapstructure:"port"`
+	GrpcPort         int                   `mapstructure:"grpc-port"`
+	Namespace        string                `mapstructure:"namespace"`
+	Username         string                `mapstructure:"username"`
+	Password         string                `mapstructure:"password"`
+	ServerConfig     []NacosServerConfig   `mapstructure:"server_config"`
+	ClientConfig     NacosClientConfig     `mapstructure:"client_config"`
+	SubscribeConfigs NacosSubscribeConfigs `mapstructure:"subscribe_configs"`
+}
+
+// NacosServerConfig Nacos服务端配置结构体（匹配yaml中的server_config）
+type NacosServerConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     uint64 `mapstructure:"port"`
+	GrpcPort uint64 `mapstructure:"grpc_port"`
+}
+
+// NacosClientConfig Nacos客户端配置结构体（匹配yaml中的client_config）
+type NacosClientConfig struct {
+	NamespaceId         string `mapstructure:"namespace_id"`
+	TimeoutMs           uint64 `mapstructure:"timeout_ms"`
+	NotLoadCacheAtStart bool   `mapstructure:"not_load_cache_at_start"`
+	LogDir              string `mapstructure:"log_dir"`
+	CacheDir            string `mapstructure:"cache_dir"`
+	LogLevel            string `mapstructure:"log_level"`
+	Username            string `mapstructure:"username"`
+	Password            string `mapstructure:"password"`
+}
+
+type NacosSubscribeConfig struct {
+	DataId string `mapstructure:"data_id"`
+	Group  string `mapstructure:"group"`
+}
+
+type NacosSubscribeConfigs struct {
+	BaseRuntime     NacosSubscribeConfig `mapstructure:"base_runtime"`
+	ServiceRegistry NacosSubscribeConfig `mapstructure:"service_registry"`
 }
 
 type AppConfig struct {

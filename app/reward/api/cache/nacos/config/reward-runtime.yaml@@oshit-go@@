@@ -1,0 +1,40 @@
+level_dist:
+  dist_level: 2
+
+level_ratio:
+  - dist_level: 1
+    ratio: 10.00
+  - dist_level: 2
+    ratio: 1.00
+
+discount_rate:
+  rate: 1.25
+
+take_token:
+  invite_code: ""
+  reward_account: "GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E"
+  cost_account: "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K"
+  amount: 500000
+  invite_amount: 1500000
+  cost_fee_rate: 200
+  max_cost_fee: 400
+  is_default: true
+  reward_inviter: true
+  invited: true
+
+give_token:
+  reward_account: "AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ"
+  cost_account: "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K"
+  reward_rate: 200.00
+  max_valid_reward: 4000000
+  valid_rate: 300.000000
+
+campaign_quote:
+  reward_account: "2NVji8RvQAFhg4YJKuxqhdMjWMLJmWbKm5MBvSJmTUHL"
+  cost_account: "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K"
+  quote_rate: 500.00
+  cost_rate: 17.00
+
+reward_code:
+  reward_account: "584AMuM1HkV4wRMMVPZuZy9g9mZbSAcTF7QiBrHJaZFE"
+  cost_account: "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K"

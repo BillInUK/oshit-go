@@ -41,6 +41,10 @@ nacos:
     username: "nacos"               # Nacos用户名
     password: "lJPQwjjO9k"          # Nacos密码
 
-  subscribe_config:                 # Nacos订阅配置（要读取的业务配置标识）
-    data_id: "pos-api-config"    # 业务配置DataId
-    group: "DEFAULT_GROUP"          # 业务配置Group
+  subscribe_configs:
+    base_runtime:
+      data_id: "base-runtime.yaml"
+      group: "oshit-go"
+    pos_runtime:
+      data_id: "pos-runtime.yaml"
+      group: "oshit-go"

@@ -6,10 +6,12 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/go-redsync/redsync/v4"
+	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"oshit-go/app/base/api/internal/config"
 	"oshit-go/common/pkg/dal/model"
+	"sync"
 )
 
 // ServiceKey 二维索引: ServiceKeyMap[service][subService] = privateKey
@@ -29,8 +31,10 @@ type CoreContext struct {
 	LightHouseAddress   solana.PublicKey
 	TokenDecimal        float64
 	KafkaProducer       interface{} // kafka.Producer类型，在kafka.go中定义
+	NacosConfigClient   config_client.IConfigClient
 
 	// 配置表数据
+	ConfigMu            sync.RWMutex
 	SystemConfig        *model.SystemConfig
 	ChainConfig         *model.ChainConfig
 	UserWalletRPCConfig *model.UserWalletRpcConfig

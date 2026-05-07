@@ -118,12 +118,11 @@ func (l *AuthLogic) QueryNativeAccountInfoByInviteCode(inviteCode string) (*mode
 // RegisterNativeAccount 注册原生账户
 func (l *AuthLogic) RegisterNativeAccount(brand, symbol, nativeAccount, inviteCode string) (*model.NativeAccountInfo, error) {
 	// 找到token配置
-	var tokenConfig model.TokenConfig
-	if err := l.db.Model(&tokenConfig).Where("token_name = ? AND token_symbol = ?", brand, symbol).First(&tokenConfig).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("can not find token config")
-		}
-		return nil, err
+	l.srvCtx.ConfigMu.RLock()
+	tokenConfig := l.srvCtx.TokenConfig
+	l.srvCtx.ConfigMu.RUnlock()
+	if tokenConfig == nil || tokenConfig.TokenName != brand || tokenConfig.TokenSymbol != symbol {
+		return nil, errors.New("can not find token config")
 	}
 
 	// 查看地址是否已经注册
@@ -193,12 +192,12 @@ func (l *AuthLogic) RegisterNativeAccount(brand, symbol, nativeAccount, inviteCo
 		}
 
 		inviteRelation := model.InviteRelation{
-			Inviter: inviterRecord.NativeAccount,
-			Invitee: nativeAccount,
-			Channel:              "InviteCode",
-			InviterLevel:         int32(level),
-			CreatedAt:            time.Now(),
-			UpdatedAt:            time.Now(),
+			Inviter:      inviterRecord.NativeAccount,
+			Invitee:      nativeAccount,
+			Channel:      "InviteCode",
+			InviterLevel: int32(level),
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
 		}
 
 		if err := l.db.Create(&inviteRelation).Error; err != nil {

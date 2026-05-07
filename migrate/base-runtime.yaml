@@ -1,0 +1,35 @@
+system:
+  env: 1
+
+chain:
+  chain_name: "solana"
+  rpc_url: "https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
+  wss_url: "wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
+  decimals: 9
+  symbol: "SOL"
+
+user_wallet_rpc:
+  chain_name: "solana"
+  rpc_url: "https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
+  wss_url: "wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
+
+mainnet_rpc:
+  chain_name: "solana"
+  rpc_url: "https://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043"
+  wss_url: "wss://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043"
+
+token:
+  token_name: "OShit"
+  token_symbol: "OShit"
+  decimals: 3
+  mint: "wtnrTujJqBRUknLRhQQcUSwzAzx8LvcxKXEuBwvFnJM"
+
+fee_tolerance:
+  max_less_rate: 0.05
+
+aws:
+  access_key_id: "AKIAUBM64K3O3GFSHN7W"
+  secret_access_key: "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"
+  region: "ap-southeast-1"
+
+lighthouse_address: "L2TExMFKdjpN9kozasaurPirfHy9P8sbXoAN1qA3S95"

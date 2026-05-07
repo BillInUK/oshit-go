@@ -88,6 +88,9 @@ type CoreContext struct {
 	KafkaConsumer     interface{} // *kafka.Reader，在kafka.go中定义
 	BaseClient        *rewardrpc.BaseClient
 
+	NacosConfigClient config_client.IConfigClient
+	ConfigMu          sync.RWMutex
+
 	// 配置表数据
 	SystemConfig *model.SystemConfig
 	ChainConfig  *model.ChainConfig
@@ -215,23 +218,28 @@ main()
       ├── initDatabase()                → GORM postgres 连接
       ├── initRedis()                   → go-redis UniversalClient（支持 Sentinel）
       ├── redsync.New(pool)             → 分布式锁
-      ├── initDatabaseConfigs()         → 从 DB 加载全局配置表到 CoreContext / ServiceContext：
-      │    SystemConfig / ChainConfig / TokenConfig / FeeTolerance / LightHouseAddress
-      │    LevelDist / LevelRatio / LevelRatioMap（奖励层级配置，构建二维索引）
-      │    DiscountRate / TakeTokenConfig / GiveTokenConfig
-      │    CampaignQuoteConfig / RewardCodeConfig
-      │    RewardKeyMap（从 t_reward_key_config 加载并解密私钥，按 service 索引）
-      │    解密算法: PBEWithHMACSHA512AndAES_256，密码: fktYimwMl3OfUF3m
-      ├── initSolanaRPC()               → rpc.New(ChainConfig.RPCURL)，初始化 RpcClient
-      ├── initKafkaProducer()           → kafka-go writer
-      ├── initKafkaConsumer()           → kafka-go reader
+	├── initDatabaseConfigs()         → 从 DB 加载全局配置表到 CoreContext / ServiceContext：
+	│    SystemConfig / ChainConfig / TokenConfig / FeeTolerance / LightHouseAddress
+	│    LevelDist / LevelRatio / LevelRatioMap（奖励层级配置，构建二维索引）
+	│    DiscountRate / TakeTokenConfig / GiveTokenConfig
+	│    CampaignQuoteConfig / RewardCodeConfig
+	│    以上 DB 配置作为 Nacos 不可用或配置为空时的兜底配置
+      ├── initNacosConfigClient()      → 初始化 Nacos config client
+      ├── initNacosRuntimeConfigs()    → 优先从 Nacos 覆盖 DB 兜底配置：
+      │    base-runtime.yaml           → SystemConfig / ChainConfig / TokenConfig / FeeTolerance / LightHouseAddress
+      │    reward-runtime.yaml         → LevelDist / LevelRatio / DiscountRate
+      │                                  TakeTokenConfig / GiveTokenConfig / CampaignQuoteConfig / RewardCodeConfig
+	├── initSolanaRPC()               → rpc.New(ChainConfig.RPCURL)，初始化 RpcClient
+	├── initKafkaProducer()           → kafka-go writer
+	├── initKafkaConsumer()           → kafka-go reader
       ├── initBaseClient()              → 通过 Nacos 地址初始化 Dubbo Triple BaseClient
       │    连接 base 服务（用于获取手续费、价格、发送交易等）
       ├── initCampaignClient()          → 按环境初始化 Campaign HTTP 内部客户端
       │    env=0（测试环境）: http://172.31.48.20:4000/internal/api/v1
-      │    env=1（生产环境）: http://172.31.48.157:80/internal/api/v1
-      ├── utils.InitDTokenManager()     → 初始化 dtoken JWT 鉴权管理器
-      └── startTasks()                  → 创建 TaskManager（此时尚未启动任务，只初始化）
+	│    env=1（生产环境）: http://172.31.48.157:80/internal/api/v1
+	├── utils.InitDTokenManager()     → 初始化 dtoken JWT 鉴权管理器
+	├── startTasks()                  → 创建 TaskManager（此时尚未启动任务，只初始化）
+      └── listenNacosConfigs()         → 监听 base-runtime.yaml / reward-runtime.yaml 变更并热更新内存配置
 
 main()
  ├── registerTasks(srvCtx)             → 注册 Kafka 消息处理器并启动后台任务
@@ -251,4 +259,73 @@ main()
 
 # 9. 其他
 
+## 9.1 Nacos 配置
+
+reward 当前订阅两个 Nacos dataId，Group 均为 `oshit-go`：
+
+| Data ID | 用途 | 来源 |
+|---|---|---|
+| `base-runtime.yaml` | 全局链、Token、环境、手续费容错、LightHouse 地址配置 | 与 base 服务共用 |
+| `reward-runtime.yaml` | reward 自身奖励规则配置 | `migrate/reward-runtime.yaml` |
+
+`base-runtime.yaml` 中 reward 使用的字段如下：
+
+```yaml
+system:
+  env: 1
+chain:
+  chain_name: "solana"
+  rpc_url: "..."
+  wss_url: "..."
+  decimals: 9
+  symbol: "SOL"
+token:
+  token_name: "OShit"
+  token_symbol: "OShit"
+  decimals: 3
+  mint: "..."
+fee_tolerance:
+  max_less_rate: 0.05
+lighthouse_address: "..."
+```
+
+`reward-runtime.yaml` 中包含以下业务规则：
+
+```yaml
+level_dist:
+  dist_level: 2
+level_ratio:
+  - dist_level: 1
+    ratio: 10.00
+discount_rate:
+  rate: 1.25
+take_token:
+  reward_account: "..."
+  cost_account: "..."
+  amount: 500000
+  invite_amount: 1500000
+  cost_fee_rate: 200
+  max_cost_fee: 400
+  is_default: true
+  reward_inviter: true
+  invited: true
+give_token:
+  reward_account: "..."
+  cost_account: "..."
+  reward_rate: 200.00
+  max_valid_reward: 4000000
+  valid_rate: 300.000000
+campaign_quote:
+  reward_account: "..."
+  cost_account: "..."
+  quote_rate: 500.00
+  cost_rate: 17.00
+reward_code:
+  reward_account: "..."
+  cost_account: "..."
+```
+
+启动时 reward 会先从 DB 读取这些配置作为兜底，再读取 Nacos 覆盖内存配置。Nacos 读取失败或 dataId 内容为空时，服务继续使用 DB 兜底配置启动。
+
+Nacos listener 会热更新内存中的全局配置和 reward 业务规则。已经进入执行过程的单次请求或 Kafka 消息处理可能继续使用创建逻辑对象时持有的旧配置；新的请求和新的处理流程会使用更新后的配置。
 

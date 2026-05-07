@@ -169,6 +169,7 @@ CREATE TABLE public.t_service_info
     created_at  timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at  timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
+CREATE UNIQUE INDEX uq_service_info_service_sub_service ON public.t_service_info (service, sub_service);
 
 -- 业务私钥
 -- 新工程整合旧工程里面 t_reward_key_config,t_pos_reward_key_config 两张表过来
@@ -182,6 +183,7 @@ CREATE TABLE public.t_service_key
     created_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
+CREATE UNIQUE INDEX uq_service_key_service_sub_service ON public.t_service_key (service, sub_service);
 
 -- 业务交易扫描表
 -- 新工程整合旧工程里面的 t_reward_scan_info, t_pos_scan_info等几张表
@@ -199,6 +201,7 @@ CREATE TABLE public.t_tx_scan_info
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
+CREATE UNIQUE INDEX uq_tx_scan_info_service_sub_service_pda ON public.t_tx_scan_info (service, sub_service, pda_account);
 
 -- 业务交易表
 -- 新工程整合旧工程里面的 t_reward_tx,t_pos_tx等几张表
