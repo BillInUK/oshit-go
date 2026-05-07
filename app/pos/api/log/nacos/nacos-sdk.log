@@ -3,3 +3,11 @@
 2026-05-07T11:12:54.671+0800	INFO	rpc/rpc_client.go:234	config-0-51f83b95-cd3b-43ed-a1ba-0e9f1237054e success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1778123574565_172.17.0.1_56082
 2026-05-07T11:12:54.710+0800	ERROR	cache/disk_cache.go:86	failed to delete config file,cache:./cache/nacos/config/pos-runtime.yaml@@oshit-go@@ ,value: ,err:remove ./cache/nacos/config/pos-runtime.yaml@@oshit-go@@: no such file or directory
 2026-05-07T11:12:54.711+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-05-07T12:26:03.951+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-ae97491e-9517-43c4-b707-2acb4a2349bc try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-05-07T12:26:03.953+0800	INFO	util/common.go:96	Local IP:192.168.110.167
+2026-05-07T12:26:04.055+0800	INFO	rpc/rpc_client.go:234	config-0-ae97491e-9517-43c4-b707-2acb4a2349bc success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1778127963954_172.17.0.1_55208
+2026-05-07T12:26:04.061+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-05-07T13:54:14.303+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-6052a6d0-adf7-46a4-ac49-86fbd5044748 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-05-07T13:54:14.304+0800	INFO	util/common.go:96	Local IP:192.168.110.167
+2026-05-07T13:54:14.408+0800	INFO	rpc/rpc_client.go:234	config-0-6052a6d0-adf7-46a4-ac49-86fbd5044748 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1778133254306_172.17.0.1_63082
+2026-05-07T13:54:14.418+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>

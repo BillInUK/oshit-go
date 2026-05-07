@@ -38,3 +38,11 @@
 2026-05-06T21:33:33.299+0800	INFO	util/common.go:96	Local IP:192.168.110.167
 2026-05-06T21:33:33.402+0800	INFO	rpc/rpc_client.go:234	config-0-76fff1be-d74c-4cf9-a04a-ef5ab13e9247 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1778074413300_172.17.0.1_60508
 2026-05-06T21:33:33.411+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-05-07T12:25:46.007+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-ef5c0c17-5687-4987-8ec8-7fad241dc5c9 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-05-07T12:25:46.008+0800	INFO	util/common.go:96	Local IP:192.168.110.167
+2026-05-07T12:25:46.115+0800	INFO	rpc/rpc_client.go:234	config-0-ef5c0c17-5687-4987-8ec8-7fad241dc5c9 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1778127946011_172.17.0.1_59960
+2026-05-07T12:25:46.127+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-05-07T13:53:47.551+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-ac2ee5cd-2edb-458c-b559-2d6d7e7565cb try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-05-07T13:53:47.552+0800	INFO	util/common.go:96	Local IP:192.168.110.167
+2026-05-07T13:53:47.656+0800	INFO	rpc/rpc_client.go:234	config-0-ac2ee5cd-2edb-458c-b559-2d6d7e7565cb success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1778133227555_172.17.0.1_55046
+2026-05-07T13:53:47.665+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>

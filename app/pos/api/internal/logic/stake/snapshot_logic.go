@@ -3,6 +3,7 @@ package stake
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	posrpc "oshit-go/app/pos/api/internal/rpc"
 	"oshit-go/app/pos/api/internal/svc"
 	"oshit-go/app/pos/api/internal/task"
@@ -65,9 +66,9 @@ func NewStakeSnapShotLogic(ctx context.Context, srvCtx *svc.ServiceContext) *Sta
 
 // TakeStakeSnapShot 手动开启Stake快照
 func (l *StakeSnapShotLogic) TakeStakeSnapShot() error {
-	//if l.srvCtx.SystemConfig.Env == 0 {
-	//	return response.FailWithMsg(c, "can not take snap shot on mainnet")
-	//}
+	if l.srvCtx.SystemConfig.Env == 0 {
+		return errors.New("can not take snap shot manually on mainnet")
+	}
 	taskCtx := &task.TaskContext{
 		CoreContext:  l.srvCtx.CoreContext,
 		RewardConfig: l.srvCtx.StakeRewardConfig,
@@ -79,15 +80,13 @@ func (l *StakeSnapShotLogic) TakeStakeSnapShot() error {
 
 // ResetStakeSnapShot 重置Stake快照
 func (l *StakeSnapShotLogic) ResetStakeSnapShot() error {
-	//if l.srvCtx.SystemConfig.Env == 0 {
-	//	return response.FailWithMsg(c, "can not take snap shot on mainnet")
-	//}
+	if l.srvCtx.SystemConfig.Env == 0 {
+		return errors.New("can not take snap shot manually on mainnet")
+	}
 
 	// 使用 Exec 执行多条 SQL 语句
 	err := l.db.Exec(`
 		delete from t_stake_snap_shot;
-		delete from t_stake_reward;
-		delete from t_stake_reward_claim;
 	`).Error
 	if err != nil {
 		return err

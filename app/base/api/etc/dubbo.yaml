@@ -12,7 +12,7 @@ dubbo:
       username: nacos
       password: lJPQwjjO9k
       namespace: public
-      group: DEFAULT_GROUP
+      group: oshit-go
       registry-type: interface
       use-as-meta-report: false
       use-as-config-center: false

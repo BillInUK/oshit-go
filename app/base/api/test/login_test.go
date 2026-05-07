@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	baseURL = "http://localhost:1100"
+	//baseURL = "http://localhost:1100"
+	baseURL = "https://beta.testnet.oshit.io/meme/base/api/v1"
 	brand   = "OShit" // 按实际配置修改
 	symbol  = "OShit" // 按实际配置修改
 )

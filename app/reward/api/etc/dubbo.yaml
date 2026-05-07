@@ -12,7 +12,7 @@ dubbo:
       username: nacos
       password: lJPQwjjO9k
       namespace: public
-      group: DEFAULT_GROUP
+      group: oshit-go
 
   # 配置中心配置（Nacos，必选DataId与nacos_config.go中订阅的一致）
   config-center:
@@ -21,7 +21,7 @@ dubbo:
     username: nacos
     password: lJPQwjjO9k
     namespace: public
-    group: DEFAULT_GROUP
+    group: oshit-go
     data-id: reward-api-config  # 核心必选：与Nacos控制台、nacos_config.go一致
 
   # 消费端核心配置（纯消费端专属，匹配原硬编码规则）
