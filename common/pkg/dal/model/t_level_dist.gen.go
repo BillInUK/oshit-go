@@ -8,7 +8,7 @@ const TableNameLevelDist = "t_level_dist"
 
 // LevelDist mapped from table <t_level_dist>
 type LevelDist struct {
-	DistLevel int32 `gorm:"column:dist_level;not null" json:"dist_level"`
+	DistLevel int32 `gorm:"column:dist_level;not null" json:"distLevel"`
 }
 
 // TableName LevelDist's table name

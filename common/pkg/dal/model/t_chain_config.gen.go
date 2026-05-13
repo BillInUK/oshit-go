@@ -12,13 +12,13 @@ const TableNameChainConfig = "t_chain_config"
 
 // ChainConfig mapped from table <t_chain_config>
 type ChainConfig struct {
-	ChainName string    `gorm:"column:chain_name;not null" json:"chain_name"`
-	RPCURL    string    `gorm:"column:rpc_url;not null" json:"rpc_url"`
-	WssURL    string    `gorm:"column:wss_url;not null" json:"wss_url"`
+	ChainName string    `gorm:"column:chain_name;not null" json:"chainName"`
+	RPCURL    string    `gorm:"column:rpc_url;not null" json:"rpcUrl"`
+	WssURL    string    `gorm:"column:wss_url;not null" json:"wssUrl"`
 	Decimals  int32     `gorm:"column:decimals;not null" json:"decimals"`
 	Symbol    string    `gorm:"column:symbol;not null" json:"symbol"`
-	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName ChainConfig's table name

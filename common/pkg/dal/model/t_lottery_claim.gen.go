@@ -12,12 +12,12 @@ const TableNameLotteryClaim = "t_lottery_claim"
 
 // LotteryClaim mapped from table <t_lottery_claim>
 type LotteryClaim struct {
-	RecordID  string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	RewardIds string    `gorm:"column:reward_ids;not null" json:"reward_ids"`
-	TxID      string    `gorm:"column:tx_id" json:"tx_id"`
-	TxState   int32     `gorm:"column:tx_state" json:"tx_state"`
-	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID  string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"recordId"`
+	RewardIds string    `gorm:"column:reward_ids;not null" json:"rewardIds"`
+	TxID      string    `gorm:"column:tx_id" json:"txId"`
+	TxState   int32     `gorm:"column:tx_state" json:"txState"`
+	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName LotteryClaim's table name

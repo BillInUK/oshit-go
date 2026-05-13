@@ -12,14 +12,14 @@ const TableNameStakeRewardConfig = "t_stake_reward_config"
 
 // StakeRewardConfig mapped from table <t_stake_reward_config>
 type StakeRewardConfig struct {
-	RecordID         string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
-	ProgramID        string    `gorm:"column:program_id;not null" json:"program_id"`
-	RewardAccount    string    `gorm:"column:reward_account;not null" json:"reward_account"`
-	CostAccount      string    `gorm:"column:cost_account;not null" json:"cost_account"`
-	QuoteTokenAmount float64   `gorm:"column:quote_token_amount;not null" json:"quote_token_amount"`
-	CostFeeRate      int32     `gorm:"column:cost_fee_rate;not null" json:"cost_fee_rate"`
-	CreatedAt        time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt        time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID         string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
+	ProgramID        string    `gorm:"column:program_id;not null" json:"programId"`
+	RewardAccount    string    `gorm:"column:reward_account;not null" json:"rewardAccount"`
+	CostAccount      string    `gorm:"column:cost_account;not null" json:"costAccount"`
+	QuoteTokenAmount float64   `gorm:"column:quote_token_amount;not null" json:"quoteTokenAmount"`
+	CostFeeRate      int32     `gorm:"column:cost_fee_rate;not null" json:"costFeeRate"`
+	CreatedAt        time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt        time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName StakeRewardConfig's table name

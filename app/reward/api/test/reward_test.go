@@ -69,9 +69,9 @@ type TransactionParams struct {
 
 // InstUnitsRsp 与 base 模块 /fee/inst-units 响应字段保持一致
 type InstUnitsRsp struct {
-	MiniRent          uint64 `json:"mini_rent"`
-	AssociatedAccount uint64 `json:"associated_account"`
-	TransferChecked   uint64 `json:"transfer_checked"`
+	MiniRent          uint64 `json:"miniRent"`
+	AssociatedAccount uint64 `json:"associatedAccount"`
+	TransferChecked   uint64 `json:"transferChecked"`
 	Memo              uint64 `json:"memo"`
 }
 
@@ -81,7 +81,7 @@ type loginReqBody struct {
 	Account    string `json:"account"`
 	Sign       string `json:"sign"`
 	Nonce      uint64 `json:"nonce"`
-	InviteCode string `json:"invite_code"`
+	InviteCode string `json:"inviteCode"`
 }
 
 type loginRspData struct {

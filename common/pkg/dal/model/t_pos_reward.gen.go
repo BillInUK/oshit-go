@@ -12,20 +12,20 @@ const TableNamePosReward = "t_pos_reward"
 
 // PosReward mapped from table <t_pos_reward>
 type PosReward struct {
-	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
-	GroupID       string    `gorm:"column:group_id;not null" json:"group_id"`
-	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
-	StarLevel     int32     `gorm:"column:star_level" json:"star_level"`
+	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
+	GroupID       string    `gorm:"column:group_id;not null" json:"groupId"`
+	NativeAccount string    `gorm:"column:native_account;not null" json:"nativeAccount"`
+	StarLevel     int32     `gorm:"column:star_level" json:"starLevel"`
 	Base          float64   `gorm:"column:base" json:"base"`
 	Rate          float64   `gorm:"column:rate" json:"rate"`
-	RewardAmount  float64   `gorm:"column:reward_amount" json:"reward_amount"`
-	RewardType    int32     `gorm:"column:reward_type" json:"reward_type"`
-	RewardState   int32     `gorm:"column:reward_state" json:"reward_state"`
+	RewardAmount  float64   `gorm:"column:reward_amount" json:"rewardAmount"`
+	RewardType    int32     `gorm:"column:reward_type" json:"rewardType"`
+	RewardState   int32     `gorm:"column:reward_state" json:"rewardState"`
 	Starred       bool      `gorm:"column:starred;not null" json:"starred"`
 	Pending       bool      `gorm:"column:pending" json:"pending"`
-	SnapDay       time.Time `gorm:"column:snap_day;not null" json:"snap_day"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	SnapDay       time.Time `gorm:"column:snap_day;not null" json:"snapDay"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName PosReward's table name

@@ -12,10 +12,10 @@ const TableNameStakeLeaderRewardConfig = "t_stake_leader_reward_config"
 
 // StakeLeaderRewardConfig mapped from table <t_stake_leader_reward_config>
 type StakeLeaderRewardConfig struct {
-	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
-	RewardAccount string    `gorm:"column:reward_account" json:"reward_account"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
+	RewardAccount string    `gorm:"column:reward_account" json:"rewardAccount"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName StakeLeaderRewardConfig's table name

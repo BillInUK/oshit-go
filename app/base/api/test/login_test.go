@@ -25,7 +25,7 @@ type loginReq struct {
 	Account    string `json:"account"`
 	Sign       string `json:"sign"`
 	Nonce      uint64 `json:"nonce"`
-	InviteCode string `json:"invite_code"`
+	InviteCode string `json:"inviteCode"`
 }
 
 type loginRsp struct {

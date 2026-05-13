@@ -12,21 +12,21 @@ const TableNameCampaignQuoteRecord = "t_campaign_quote_record"
 
 // CampaignQuoteRecord mapped from table <t_campaign_quote_record>
 type CampaignQuoteRecord struct {
-	RecordID       string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
-	RewardAccount  string    `gorm:"column:reward_account;not null" json:"reward_account"`
-	ReceiptAccount string    `gorm:"column:receipt_account;not null" json:"receipt_account"`
+	RecordID       string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
+	RewardAccount  string    `gorm:"column:reward_account;not null" json:"rewardAccount"`
+	ReceiptAccount string    `gorm:"column:receipt_account;not null" json:"receiptAccount"`
 	Provider       string    `gorm:"column:provider;not null" json:"provider"`
-	UserID         string    `gorm:"column:user_id;not null" json:"user_id"`
-	TxID           string    `gorm:"column:tx_id;not null" json:"tx_id"`
-	ScoreFlowID    int32     `gorm:"column:score_flow_id;not null" json:"score_flow_id"`
-	ScoreTxID      string    `gorm:"column:score_tx_id;not null" json:"score_tx_id"`
+	UserID         string    `gorm:"column:user_id;not null" json:"userId"`
+	TxID           string    `gorm:"column:tx_id;not null" json:"txId"`
+	ScoreFlowID    int32     `gorm:"column:score_flow_id;not null" json:"scoreFlowId"`
+	ScoreTxID      string    `gorm:"column:score_tx_id;not null" json:"scoreTxId"`
 	Amount         float64   `gorm:"column:amount;not null" json:"amount"`
 	Score          float64   `gorm:"column:score;not null" json:"score"`
-	QuoteState     int32     `gorm:"column:quote_state" json:"quote_state"`
-	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	QuoteState     int32     `gorm:"column:quote_state" json:"quoteState"`
 	Session        int16     `gorm:"column:session;not null" json:"session"`
-	UserQuotaDate  time.Time `gorm:"column:user_quota_date;not null;default:CURRENT_DATE" json:"user_quota_date"`
+	UserQuotaDate  time.Time `gorm:"column:user_quota_date;not null;default:CURRENT_DATE" json:"userQuotaDate"`
+	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName CampaignQuoteRecord's table name

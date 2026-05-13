@@ -12,12 +12,12 @@ const TableNamePosMissionConfig = "t_pos_mission_config"
 
 // PosMissionConfig mapped from table <t_pos_mission_config>
 type PosMissionConfig struct {
-	RecordID   string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
-	RewardType int32     `gorm:"column:reward_type;not null" json:"reward_type"`
+	RecordID   string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
+	RewardType int32     `gorm:"column:reward_type;not null" json:"rewardType"`
 	Starred    bool      `gorm:"column:starred;not null" json:"starred"`
 	Rate       float64   `gorm:"column:rate" json:"rate"`
-	CreatedAt  time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt  time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt  time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt  time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName PosMissionConfig's table name

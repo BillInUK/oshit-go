@@ -12,19 +12,19 @@ const TableNameStakeBuyToken = "t_stake_buy_token"
 
 // StakeBuyToken mapped from table <t_stake_buy_token>
 type StakeBuyToken struct {
-	TxID            string    `gorm:"column:tx_id;not null" json:"tx_id"`
+	TxID            string    `gorm:"column:tx_id;not null" json:"txId"`
 	Slot            float64   `gorm:"column:slot;not null" json:"slot"`
-	FromAccount     string    `gorm:"column:from_account;not null" json:"from_account"`
-	ToAccount       string    `gorm:"column:to_account;not null" json:"to_account"`
+	FromAccount     string    `gorm:"column:from_account;not null" json:"fromAccount"`
+	ToAccount       string    `gorm:"column:to_account;not null" json:"toAccount"`
 	Amount          float64   `gorm:"column:amount;not null" json:"amount"`
 	Locked          bool      `gorm:"column:locked;not null" json:"locked"`
-	LockedBy        string    `gorm:"column:locked_by" json:"locked_by"`
-	LockedAt        time.Time `gorm:"column:locked_at" json:"locked_at"`
-	StakedAmount    float64   `gorm:"column:staked_amount;not null" json:"staked_amount"`
-	RemainingAmount float64   `gorm:"column:remaining_amount;not null" json:"remaining_amount"`
+	LockedBy        string    `gorm:"column:locked_by" json:"lockedBy"`
+	LockedAt        time.Time `gorm:"column:locked_at" json:"lockedAt"`
+	StakedAmount    float64   `gorm:"column:staked_amount;not null" json:"stakedAmount"`
+	RemainingAmount float64   `gorm:"column:remaining_amount;not null" json:"remainingAmount"`
 	Expired         bool      `gorm:"column:expired;not null" json:"expired"`
-	CreatedAt       time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	ExpiredAt       time.Time `gorm:"column:expired_at;default:CURRENT_TIMESTAMP" json:"expired_at"`
+	CreatedAt       time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	ExpiredAt       time.Time `gorm:"column:expired_at;default:CURRENT_TIMESTAMP" json:"expiredAt"`
 }
 
 // TableName StakeBuyToken's table name

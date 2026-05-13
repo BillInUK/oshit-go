@@ -12,14 +12,14 @@ const TableNameGiveTokenRecord = "t_give_token_record"
 
 // GiveTokenRecord mapped from table <t_give_token_record>
 type GiveTokenRecord struct {
-	RecordID       string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	FromAccount    string    `gorm:"column:from_account;not null" json:"from_account"`
-	ReceiptAccount string    `gorm:"column:receipt_account;not null" json:"receipt_account"`
-	TxID           string    `gorm:"column:tx_id;not null" json:"tx_id"`
+	RecordID       string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"recordId"`
+	FromAccount    string    `gorm:"column:from_account;not null" json:"fromAccount"`
+	ReceiptAccount string    `gorm:"column:receipt_account;not null" json:"receiptAccount"`
+	TxID           string    `gorm:"column:tx_id;not null" json:"txId"`
 	Amount         float64   `gorm:"column:amount;not null" json:"amount"`
-	TxState        int32     `gorm:"column:tx_state" json:"tx_state"`
-	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	TxState        int32     `gorm:"column:tx_state" json:"txState"`
+	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName GiveTokenRecord's table name

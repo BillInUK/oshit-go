@@ -12,10 +12,10 @@ const TableNameHackerAccount = "t_hacker_account"
 
 // HackerAccount mapped from table <t_hacker_account>
 type HackerAccount struct {
-	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"recordId"`
+	NativeAccount string    `gorm:"column:native_account;not null" json:"nativeAccount"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName HackerAccount's table name

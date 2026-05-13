@@ -13,8 +13,8 @@ type FeeDetail struct {
 
 type QnSOLPriorityFee struct {
 	Context        Context   `json:"context"`
-	PerComputeUnit FeeDetail `json:"per_compute_unit"`
-	PerTransaction FeeDetail `json:"per_transaction"`
+	PerComputeUnit FeeDetail `json:"perComputeUnit"`
+	PerTransaction FeeDetail `json:"perTransaction"`
 }
 
 type SOLWeightAvgFee struct {
@@ -36,8 +36,8 @@ type ComputeUnitDetail struct {
 }
 
 type PriorityFee struct {
-	PerComputeUnit FeeDetail `json:"per_compute_unit"`
-	PerTransaction FeeDetail `json:"per_transaction"`
+	PerComputeUnit FeeDetail `json:"perComputeUnit"`
+	PerTransaction FeeDetail `json:"perTransaction"`
 }
 
 //type PriorityFeeData struct {

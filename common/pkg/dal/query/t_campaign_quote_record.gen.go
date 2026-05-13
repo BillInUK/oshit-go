@@ -39,10 +39,10 @@ func newCampaignQuoteRecord(db *gorm.DB, opts ...gen.DOOption) campaignQuoteReco
 	_campaignQuoteRecord.Amount = field.NewFloat64(tableName, "amount")
 	_campaignQuoteRecord.Score = field.NewFloat64(tableName, "score")
 	_campaignQuoteRecord.QuoteState = field.NewInt32(tableName, "quote_state")
-	_campaignQuoteRecord.CreatedAt = field.NewTime(tableName, "created_at")
-	_campaignQuoteRecord.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_campaignQuoteRecord.Session = field.NewInt16(tableName, "session")
 	_campaignQuoteRecord.UserQuotaDate = field.NewTime(tableName, "user_quota_date")
+	_campaignQuoteRecord.CreatedAt = field.NewTime(tableName, "created_at")
+	_campaignQuoteRecord.UpdatedAt = field.NewTime(tableName, "updated_at")
 
 	_campaignQuoteRecord.fillFieldMap()
 
@@ -64,10 +64,10 @@ type campaignQuoteRecord struct {
 	Amount         field.Float64
 	Score          field.Float64
 	QuoteState     field.Int32
-	CreatedAt      field.Time
-	UpdatedAt      field.Time
 	Session        field.Int16
 	UserQuotaDate  field.Time
+	CreatedAt      field.Time
+	UpdatedAt      field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -95,10 +95,10 @@ func (c *campaignQuoteRecord) updateTableName(table string) *campaignQuoteRecord
 	c.Amount = field.NewFloat64(table, "amount")
 	c.Score = field.NewFloat64(table, "score")
 	c.QuoteState = field.NewInt32(table, "quote_state")
-	c.CreatedAt = field.NewTime(table, "created_at")
-	c.UpdatedAt = field.NewTime(table, "updated_at")
 	c.Session = field.NewInt16(table, "session")
 	c.UserQuotaDate = field.NewTime(table, "user_quota_date")
+	c.CreatedAt = field.NewTime(table, "created_at")
+	c.UpdatedAt = field.NewTime(table, "updated_at")
 
 	c.fillFieldMap()
 
@@ -139,10 +139,10 @@ func (c *campaignQuoteRecord) fillFieldMap() {
 	c.fieldMap["amount"] = c.Amount
 	c.fieldMap["score"] = c.Score
 	c.fieldMap["quote_state"] = c.QuoteState
-	c.fieldMap["created_at"] = c.CreatedAt
-	c.fieldMap["updated_at"] = c.UpdatedAt
 	c.fieldMap["session"] = c.Session
 	c.fieldMap["user_quota_date"] = c.UserQuotaDate
+	c.fieldMap["created_at"] = c.CreatedAt
+	c.fieldMap["updated_at"] = c.UpdatedAt
 }
 
 func (c campaignQuoteRecord) clone(db *gorm.DB) campaignQuoteRecord {

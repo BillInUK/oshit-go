@@ -13,14 +13,14 @@ const TableNameTxScanInfo = "t_tx_scan_info"
 // TxScanInfo mapped from table <t_tx_scan_info>
 type TxScanInfo struct {
 	Service       string    `gorm:"column:service;not null" json:"service"`
-	SubService    string    `gorm:"column:sub_service;not null" json:"sub_service"`
-	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
-	PdaAccount    string    `gorm:"column:pda_account;not null" json:"pda_account"`
-	UntilTxID     string    `gorm:"column:until_tx_id;not null" json:"until_tx_id"`
-	BeforeTxID    string    `gorm:"column:before_tx_id" json:"before_tx_id"`
+	SubService    string    `gorm:"column:sub_service;not null" json:"subService"`
+	NativeAccount string    `gorm:"column:native_account;not null" json:"nativeAccount"`
+	PdaAccount    string    `gorm:"column:pda_account;not null" json:"pdaAccount"`
+	UntilTxID     string    `gorm:"column:until_tx_id;not null" json:"untilTxId"`
+	BeforeTxID    string    `gorm:"column:before_tx_id" json:"beforeTxId"`
 	Slot          float64   `gorm:"column:slot;not null" json:"slot"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName TxScanInfo's table name

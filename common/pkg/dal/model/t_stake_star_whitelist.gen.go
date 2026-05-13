@@ -12,12 +12,12 @@ const TableNameStakeStarWhitelist = "t_stake_star_whitelist"
 
 // StakeStarWhitelist mapped from table <t_stake_star_whitelist>
 type StakeStarWhitelist struct {
-	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
-	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
-	StarLevel     int32     `gorm:"column:star_level;not null" json:"star_level"`
+	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
+	NativeAccount string    `gorm:"column:native_account;not null" json:"nativeAccount"`
+	StarLevel     int32     `gorm:"column:star_level;not null" json:"starLevel"`
 	Rate          float64   `gorm:"column:rate" json:"rate"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName StakeStarWhitelist's table name

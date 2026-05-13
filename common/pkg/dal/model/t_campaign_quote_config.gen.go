@@ -12,13 +12,13 @@ const TableNameCampaignQuoteConfig = "t_campaign_quote_config"
 
 // CampaignQuoteConfig mapped from table <t_campaign_quote_config>
 type CampaignQuoteConfig struct {
-	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	RewardAccount string    `gorm:"column:reward_account;not null" json:"reward_account"`
-	CostAccount   string    `gorm:"column:cost_account;not null" json:"cost_account"`
-	QuoteRate     float64   `gorm:"column:quote_rate;not null" json:"quote_rate"`
-	CostRate      float64   `gorm:"column:cost_rate;not null" json:"cost_rate"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"recordId"`
+	RewardAccount string    `gorm:"column:reward_account;not null" json:"rewardAccount"`
+	CostAccount   string    `gorm:"column:cost_account;not null" json:"costAccount"`
+	QuoteRate     float64   `gorm:"column:quote_rate;not null" json:"quoteRate"`
+	CostRate      float64   `gorm:"column:cost_rate;not null" json:"costRate"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName CampaignQuoteConfig's table name

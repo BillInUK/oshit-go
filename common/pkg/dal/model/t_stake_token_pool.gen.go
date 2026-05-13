@@ -8,8 +8,8 @@ const TableNameStakeTokenPool = "t_stake_token_pool"
 
 // StakeTokenPool mapped from table <t_stake_token_pool>
 type StakeTokenPool struct {
-	SourceAccount    string `gorm:"column:source_account;not null" json:"source_account"`
-	FromTokenAccount string `gorm:"column:from_token_account;not null" json:"from_token_account"`
+	SourceAccount    string `gorm:"column:source_account;not null" json:"sourceAccount"`
+	FromTokenAccount string `gorm:"column:from_token_account;not null" json:"fromTokenAccount"`
 }
 
 // TableName StakeTokenPool's table name

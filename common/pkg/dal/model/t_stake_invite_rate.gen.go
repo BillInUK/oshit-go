@@ -8,7 +8,7 @@ const TableNameStakeInviteRate = "t_stake_invite_rate"
 
 // StakeInviteRate mapped from table <t_stake_invite_rate>
 type StakeInviteRate struct {
-	DistLevel int32   `gorm:"column:dist_level;primaryKey" json:"dist_level"`
+	DistLevel int32   `gorm:"column:dist_level;primaryKey" json:"distLevel"`
 	Rate      float64 `gorm:"column:rate;not null" json:"rate"`
 }
 

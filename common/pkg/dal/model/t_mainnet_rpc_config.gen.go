@@ -12,12 +12,12 @@ const TableNameMainnetRpcConfig = "t_mainnet_rpc_config"
 
 // MainnetRpcConfig mapped from table <t_mainnet_rpc_config>
 type MainnetRpcConfig struct {
-	RecordID  string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	ChainName string    `gorm:"column:chain_name;not null" json:"chain_name"`
-	RPCURL    string    `gorm:"column:rpc_url;not null" json:"rpc_url"`
-	WssURL    string    `gorm:"column:wss_url;not null" json:"wss_url"`
-	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID  string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"recordId"`
+	ChainName string    `gorm:"column:chain_name;not null" json:"chainName"`
+	RPCURL    string    `gorm:"column:rpc_url;not null" json:"rpcUrl"`
+	WssURL    string    `gorm:"column:wss_url;not null" json:"wssUrl"`
+	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName MainnetRpcConfig's table name

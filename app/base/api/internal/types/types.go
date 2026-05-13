@@ -11,7 +11,7 @@ type LoginReq struct {
 	Account    string `json:"account"`
 	Sign       string `json:"sign"`
 	Nonce      uint64 `json:"nonce"`
-	InviteCode string `json:"invite_code"`
+	InviteCode string `json:"inviteCode"`
 }
 
 type LoginRsp struct {
@@ -29,22 +29,22 @@ type GetTokenInfoRsp struct {
 	Symbol    string `json:"symbol"`
 	Decimals  int32  `json:"decimal"`
 	Mint      string `json:"mint"`
-	CreatedAt string `json:"created_at"`
+	CreatedAt string `json:"createdAt"`
 }
 
 type GetFeeToleranceRsp struct {
-	MaxLessRate float64 `json:"max_less_rate"`
+	MaxLessRate float64 `json:"maxLessRate"`
 }
 
 type PriorityFeeRsp struct {
-	PerComputeUnit entity.FeeDetail `json:"per_compute_unit"`
-	PerTransaction entity.FeeDetail `json:"per_transaction"`
+	PerComputeUnit entity.FeeDetail `json:"perComputeUnit"`
+	PerTransaction entity.FeeDetail `json:"perTransaction"`
 }
 
 type ComputeUnitConsumedRsp struct {
-	MiniRent          uint64 `json:"mini_rent"`
-	AssociatedAccount uint64 `json:"associated_account"`
-	TransferChecked   uint64 `json:"transfer_checked"`
+	MiniRent          uint64 `json:"miniRent"`
+	AssociatedAccount uint64 `json:"associatedAccount"`
+	TransferChecked   uint64 `json:"transferChecked"`
 	Memo              uint64 `json:"memo"`
 }
 
@@ -63,19 +63,19 @@ type BirdEyePriceRsp struct {
 
 // Invite Types
 type GetAccountByInviteCodeReq struct {
-	InviteCode string `json:"invite_code"`
+	InviteCode string `json:"inviteCode"`
 }
 
 type GetAccountByInviteCodeRsp struct {
-	RecordID      string `json:"record_id"`
-	NativeAccount string `json:"native_account"`
-	TokenAccount  string `json:"token_account"`
-	InviteCode    string `json:"invite_code"`
-	CreatedAt     string `json:"created_at"`
+	RecordID      string `json:"recordId"`
+	NativeAccount string `json:"nativeAccount"`
+	TokenAccount  string `json:"tokenAccount"`
+	InviteCode    string `json:"inviteCode"`
+	CreatedAt     string `json:"createdAt"`
 }
 
 type CheckInviteRecordReq struct {
-	NativeAccount string `json:"native_account"`
+	NativeAccount string `json:"nativeAccount"`
 }
 
 type CheckInviteRecordRsp struct {
@@ -83,22 +83,22 @@ type CheckInviteRecordRsp struct {
 }
 
 type FindInviteRelationByAccountReq struct {
-	NativeAccount string `json:"native_account"`
+	NativeAccount string `json:"nativeAccount"`
 }
 
 type RecursiveQueryReq struct {
 	Depth         int    `json:"depth"`
-	NativeAccount string `json:"native_account"`
+	NativeAccount string `json:"nativeAccount"`
 }
 
 type InviteRelation struct {
-	RecordID             string `json:"record_id"`
-	Inviter string `json:"inviter"`
-	Invitee string `json:"invitee"`
-	Channel              string `json:"channel"`
-	Level                int32  `json:"level"`
-	TxID                 string `json:"tx_id"`
-	CreatedAt            string `json:"created_at"`
+	RecordID string `json:"recordId"`
+	Inviter  string `json:"inviter"`
+	Invitee  string `json:"invitee"`
+	Channel  string `json:"channel"`
+	Level    int32  `json:"level"`
+	TxID     string `json:"txId"`
+	CreatedAt string `json:"createdAt"`
 }
 
 type RecursiveQueryRsp struct {
@@ -107,14 +107,14 @@ type RecursiveQueryRsp struct {
 
 // Tx Types
 type SendTransactionReq struct {
-	EncodedTx  string `json:"encoded_tx"`
+	EncodedTx  string `json:"encodedTx"`
 	Service    string `json:"service"`
-	SubService string `json:"sub_service"`
+	SubService string `json:"subService"`
 }
 
 type SendTransactionRsp struct {
-	RecordID string `json:"record_id"`
-	TxID     string `json:"tx_id"`
+	RecordID string `json:"recordId"`
+	TxID     string `json:"txId"`
 }
 
 type RewardDistributionRsp struct {
@@ -129,5 +129,5 @@ type RewardClaimRsp struct {
 }
 
 type TokenHoldersRsp struct {
-	HoldersNumber int `json:"holders_number"`
+	HoldersNumber int `json:"holdersNumber"`
 }

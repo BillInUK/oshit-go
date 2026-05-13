@@ -12,17 +12,17 @@ const TableNameFeeStatistics = "t_fee_statistics"
 
 // FeeStatistics mapped from table <t_fee_statistics>
 type FeeStatistics struct {
-	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
+	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"recordId"`
 	Slot          int64     `gorm:"column:slot" json:"slot"`
-	TxIndex       int32     `gorm:"column:tx_index" json:"tx_index"`
-	BlockHash     string    `gorm:"column:block_hash" json:"block_hash"`
-	TxID          string    `gorm:"column:tx_id" json:"tx_id"`
+	TxIndex       int32     `gorm:"column:tx_index" json:"txIndex"`
+	BlockHash     string    `gorm:"column:block_hash" json:"blockHash"`
+	TxID          string    `gorm:"column:tx_id" json:"txId"`
 	Price         float64   `gorm:"column:price" json:"price"`
-	UnitLimit     float64   `gorm:"column:unit_limit" json:"unit_limit"`
-	UnitsConsumed float64   `gorm:"column:units_consumed" json:"units_consumed"`
+	UnitLimit     float64   `gorm:"column:unit_limit" json:"unitLimit"`
+	UnitsConsumed float64   `gorm:"column:units_consumed" json:"unitsConsumed"`
 	Fee           float64   `gorm:"column:fee" json:"fee"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName FeeStatistics's table name

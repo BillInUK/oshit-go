@@ -12,18 +12,18 @@ const TableNameFundFlow = "t_fund_flow"
 
 // FundFlow mapped from table <t_fund_flow>
 type FundFlow struct {
-	RecordID    string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	IsToken     bool      `gorm:"column:is_token;not null" json:"is_token"`
-	FromAccount string    `gorm:"column:from_account;not null" json:"from_account"`
-	ToAccount   string    `gorm:"column:to_account;not null" json:"to_account"`
-	TxID        string    `gorm:"column:tx_id;not null" json:"tx_id"`
+	RecordID    string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"recordId"`
+	IsToken     bool      `gorm:"column:is_token;not null" json:"isToken"`
+	FromAccount string    `gorm:"column:from_account;not null" json:"fromAccount"`
+	ToAccount   string    `gorm:"column:to_account;not null" json:"toAccount"`
+	TxID        string    `gorm:"column:tx_id;not null" json:"txId"`
 	Direction   string    `gorm:"column:direction;not null" json:"direction"`
-	ServiceType string    `gorm:"column:service_type;not null" json:"service_type"`
-	FlowType    string    `gorm:"column:flow_type;not null" json:"flow_type"`
+	ServiceType string    `gorm:"column:service_type;not null" json:"serviceType"`
+	FlowType    string    `gorm:"column:flow_type;not null" json:"flowType"`
 	Decimals    int16     `gorm:"column:decimals;not null" json:"decimals"`
 	Amount      float64   `gorm:"column:amount;not null" json:"amount"`
-	CreatedAt   time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt   time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt   time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt   time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName FundFlow's table name

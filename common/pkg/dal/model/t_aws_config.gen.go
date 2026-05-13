@@ -12,11 +12,11 @@ const TableNameAwsConfig = "t_aws_config"
 
 // AwsConfig mapped from table <t_aws_config>
 type AwsConfig struct {
-	AccessKeyID     string    `gorm:"column:access_key_id;not null" json:"access_key_id"`
-	SecretAccessKey string    `gorm:"column:secret_access_key;not null" json:"secret_access_key"`
+	AccessKeyID     string    `gorm:"column:access_key_id;not null" json:"accessKeyId"`
+	SecretAccessKey string    `gorm:"column:secret_access_key;not null" json:"secretAccessKey"`
 	Region          string    `gorm:"column:region;not null" json:"region"`
-	CreatedAt       time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt       time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt       time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt       time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName AwsConfig's table name

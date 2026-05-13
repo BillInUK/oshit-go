@@ -12,9 +12,9 @@ const TableNameFeeTolerance = "t_fee_tolerance"
 
 // FeeTolerance mapped from table <t_fee_tolerance>
 type FeeTolerance struct {
-	MaxLessRate float64   `gorm:"column:max_less_rate;not null" json:"max_less_rate"`
-	CreatedAt   time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt   time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	MaxLessRate float64   `gorm:"column:max_less_rate;not null" json:"maxLessRate"`
+	CreatedAt   time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt   time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName FeeTolerance's table name

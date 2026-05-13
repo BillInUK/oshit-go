@@ -12,13 +12,13 @@ const TableNameStakeFixRateConfig = "t_stake_fix_rate_config"
 
 // StakeFixRateConfig mapped from table <t_stake_fix_rate_config>
 type StakeFixRateConfig struct {
-	RecordID       string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
-	MinAmount      float64   `gorm:"column:min_amount" json:"min_amount"`
-	StakeType      int32     `gorm:"column:stake_type;not null" json:"stake_type"`
-	FixRate        float64   `gorm:"column:fix_rate" json:"fix_rate"`
-	IndividualRate float64   `gorm:"column:individual_rate" json:"individual_rate"`
-	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID       string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
+	MinAmount      float64   `gorm:"column:min_amount" json:"minAmount"`
+	StakeType      int32     `gorm:"column:stake_type;not null" json:"stakeType"`
+	FixRate        float64   `gorm:"column:fix_rate" json:"fixRate"`
+	IndividualRate float64   `gorm:"column:individual_rate" json:"individualRate"`
+	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName StakeFixRateConfig's table name

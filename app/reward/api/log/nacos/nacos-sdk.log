@@ -46,3 +46,7 @@
 2026-05-07T13:53:47.552+0800	INFO	util/common.go:96	Local IP:192.168.110.167
 2026-05-07T13:53:47.656+0800	INFO	rpc/rpc_client.go:234	config-0-ac2ee5cd-2edb-458c-b559-2d6d7e7565cb success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1778133227555_172.17.0.1_55046
 2026-05-07T13:53:47.665+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>
+2026-05-13T19:06:14.382+0800	INFO	rpc/rpc_client.go:224	[RpcClient.Start] config-0-bbfc187a-805c-4c2d-ad25-1182e58a1513 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-05-13T19:06:14.382+0800	INFO	util/common.go:96	Local IP:192.168.110.196
+2026-05-13T19:06:14.491+0800	INFO	rpc/rpc_client.go:234	config-0-bbfc187a-805c-4c2d-ad25-1182e58a1513 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1778670374388_172.17.0.1_65272
+2026-05-13T19:06:14.502+0800	INFO	nacos_client/nacos_client.go:65	logDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/log> cacheDir:</Users/mac/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/cache>

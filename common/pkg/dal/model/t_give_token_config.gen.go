@@ -12,13 +12,13 @@ const TableNameGiveTokenConfig = "t_give_token_config"
 
 // GiveTokenConfig mapped from table <t_give_token_config>
 type GiveTokenConfig struct {
-	RewardAccount  string    `gorm:"column:reward_account;not null" json:"reward_account"`
-	CostAccount    string    `gorm:"column:cost_account;not null" json:"cost_account"`
-	RewardRate     float64   `gorm:"column:reward_rate;not null" json:"reward_rate"`
-	MaxValidReward float64   `gorm:"column:max_valid_reward;not null" json:"max_valid_reward"`
-	ValidRate      float64   `gorm:"column:valid_rate;not null" json:"valid_rate"`
-	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RewardAccount  string    `gorm:"column:reward_account;not null" json:"rewardAccount"`
+	CostAccount    string    `gorm:"column:cost_account;not null" json:"costAccount"`
+	RewardRate     float64   `gorm:"column:reward_rate;not null" json:"rewardRate"`
+	MaxValidReward float64   `gorm:"column:max_valid_reward;not null" json:"maxValidReward"`
+	ValidRate      float64   `gorm:"column:valid_rate;not null" json:"validRate"`
+	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName GiveTokenConfig's table name

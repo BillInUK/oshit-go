@@ -13,17 +13,17 @@ const TableNameServiceInfo = "t_service_info"
 // ServiceInfo mapped from table <t_service_info>
 type ServiceInfo struct {
 	Service    string    `gorm:"column:service;not null" json:"service"`
-	SubService string    `gorm:"column:sub_service;not null" json:"sub_service"`
+	SubService string    `gorm:"column:sub_service;not null" json:"subService"`
 	Address    string    `gorm:"column:address;not null" json:"address"`
 	Webhook    string    `gorm:"column:webhook;default:NULL" json:"webhook"`
-	MqGroup    string    `gorm:"column:mq_group;default:NULL" json:"mq_group"`
-	MqTopic    string    `gorm:"column:mq_topic;default:NULL" json:"mq_topic"`
-	HookType   int32     `gorm:"column:hook_type;not null" json:"hook_type"`
-	TxSource   int32     `gorm:"column:tx_source;not null" json:"tx_source"`
+	MqGroup    string    `gorm:"column:mq_group;default:NULL" json:"mqGroup"`
+	MqTopic    string    `gorm:"column:mq_topic;default:NULL" json:"mqTopic"`
+	HookType   int32     `gorm:"column:hook_type;not null" json:"hookType"`
+	TxSource   int32     `gorm:"column:tx_source;not null" json:"txSource"`
 	Confirm    bool      `gorm:"column:confirm;not null;default:true" json:"confirm"`
-	MultiSign  bool      `gorm:"column:multi_sign;not null;default:true" json:"multi_sign"`
-	CreatedAt  time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt  time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	MultiSign  bool      `gorm:"column:multi_sign;not null;default:true" json:"multiSign"`
+	CreatedAt  time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt  time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName ServiceInfo's table name

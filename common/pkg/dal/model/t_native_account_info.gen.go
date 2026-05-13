@@ -12,12 +12,12 @@ const TableNameNativeAccountInfo = "t_native_account_info"
 
 // NativeAccountInfo mapped from table <t_native_account_info>
 type NativeAccountInfo struct {
-	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
-	TokenAccount  string    `gorm:"column:token_account;not null" json:"token_account"`
-	InviteCode    string    `gorm:"column:invite_code;not null" json:"invite_code"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"recordId"`
+	NativeAccount string    `gorm:"column:native_account;not null" json:"nativeAccount"`
+	TokenAccount  string    `gorm:"column:token_account;not null" json:"tokenAccount"`
+	InviteCode    string    `gorm:"column:invite_code;not null" json:"inviteCode"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName NativeAccountInfo's table name

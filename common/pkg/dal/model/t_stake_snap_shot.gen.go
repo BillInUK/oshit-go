@@ -12,13 +12,13 @@ const TableNameStakeSnapShot = "t_stake_snap_shot"
 
 // StakeSnapShot mapped from table <t_stake_snap_shot>
 type StakeSnapShot struct {
-	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
-	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
+	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
+	NativeAccount string    `gorm:"column:native_account;not null" json:"nativeAccount"`
 	Amount        float64   `gorm:"column:amount" json:"amount"`
-	StakeType     int32     `gorm:"column:stake_type;not null" json:"stake_type"`
-	SnapDay       time.Time `gorm:"column:snap_day;not null" json:"snap_day"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	StakeType     int32     `gorm:"column:stake_type;not null" json:"stakeType"`
+	SnapDay       time.Time `gorm:"column:snap_day;not null" json:"snapDay"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName StakeSnapShot's table name

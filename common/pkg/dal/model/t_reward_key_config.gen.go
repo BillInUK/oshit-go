@@ -13,9 +13,9 @@ const TableNameRewardKeyConfig = "t_reward_key_config"
 // RewardKeyConfig mapped from table <t_reward_key_config>
 type RewardKeyConfig struct {
 	Service      string    `gorm:"column:service;not null" json:"service"`
-	EncryptedKey string    `gorm:"column:encrypted_key;not null" json:"encrypted_key"`
-	CreatedAt    time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt    time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	EncryptedKey string    `gorm:"column:encrypted_key;not null" json:"encryptedKey"`
+	CreatedAt    time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt    time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName RewardKeyConfig's table name

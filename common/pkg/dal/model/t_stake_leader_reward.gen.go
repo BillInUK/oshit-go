@@ -12,18 +12,18 @@ const TableNameStakeLeaderReward = "t_stake_leader_reward"
 
 // StakeLeaderReward mapped from table <t_stake_leader_reward>
 type StakeLeaderReward struct {
-	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
-	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
+	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
+	NativeAccount string    `gorm:"column:native_account;not null" json:"nativeAccount"`
 	Staker        string    `gorm:"column:staker;not null" json:"staker"`
-	RewardType    int32     `gorm:"column:reward_type;not null" json:"reward_type"`
-	BaseAmount    float64   `gorm:"column:base_amount" json:"base_amount"`
-	StakeShare    float64   `gorm:"column:stake_share" json:"stake_share"`
-	RewardAmount  float64   `gorm:"column:reward_amount" json:"reward_amount"`
-	RewardState   int32     `gorm:"column:reward_state;not null" json:"reward_state"`
+	RewardType    int32     `gorm:"column:reward_type;not null" json:"rewardType"`
+	BaseAmount    float64   `gorm:"column:base_amount" json:"baseAmount"`
+	StakeShare    float64   `gorm:"column:stake_share" json:"stakeShare"`
+	RewardAmount  float64   `gorm:"column:reward_amount" json:"rewardAmount"`
+	RewardState   int32     `gorm:"column:reward_state;not null" json:"rewardState"`
 	Pending       bool      `gorm:"column:pending;not null" json:"pending"`
-	TxID          string    `gorm:"column:tx_id" json:"tx_id"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	TxID          string    `gorm:"column:tx_id" json:"txId"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName StakeLeaderReward's table name

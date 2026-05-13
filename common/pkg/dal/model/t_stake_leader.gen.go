@@ -12,12 +12,12 @@ const TableNameStakeLeader = "t_stake_leader"
 
 // StakeLeader mapped from table <t_stake_leader>
 type StakeLeader struct {
-	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
-	NativeAccount string    `gorm:"column:native_account" json:"native_account"`
-	LeaderLevel   int16     `gorm:"column:leader_level;not null" json:"leader_level"`
-	UpLeader      string    `gorm:"column:up_leader" json:"up_leader"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
+	NativeAccount string    `gorm:"column:native_account" json:"nativeAccount"`
+	LeaderLevel   int16     `gorm:"column:leader_level;not null" json:"leaderLevel"`
+	UpLeader      string    `gorm:"column:up_leader" json:"upLeader"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName StakeLeader's table name

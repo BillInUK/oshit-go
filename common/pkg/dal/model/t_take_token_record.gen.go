@@ -12,19 +12,19 @@ const TableNameTakeTokenRecord = "t_take_token_record"
 
 // TakeTokenRecord mapped from table <t_take_token_record>
 type TakeTokenRecord struct {
-	RecordID       string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	RewardAccount  string    `gorm:"column:reward_account;not null" json:"reward_account"`
-	ReceiptAccount string    `gorm:"column:receipt_account;not null" json:"receipt_account"`
-	CostAccount    string    `gorm:"column:cost_account;not null" json:"cost_account"`
-	TxID           string    `gorm:"column:tx_id;not null" json:"tx_id"`
+	RecordID       string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"recordId"`
+	RewardAccount  string    `gorm:"column:reward_account;not null" json:"rewardAccount"`
+	ReceiptAccount string    `gorm:"column:receipt_account;not null" json:"receiptAccount"`
+	CostAccount    string    `gorm:"column:cost_account;not null" json:"costAccount"`
+	TxID           string    `gorm:"column:tx_id;not null" json:"txId"`
 	Amount         float64   `gorm:"column:amount;not null" json:"amount"`
-	CostFee        float64   `gorm:"column:cost_fee;not null" json:"cost_fee"`
-	UseInviteCode  bool      `gorm:"column:use_invite_code;not null" json:"use_invite_code"`
-	InviteCode     string    `gorm:"column:invite_code" json:"invite_code"`
-	TxState        int32     `gorm:"column:tx_state" json:"tx_state"`
+	CostFee        float64   `gorm:"column:cost_fee;not null" json:"costFee"`
+	UseInviteCode  bool      `gorm:"column:use_invite_code;not null" json:"useInviteCode"`
+	InviteCode     string    `gorm:"column:invite_code" json:"inviteCode"`
+	TxState        int32     `gorm:"column:tx_state" json:"txState"`
 	Invited        bool      `gorm:"column:invited" json:"invited"`
-	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName TakeTokenRecord's table name

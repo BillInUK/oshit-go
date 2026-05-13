@@ -16,68 +16,70 @@ import (
 )
 
 var (
-	Q                       = new(Query)
-	AwsConfig               *awsConfig
-	CampaignQuoteConfig     *campaignQuoteConfig
-	CampaignQuoteLimit      *campaignQuoteLimit
-	CampaignQuoteRecord     *campaignQuoteRecord
-	ChainConfig             *chainConfig
-	DailyClaimStats         *dailyClaimStats
-	DiscountRate            *discountRate
-	ExcludeAccount          *excludeAccount
-	FeeStatistics           *feeStatistics
-	FeeTolerance            *feeTolerance
-	FundFlow                *fundFlow
-	GiveTokenConfig         *giveTokenConfig
-	GiveTokenRecord         *giveTokenRecord
-	HackerAccount           *hackerAccount
-	InviteRelation          *inviteRelation
-	LevelDist               *levelDist
-	LevelRatio              *levelRatio
-	LotteryClaim            *lotteryClaim
-	LotteryReward           *lotteryReward
-	MainnetRpcConfig        *mainnetRpcConfig
-	NativeAccountInfo       *nativeAccountInfo
-	PosMissionConfig        *posMissionConfig
-	PosReward               *posReward
-	PosRewardClaim          *posRewardClaim
-	PosRewardConfig         *posRewardConfig
-	PosSnapShot             *posSnapShot
-	PosStarLevelRule        *posStarLevelRule
-	PosStarWhitelist        *posStarWhitelist
-	QnFee                   *qnFee
-	RewardCode              *rewardCode
-	RewardCodeConfig        *rewardCodeConfig
-	RewardCodeFee           *rewardCodeFee
-	RewardKeyConfig         *rewardKeyConfig
-	ServiceInfo             *serviceInfo
-	ServiceKey              *serviceKey
-	ServiceTx               *serviceTx
-	StakeAmmConfig          *stakeAmmConfig
-	StakeBuyToken           *stakeBuyToken
-	StakeFixRateConfig      *stakeFixRateConfig
-	StakeInviteDist         *stakeInviteDist
-	StakeInviteRate         *stakeInviteRate
-	StakeLeader             *stakeLeader
-	StakeLeaderReward       *stakeLeaderReward
-	StakeLeaderRewardClaim  *stakeLeaderRewardClaim
-	StakeLeaderRewardConfig *stakeLeaderRewardConfig
-	StakeRecord             *stakeRecord
-	StakeReward             *stakeReward
-	StakeRewardClaim        *stakeRewardClaim
-	StakeRewardConfig       *stakeRewardConfig
-	StakeSnapShot           *stakeSnapShot
-	StakeStarLevelRule      *stakeStarLevelRule
-	StakeStarWhitelist      *stakeStarWhitelist
-	StakeTokenPool          *stakeTokenPool
-	StakeTotalLeader        *stakeTotalLeader
-	SystemConfig            *systemConfig
-	TakeTokenConfig         *takeTokenConfig
-	TakeTokenRecord         *takeTokenRecord
-	TokenConfig             *tokenConfig
-	TxScanInfo              *txScanInfo
-	UserDailyQuota          *userDailyQuota
-	UserWalletRpcConfig     *userWalletRpcConfig
+	Q                           = new(Query)
+	AwsConfig                   *awsConfig
+	CampaignQuoteConfig         *campaignQuoteConfig
+	CampaignQuoteLimit          *campaignQuoteLimit
+	CampaignQuoteRecord         *campaignQuoteRecord
+	ChainConfig                 *chainConfig
+	DailyClaimStats             *dailyClaimStats
+	DiscountRate                *discountRate
+	ExcludeAccount              *excludeAccount
+	FeeStatistics               *feeStatistics
+	FeeTolerance                *feeTolerance
+	FundFlow                    *fundFlow
+	GiveTokenConfig             *giveTokenConfig
+	GiveTokenRecord             *giveTokenRecord
+	HackerAccount               *hackerAccount
+	InviteRelation              *inviteRelation
+	LevelDist                   *levelDist
+	LevelRatio                  *levelRatio
+	LotteryClaim                *lotteryClaim
+	LotteryReward               *lotteryReward
+	MainnetRpcConfig            *mainnetRpcConfig
+	NativeAccountInfo           *nativeAccountInfo
+	PosMissionConfig            *posMissionConfig
+	PosReward                   *posReward
+	PosRewardClaim              *posRewardClaim
+	PosRewardConfig             *posRewardConfig
+	PosSnapShot                 *posSnapShot
+	PosStarLevelRule            *posStarLevelRule
+	PosStarWhitelist            *posStarWhitelist
+	QnFee                       *qnFee
+	RewardCode                  *rewardCode
+	RewardCodeConfig            *rewardCodeConfig
+	RewardCodeFee               *rewardCodeFee
+	RewardKeyConfig             *rewardKeyConfig
+	ServiceInfo                 *serviceInfo
+	ServiceKey                  *serviceKey
+	ServiceTx                   *serviceTx
+	StakeAmmConfig              *stakeAmmConfig
+	StakeBuyToken               *stakeBuyToken
+	StakeFixRateConfig          *stakeFixRateConfig
+	StakeInviteDist             *stakeInviteDist
+	StakeInviteRate             *stakeInviteRate
+	StakeLeader                 *stakeLeader
+	StakeLeaderReward           *stakeLeaderReward
+	StakeLeaderRewardClaim      *stakeLeaderRewardClaim
+	StakeLeaderRewardConfig     *stakeLeaderRewardConfig
+	StakeRecord                 *stakeRecord
+	StakeReward                 *stakeReward
+	StakeRewardClaim            *stakeRewardClaim
+	StakeRewardConfig           *stakeRewardConfig
+	StakeSnapShot               *stakeSnapShot
+	StakeStarLevelRule          *stakeStarLevelRule
+	StakeStarWhitelist          *stakeStarWhitelist
+	StakeTeamRewardDeduction    *stakeTeamRewardDeduction
+	StakeTeamRewardDeductionLog *stakeTeamRewardDeductionLog
+	StakeTokenPool              *stakeTokenPool
+	StakeTotalLeader            *stakeTotalLeader
+	SystemConfig                *systemConfig
+	TakeTokenConfig             *takeTokenConfig
+	TakeTokenRecord             *takeTokenRecord
+	TokenConfig                 *tokenConfig
+	TxScanInfo                  *txScanInfo
+	UserDailyQuota              *userDailyQuota
+	UserWalletRpcConfig         *userWalletRpcConfig
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
@@ -134,6 +136,8 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	StakeSnapShot = &Q.StakeSnapShot
 	StakeStarLevelRule = &Q.StakeStarLevelRule
 	StakeStarWhitelist = &Q.StakeStarWhitelist
+	StakeTeamRewardDeduction = &Q.StakeTeamRewardDeduction
+	StakeTeamRewardDeductionLog = &Q.StakeTeamRewardDeductionLog
 	StakeTokenPool = &Q.StakeTokenPool
 	StakeTotalLeader = &Q.StakeTotalLeader
 	SystemConfig = &Q.SystemConfig
@@ -147,203 +151,209 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:                      db,
-		AwsConfig:               newAwsConfig(db, opts...),
-		CampaignQuoteConfig:     newCampaignQuoteConfig(db, opts...),
-		CampaignQuoteLimit:      newCampaignQuoteLimit(db, opts...),
-		CampaignQuoteRecord:     newCampaignQuoteRecord(db, opts...),
-		ChainConfig:             newChainConfig(db, opts...),
-		DailyClaimStats:         newDailyClaimStats(db, opts...),
-		DiscountRate:            newDiscountRate(db, opts...),
-		ExcludeAccount:          newExcludeAccount(db, opts...),
-		FeeStatistics:           newFeeStatistics(db, opts...),
-		FeeTolerance:            newFeeTolerance(db, opts...),
-		FundFlow:                newFundFlow(db, opts...),
-		GiveTokenConfig:         newGiveTokenConfig(db, opts...),
-		GiveTokenRecord:         newGiveTokenRecord(db, opts...),
-		HackerAccount:           newHackerAccount(db, opts...),
-		InviteRelation:          newInviteRelation(db, opts...),
-		LevelDist:               newLevelDist(db, opts...),
-		LevelRatio:              newLevelRatio(db, opts...),
-		LotteryClaim:            newLotteryClaim(db, opts...),
-		LotteryReward:           newLotteryReward(db, opts...),
-		MainnetRpcConfig:        newMainnetRpcConfig(db, opts...),
-		NativeAccountInfo:       newNativeAccountInfo(db, opts...),
-		PosMissionConfig:        newPosMissionConfig(db, opts...),
-		PosReward:               newPosReward(db, opts...),
-		PosRewardClaim:          newPosRewardClaim(db, opts...),
-		PosRewardConfig:         newPosRewardConfig(db, opts...),
-		PosSnapShot:             newPosSnapShot(db, opts...),
-		PosStarLevelRule:        newPosStarLevelRule(db, opts...),
-		PosStarWhitelist:        newPosStarWhitelist(db, opts...),
-		QnFee:                   newQnFee(db, opts...),
-		RewardCode:              newRewardCode(db, opts...),
-		RewardCodeConfig:        newRewardCodeConfig(db, opts...),
-		RewardCodeFee:           newRewardCodeFee(db, opts...),
-		RewardKeyConfig:         newRewardKeyConfig(db, opts...),
-		ServiceInfo:             newServiceInfo(db, opts...),
-		ServiceKey:              newServiceKey(db, opts...),
-		ServiceTx:               newServiceTx(db, opts...),
-		StakeAmmConfig:          newStakeAmmConfig(db, opts...),
-		StakeBuyToken:           newStakeBuyToken(db, opts...),
-		StakeFixRateConfig:      newStakeFixRateConfig(db, opts...),
-		StakeInviteDist:         newStakeInviteDist(db, opts...),
-		StakeInviteRate:         newStakeInviteRate(db, opts...),
-		StakeLeader:             newStakeLeader(db, opts...),
-		StakeLeaderReward:       newStakeLeaderReward(db, opts...),
-		StakeLeaderRewardClaim:  newStakeLeaderRewardClaim(db, opts...),
-		StakeLeaderRewardConfig: newStakeLeaderRewardConfig(db, opts...),
-		StakeRecord:             newStakeRecord(db, opts...),
-		StakeReward:             newStakeReward(db, opts...),
-		StakeRewardClaim:        newStakeRewardClaim(db, opts...),
-		StakeRewardConfig:       newStakeRewardConfig(db, opts...),
-		StakeSnapShot:           newStakeSnapShot(db, opts...),
-		StakeStarLevelRule:      newStakeStarLevelRule(db, opts...),
-		StakeStarWhitelist:      newStakeStarWhitelist(db, opts...),
-		StakeTokenPool:          newStakeTokenPool(db, opts...),
-		StakeTotalLeader:        newStakeTotalLeader(db, opts...),
-		SystemConfig:            newSystemConfig(db, opts...),
-		TakeTokenConfig:         newTakeTokenConfig(db, opts...),
-		TakeTokenRecord:         newTakeTokenRecord(db, opts...),
-		TokenConfig:             newTokenConfig(db, opts...),
-		TxScanInfo:              newTxScanInfo(db, opts...),
-		UserDailyQuota:          newUserDailyQuota(db, opts...),
-		UserWalletRpcConfig:     newUserWalletRpcConfig(db, opts...),
+		db:                          db,
+		AwsConfig:                   newAwsConfig(db, opts...),
+		CampaignQuoteConfig:         newCampaignQuoteConfig(db, opts...),
+		CampaignQuoteLimit:          newCampaignQuoteLimit(db, opts...),
+		CampaignQuoteRecord:         newCampaignQuoteRecord(db, opts...),
+		ChainConfig:                 newChainConfig(db, opts...),
+		DailyClaimStats:             newDailyClaimStats(db, opts...),
+		DiscountRate:                newDiscountRate(db, opts...),
+		ExcludeAccount:              newExcludeAccount(db, opts...),
+		FeeStatistics:               newFeeStatistics(db, opts...),
+		FeeTolerance:                newFeeTolerance(db, opts...),
+		FundFlow:                    newFundFlow(db, opts...),
+		GiveTokenConfig:             newGiveTokenConfig(db, opts...),
+		GiveTokenRecord:             newGiveTokenRecord(db, opts...),
+		HackerAccount:               newHackerAccount(db, opts...),
+		InviteRelation:              newInviteRelation(db, opts...),
+		LevelDist:                   newLevelDist(db, opts...),
+		LevelRatio:                  newLevelRatio(db, opts...),
+		LotteryClaim:                newLotteryClaim(db, opts...),
+		LotteryReward:               newLotteryReward(db, opts...),
+		MainnetRpcConfig:            newMainnetRpcConfig(db, opts...),
+		NativeAccountInfo:           newNativeAccountInfo(db, opts...),
+		PosMissionConfig:            newPosMissionConfig(db, opts...),
+		PosReward:                   newPosReward(db, opts...),
+		PosRewardClaim:              newPosRewardClaim(db, opts...),
+		PosRewardConfig:             newPosRewardConfig(db, opts...),
+		PosSnapShot:                 newPosSnapShot(db, opts...),
+		PosStarLevelRule:            newPosStarLevelRule(db, opts...),
+		PosStarWhitelist:            newPosStarWhitelist(db, opts...),
+		QnFee:                       newQnFee(db, opts...),
+		RewardCode:                  newRewardCode(db, opts...),
+		RewardCodeConfig:            newRewardCodeConfig(db, opts...),
+		RewardCodeFee:               newRewardCodeFee(db, opts...),
+		RewardKeyConfig:             newRewardKeyConfig(db, opts...),
+		ServiceInfo:                 newServiceInfo(db, opts...),
+		ServiceKey:                  newServiceKey(db, opts...),
+		ServiceTx:                   newServiceTx(db, opts...),
+		StakeAmmConfig:              newStakeAmmConfig(db, opts...),
+		StakeBuyToken:               newStakeBuyToken(db, opts...),
+		StakeFixRateConfig:          newStakeFixRateConfig(db, opts...),
+		StakeInviteDist:             newStakeInviteDist(db, opts...),
+		StakeInviteRate:             newStakeInviteRate(db, opts...),
+		StakeLeader:                 newStakeLeader(db, opts...),
+		StakeLeaderReward:           newStakeLeaderReward(db, opts...),
+		StakeLeaderRewardClaim:      newStakeLeaderRewardClaim(db, opts...),
+		StakeLeaderRewardConfig:     newStakeLeaderRewardConfig(db, opts...),
+		StakeRecord:                 newStakeRecord(db, opts...),
+		StakeReward:                 newStakeReward(db, opts...),
+		StakeRewardClaim:            newStakeRewardClaim(db, opts...),
+		StakeRewardConfig:           newStakeRewardConfig(db, opts...),
+		StakeSnapShot:               newStakeSnapShot(db, opts...),
+		StakeStarLevelRule:          newStakeStarLevelRule(db, opts...),
+		StakeStarWhitelist:          newStakeStarWhitelist(db, opts...),
+		StakeTeamRewardDeduction:    newStakeTeamRewardDeduction(db, opts...),
+		StakeTeamRewardDeductionLog: newStakeTeamRewardDeductionLog(db, opts...),
+		StakeTokenPool:              newStakeTokenPool(db, opts...),
+		StakeTotalLeader:            newStakeTotalLeader(db, opts...),
+		SystemConfig:                newSystemConfig(db, opts...),
+		TakeTokenConfig:             newTakeTokenConfig(db, opts...),
+		TakeTokenRecord:             newTakeTokenRecord(db, opts...),
+		TokenConfig:                 newTokenConfig(db, opts...),
+		TxScanInfo:                  newTxScanInfo(db, opts...),
+		UserDailyQuota:              newUserDailyQuota(db, opts...),
+		UserWalletRpcConfig:         newUserWalletRpcConfig(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	AwsConfig               awsConfig
-	CampaignQuoteConfig     campaignQuoteConfig
-	CampaignQuoteLimit      campaignQuoteLimit
-	CampaignQuoteRecord     campaignQuoteRecord
-	ChainConfig             chainConfig
-	DailyClaimStats         dailyClaimStats
-	DiscountRate            discountRate
-	ExcludeAccount          excludeAccount
-	FeeStatistics           feeStatistics
-	FeeTolerance            feeTolerance
-	FundFlow                fundFlow
-	GiveTokenConfig         giveTokenConfig
-	GiveTokenRecord         giveTokenRecord
-	HackerAccount           hackerAccount
-	InviteRelation          inviteRelation
-	LevelDist               levelDist
-	LevelRatio              levelRatio
-	LotteryClaim            lotteryClaim
-	LotteryReward           lotteryReward
-	MainnetRpcConfig        mainnetRpcConfig
-	NativeAccountInfo       nativeAccountInfo
-	PosMissionConfig        posMissionConfig
-	PosReward               posReward
-	PosRewardClaim          posRewardClaim
-	PosRewardConfig         posRewardConfig
-	PosSnapShot             posSnapShot
-	PosStarLevelRule        posStarLevelRule
-	PosStarWhitelist        posStarWhitelist
-	QnFee                   qnFee
-	RewardCode              rewardCode
-	RewardCodeConfig        rewardCodeConfig
-	RewardCodeFee           rewardCodeFee
-	RewardKeyConfig         rewardKeyConfig
-	ServiceInfo             serviceInfo
-	ServiceKey              serviceKey
-	ServiceTx               serviceTx
-	StakeAmmConfig          stakeAmmConfig
-	StakeBuyToken           stakeBuyToken
-	StakeFixRateConfig      stakeFixRateConfig
-	StakeInviteDist         stakeInviteDist
-	StakeInviteRate         stakeInviteRate
-	StakeLeader             stakeLeader
-	StakeLeaderReward       stakeLeaderReward
-	StakeLeaderRewardClaim  stakeLeaderRewardClaim
-	StakeLeaderRewardConfig stakeLeaderRewardConfig
-	StakeRecord             stakeRecord
-	StakeReward             stakeReward
-	StakeRewardClaim        stakeRewardClaim
-	StakeRewardConfig       stakeRewardConfig
-	StakeSnapShot           stakeSnapShot
-	StakeStarLevelRule      stakeStarLevelRule
-	StakeStarWhitelist      stakeStarWhitelist
-	StakeTokenPool          stakeTokenPool
-	StakeTotalLeader        stakeTotalLeader
-	SystemConfig            systemConfig
-	TakeTokenConfig         takeTokenConfig
-	TakeTokenRecord         takeTokenRecord
-	TokenConfig             tokenConfig
-	TxScanInfo              txScanInfo
-	UserDailyQuota          userDailyQuota
-	UserWalletRpcConfig     userWalletRpcConfig
+	AwsConfig                   awsConfig
+	CampaignQuoteConfig         campaignQuoteConfig
+	CampaignQuoteLimit          campaignQuoteLimit
+	CampaignQuoteRecord         campaignQuoteRecord
+	ChainConfig                 chainConfig
+	DailyClaimStats             dailyClaimStats
+	DiscountRate                discountRate
+	ExcludeAccount              excludeAccount
+	FeeStatistics               feeStatistics
+	FeeTolerance                feeTolerance
+	FundFlow                    fundFlow
+	GiveTokenConfig             giveTokenConfig
+	GiveTokenRecord             giveTokenRecord
+	HackerAccount               hackerAccount
+	InviteRelation              inviteRelation
+	LevelDist                   levelDist
+	LevelRatio                  levelRatio
+	LotteryClaim                lotteryClaim
+	LotteryReward               lotteryReward
+	MainnetRpcConfig            mainnetRpcConfig
+	NativeAccountInfo           nativeAccountInfo
+	PosMissionConfig            posMissionConfig
+	PosReward                   posReward
+	PosRewardClaim              posRewardClaim
+	PosRewardConfig             posRewardConfig
+	PosSnapShot                 posSnapShot
+	PosStarLevelRule            posStarLevelRule
+	PosStarWhitelist            posStarWhitelist
+	QnFee                       qnFee
+	RewardCode                  rewardCode
+	RewardCodeConfig            rewardCodeConfig
+	RewardCodeFee               rewardCodeFee
+	RewardKeyConfig             rewardKeyConfig
+	ServiceInfo                 serviceInfo
+	ServiceKey                  serviceKey
+	ServiceTx                   serviceTx
+	StakeAmmConfig              stakeAmmConfig
+	StakeBuyToken               stakeBuyToken
+	StakeFixRateConfig          stakeFixRateConfig
+	StakeInviteDist             stakeInviteDist
+	StakeInviteRate             stakeInviteRate
+	StakeLeader                 stakeLeader
+	StakeLeaderReward           stakeLeaderReward
+	StakeLeaderRewardClaim      stakeLeaderRewardClaim
+	StakeLeaderRewardConfig     stakeLeaderRewardConfig
+	StakeRecord                 stakeRecord
+	StakeReward                 stakeReward
+	StakeRewardClaim            stakeRewardClaim
+	StakeRewardConfig           stakeRewardConfig
+	StakeSnapShot               stakeSnapShot
+	StakeStarLevelRule          stakeStarLevelRule
+	StakeStarWhitelist          stakeStarWhitelist
+	StakeTeamRewardDeduction    stakeTeamRewardDeduction
+	StakeTeamRewardDeductionLog stakeTeamRewardDeductionLog
+	StakeTokenPool              stakeTokenPool
+	StakeTotalLeader            stakeTotalLeader
+	SystemConfig                systemConfig
+	TakeTokenConfig             takeTokenConfig
+	TakeTokenRecord             takeTokenRecord
+	TokenConfig                 tokenConfig
+	TxScanInfo                  txScanInfo
+	UserDailyQuota              userDailyQuota
+	UserWalletRpcConfig         userWalletRpcConfig
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:                      db,
-		AwsConfig:               q.AwsConfig.clone(db),
-		CampaignQuoteConfig:     q.CampaignQuoteConfig.clone(db),
-		CampaignQuoteLimit:      q.CampaignQuoteLimit.clone(db),
-		CampaignQuoteRecord:     q.CampaignQuoteRecord.clone(db),
-		ChainConfig:             q.ChainConfig.clone(db),
-		DailyClaimStats:         q.DailyClaimStats.clone(db),
-		DiscountRate:            q.DiscountRate.clone(db),
-		ExcludeAccount:          q.ExcludeAccount.clone(db),
-		FeeStatistics:           q.FeeStatistics.clone(db),
-		FeeTolerance:            q.FeeTolerance.clone(db),
-		FundFlow:                q.FundFlow.clone(db),
-		GiveTokenConfig:         q.GiveTokenConfig.clone(db),
-		GiveTokenRecord:         q.GiveTokenRecord.clone(db),
-		HackerAccount:           q.HackerAccount.clone(db),
-		InviteRelation:          q.InviteRelation.clone(db),
-		LevelDist:               q.LevelDist.clone(db),
-		LevelRatio:              q.LevelRatio.clone(db),
-		LotteryClaim:            q.LotteryClaim.clone(db),
-		LotteryReward:           q.LotteryReward.clone(db),
-		MainnetRpcConfig:        q.MainnetRpcConfig.clone(db),
-		NativeAccountInfo:       q.NativeAccountInfo.clone(db),
-		PosMissionConfig:        q.PosMissionConfig.clone(db),
-		PosReward:               q.PosReward.clone(db),
-		PosRewardClaim:          q.PosRewardClaim.clone(db),
-		PosRewardConfig:         q.PosRewardConfig.clone(db),
-		PosSnapShot:             q.PosSnapShot.clone(db),
-		PosStarLevelRule:        q.PosStarLevelRule.clone(db),
-		PosStarWhitelist:        q.PosStarWhitelist.clone(db),
-		QnFee:                   q.QnFee.clone(db),
-		RewardCode:              q.RewardCode.clone(db),
-		RewardCodeConfig:        q.RewardCodeConfig.clone(db),
-		RewardCodeFee:           q.RewardCodeFee.clone(db),
-		RewardKeyConfig:         q.RewardKeyConfig.clone(db),
-		ServiceInfo:             q.ServiceInfo.clone(db),
-		ServiceKey:              q.ServiceKey.clone(db),
-		ServiceTx:               q.ServiceTx.clone(db),
-		StakeAmmConfig:          q.StakeAmmConfig.clone(db),
-		StakeBuyToken:           q.StakeBuyToken.clone(db),
-		StakeFixRateConfig:      q.StakeFixRateConfig.clone(db),
-		StakeInviteDist:         q.StakeInviteDist.clone(db),
-		StakeInviteRate:         q.StakeInviteRate.clone(db),
-		StakeLeader:             q.StakeLeader.clone(db),
-		StakeLeaderReward:       q.StakeLeaderReward.clone(db),
-		StakeLeaderRewardClaim:  q.StakeLeaderRewardClaim.clone(db),
-		StakeLeaderRewardConfig: q.StakeLeaderRewardConfig.clone(db),
-		StakeRecord:             q.StakeRecord.clone(db),
-		StakeReward:             q.StakeReward.clone(db),
-		StakeRewardClaim:        q.StakeRewardClaim.clone(db),
-		StakeRewardConfig:       q.StakeRewardConfig.clone(db),
-		StakeSnapShot:           q.StakeSnapShot.clone(db),
-		StakeStarLevelRule:      q.StakeStarLevelRule.clone(db),
-		StakeStarWhitelist:      q.StakeStarWhitelist.clone(db),
-		StakeTokenPool:          q.StakeTokenPool.clone(db),
-		StakeTotalLeader:        q.StakeTotalLeader.clone(db),
-		SystemConfig:            q.SystemConfig.clone(db),
-		TakeTokenConfig:         q.TakeTokenConfig.clone(db),
-		TakeTokenRecord:         q.TakeTokenRecord.clone(db),
-		TokenConfig:             q.TokenConfig.clone(db),
-		TxScanInfo:              q.TxScanInfo.clone(db),
-		UserDailyQuota:          q.UserDailyQuota.clone(db),
-		UserWalletRpcConfig:     q.UserWalletRpcConfig.clone(db),
+		db:                          db,
+		AwsConfig:                   q.AwsConfig.clone(db),
+		CampaignQuoteConfig:         q.CampaignQuoteConfig.clone(db),
+		CampaignQuoteLimit:          q.CampaignQuoteLimit.clone(db),
+		CampaignQuoteRecord:         q.CampaignQuoteRecord.clone(db),
+		ChainConfig:                 q.ChainConfig.clone(db),
+		DailyClaimStats:             q.DailyClaimStats.clone(db),
+		DiscountRate:                q.DiscountRate.clone(db),
+		ExcludeAccount:              q.ExcludeAccount.clone(db),
+		FeeStatistics:               q.FeeStatistics.clone(db),
+		FeeTolerance:                q.FeeTolerance.clone(db),
+		FundFlow:                    q.FundFlow.clone(db),
+		GiveTokenConfig:             q.GiveTokenConfig.clone(db),
+		GiveTokenRecord:             q.GiveTokenRecord.clone(db),
+		HackerAccount:               q.HackerAccount.clone(db),
+		InviteRelation:              q.InviteRelation.clone(db),
+		LevelDist:                   q.LevelDist.clone(db),
+		LevelRatio:                  q.LevelRatio.clone(db),
+		LotteryClaim:                q.LotteryClaim.clone(db),
+		LotteryReward:               q.LotteryReward.clone(db),
+		MainnetRpcConfig:            q.MainnetRpcConfig.clone(db),
+		NativeAccountInfo:           q.NativeAccountInfo.clone(db),
+		PosMissionConfig:            q.PosMissionConfig.clone(db),
+		PosReward:                   q.PosReward.clone(db),
+		PosRewardClaim:              q.PosRewardClaim.clone(db),
+		PosRewardConfig:             q.PosRewardConfig.clone(db),
+		PosSnapShot:                 q.PosSnapShot.clone(db),
+		PosStarLevelRule:            q.PosStarLevelRule.clone(db),
+		PosStarWhitelist:            q.PosStarWhitelist.clone(db),
+		QnFee:                       q.QnFee.clone(db),
+		RewardCode:                  q.RewardCode.clone(db),
+		RewardCodeConfig:            q.RewardCodeConfig.clone(db),
+		RewardCodeFee:               q.RewardCodeFee.clone(db),
+		RewardKeyConfig:             q.RewardKeyConfig.clone(db),
+		ServiceInfo:                 q.ServiceInfo.clone(db),
+		ServiceKey:                  q.ServiceKey.clone(db),
+		ServiceTx:                   q.ServiceTx.clone(db),
+		StakeAmmConfig:              q.StakeAmmConfig.clone(db),
+		StakeBuyToken:               q.StakeBuyToken.clone(db),
+		StakeFixRateConfig:          q.StakeFixRateConfig.clone(db),
+		StakeInviteDist:             q.StakeInviteDist.clone(db),
+		StakeInviteRate:             q.StakeInviteRate.clone(db),
+		StakeLeader:                 q.StakeLeader.clone(db),
+		StakeLeaderReward:           q.StakeLeaderReward.clone(db),
+		StakeLeaderRewardClaim:      q.StakeLeaderRewardClaim.clone(db),
+		StakeLeaderRewardConfig:     q.StakeLeaderRewardConfig.clone(db),
+		StakeRecord:                 q.StakeRecord.clone(db),
+		StakeReward:                 q.StakeReward.clone(db),
+		StakeRewardClaim:            q.StakeRewardClaim.clone(db),
+		StakeRewardConfig:           q.StakeRewardConfig.clone(db),
+		StakeSnapShot:               q.StakeSnapShot.clone(db),
+		StakeStarLevelRule:          q.StakeStarLevelRule.clone(db),
+		StakeStarWhitelist:          q.StakeStarWhitelist.clone(db),
+		StakeTeamRewardDeduction:    q.StakeTeamRewardDeduction.clone(db),
+		StakeTeamRewardDeductionLog: q.StakeTeamRewardDeductionLog.clone(db),
+		StakeTokenPool:              q.StakeTokenPool.clone(db),
+		StakeTotalLeader:            q.StakeTotalLeader.clone(db),
+		SystemConfig:                q.SystemConfig.clone(db),
+		TakeTokenConfig:             q.TakeTokenConfig.clone(db),
+		TakeTokenRecord:             q.TakeTokenRecord.clone(db),
+		TokenConfig:                 q.TokenConfig.clone(db),
+		TxScanInfo:                  q.TxScanInfo.clone(db),
+		UserDailyQuota:              q.UserDailyQuota.clone(db),
+		UserWalletRpcConfig:         q.UserWalletRpcConfig.clone(db),
 	}
 }
 
@@ -357,198 +367,204 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:                      db,
-		AwsConfig:               q.AwsConfig.replaceDB(db),
-		CampaignQuoteConfig:     q.CampaignQuoteConfig.replaceDB(db),
-		CampaignQuoteLimit:      q.CampaignQuoteLimit.replaceDB(db),
-		CampaignQuoteRecord:     q.CampaignQuoteRecord.replaceDB(db),
-		ChainConfig:             q.ChainConfig.replaceDB(db),
-		DailyClaimStats:         q.DailyClaimStats.replaceDB(db),
-		DiscountRate:            q.DiscountRate.replaceDB(db),
-		ExcludeAccount:          q.ExcludeAccount.replaceDB(db),
-		FeeStatistics:           q.FeeStatistics.replaceDB(db),
-		FeeTolerance:            q.FeeTolerance.replaceDB(db),
-		FundFlow:                q.FundFlow.replaceDB(db),
-		GiveTokenConfig:         q.GiveTokenConfig.replaceDB(db),
-		GiveTokenRecord:         q.GiveTokenRecord.replaceDB(db),
-		HackerAccount:           q.HackerAccount.replaceDB(db),
-		InviteRelation:          q.InviteRelation.replaceDB(db),
-		LevelDist:               q.LevelDist.replaceDB(db),
-		LevelRatio:              q.LevelRatio.replaceDB(db),
-		LotteryClaim:            q.LotteryClaim.replaceDB(db),
-		LotteryReward:           q.LotteryReward.replaceDB(db),
-		MainnetRpcConfig:        q.MainnetRpcConfig.replaceDB(db),
-		NativeAccountInfo:       q.NativeAccountInfo.replaceDB(db),
-		PosMissionConfig:        q.PosMissionConfig.replaceDB(db),
-		PosReward:               q.PosReward.replaceDB(db),
-		PosRewardClaim:          q.PosRewardClaim.replaceDB(db),
-		PosRewardConfig:         q.PosRewardConfig.replaceDB(db),
-		PosSnapShot:             q.PosSnapShot.replaceDB(db),
-		PosStarLevelRule:        q.PosStarLevelRule.replaceDB(db),
-		PosStarWhitelist:        q.PosStarWhitelist.replaceDB(db),
-		QnFee:                   q.QnFee.replaceDB(db),
-		RewardCode:              q.RewardCode.replaceDB(db),
-		RewardCodeConfig:        q.RewardCodeConfig.replaceDB(db),
-		RewardCodeFee:           q.RewardCodeFee.replaceDB(db),
-		RewardKeyConfig:         q.RewardKeyConfig.replaceDB(db),
-		ServiceInfo:             q.ServiceInfo.replaceDB(db),
-		ServiceKey:              q.ServiceKey.replaceDB(db),
-		ServiceTx:               q.ServiceTx.replaceDB(db),
-		StakeAmmConfig:          q.StakeAmmConfig.replaceDB(db),
-		StakeBuyToken:           q.StakeBuyToken.replaceDB(db),
-		StakeFixRateConfig:      q.StakeFixRateConfig.replaceDB(db),
-		StakeInviteDist:         q.StakeInviteDist.replaceDB(db),
-		StakeInviteRate:         q.StakeInviteRate.replaceDB(db),
-		StakeLeader:             q.StakeLeader.replaceDB(db),
-		StakeLeaderReward:       q.StakeLeaderReward.replaceDB(db),
-		StakeLeaderRewardClaim:  q.StakeLeaderRewardClaim.replaceDB(db),
-		StakeLeaderRewardConfig: q.StakeLeaderRewardConfig.replaceDB(db),
-		StakeRecord:             q.StakeRecord.replaceDB(db),
-		StakeReward:             q.StakeReward.replaceDB(db),
-		StakeRewardClaim:        q.StakeRewardClaim.replaceDB(db),
-		StakeRewardConfig:       q.StakeRewardConfig.replaceDB(db),
-		StakeSnapShot:           q.StakeSnapShot.replaceDB(db),
-		StakeStarLevelRule:      q.StakeStarLevelRule.replaceDB(db),
-		StakeStarWhitelist:      q.StakeStarWhitelist.replaceDB(db),
-		StakeTokenPool:          q.StakeTokenPool.replaceDB(db),
-		StakeTotalLeader:        q.StakeTotalLeader.replaceDB(db),
-		SystemConfig:            q.SystemConfig.replaceDB(db),
-		TakeTokenConfig:         q.TakeTokenConfig.replaceDB(db),
-		TakeTokenRecord:         q.TakeTokenRecord.replaceDB(db),
-		TokenConfig:             q.TokenConfig.replaceDB(db),
-		TxScanInfo:              q.TxScanInfo.replaceDB(db),
-		UserDailyQuota:          q.UserDailyQuota.replaceDB(db),
-		UserWalletRpcConfig:     q.UserWalletRpcConfig.replaceDB(db),
+		db:                          db,
+		AwsConfig:                   q.AwsConfig.replaceDB(db),
+		CampaignQuoteConfig:         q.CampaignQuoteConfig.replaceDB(db),
+		CampaignQuoteLimit:          q.CampaignQuoteLimit.replaceDB(db),
+		CampaignQuoteRecord:         q.CampaignQuoteRecord.replaceDB(db),
+		ChainConfig:                 q.ChainConfig.replaceDB(db),
+		DailyClaimStats:             q.DailyClaimStats.replaceDB(db),
+		DiscountRate:                q.DiscountRate.replaceDB(db),
+		ExcludeAccount:              q.ExcludeAccount.replaceDB(db),
+		FeeStatistics:               q.FeeStatistics.replaceDB(db),
+		FeeTolerance:                q.FeeTolerance.replaceDB(db),
+		FundFlow:                    q.FundFlow.replaceDB(db),
+		GiveTokenConfig:             q.GiveTokenConfig.replaceDB(db),
+		GiveTokenRecord:             q.GiveTokenRecord.replaceDB(db),
+		HackerAccount:               q.HackerAccount.replaceDB(db),
+		InviteRelation:              q.InviteRelation.replaceDB(db),
+		LevelDist:                   q.LevelDist.replaceDB(db),
+		LevelRatio:                  q.LevelRatio.replaceDB(db),
+		LotteryClaim:                q.LotteryClaim.replaceDB(db),
+		LotteryReward:               q.LotteryReward.replaceDB(db),
+		MainnetRpcConfig:            q.MainnetRpcConfig.replaceDB(db),
+		NativeAccountInfo:           q.NativeAccountInfo.replaceDB(db),
+		PosMissionConfig:            q.PosMissionConfig.replaceDB(db),
+		PosReward:                   q.PosReward.replaceDB(db),
+		PosRewardClaim:              q.PosRewardClaim.replaceDB(db),
+		PosRewardConfig:             q.PosRewardConfig.replaceDB(db),
+		PosSnapShot:                 q.PosSnapShot.replaceDB(db),
+		PosStarLevelRule:            q.PosStarLevelRule.replaceDB(db),
+		PosStarWhitelist:            q.PosStarWhitelist.replaceDB(db),
+		QnFee:                       q.QnFee.replaceDB(db),
+		RewardCode:                  q.RewardCode.replaceDB(db),
+		RewardCodeConfig:            q.RewardCodeConfig.replaceDB(db),
+		RewardCodeFee:               q.RewardCodeFee.replaceDB(db),
+		RewardKeyConfig:             q.RewardKeyConfig.replaceDB(db),
+		ServiceInfo:                 q.ServiceInfo.replaceDB(db),
+		ServiceKey:                  q.ServiceKey.replaceDB(db),
+		ServiceTx:                   q.ServiceTx.replaceDB(db),
+		StakeAmmConfig:              q.StakeAmmConfig.replaceDB(db),
+		StakeBuyToken:               q.StakeBuyToken.replaceDB(db),
+		StakeFixRateConfig:          q.StakeFixRateConfig.replaceDB(db),
+		StakeInviteDist:             q.StakeInviteDist.replaceDB(db),
+		StakeInviteRate:             q.StakeInviteRate.replaceDB(db),
+		StakeLeader:                 q.StakeLeader.replaceDB(db),
+		StakeLeaderReward:           q.StakeLeaderReward.replaceDB(db),
+		StakeLeaderRewardClaim:      q.StakeLeaderRewardClaim.replaceDB(db),
+		StakeLeaderRewardConfig:     q.StakeLeaderRewardConfig.replaceDB(db),
+		StakeRecord:                 q.StakeRecord.replaceDB(db),
+		StakeReward:                 q.StakeReward.replaceDB(db),
+		StakeRewardClaim:            q.StakeRewardClaim.replaceDB(db),
+		StakeRewardConfig:           q.StakeRewardConfig.replaceDB(db),
+		StakeSnapShot:               q.StakeSnapShot.replaceDB(db),
+		StakeStarLevelRule:          q.StakeStarLevelRule.replaceDB(db),
+		StakeStarWhitelist:          q.StakeStarWhitelist.replaceDB(db),
+		StakeTeamRewardDeduction:    q.StakeTeamRewardDeduction.replaceDB(db),
+		StakeTeamRewardDeductionLog: q.StakeTeamRewardDeductionLog.replaceDB(db),
+		StakeTokenPool:              q.StakeTokenPool.replaceDB(db),
+		StakeTotalLeader:            q.StakeTotalLeader.replaceDB(db),
+		SystemConfig:                q.SystemConfig.replaceDB(db),
+		TakeTokenConfig:             q.TakeTokenConfig.replaceDB(db),
+		TakeTokenRecord:             q.TakeTokenRecord.replaceDB(db),
+		TokenConfig:                 q.TokenConfig.replaceDB(db),
+		TxScanInfo:                  q.TxScanInfo.replaceDB(db),
+		UserDailyQuota:              q.UserDailyQuota.replaceDB(db),
+		UserWalletRpcConfig:         q.UserWalletRpcConfig.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	AwsConfig               IAwsConfigDo
-	CampaignQuoteConfig     ICampaignQuoteConfigDo
-	CampaignQuoteLimit      ICampaignQuoteLimitDo
-	CampaignQuoteRecord     ICampaignQuoteRecordDo
-	ChainConfig             IChainConfigDo
-	DailyClaimStats         IDailyClaimStatsDo
-	DiscountRate            IDiscountRateDo
-	ExcludeAccount          IExcludeAccountDo
-	FeeStatistics           IFeeStatisticsDo
-	FeeTolerance            IFeeToleranceDo
-	FundFlow                IFundFlowDo
-	GiveTokenConfig         IGiveTokenConfigDo
-	GiveTokenRecord         IGiveTokenRecordDo
-	HackerAccount           IHackerAccountDo
-	InviteRelation          IInviteRelationDo
-	LevelDist               ILevelDistDo
-	LevelRatio              ILevelRatioDo
-	LotteryClaim            ILotteryClaimDo
-	LotteryReward           ILotteryRewardDo
-	MainnetRpcConfig        IMainnetRpcConfigDo
-	NativeAccountInfo       INativeAccountInfoDo
-	PosMissionConfig        IPosMissionConfigDo
-	PosReward               IPosRewardDo
-	PosRewardClaim          IPosRewardClaimDo
-	PosRewardConfig         IPosRewardConfigDo
-	PosSnapShot             IPosSnapShotDo
-	PosStarLevelRule        IPosStarLevelRuleDo
-	PosStarWhitelist        IPosStarWhitelistDo
-	QnFee                   IQnFeeDo
-	RewardCode              IRewardCodeDo
-	RewardCodeConfig        IRewardCodeConfigDo
-	RewardCodeFee           IRewardCodeFeeDo
-	RewardKeyConfig         IRewardKeyConfigDo
-	ServiceInfo             IServiceInfoDo
-	ServiceKey              IServiceKeyDo
-	ServiceTx               IServiceTxDo
-	StakeAmmConfig          IStakeAmmConfigDo
-	StakeBuyToken           IStakeBuyTokenDo
-	StakeFixRateConfig      IStakeFixRateConfigDo
-	StakeInviteDist         IStakeInviteDistDo
-	StakeInviteRate         IStakeInviteRateDo
-	StakeLeader             IStakeLeaderDo
-	StakeLeaderReward       IStakeLeaderRewardDo
-	StakeLeaderRewardClaim  IStakeLeaderRewardClaimDo
-	StakeLeaderRewardConfig IStakeLeaderRewardConfigDo
-	StakeRecord             IStakeRecordDo
-	StakeReward             IStakeRewardDo
-	StakeRewardClaim        IStakeRewardClaimDo
-	StakeRewardConfig       IStakeRewardConfigDo
-	StakeSnapShot           IStakeSnapShotDo
-	StakeStarLevelRule      IStakeStarLevelRuleDo
-	StakeStarWhitelist      IStakeStarWhitelistDo
-	StakeTokenPool          IStakeTokenPoolDo
-	StakeTotalLeader        IStakeTotalLeaderDo
-	SystemConfig            ISystemConfigDo
-	TakeTokenConfig         ITakeTokenConfigDo
-	TakeTokenRecord         ITakeTokenRecordDo
-	TokenConfig             ITokenConfigDo
-	TxScanInfo              ITxScanInfoDo
-	UserDailyQuota          IUserDailyQuotaDo
-	UserWalletRpcConfig     IUserWalletRpcConfigDo
+	AwsConfig                   IAwsConfigDo
+	CampaignQuoteConfig         ICampaignQuoteConfigDo
+	CampaignQuoteLimit          ICampaignQuoteLimitDo
+	CampaignQuoteRecord         ICampaignQuoteRecordDo
+	ChainConfig                 IChainConfigDo
+	DailyClaimStats             IDailyClaimStatsDo
+	DiscountRate                IDiscountRateDo
+	ExcludeAccount              IExcludeAccountDo
+	FeeStatistics               IFeeStatisticsDo
+	FeeTolerance                IFeeToleranceDo
+	FundFlow                    IFundFlowDo
+	GiveTokenConfig             IGiveTokenConfigDo
+	GiveTokenRecord             IGiveTokenRecordDo
+	HackerAccount               IHackerAccountDo
+	InviteRelation              IInviteRelationDo
+	LevelDist                   ILevelDistDo
+	LevelRatio                  ILevelRatioDo
+	LotteryClaim                ILotteryClaimDo
+	LotteryReward               ILotteryRewardDo
+	MainnetRpcConfig            IMainnetRpcConfigDo
+	NativeAccountInfo           INativeAccountInfoDo
+	PosMissionConfig            IPosMissionConfigDo
+	PosReward                   IPosRewardDo
+	PosRewardClaim              IPosRewardClaimDo
+	PosRewardConfig             IPosRewardConfigDo
+	PosSnapShot                 IPosSnapShotDo
+	PosStarLevelRule            IPosStarLevelRuleDo
+	PosStarWhitelist            IPosStarWhitelistDo
+	QnFee                       IQnFeeDo
+	RewardCode                  IRewardCodeDo
+	RewardCodeConfig            IRewardCodeConfigDo
+	RewardCodeFee               IRewardCodeFeeDo
+	RewardKeyConfig             IRewardKeyConfigDo
+	ServiceInfo                 IServiceInfoDo
+	ServiceKey                  IServiceKeyDo
+	ServiceTx                   IServiceTxDo
+	StakeAmmConfig              IStakeAmmConfigDo
+	StakeBuyToken               IStakeBuyTokenDo
+	StakeFixRateConfig          IStakeFixRateConfigDo
+	StakeInviteDist             IStakeInviteDistDo
+	StakeInviteRate             IStakeInviteRateDo
+	StakeLeader                 IStakeLeaderDo
+	StakeLeaderReward           IStakeLeaderRewardDo
+	StakeLeaderRewardClaim      IStakeLeaderRewardClaimDo
+	StakeLeaderRewardConfig     IStakeLeaderRewardConfigDo
+	StakeRecord                 IStakeRecordDo
+	StakeReward                 IStakeRewardDo
+	StakeRewardClaim            IStakeRewardClaimDo
+	StakeRewardConfig           IStakeRewardConfigDo
+	StakeSnapShot               IStakeSnapShotDo
+	StakeStarLevelRule          IStakeStarLevelRuleDo
+	StakeStarWhitelist          IStakeStarWhitelistDo
+	StakeTeamRewardDeduction    IStakeTeamRewardDeductionDo
+	StakeTeamRewardDeductionLog IStakeTeamRewardDeductionLogDo
+	StakeTokenPool              IStakeTokenPoolDo
+	StakeTotalLeader            IStakeTotalLeaderDo
+	SystemConfig                ISystemConfigDo
+	TakeTokenConfig             ITakeTokenConfigDo
+	TakeTokenRecord             ITakeTokenRecordDo
+	TokenConfig                 ITokenConfigDo
+	TxScanInfo                  ITxScanInfoDo
+	UserDailyQuota              IUserDailyQuotaDo
+	UserWalletRpcConfig         IUserWalletRpcConfigDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		AwsConfig:               q.AwsConfig.WithContext(ctx),
-		CampaignQuoteConfig:     q.CampaignQuoteConfig.WithContext(ctx),
-		CampaignQuoteLimit:      q.CampaignQuoteLimit.WithContext(ctx),
-		CampaignQuoteRecord:     q.CampaignQuoteRecord.WithContext(ctx),
-		ChainConfig:             q.ChainConfig.WithContext(ctx),
-		DailyClaimStats:         q.DailyClaimStats.WithContext(ctx),
-		DiscountRate:            q.DiscountRate.WithContext(ctx),
-		ExcludeAccount:          q.ExcludeAccount.WithContext(ctx),
-		FeeStatistics:           q.FeeStatistics.WithContext(ctx),
-		FeeTolerance:            q.FeeTolerance.WithContext(ctx),
-		FundFlow:                q.FundFlow.WithContext(ctx),
-		GiveTokenConfig:         q.GiveTokenConfig.WithContext(ctx),
-		GiveTokenRecord:         q.GiveTokenRecord.WithContext(ctx),
-		HackerAccount:           q.HackerAccount.WithContext(ctx),
-		InviteRelation:          q.InviteRelation.WithContext(ctx),
-		LevelDist:               q.LevelDist.WithContext(ctx),
-		LevelRatio:              q.LevelRatio.WithContext(ctx),
-		LotteryClaim:            q.LotteryClaim.WithContext(ctx),
-		LotteryReward:           q.LotteryReward.WithContext(ctx),
-		MainnetRpcConfig:        q.MainnetRpcConfig.WithContext(ctx),
-		NativeAccountInfo:       q.NativeAccountInfo.WithContext(ctx),
-		PosMissionConfig:        q.PosMissionConfig.WithContext(ctx),
-		PosReward:               q.PosReward.WithContext(ctx),
-		PosRewardClaim:          q.PosRewardClaim.WithContext(ctx),
-		PosRewardConfig:         q.PosRewardConfig.WithContext(ctx),
-		PosSnapShot:             q.PosSnapShot.WithContext(ctx),
-		PosStarLevelRule:        q.PosStarLevelRule.WithContext(ctx),
-		PosStarWhitelist:        q.PosStarWhitelist.WithContext(ctx),
-		QnFee:                   q.QnFee.WithContext(ctx),
-		RewardCode:              q.RewardCode.WithContext(ctx),
-		RewardCodeConfig:        q.RewardCodeConfig.WithContext(ctx),
-		RewardCodeFee:           q.RewardCodeFee.WithContext(ctx),
-		RewardKeyConfig:         q.RewardKeyConfig.WithContext(ctx),
-		ServiceInfo:             q.ServiceInfo.WithContext(ctx),
-		ServiceKey:              q.ServiceKey.WithContext(ctx),
-		ServiceTx:               q.ServiceTx.WithContext(ctx),
-		StakeAmmConfig:          q.StakeAmmConfig.WithContext(ctx),
-		StakeBuyToken:           q.StakeBuyToken.WithContext(ctx),
-		StakeFixRateConfig:      q.StakeFixRateConfig.WithContext(ctx),
-		StakeInviteDist:         q.StakeInviteDist.WithContext(ctx),
-		StakeInviteRate:         q.StakeInviteRate.WithContext(ctx),
-		StakeLeader:             q.StakeLeader.WithContext(ctx),
-		StakeLeaderReward:       q.StakeLeaderReward.WithContext(ctx),
-		StakeLeaderRewardClaim:  q.StakeLeaderRewardClaim.WithContext(ctx),
-		StakeLeaderRewardConfig: q.StakeLeaderRewardConfig.WithContext(ctx),
-		StakeRecord:             q.StakeRecord.WithContext(ctx),
-		StakeReward:             q.StakeReward.WithContext(ctx),
-		StakeRewardClaim:        q.StakeRewardClaim.WithContext(ctx),
-		StakeRewardConfig:       q.StakeRewardConfig.WithContext(ctx),
-		StakeSnapShot:           q.StakeSnapShot.WithContext(ctx),
-		StakeStarLevelRule:      q.StakeStarLevelRule.WithContext(ctx),
-		StakeStarWhitelist:      q.StakeStarWhitelist.WithContext(ctx),
-		StakeTokenPool:          q.StakeTokenPool.WithContext(ctx),
-		StakeTotalLeader:        q.StakeTotalLeader.WithContext(ctx),
-		SystemConfig:            q.SystemConfig.WithContext(ctx),
-		TakeTokenConfig:         q.TakeTokenConfig.WithContext(ctx),
-		TakeTokenRecord:         q.TakeTokenRecord.WithContext(ctx),
-		TokenConfig:             q.TokenConfig.WithContext(ctx),
-		TxScanInfo:              q.TxScanInfo.WithContext(ctx),
-		UserDailyQuota:          q.UserDailyQuota.WithContext(ctx),
-		UserWalletRpcConfig:     q.UserWalletRpcConfig.WithContext(ctx),
+		AwsConfig:                   q.AwsConfig.WithContext(ctx),
+		CampaignQuoteConfig:         q.CampaignQuoteConfig.WithContext(ctx),
+		CampaignQuoteLimit:          q.CampaignQuoteLimit.WithContext(ctx),
+		CampaignQuoteRecord:         q.CampaignQuoteRecord.WithContext(ctx),
+		ChainConfig:                 q.ChainConfig.WithContext(ctx),
+		DailyClaimStats:             q.DailyClaimStats.WithContext(ctx),
+		DiscountRate:                q.DiscountRate.WithContext(ctx),
+		ExcludeAccount:              q.ExcludeAccount.WithContext(ctx),
+		FeeStatistics:               q.FeeStatistics.WithContext(ctx),
+		FeeTolerance:                q.FeeTolerance.WithContext(ctx),
+		FundFlow:                    q.FundFlow.WithContext(ctx),
+		GiveTokenConfig:             q.GiveTokenConfig.WithContext(ctx),
+		GiveTokenRecord:             q.GiveTokenRecord.WithContext(ctx),
+		HackerAccount:               q.HackerAccount.WithContext(ctx),
+		InviteRelation:              q.InviteRelation.WithContext(ctx),
+		LevelDist:                   q.LevelDist.WithContext(ctx),
+		LevelRatio:                  q.LevelRatio.WithContext(ctx),
+		LotteryClaim:                q.LotteryClaim.WithContext(ctx),
+		LotteryReward:               q.LotteryReward.WithContext(ctx),
+		MainnetRpcConfig:            q.MainnetRpcConfig.WithContext(ctx),
+		NativeAccountInfo:           q.NativeAccountInfo.WithContext(ctx),
+		PosMissionConfig:            q.PosMissionConfig.WithContext(ctx),
+		PosReward:                   q.PosReward.WithContext(ctx),
+		PosRewardClaim:              q.PosRewardClaim.WithContext(ctx),
+		PosRewardConfig:             q.PosRewardConfig.WithContext(ctx),
+		PosSnapShot:                 q.PosSnapShot.WithContext(ctx),
+		PosStarLevelRule:            q.PosStarLevelRule.WithContext(ctx),
+		PosStarWhitelist:            q.PosStarWhitelist.WithContext(ctx),
+		QnFee:                       q.QnFee.WithContext(ctx),
+		RewardCode:                  q.RewardCode.WithContext(ctx),
+		RewardCodeConfig:            q.RewardCodeConfig.WithContext(ctx),
+		RewardCodeFee:               q.RewardCodeFee.WithContext(ctx),
+		RewardKeyConfig:             q.RewardKeyConfig.WithContext(ctx),
+		ServiceInfo:                 q.ServiceInfo.WithContext(ctx),
+		ServiceKey:                  q.ServiceKey.WithContext(ctx),
+		ServiceTx:                   q.ServiceTx.WithContext(ctx),
+		StakeAmmConfig:              q.StakeAmmConfig.WithContext(ctx),
+		StakeBuyToken:               q.StakeBuyToken.WithContext(ctx),
+		StakeFixRateConfig:          q.StakeFixRateConfig.WithContext(ctx),
+		StakeInviteDist:             q.StakeInviteDist.WithContext(ctx),
+		StakeInviteRate:             q.StakeInviteRate.WithContext(ctx),
+		StakeLeader:                 q.StakeLeader.WithContext(ctx),
+		StakeLeaderReward:           q.StakeLeaderReward.WithContext(ctx),
+		StakeLeaderRewardClaim:      q.StakeLeaderRewardClaim.WithContext(ctx),
+		StakeLeaderRewardConfig:     q.StakeLeaderRewardConfig.WithContext(ctx),
+		StakeRecord:                 q.StakeRecord.WithContext(ctx),
+		StakeReward:                 q.StakeReward.WithContext(ctx),
+		StakeRewardClaim:            q.StakeRewardClaim.WithContext(ctx),
+		StakeRewardConfig:           q.StakeRewardConfig.WithContext(ctx),
+		StakeSnapShot:               q.StakeSnapShot.WithContext(ctx),
+		StakeStarLevelRule:          q.StakeStarLevelRule.WithContext(ctx),
+		StakeStarWhitelist:          q.StakeStarWhitelist.WithContext(ctx),
+		StakeTeamRewardDeduction:    q.StakeTeamRewardDeduction.WithContext(ctx),
+		StakeTeamRewardDeductionLog: q.StakeTeamRewardDeductionLog.WithContext(ctx),
+		StakeTokenPool:              q.StakeTokenPool.WithContext(ctx),
+		StakeTotalLeader:            q.StakeTotalLeader.WithContext(ctx),
+		SystemConfig:                q.SystemConfig.WithContext(ctx),
+		TakeTokenConfig:             q.TakeTokenConfig.WithContext(ctx),
+		TakeTokenRecord:             q.TakeTokenRecord.WithContext(ctx),
+		TokenConfig:                 q.TokenConfig.WithContext(ctx),
+		TxScanInfo:                  q.TxScanInfo.WithContext(ctx),
+		UserDailyQuota:              q.UserDailyQuota.WithContext(ctx),
+		UserWalletRpcConfig:         q.UserWalletRpcConfig.WithContext(ctx),
 	}
 }
 

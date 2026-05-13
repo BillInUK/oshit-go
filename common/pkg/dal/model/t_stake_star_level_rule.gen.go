@@ -12,13 +12,13 @@ const TableNameStakeStarLevelRule = "t_stake_star_level_rule"
 
 // StakeStarLevelRule mapped from table <t_stake_star_level_rule>
 type StakeStarLevelRule struct {
-	RecordID    string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
+	RecordID    string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
 	Amount      float64   `gorm:"column:amount;not null" json:"amount"`
-	GroupAmount float64   `gorm:"column:group_amount;not null" json:"group_amount"`
-	StarLevel   int32     `gorm:"column:star_level;not null" json:"star_level"`
+	GroupAmount float64   `gorm:"column:group_amount;not null" json:"groupAmount"`
+	StarLevel   int32     `gorm:"column:star_level;not null" json:"starLevel"`
 	Rate        float64   `gorm:"column:rate;not null" json:"rate"`
-	CreatedAt   time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt   time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt   time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt   time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName StakeStarLevelRule's table name

@@ -12,15 +12,15 @@ const TableNamePosSnapShot = "t_pos_snap_shot"
 
 // PosSnapShot mapped from table <t_pos_snap_shot>
 type PosSnapShot struct {
-	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
-	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
+	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
+	NativeAccount string    `gorm:"column:native_account;not null" json:"nativeAccount"`
 	Amount        float64   `gorm:"column:amount" json:"amount"`
-	StarLevel     int32     `gorm:"column:star_level" json:"star_level"`
+	StarLevel     int32     `gorm:"column:star_level" json:"starLevel"`
 	Rate          float64   `gorm:"column:rate" json:"rate"`
-	RangeBase     float64   `gorm:"column:range_base" json:"range_base"`
-	SnapDay       time.Time `gorm:"column:snap_day;not null" json:"snap_day"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RangeBase     float64   `gorm:"column:range_base" json:"rangeBase"`
+	SnapDay       time.Time `gorm:"column:snap_day;not null" json:"snapDay"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName PosSnapShot's table name

@@ -12,17 +12,17 @@ const TableNameDailyClaimStats = "t_daily_claim_stats"
 
 // DailyClaimStats mapped from table <t_daily_claim_stats>
 type DailyClaimStats struct {
-	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
-	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
-	TakeDate      time.Time `gorm:"column:take_date;not null" json:"take_date"`
-	TakeCount     int32     `gorm:"column:take_count;not null" json:"take_count"`
-	NeedLottery   bool      `gorm:"column:need_lottery;not null" json:"need_lottery"`
-	LastTakeTime  time.Time `gorm:"column:last_take_time" json:"last_take_time"`
-	TotalLottery  float64   `gorm:"column:total_lottery;not null" json:"total_lottery"`
-	TotalTake     float64   `gorm:"column:total_take;not null" json:"total_take"`
-	LotteryCount  int32     `gorm:"column:lottery_count;not null" json:"lottery_count"`
-	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	RecordID      string    `gorm:"column:record_id;not null;default:gen_ulid()" json:"recordId"`
+	NativeAccount string    `gorm:"column:native_account;not null" json:"nativeAccount"`
+	TakeDate      time.Time `gorm:"column:take_date;not null" json:"takeDate"`
+	TakeCount     int32     `gorm:"column:take_count;not null" json:"takeCount"`
+	NeedLottery   bool      `gorm:"column:need_lottery;not null" json:"needLottery"`
+	LastTakeTime  time.Time `gorm:"column:last_take_time" json:"lastTakeTime"`
+	TotalLottery  float64   `gorm:"column:total_lottery;not null" json:"totalLottery"`
+	TotalTake     float64   `gorm:"column:total_take;not null" json:"totalTake"`
+	LotteryCount  int32     `gorm:"column:lottery_count;not null" json:"lotteryCount"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName DailyClaimStats's table name

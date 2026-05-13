@@ -13,8 +13,8 @@ const TableNameSystemConfig = "t_system_config"
 // SystemConfig mapped from table <t_system_config>
 type SystemConfig struct {
 	Env       int32     `gorm:"column:env;not null" json:"env"`
-	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName SystemConfig's table name

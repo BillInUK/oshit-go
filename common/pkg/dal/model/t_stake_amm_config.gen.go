@@ -8,8 +8,8 @@ const TableNameStakeAmmConfig = "t_stake_amm_config"
 
 // StakeAmmConfig mapped from table <t_stake_amm_config>
 type StakeAmmConfig struct {
-	QuoteToken string `gorm:"column:quote_token;not null" json:"quote_token"`
-	PublicKey  string `gorm:"column:public_key;not null" json:"public_key"`
+	QuoteToken string `gorm:"column:quote_token;not null" json:"quoteToken"`
+	PublicKey  string `gorm:"column:public_key;not null" json:"publicKey"`
 }
 
 // TableName StakeAmmConfig's table name

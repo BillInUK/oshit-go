@@ -37,9 +37,15 @@ func main() {
 		Mode:         gen.WithDefaultQuery | gen.WithQueryInterface,
 	})
 
-	// 自定义 JSON 标签（首字母小写）
+	// 自定义 JSON 标签：将 snake_case 列名转为 camelCase
 	g.WithJSONTagNameStrategy(func(columnName string) string {
-		return strings.ToLower(columnName[:1]) + columnName[1:]
+		parts := strings.Split(columnName, "_")
+		for i := 1; i < len(parts); i++ {
+			if len(parts[i]) > 0 {
+				parts[i] = strings.ToUpper(parts[i][:1]) + parts[i][1:]
+			}
+		}
+		return strings.Join(parts, "")
 	})
 
 	// 自定义模型名称：去除表名的 "t_" 前缀，并将下划线命名转为驼峰

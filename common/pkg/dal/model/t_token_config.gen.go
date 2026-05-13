@@ -12,12 +12,12 @@ const TableNameTokenConfig = "t_token_config"
 
 // TokenConfig mapped from table <t_token_config>
 type TokenConfig struct {
-	TokenName   string    `gorm:"column:token_name;not null" json:"token_name"`
-	TokenSymbol string    `gorm:"column:token_symbol;not null" json:"token_symbol"`
+	TokenName   string    `gorm:"column:token_name;not null" json:"tokenName"`
+	TokenSymbol string    `gorm:"column:token_symbol;not null" json:"tokenSymbol"`
 	Decimals    int32     `gorm:"column:decimals;not null" json:"decimals"`
 	Mint        string    `gorm:"column:mint;not null" json:"mint"`
-	CreatedAt   time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt   time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt   time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt   time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName TokenConfig's table name

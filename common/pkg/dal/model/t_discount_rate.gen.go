@@ -8,7 +8,7 @@ const TableNameDiscountRate = "t_discount_rate"
 
 // DiscountRate mapped from table <t_discount_rate>
 type DiscountRate struct {
-	RecordID string  `gorm:"column:record_id;not null;default:gen_ulid()" json:"record_id"`
+	RecordID string  `gorm:"column:record_id;not null;default:gen_ulid()" json:"recordId"`
 	Rate     float64 `gorm:"column:rate;not null" json:"rate"`
 }
 

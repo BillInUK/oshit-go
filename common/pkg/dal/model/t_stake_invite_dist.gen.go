@@ -8,7 +8,7 @@ const TableNameStakeInviteDist = "t_stake_invite_dist"
 
 // StakeInviteDist mapped from table <t_stake_invite_dist>
 type StakeInviteDist struct {
-	DistLevel int32 `gorm:"column:dist_level;not null" json:"dist_level"`
+	DistLevel int32 `gorm:"column:dist_level;not null" json:"distLevel"`
 }
 
 // TableName StakeInviteDist's table name

@@ -13,10 +13,10 @@ const TableNameServiceKey = "t_service_key"
 // ServiceKey mapped from table <t_service_key>
 type ServiceKey struct {
 	Service      string    `gorm:"column:service;not null" json:"service"`
-	SubService   string    `gorm:"column:sub_service;not null" json:"sub_service"`
-	EncryptedKey string    `gorm:"column:encrypted_key;not null" json:"encrypted_key"`
-	CreatedAt    time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt    time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	SubService   string    `gorm:"column:sub_service;not null" json:"subService"`
+	EncryptedKey string    `gorm:"column:encrypted_key;not null" json:"encryptedKey"`
+	CreatedAt    time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt    time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }
 
 // TableName ServiceKey's table name

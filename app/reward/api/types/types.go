@@ -114,7 +114,7 @@ type CampaignQuoteReq struct {
 }
 
 type CampaignQuoteTxInfo struct {
-	RewardAccount string  `json:"rewardAccount"` // 发放抽奖记录的token
+	RewardAccount string  `json:"rewardAccount"` // 发放抽奖记录的地址
 	Mint          string  `json:"mint"`          // token地址
 	Decimals      int32   `json:"decimals"`      // 币种精度
 	CostAccount   string  `json:"costAccount"`   // 成本费
