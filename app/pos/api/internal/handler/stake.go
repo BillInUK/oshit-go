@@ -13,6 +13,7 @@ import (
 	app_utils "oshit-go/app/utils"
 	"oshit-go/common/pkg/response"
 	"strconv"
+	"time"
 )
 
 type StakeHandler struct {
@@ -39,12 +40,39 @@ func (h *StakeHandler) GetConfig(fiberCtx *fiber.Ctx) error {
 
 // GetRewardStat 获取质押奖励信息
 func (h *StakeHandler) GetRewardStat(fiberCtx *fiber.Ctx) error {
-	return nil
+	nativeAccount := fiberCtx.FormValue("nativeAccount")
+	l := stake.NewStakeRewardLogic(fiberCtx.Context(), h.srvCtx)
+	detail, err := l.GetStakeRewardStat(nativeAccount)
+	if err != nil {
+		log.Errorf("Stake业务- 查询奖励明细错误: %v", err)
+		return response.FailWithMsg(fiberCtx, "query sol pos rewards error")
+	}
+	return response.OkWithData(fiberCtx, detail)
 }
 
 // GetStarLevel 获取质押星级
 func (h *StakeHandler) GetStarLevel(fiberCtx *fiber.Ctx) error {
-	return nil
+	var prefix = fmt.Sprintf("%s - 查看地址星级 -", h.prefix)
+	nativeAccount := fiberCtx.FormValue("nativeAccount")
+	l := stake.NewStakeSnapShotLogic(fiberCtx.Context(), h.srvCtx)
+	snapShots, err := l.GetStakeSnapShot(nativeAccount, time.Now())
+	if err != nil {
+		log.Errorf("%s 查看地址 %s 快照信息错误 %v", prefix, nativeAccount, err)
+		return response.FailWithMsg(fiberCtx, "query stake snap shot error")
+	}
+	totalStakeAmount := 0.0
+	for _, s := range snapShots {
+		totalStakeAmount += s.Amount
+	}
+	starLevel, rate, err := l.GetStakeStarLevelFromConfig(nativeAccount, totalStakeAmount, time.Now())
+	if err != nil {
+		log.Errorf("%s 计算地址 %s 星级 %v", prefix, nativeAccount, err)
+		return response.FailWithMsg(fiberCtx, "query stake star level error")
+	}
+	return response.OkWithData(fiberCtx, fiber.Map{
+		"starLevel": starLevel,
+		"rate":      rate,
+	})
 }
 
 // GetClaimRecord 根据交易id获取领取stake奖励记录

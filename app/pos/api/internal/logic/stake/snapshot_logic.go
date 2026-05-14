@@ -119,6 +119,17 @@ func (l *StakeSnapShotLogic) ProcessSnapShot(msg entity.KafkaNewSnapShotMsg) {
 	l.expireRewards(snapShotDay)
 }
 
+func (l *StakeSnapShotLogic) GetStakeSnapShot(nativeAccount string, snapShotDay time.Time) ([]model.StakeSnapShot, error) {
+	var snapShots []model.StakeSnapShot
+	if err := l.db.Table(model.TableNameStakeSnapShot).
+		Where("native_account = ? AND snap_day = ?", nativeAccount, snapShotDay).
+		Scan(&snapShots).Error; err != nil {
+		log.Errorf("%s 根据日期查询快照失败: %v", l.prefix, err)
+		return nil, err
+	}
+	return snapShots, nil
+}
+
 // rewardOrdinaryStaker 发放普通质押用户的奖励以及其邀请人的奖励
 // 经过此函数
 // StarLevel: 0
@@ -585,7 +596,7 @@ func (l *StakeSnapShotLogic) expireRewards(snapShotDay time.Time) {
 	}
 }
 
-func (l *StakeSnapShotLogic) getGroupStakeAmount(rootAccount string, snapShotDay time.Time) (float64, error) {
+func (l *StakeSnapShotLogic) GetGroupStakeAmount(rootAccount string, snapShotDay time.Time) (float64, error) {
 	var totalHoldAmount float64
 	query := `
 		with recursive invite_tree as (
@@ -658,7 +669,7 @@ func (l *StakeSnapShotLogic) GetStakeStarLevelFromConfig(owner string, amount fl
 			return 0, 0.0, nil
 		}
 		// 质押量达到星级后，再判断团队持币量
-		groupStakeAmount, err := l.getGroupStakeAmount(owner, snapShotDay)
+		groupStakeAmount, err := l.GetGroupStakeAmount(owner, snapShotDay)
 		if err != nil {
 			return 0, 0.0, nil
 		}

@@ -24,7 +24,7 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 		pos.Post("/reward/config", posHandler.GetConfig)                          // 旧工程 /sol/pos/querySolPosRewardRule 查询pos奖励发放规则
 		pos.Post("/reward/record", JWTAuthMiddleware, posHandler.GetRewardRecord) // 旧工程 /sol/pos/queryPosRewards
 		pos.Post("/reward/tx-info", JWTAuthMiddleware, posHandler.GetTxInfo)      // 旧工程 /sol/pos/getClaimPosRewardTxInfo
-		pos.Post("/reward/claim-record", posHandler.GetClaimRecord)               // 旧工程 /sol/pos/getClaimPosRewardTxInfo
+		pos.Post("/reward/claim-record", posHandler.GetClaimRecord)               // 旧工程 /sol/pos/queryClaimPosRewardByTxId
 		pos.Post("/reward/commit-tx", posHandler.CommitTx)                        // 旧工程 /sol/pos/claimPosReward
 	}
 
@@ -39,7 +39,7 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 		stake.Get("/token/min-amount/${type}", stakeHandler.MinAmount) // 旧工程		/sol/pos/queryMinStakeAmount
 		stake.Post("/token/stake", stakeHandler.StakeToken)            // 旧工程 		/sol/pos/stakeToken
 		stake.Post("/token/unstake", stakeHandler.UnStakeToken)        // 旧工程 		/sol/pos/unStakeToken
-		stake.Post("/token/restake", stakeHandler.ReStakeToken)        // 旧工程 		/sol/pos/unStakeToken
+		stake.Post("/token/restake", stakeHandler.ReStakeToken)        // 旧工程 		/sol/pos/reStakeToken
 
 		// 用户奖励相关接口
 		stake.Post("/reward/star-level", stakeHandler.GetStarLevel) // 旧工程 		/sol/pos/fetchStakeStarLevel
@@ -52,9 +52,9 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 		stake.Post("/reward/commit-tx", stakeHandler.CommitTx)                        // 旧工程			/sol/pos/claimStakeReward
 
 		stake.Post("/reward/leader/info", JWTAuthMiddleware, stakeHandler.GetLeaderInfo)
-		stake.Post("/reward/leader/records", JWTAuthMiddleware, stakeHandler.GetLeaderRewardRecord) // 旧工程 		/sol/pos/querySolStakeRewardRule
-		stake.Post("/reward/leader/tx-info", JWTAuthMiddleware, stakeHandler.GetLeaderTxInfo)       // 旧工程 		/sol/pos/queryUnClaimedStakeRewards
-		stake.Post("/reward/leader/claim-record", stakeHandler.GetLeaderClaimRecord)                // 旧工程		/sol/pos/queryStakeRewardClaimRecordByTxId
-		stake.Post("/reward/leader/commit-tx", stakeHandler.LeaderCommitTx)                         // 旧工程		/sol/pos/claimStakeReward
+		stake.Post("/reward/leader/records", JWTAuthMiddleware, stakeHandler.GetLeaderRewardRecord) // 旧工程 		/sol/pos/areaLeaderInfo
+		stake.Post("/reward/leader/tx-info", JWTAuthMiddleware, stakeHandler.GetLeaderTxInfo)       // 旧工程 		/sol/pos/queryUnClaimedAreaLeaderRewards
+		stake.Post("/reward/leader/claim-record", stakeHandler.GetLeaderClaimRecord)                // 新工程接口
+		stake.Post("/reward/leader/commit-tx", stakeHandler.LeaderCommitTx)                         // 旧工程		/sol/pos/claimAreaLeaderReward
 	}
 }

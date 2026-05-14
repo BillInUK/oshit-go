@@ -577,16 +577,36 @@ func (l *StakeLogic) GetUserAvailableStake(userAddress string) (uint64, error) {
 	return totalAvailable.Total, nil
 }
 
-// GetLeaderInfo 根据 native account 查询区域经理信息，不存在时返回 nil
+// GetLeaderInfo 根据 native account 查询区域经理信息。
+// 优先查 t_stake_leader，查不到再查 t_stake_total_leader，都不存在时返回 gorm.ErrRecordNotFound。
 func (l *StakeLogic) GetLeaderInfo(nativeAccount string) (*model.StakeLeader, error) {
 	var leader model.StakeLeader
 	err := l.db.Table(model.TableNameStakeLeader).
 		Where("native_account = ?", nativeAccount).
 		First(&leader).Error
+	if err == nil {
+		return &leader, nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	// t_stake_leader 中不存在，查 t_stake_total_leader
+	var totalLeader model.StakeTotalLeader
+	err = l.db.Table(model.TableNameStakeTotalLeader).
+		Where("native_account = ?", nativeAccount).
+		First(&totalLeader).Error
 	if err != nil {
 		return nil, err
 	}
-	return &leader, nil
+
+	return &model.StakeLeader{
+		RecordID:      totalLeader.RecordID,
+		NativeAccount: totalLeader.NativeAccount,
+		LeaderLevel:   3, // 总区域经理
+		CreatedAt:     totalLeader.CreatedAt,
+		UpdatedAt:     totalLeader.UpdatedAt,
+	}, nil
 }
 
 func (l *StakeLogic) GetLeaderRewards(nativeAccount string) ([]model.StakeLeaderReward, error) {

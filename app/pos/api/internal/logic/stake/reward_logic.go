@@ -419,3 +419,94 @@ func (l *StakeRewardLogic) getLeaderTxInfo(nativeAccount string) (*types.LeaderR
 		TotalReward:   totalReward,
 	}, nil
 }
+
+func (l *StakeRewardLogic) GetStakeRewardStat(nativeAccount string) (*types.StakeRewardStat, error) {
+	var err error
+	var stat types.StakeRewardStat
+	snapShotDay := time.Now()
+
+	// 查询当日质押量
+	stakeSnapShots, err := l.snapShotLogic.GetStakeSnapShot(nativeAccount, snapShotDay)
+	if err != nil {
+		log.Errorf("%s 查询地址 %s 快照错误: %v", l.prefix, nativeAccount, err)
+		return nil, err
+	}
+	stakeAmount := 0.0
+	for _, s := range stakeSnapShots {
+		stakeAmount += s.Amount
+	}
+
+	// 直接使用 DB 实例，每次查询都重新指定表名
+	db := l.db
+	starLevel, _, _ := l.snapShotLogic.GetStakeStarLevelFromConfig(nativeAccount, stakeAmount, time.Now())
+
+	// 查询每日固定利息累计收入
+	accumulatedInterest := 0.0
+	err = db.Table(model.TableNameStakeReward).
+		Select(`COALESCE(SUM(reward_amount), 0) AS reward_amount`).
+		Where(`native_account = ? AND reward_type = ? AND reward_state = 0 AND pending = false`, nativeAccount, types.StakeFixed).
+		Scan(&accumulatedInterest).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// 查询质押邀请奖励
+	inviteReward := 0.0
+	err = db.Table(model.TableNameStakeReward).
+		Select(`reward_amount`).
+		Where(`native_account = ? AND reward_type = ? AND reward_state = 0 AND pending = false`, nativeAccount, types.StakeInvite).
+		Order("snap_day DESC").
+		Limit(1).
+		Scan(&inviteReward).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// 查询质押激励奖励个人星级部分
+	starReward := 0.0
+	err = db.Table(model.TableNameStakeReward).
+		Select(`reward_amount`).
+		Where(`native_account = ? AND reward_type = ? AND reward_state = 0 AND pending = false`, nativeAccount, types.StakeStar).
+		Order("snap_day DESC").
+		Limit(1).
+		Scan(&starReward).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// 查询团队极差奖励
+	groupReward := 0.0
+	err = db.Table(model.TableNameStakeReward).
+		Select(`reward_amount`).
+		Where(`native_account = ? AND reward_type = ? AND reward_state = 0 AND pending = false`, nativeAccount, types.StakeStarGroup).
+		Order("snap_day DESC").
+		Limit(1).
+		Scan(&groupReward).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// 查询团队总质押量
+	groupTotalStake, _ := l.snapShotLogic.GetGroupStakeAmount(nativeAccount, snapShotDay)
+	if err != nil {
+		log.Errorf("%s 查询地址 %s 团队质押总奖励错误: %v", l.prefix, nativeAccount, err)
+		return nil, err
+	}
+
+	// 查询总奖励 = 质押邀请奖励 + 激励奖励个人星级部分 + 质押激励奖励团队部分
+	totalReward := inviteReward + starReward + groupReward
+
+	log.Infof("查询地址: %s 日期 %v 奖励: StarLevel: %d StakeAmount: %.3f AccumulatedInterest: %.3f InviteReward: %.3f StarReward %.3f GroupReward %.3f TotalReward %.3f GroupTotalStake %.3f",
+		nativeAccount, snapShotDay, starLevel, stakeAmount, accumulatedInterest, inviteReward, starReward, groupReward, totalReward, groupTotalStake)
+
+	stat.StarLevel = starLevel
+	stat.StakeAmount = stakeAmount
+	stat.AccumulatedInterest = accumulatedInterest
+	stat.InviteReward = inviteReward
+	stat.StarReward = starReward
+	stat.GroupReward = groupReward
+	stat.TotalReward = totalReward
+	stat.GroupTotalStake = groupTotalStake
+
+	return &stat, nil
+}
