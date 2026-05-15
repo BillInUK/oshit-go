@@ -57,6 +57,7 @@ func NewStakeRewardLogic(ctx context.Context, srvCtx *svc.ServiceContext) *Stake
 		rs:                srvCtx.RedSync,
 		rpcClient:         srvCtx.RpcClient,
 		baseClient:        srvCtx.BaseClient,
+		serviceConfig:     srvCtx.StakeRewardConfig,
 		distLevel:         srvCtx.StakeDistLevel,
 		starWhiteList:     srvCtx.StakeStarWhitelist,
 		starLevelRule:     srvCtx.StakeStarLevelRule,

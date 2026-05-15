@@ -25,6 +25,21 @@ func (l *StakeRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	dbTx := l.db.Begin()
 	defer dbTx.Rollback()
 
+	// 查询记录并加行锁，防重复处理
+	var stakeReward model.StakeReward
+	if err = dbTx.Table(model.TableNameStakeReward).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("tx_id = ?", txId).First(&stakeReward).Error; err != nil {
+		log.Errorf("%s 处理Kafka消息 - 根据交易 Id %s 查找奖励记录错误: %v", l.prefix, txId, err)
+		return err
+	}
+
+	// 只有待领取状态才处理
+	if stakeReward.RewardState != int32(constants.RewardStateInit) {
+		log.Infof("%s 交易 %s 奖励状态已为 %d，跳过重复处理", l.prefix, txId, stakeReward.RewardState)
+		return nil
+	}
+
 	// 如果交易执行失败
 	if msg.TxSig.Err != nil {
 		// 重置奖励领取状态
@@ -97,6 +112,21 @@ func (l *StakeRewardLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	dbTx := l.db.Begin()
 	defer dbTx.Rollback()
 
+	// 查询记录并加行锁，防重复处理
+	var stakeReward model.StakeReward
+	if err = dbTx.Table(model.TableNameStakeReward).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("tx_id = ?", txId).First(&stakeReward).Error; err != nil {
+		log.Errorf("%s 处理超时交易 - 根据交易 Id %s 查找奖励记录错误: %v", l.prefix, txId, err)
+		return err
+	}
+
+	// 只有待领取状态才处理
+	if stakeReward.RewardState != int32(constants.RewardStateInit) {
+		log.Infof("%s 超时交易 %s 奖励状态已为 %d，跳过重复处理", l.prefix, txId, stakeReward.RewardState)
+		return nil
+	}
+
 	// 将 t_stake_reward_claim_record 标记为失败
 	claimTable := dbTx.Table(model.TableNameStakeRewardClaim)
 	if err = claimTable.Where("tx_id = ?", txId).Updates(map[string]interface{}{
@@ -140,6 +170,21 @@ func (l *StakeRewardLogic) HandleLeaderScannedTx(msg entity.NewScannedTx) error 
 
 	dbTx := l.db.Begin()
 	defer dbTx.Rollback()
+
+	// 查询记录并加行锁，防重复处理
+	var leaderReward model.StakeLeaderReward
+	if err := dbTx.Table(model.TableNameStakeLeaderReward).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("tx_id = ?", txId).First(&leaderReward).Error; err != nil {
+		log.Errorf("%s HandleLeaderScannedTx - 查找记录失败 txId=%s: %v", l.prefix, txId, err)
+		return err
+	}
+
+	// 只有待领取状态才处理
+	if leaderReward.RewardState != int32(constants.RewardStateInit) {
+		log.Infof("%s HandleLeaderScannedTx - 交易 %s 奖励状态已为 %d，跳过重复处理", l.prefix, txId, leaderReward.RewardState)
+		return nil
+	}
 
 	if msg.TxSig.Err != nil {
 		// 链上执行失败：重置奖励领取状态
@@ -214,6 +259,21 @@ func (l *StakeRewardLogic) HandleLeaderExpiredTx(msg entity.NewExpiredTx) error 
 
 	dbTx := l.db.Begin()
 	defer dbTx.Rollback()
+
+	// 查询记录并加行锁，防重复处理
+	var leaderReward model.StakeLeaderReward
+	if err := dbTx.Table(model.TableNameStakeLeaderReward).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("tx_id = ?", txId).First(&leaderReward).Error; err != nil {
+		log.Errorf("%s HandleLeaderExpiredTx - 查找记录失败 txId=%s: %v", l.prefix, txId, err)
+		return err
+	}
+
+	// 只有待领取状态才处理
+	if leaderReward.RewardState != int32(constants.RewardStateInit) {
+		log.Infof("%s HandleLeaderExpiredTx - 交易 %s 奖励状态已为 %d，跳过重复处理", l.prefix, txId, leaderReward.RewardState)
+		return nil
+	}
 
 	if err := dbTx.Table(model.TableNameStakeLeaderRewardClaim).
 		Where("tx_id = ?", txId).

@@ -40,7 +40,7 @@ func (h *StakeHandler) GetConfig(fiberCtx *fiber.Ctx) error {
 
 // GetRewardStat 获取质押奖励信息
 func (h *StakeHandler) GetRewardStat(fiberCtx *fiber.Ctx) error {
-	nativeAccount := fiberCtx.FormValue("nativeAccount")
+	nativeAccount := fiberCtx.Locals("nativeAccount").(string)
 	l := stake.NewStakeRewardLogic(fiberCtx.Context(), h.srvCtx)
 	detail, err := l.GetStakeRewardStat(nativeAccount)
 	if err != nil {
@@ -53,7 +53,7 @@ func (h *StakeHandler) GetRewardStat(fiberCtx *fiber.Ctx) error {
 // GetStarLevel 获取质押星级
 func (h *StakeHandler) GetStarLevel(fiberCtx *fiber.Ctx) error {
 	var prefix = fmt.Sprintf("%s - 查看地址星级 -", h.prefix)
-	nativeAccount := fiberCtx.FormValue("nativeAccount")
+	nativeAccount := fiberCtx.Locals("nativeAccount").(string)
 	l := stake.NewStakeSnapShotLogic(fiberCtx.Context(), h.srvCtx)
 	snapShots, err := l.GetStakeSnapShot(nativeAccount, time.Now())
 	if err != nil {

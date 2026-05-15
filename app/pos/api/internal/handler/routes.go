@@ -42,8 +42,8 @@ func RegisterRoutes(fiberApp *fiber.App, srvCtx *svc.ServiceContext) {
 		stake.Post("/token/restake", stakeHandler.ReStakeToken)        // 旧工程 		/sol/pos/reStakeToken
 
 		// 用户奖励相关接口
-		stake.Post("/reward/star-level", stakeHandler.GetStarLevel) // 旧工程 		/sol/pos/fetchStakeStarLevel
-		stake.Post("/reward/stat", stakeHandler.GetRewardStat)      // 旧工程 		/sol/pos/queryStakeRewardStat
+		stake.Post("/reward/star-level", JWTAuthMiddleware, stakeHandler.GetStarLevel) // 旧工程 		/sol/pos/fetchStakeStarLevel
+		stake.Post("/reward/stat", JWTAuthMiddleware, stakeHandler.GetRewardStat) // 旧工程 		/sol/pos/queryStakeRewardStat
 
 		stake.Post("/reward/config", stakeHandler.GetConfig)                          // 旧工程 		/sol/pos/querySolStakeRewardRule
 		stake.Post("/reward/record", JWTAuthMiddleware, stakeHandler.GetRewardRecord) // 旧工程 		/sol/pos/queryUnClaimedStakeRewards

@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
@@ -25,9 +26,10 @@ func (l *RewardCodeLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		}
 	}()
 
-	// 根据 tx_id 找到奖励码记录
+	// 根据 tx_id 找到奖励码记录，SELECT FOR UPDATE 防止并发重复处理
 	var rc model.RewardCode
 	if err := dbTx.Table(model.TableNameRewardCode).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("tx_id = ?", txId).
 		First(&rc).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -38,6 +40,13 @@ func (l *RewardCodeLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		log.Errorf("%s 查询奖励码记录错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
+	}
+
+	// 防重复处理：只有 TxStateInit 状态才需要处理
+	if rc.TxState != int32(constants.TxStateInit) {
+		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, rc.TxState)
+		dbTx.Rollback()
+		return nil
 	}
 
 	var newState constants.TxState
@@ -79,8 +88,30 @@ func (l *RewardCodeLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		}
 	}()
 
+	// 根据 tx_id 找到奖励码记录，SELECT FOR UPDATE 防止并发重复处理
+	var rc model.RewardCode
 	if err := dbTx.Table(model.TableNameRewardCode).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("tx_id = ?", txId).
+		First(&rc).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			dbTx.Rollback()
+			return err
+		}
+		log.Errorf("%s 查询奖励码记录错误: %v", prefix, err)
+		dbTx.Rollback()
+		return err
+	}
+
+	// 防重复处理：只有 TxStateInit 状态才需要处理
+	if rc.TxState != int32(constants.TxStateInit) {
+		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, rc.TxState)
+		dbTx.Rollback()
+		return nil
+	}
+
+	if err := dbTx.Table(model.TableNameRewardCode).
+		Where("record_id = ?", rc.RecordID).
 		Update("tx_state", constants.TxStateFailed).Error; err != nil {
 		log.Errorf("%s 更新奖励码状态为失败错误: %v", prefix, err)
 		dbTx.Rollback()

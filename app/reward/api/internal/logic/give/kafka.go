@@ -29,8 +29,9 @@ func (l *GiveTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	}()
 
 	var giveTokenRecord model.GiveTokenRecord
-	table := dbTx.Table(model.TableNameGiveTokenRecord)
-	if err := table.Where("tx_id = ?", txId).First(&giveTokenRecord).Error; err != nil {
+	if err := dbTx.Table(model.TableNameGiveTokenRecord).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("tx_id = ?", txId).First(&giveTokenRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			dbTx.Rollback()
 			return err
@@ -38,6 +39,13 @@ func (l *GiveTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		log.Errorf("%s 查找业务记录错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
+	}
+
+	// 防重复处理：只有 TxStateInit 状态才需要处理
+	if giveTokenRecord.TxState != int32(constants.TxStateInit) {
+		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, giveTokenRecord.TxState)
+		dbTx.Rollback()
+		return nil
 	}
 
 	if msg.TxSig.Err != nil {
@@ -91,8 +99,9 @@ func (l *GiveTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	}()
 
 	var giveTokenRecord model.GiveTokenRecord
-	table := dbTx.Table(model.TableNameGiveTokenRecord)
-	if err := table.Where("tx_id = ?", txId).First(&giveTokenRecord).Error; err != nil {
+	if err := dbTx.Table(model.TableNameGiveTokenRecord).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("tx_id = ?", txId).First(&giveTokenRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			dbTx.Rollback()
 			return err
@@ -100,6 +109,13 @@ func (l *GiveTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		log.Errorf("%s 查找转账记录错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
+	}
+
+	// 防重复处理：只有 TxStateInit 状态才需要处理
+	if giveTokenRecord.TxState != int32(constants.TxStateInit) {
+		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, giveTokenRecord.TxState)
+		dbTx.Rollback()
+		return nil
 	}
 
 	if err := dbTx.Model(&model.GiveTokenRecord{}).Where("tx_id = ?", txId).Update("tx_state", constants.TxStateFailed).Error; err != nil {

@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
@@ -34,8 +35,9 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 	var err error
 	var exchangeRecord model.CampaignQuoteRecord
 
-	// 根据交易 Id 找到记录
+	// 根据交易 Id 找到记录，SELECT FOR UPDATE 防止并发重复处理
 	if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("tx_id = ?", txId).
 		First(&exchangeRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -43,6 +45,13 @@ func (l *CampaignLogic) HandleScannedTx(msg entity.NewScannedTx) {
 			return
 		}
 		log.Errorf("%s - 处理Kafka消息，根据交易 Id %s 查找领取记录错误: %v", prefix, txId, err)
+		dbTx.Rollback()
+		return
+	}
+
+	// 防重复处理：只有 QuoteStateInit 状态才需要处理
+	if exchangeRecord.QuoteState != int32(constants.QuoteStateInit) {
+		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, exchangeRecord.QuoteState)
 		dbTx.Rollback()
 		return
 	}
@@ -150,8 +159,9 @@ func (l *CampaignLogic) HandleExpiredTx(msg entity.NewExpiredTx) {
 	var err error
 	var exchangeRecord model.CampaignQuoteRecord
 
-	// 根据交易 Id 找到记录
+	// 根据交易 Id 找到记录，SELECT FOR UPDATE 防止并发重复处理
 	if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("tx_id = ?", txId).
 		First(&exchangeRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -162,6 +172,14 @@ func (l *CampaignLogic) HandleExpiredTx(msg entity.NewExpiredTx) {
 		dbTx.Rollback()
 		return
 	}
+
+	// 防重复处理：只有 QuoteStateInit 状态才需要处理
+	if exchangeRecord.QuoteState != int32(constants.QuoteStateInit) {
+		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, exchangeRecord.QuoteState)
+		dbTx.Rollback()
+		return
+	}
+
 	if err = dbTx.Table(model.TableNameCampaignQuoteRecord).
 		Where("tx_id = ?", txId).
 		Update("quote_state", constants.QuoteStateFailed).Error; err != nil {

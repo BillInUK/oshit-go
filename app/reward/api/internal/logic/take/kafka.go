@@ -69,9 +69,10 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	var err error
 	var takeTokenRecord model.TakeTokenRecord
 
-	// 根据交易 Id 找到记录
-	table := dbTx.Table(model.TableNameTakeTokenRecord)
-	if err = table.Where("tx_id = ?", txId).First(&takeTokenRecord).Error; err != nil {
+	// 根据交易 Id 找到记录，SELECT FOR UPDATE 防止并发重复处理
+	if err = dbTx.Table(model.TableNameTakeTokenRecord).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("tx_id = ?", txId).First(&takeTokenRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			dbTx.Rollback()
 			return err
@@ -79,6 +80,13 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		log.Errorf("%s 查找业务记录错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
+	}
+
+	// 防重复处理：只有 TxStateInit 状态才需要处理
+	if takeTokenRecord.TxState != int32(constants.TxStateInit) {
+		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, takeTokenRecord.TxState)
+		dbTx.Rollback()
+		return nil
 	}
 
 	if msg.TxSig.Err != nil {
@@ -170,9 +178,10 @@ func (l *TakeTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	var err error
 	var takeTokenRecord model.TakeTokenRecord
 
-	// 根据交易 Id 找到记录
-	table := dbTx.Table(model.TableNameTakeTokenRecord)
-	if err = table.Where("tx_id = ?", txId).First(&takeTokenRecord).Error; err != nil {
+	// 根据交易 Id 找到记录，SELECT FOR UPDATE 防止并发重复处理
+	if err = dbTx.Table(model.TableNameTakeTokenRecord).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("tx_id = ?", txId).First(&takeTokenRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			dbTx.Rollback()
 			return err
@@ -181,6 +190,14 @@ func (l *TakeTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		dbTx.Rollback()
 		return err
 	}
+
+	// 防重复处理：只有 TxStateInit 状态才需要处理
+	if takeTokenRecord.TxState != int32(constants.TxStateInit) {
+		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, takeTokenRecord.TxState)
+		dbTx.Rollback()
+		return nil
+	}
+
 	if err = dbTx.Model(&model.TakeTokenRecord{}).Where("tx_id = ?", txId).Update("tx_state", constants.TxStateFailed).Error; err != nil {
 		log.Errorf("%s 更新领取交易状态为失败，错误: %v", prefix, err)
 		dbTx.Rollback()

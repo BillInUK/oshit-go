@@ -612,7 +612,7 @@ func (l *StakeLogic) GetLeaderInfo(nativeAccount string) (*model.StakeLeader, er
 func (l *StakeLogic) GetLeaderRewards(nativeAccount string) ([]model.StakeLeaderReward, error) {
 	var rewards []model.StakeLeaderReward
 	err := l.db.Table(model.TableNameStakeLeaderReward).
-		Where("native_account = ? and state = ? and pending = ?", nativeAccount, constants.RewardStateInit, false).
+		Where("native_account = ? and reward_state = ? and pending = ?", nativeAccount, constants.RewardStateInit, false).
 		Order("created_at asc").
 		Find(&rewards).Error
 	if err != nil {

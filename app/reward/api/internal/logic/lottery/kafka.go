@@ -29,9 +29,10 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		}
 	}()
 
-	// 1. 找到 t_lottery_claim_record
+	// 1. 找到 t_lottery_claim_record，SELECT FOR UPDATE 防止并发重复处理
 	var claimRecord model.LotteryClaim
 	if err := dbTx.Table(model.TableNameLotteryClaim).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("tx_id = ?", txId).First(&claimRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			dbTx.Rollback()
@@ -40,6 +41,13 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		log.Errorf("%s 查找领取记录错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
+	}
+
+	// 防重复处理：只有 TxStateInit 状态才需要处理
+	if claimRecord.TxState != int32(constants.TxStateInit) {
+		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, claimRecord.TxState)
+		dbTx.Rollback()
+		return nil
 	}
 
 	rewardId := strings.Trim(claimRecord.RewardIds, "{}")
@@ -131,9 +139,10 @@ func (l *LotteryLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		}
 	}()
 
-	// 找到 t_lottery_claim_record
+	// 找到 t_lottery_claim_record，SELECT FOR UPDATE 防止并发重复处理
 	var claimRecord model.LotteryClaim
 	if err := dbTx.Table(model.TableNameLotteryClaim).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("tx_id = ?", txId).First(&claimRecord).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			dbTx.Rollback()
@@ -142,6 +151,13 @@ func (l *LotteryLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		log.Errorf("%s 查找领取记录错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err
+	}
+
+	// 防重复处理：只有 TxStateInit 状态才需要处理
+	if claimRecord.TxState != int32(constants.TxStateInit) {
+		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, claimRecord.TxState)
+		dbTx.Rollback()
+		return nil
 	}
 
 	rewardId := strings.Trim(claimRecord.RewardIds, "{}")
