@@ -187,7 +187,6 @@ func (h *StakeHandler) MinAmount(fiberCtx *fiber.Ctx) error {
 // StakeToken 提交质押token交易
 func (h *StakeHandler) StakeToken(fiberCtx *fiber.Ctx) error {
 	var err error
-	var txId *solana.Signature
 	var prefix = fmt.Sprintf("Stake业务 - 质押token -")
 
 	// 1. 检查交易参数
@@ -214,13 +213,12 @@ func (h *StakeHandler) StakeToken(fiberCtx *fiber.Ctx) error {
 		return response.FailWithError(fiberCtx, "process transaction error:", err)
 	}
 
-	return response.OkWithData(fiberCtx, txId)
+	return response.OkWithData(fiberCtx, preCheckedTx.TxId.String())
 }
 
 // UnStakeToken 解除质押
 func (h *StakeHandler) UnStakeToken(fiberCtx *fiber.Ctx) error {
 	var err error
-	var txId *solana.Signature
 	var prefix = fmt.Sprintf("Stake业务 - 解除质押token -")
 
 	// 1. 检查交易参数
@@ -247,13 +245,12 @@ func (h *StakeHandler) UnStakeToken(fiberCtx *fiber.Ctx) error {
 		return response.FailWithError(fiberCtx, "process transaction error:", err)
 	}
 
-	return response.OkWithData(fiberCtx, txId)
+	return response.OkWithData(fiberCtx, preCheckedTx.TxId.String())
 }
 
 // ReStakeToken 重新质押
 func (h *StakeHandler) ReStakeToken(fiberCtx *fiber.Ctx) error {
 	var err error
-	var txId *solana.Signature
 	var prefix = fmt.Sprintf("Stake业务 - 重新质押token -")
 
 	// 1. 检查交易参数
@@ -279,7 +276,7 @@ func (h *StakeHandler) ReStakeToken(fiberCtx *fiber.Ctx) error {
 		return response.FailWithError(fiberCtx, "process transaction error:", err)
 	}
 
-	return response.OkWithData(fiberCtx, txId)
+	return response.OkWithData(fiberCtx, preCheckedTx.TxId.String())
 }
 
 // GetLeaderInfo 获取当前登录用户的区域经理信息
