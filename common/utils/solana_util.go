@@ -58,6 +58,30 @@ type ParsedData struct {
 	Space   int                 `json:"space"`
 }
 
+// ── Helius Enhanced Transactions API ─────────────────────────────────────────
+
+type heliusTokenBalanceChange struct {
+	UserAccount    string `json:"userAccount"`
+	TokenAccount   string `json:"tokenAccount"`
+	Mint           string `json:"mint"`
+	RawTokenAmount struct {
+		TokenAmount string `json:"tokenAmount"`
+		Decimals    uint8  `json:"decimals"`
+	} `json:"rawTokenAmount"`
+}
+
+type heliusAccountData struct {
+	Account             string                     `json:"account"`
+	TokenBalanceChanges []heliusTokenBalanceChange `json:"tokenBalanceChanges"`
+}
+
+type heliusEnhancedTx struct {
+	Signature        string              `json:"signature"`
+	FeePayer         string              `json:"feePayer"`
+	AccountData      []heliusAccountData `json:"accountData"`
+	TransactionError interface{}         `json:"transactionError"`
+}
+
 func ParseDbArray(input string) []string {
 	// 如果输入为空或长度小于2（不能构成花括号），直接返回空数组
 	if len(input) < 2 {
@@ -1566,4 +1590,143 @@ func decodeTokenInstructionForTransferChecked(inst rpc.CompiledInstruction, full
 	default:
 		return nil, nil // 非TransferChecked指令，跳过
 	}
+}
+
+// HeliusParseMarketBuyTx 通过 Helius Enhanced Transactions API 解析主网购买 token 的交易。
+// heliusAPIKey 由调用方传入（取自 pos_global.HeliusApi.APIKey）。
+func HeliusParseMarketBuyTx(heliusAPIKey string, txSig solana.Signature) (*entity.DecodedSolanaTransaction, error) {
+	tokenMint := solana.MPK("ShitJuMfPKCQU7LedLERFYapDta7CCdKExPWX2gETRH")
+	const maxRetries = 5
+	url := fmt.Sprintf("https://api-mainnet.helius-rpc.com/v0/transactions/?api-key=%s", heliusAPIKey)
+	reqBody, err := json.Marshal(map[string]interface{}{"transactions": []string{txSig.String()}})
+	if err != nil {
+		return nil, fmt.Errorf("序列化请求失败: %w", err)
+	}
+
+	httpClient := &http.Client{Timeout: 10 * time.Second}
+
+	var rawTxList []heliusEnhancedTx
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		resp, err := httpClient.Post(url, "application/json", bytes.NewReader(reqBody))
+		if err != nil {
+			if attempt == maxRetries {
+				return nil, fmt.Errorf("Helius API 网络错误: %w", err)
+			}
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			resp.Body.Close()
+			if attempt == maxRetries {
+				return nil, fmt.Errorf("Helius API 限流，已重试 %d 次", maxRetries)
+			}
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := ioutil.ReadAll(resp.Body)
+			resp.Body.Close()
+			return nil, fmt.Errorf("Helius API 错误 %d: %s", resp.StatusCode, string(body))
+		}
+
+		if err := json.NewDecoder(resp.Body).Decode(&rawTxList); err != nil {
+			resp.Body.Close()
+			return nil, fmt.Errorf("解析 Helius 响应失败: %w", err)
+		}
+		resp.Body.Close()
+		break
+	}
+
+	if len(rawTxList) == 0 {
+		return nil, fmt.Errorf("Helius 返回空数据")
+	}
+	htx := rawTxList[0]
+	if htx.TransactionError != nil {
+		return nil, fmt.Errorf("交易执行失败: %v", htx.TransactionError)
+	}
+	mintStr := tokenMint.String()
+
+	// FromTokenAccount / FromNativeAccount：与原版保持一致，直接硬编码资金池账户
+	fromTokenPubkey := solana.MPK("GjkvqFpZ5gqbzYEUAGsn5ozmFgM52JJDgso426DiLXbQ")
+	fromNativePubkey := solana.MPK("GpMZbSM2GgvTKHJirzeGfMFoaZ8UR2X7F4v8vHTvxFbL") // Raydium AMM
+
+	// ToTokenAccount / ToNativeAccount：目标 mint 余额增加最多的账户
+	// 买单中池子 token 余额是减少的（负数），自然不会被选中，无需额外排除
+	var toTokenAcct, toUserAcct string
+	var toDecimals uint8
+	var maxIncrease int64
+
+	for _, acct := range htx.AccountData {
+		for _, c := range acct.TokenBalanceChanges {
+			if c.Mint != mintStr {
+				continue
+			}
+			var amt int64
+			fmt.Sscanf(c.RawTokenAmount.TokenAmount, "%d", &amt)
+			if amt > maxIncrease {
+				maxIncrease = amt
+				toTokenAcct = c.TokenAccount
+				toUserAcct = c.UserAccount
+				toDecimals = c.RawTokenAmount.Decimals
+			}
+		}
+	}
+
+	if toTokenAcct == "" {
+		return nil, fmt.Errorf("未找到目标 mint token 余额增加的账户")
+	}
+
+	// 解析公钥
+	feePayer, err := solana.PublicKeyFromBase58(htx.FeePayer)
+	if err != nil {
+		return nil, fmt.Errorf("解析 feePayer 失败: %w", err)
+	}
+	toTokenAccount, err := solana.PublicKeyFromBase58(toTokenAcct)
+	if err != nil {
+		return nil, fmt.Errorf("解析接收方 token 账户失败: %w", err)
+	}
+	toNativeAccount, err := solana.PublicKeyFromBase58(toUserAcct)
+	if err != nil {
+		return nil, fmt.Errorf("解析接收方 native 账户失败: %w", err)
+	}
+	mintPubkey := tokenMint
+
+	// 构建账户列表（按 accountData 顺序，去重）
+	var accounts []solana.PublicKey
+	seen := make(map[string]bool)
+	for _, acct := range htx.AccountData {
+		if seen[acct.Account] {
+			continue
+		}
+		seen[acct.Account] = true
+		pk, err := solana.PublicKeyFromBase58(acct.Account)
+		if err == nil {
+			accounts = append(accounts, pk)
+		}
+	}
+
+	decodedTx := &entity.DecodedSolanaTransaction{
+		TxID:                 txSig,
+		FromNativeAccount:    feePayer,
+		FromTokenAccount:     fromTokenPubkey,
+		FeePayer:             feePayer,
+		Accounts:             accounts,
+		Signatures:           []solana.Signature{txSig},
+		TransferInstructions: []entity.DecodedSolTransferInst{},
+		TransferCheckedInstructions: []entity.DecodedSolTransferCheckedInst{
+			{
+				FromTokenAccount:   fromTokenPubkey,
+				FromNativeAccount:  fromNativePubkey,
+				ToTokenAccount:     toTokenAccount,
+				ToNativeAccount:    toNativeAccount,
+				OwnerNativeAccount: fromNativePubkey,
+				TokenMintAccount:   mintPubkey,
+				Amount:             uint64(maxIncrease),
+				Decimals:           toDecimals,
+			},
+		},
+	}
+	return decodedTx, nil
 }

@@ -271,12 +271,19 @@ Dubbo 注册中心使用接口级注册（`registry-type=interface` / `registry.
 6. 若 multiSign=true：
    从 ServiceKeyMap[Service][SubService] 取私钥
    tx.Message.MarshalBinary() → privateKey.Sign() → tx.Signatures[1] = sig
-7. goroutine: broadcastTx()（60s 超时，单次广播，不重试）
-   失败且 confirm=true → 将 t_service_tx.tx_state 更新为 TxStateFailed
-8. 同步返回 record_id 和 tx_id
+7. 同步模拟执行交易（SimulateTransactionWithOpts，10s 超时）
+   - SigVerify=false（服务端刚签完，签名一定正确）
+   - ReplaceRecentBlockhash=true（避免因 blockhash 过期导致模拟误报失败）
+   - 模拟链上失败（simResult.Value.Err != nil）→ 标记 t_service_tx 失败 → dubbo 返回错误
+   - 模拟 RPC 网络层错误（connection refused/reset 等）→ 标记失败 → dubbo 返回错误
+   - 模拟 RPC HTTP 层错误（400/500/timeout 等）→ 跳过模拟，继续广播（保守策略）
+8. goroutine: broadcastTx()（60s 超时，单次广播，不重试）
+   - 网络传输层错误 → 标记 t_service_tx 失败（交易根本没发出去）
+   - HTTP 层/RPC 层错误 → 仅打日志，不标记失败（交易可能已到达节点，留给 TxScanTask/TxExpireTask 兜底）
+9. 同步返回 record_id 和 tx_id
 ```
 
-> **注意**：旧版本有指数退避重试逻辑（retry_count / max_retries），当前版本已移除，广播失败直接标记失败，不重试。
+**错误分类辅助函数 `isNetworkError`**：优先用 `errors.As` 匹配 `net.OpError` / `net.DNSError`，兜底用关键字匹配（`connection refused`、`connection reset by peer`、`no such host`、`network is unreachable`、`i/o timeout`、`dial tcp`、`eof`）。
 
 ---
 

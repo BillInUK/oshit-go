@@ -2,7 +2,6 @@ package task
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -486,6 +485,138 @@ func (t *TxScanTask) handleServiceTx(service, subService string, txSig rpc.Trans
 // handleMarketBuyTokenTx 处理 MarketBuyToken DEX 购买交易：
 // 解析 inner instructions 中从 Raydium Pool 发出的 TransferChecked 指令，
 // 不依赖 t_service_tx，直接将解析结果发送到 Kafka。
+//func (t *TxScanTask) handleMarketBuyTokenTx(prefix, service, subService string, txSig rpc.TransactionSignature, tr *rpc.GetTransactionResult) {
+//	log.Infof("%s 处理交易所购买token交易，交易Id[%s] ", prefix, txSig.Signature.String())
+//	// 只处理链上成功的交易
+//	if txSig.Err != nil {
+//		log.Infof("%s 交易Id[%s] 交易失败，跳过", prefix, txSig.Signature.String())
+//		return
+//	}
+//
+//	// 解码外层交易以获取 account keys
+//	tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(tr.Transaction.GetBinary()))
+//	if err != nil {
+//		log.Errorf("%s 交易Id[%s] 解码交易失败: %v", prefix, txSig.Signature.String(), err)
+//		return
+//	}
+//
+//	if tr.Meta == nil {
+//		log.Warnf("%s 交易Id[%s] meta 为空，跳过", prefix, txSig.Signature.String())
+//		return
+//	}
+//
+//	// 构建完整账户列表：静态账户 + ALT 动态加载的账户（v0 交易）
+//	// 顺序：static keys → loaded writable → loaded readonly
+//	accountKeys := make([]solana.PublicKey, len(tx.Message.AccountKeys))
+//	copy(accountKeys, tx.Message.AccountKeys)
+//	accountKeys = append(accountKeys, tr.Meta.LoadedAddresses.Writable...)
+//	accountKeys = append(accountKeys, tr.Meta.LoadedAddresses.ReadOnly...)
+//
+//	// 1. 检查完整账户列表是否包含目标程序地址
+//	marketProgramPubKey := solana.MPK(marketBuyTokenProgramID)
+//	found := false
+//	for _, acc := range accountKeys {
+//		if acc.Equals(marketProgramPubKey) {
+//			found = true
+//			break
+//		}
+//	}
+//	if !found {
+//		log.Infof("%s 交易Id[%s] 不包含目标程序 %s，跳过", prefix, txSig.Signature.String(), marketBuyTokenProgramID)
+//		return
+//	}
+//
+//	// 2. 遍历 inner instructions，找到符合条件的 TransferChecked
+//	raydiumSrcPubKey := solana.MPK(raydiumPoolSourceAccount)
+//	var matchedInsts []entity.DecodedSolTransferCheckedInst
+//
+//	for _, innerGroup := range tr.Meta.InnerInstructions {
+//		for _, innerInst := range innerGroup.Instructions {
+//			// 检查 program 是否为 Token Program
+//			if int(innerInst.ProgramIDIndex) >= len(accountKeys) {
+//				continue
+//			}
+//			programID := accountKeys[innerInst.ProgramIDIndex]
+//			if !programID.Equals(solana.TokenProgramID) {
+//				continue
+//			}
+//
+//			// 检查指令数据：data[0]=12 表示 TransferChecked，data 至少 10 字节
+//			data := []byte(innerInst.Data)
+//			if len(data) < 10 || data[0] != 12 {
+//				continue
+//			}
+//
+//			// 需要至少 4 个 account indices
+//			if len(innerInst.Accounts) < 4 {
+//				continue
+//			}
+//
+//			// 解析 account 索引
+//			srcIdx := int(innerInst.Accounts[0])
+//			mintIdx := int(innerInst.Accounts[1])
+//			dstIdx := int(innerInst.Accounts[2])
+//			authIdx := int(innerInst.Accounts[3])
+//
+//			nAccounts := len(accountKeys)
+//			if srcIdx >= nAccounts || mintIdx >= nAccounts || dstIdx >= nAccounts || authIdx >= nAccounts {
+//				continue
+//			}
+//
+//			sourceAccount := accountKeys[srcIdx]
+//
+//			// 3. source 必须是 Raydium Pool source account
+//			if !sourceAccount.Equals(raydiumSrcPubKey) {
+//				continue
+//			}
+//
+//			mintAccount := accountKeys[mintIdx]
+//			dstAccount := accountKeys[dstIdx]
+//			authAccount := accountKeys[authIdx]
+//
+//			// 解析 amount（uint64 little-endian）和 decimals
+//			amount := binary.LittleEndian.Uint64(data[1:9])
+//			decimals := data[9]
+//
+//			matchedInsts = append(matchedInsts, entity.DecodedSolTransferCheckedInst{
+//				FromTokenAccount:   sourceAccount,
+//				FromNativeAccount:  authAccount,
+//				TokenMintAccount:   mintAccount,
+//				ToTokenAccount:     dstAccount,
+//				OwnerNativeAccount: authAccount,
+//				Amount:             amount,
+//				Decimals:           decimals,
+//			})
+//		}
+//	}
+//
+//	if len(matchedInsts) == 0 {
+//		log.Infof("%s 交易Id[%s] 未找到符合条件的 TransferChecked 指令，跳过", prefix, txSig.Signature.String())
+//		return
+//	}
+//
+//	// 4. 填充 DecodedSolanaTransaction
+//	decodedTx := entity.DecodedSolanaTransaction{
+//		TxID:                        txSig.Signature,
+//		FromNativeAccount:           accountKeys[0],
+//		TransferCheckedInstructions: matchedInsts,
+//	}
+//
+//	// 5. 发送 Kafka 消息
+//	rmqMsg := entity.KafkaTxMsg{
+//		MsgType: "NewScannedTransaction",
+//		MsgContent: entity.NewScannedTx{
+//			Service:    service,
+//			SubService: subService,
+//			TxSig:      txSig,
+//			DecodedTx:  decodedTx,
+//		},
+//	}
+//	if err := t.sendMsgToKafka(rmqMsg); err != nil {
+//		log.Errorf("%s 交易Id[%s] 发送 Kafka 消息失败: %v", prefix, txSig.Signature.String(), err)
+//	}
+//}
+
 func (t *TxScanTask) handleMarketBuyTokenTx(prefix, service, subService string, txSig rpc.TransactionSignature, tr *rpc.GetTransactionResult) {
 	log.Infof("%s 处理交易所购买token交易，交易Id[%s] ", prefix, txSig.Signature.String())
 	// 只处理链上成功的交易
@@ -493,116 +624,11 @@ func (t *TxScanTask) handleMarketBuyTokenTx(prefix, service, subService string, 
 		log.Infof("%s 交易Id[%s] 交易失败，跳过", prefix, txSig.Signature.String())
 		return
 	}
-
-	// 解码外层交易以获取 account keys
-	tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(tr.Transaction.GetBinary()))
+	decodedTx, err := utils.HeliusParseMarketBuyTx("a4309444-6229-433a-a89f-3fbe85f5f043", txSig.Signature)
 	if err != nil {
-		log.Errorf("%s 交易Id[%s] 解码交易失败: %v", prefix, txSig.Signature.String(), err)
+		log.Errorf("%s 交易Id[%s] 交易解析错误: %v", prefix, txSig.Signature.String(), err)
 		return
 	}
-
-	if tr.Meta == nil {
-		log.Warnf("%s 交易Id[%s] meta 为空，跳过", prefix, txSig.Signature.String())
-		return
-	}
-
-	// 构建完整账户列表：静态账户 + ALT 动态加载的账户（v0 交易）
-	// 顺序：static keys → loaded writable → loaded readonly
-	accountKeys := make([]solana.PublicKey, len(tx.Message.AccountKeys))
-	copy(accountKeys, tx.Message.AccountKeys)
-	accountKeys = append(accountKeys, tr.Meta.LoadedAddresses.Writable...)
-	accountKeys = append(accountKeys, tr.Meta.LoadedAddresses.ReadOnly...)
-
-	// 1. 检查完整账户列表是否包含目标程序地址
-	marketProgramPubKey := solana.MPK(marketBuyTokenProgramID)
-	found := false
-	for _, acc := range accountKeys {
-		if acc.Equals(marketProgramPubKey) {
-			found = true
-			break
-		}
-	}
-	if !found {
-		log.Infof("%s 交易Id[%s] 不包含目标程序 %s，跳过", prefix, txSig.Signature.String(), marketBuyTokenProgramID)
-		return
-	}
-
-	// 2. 遍历 inner instructions，找到符合条件的 TransferChecked
-	raydiumSrcPubKey := solana.MPK(raydiumPoolSourceAccount)
-	var matchedInsts []entity.DecodedSolTransferCheckedInst
-
-	for _, innerGroup := range tr.Meta.InnerInstructions {
-		for _, innerInst := range innerGroup.Instructions {
-			// 检查 program 是否为 Token Program
-			if int(innerInst.ProgramIDIndex) >= len(accountKeys) {
-				continue
-			}
-			programID := accountKeys[innerInst.ProgramIDIndex]
-			if !programID.Equals(solana.TokenProgramID) {
-				continue
-			}
-
-			// 检查指令数据：data[0]=12 表示 TransferChecked，data 至少 10 字节
-			data := []byte(innerInst.Data)
-			if len(data) < 10 || data[0] != 12 {
-				continue
-			}
-
-			// 需要至少 4 个 account indices
-			if len(innerInst.Accounts) < 4 {
-				continue
-			}
-
-			// 解析 account 索引
-			srcIdx := int(innerInst.Accounts[0])
-			mintIdx := int(innerInst.Accounts[1])
-			dstIdx := int(innerInst.Accounts[2])
-			authIdx := int(innerInst.Accounts[3])
-
-			nAccounts := len(accountKeys)
-			if srcIdx >= nAccounts || mintIdx >= nAccounts || dstIdx >= nAccounts || authIdx >= nAccounts {
-				continue
-			}
-
-			sourceAccount := accountKeys[srcIdx]
-
-			// 3. source 必须是 Raydium Pool source account
-			if !sourceAccount.Equals(raydiumSrcPubKey) {
-				continue
-			}
-
-			mintAccount := accountKeys[mintIdx]
-			dstAccount := accountKeys[dstIdx]
-			authAccount := accountKeys[authIdx]
-
-			// 解析 amount（uint64 little-endian）和 decimals
-			amount := binary.LittleEndian.Uint64(data[1:9])
-			decimals := data[9]
-
-			matchedInsts = append(matchedInsts, entity.DecodedSolTransferCheckedInst{
-				FromTokenAccount:   sourceAccount,
-				FromNativeAccount:  authAccount,
-				TokenMintAccount:   mintAccount,
-				ToTokenAccount:     dstAccount,
-				OwnerNativeAccount: authAccount,
-				Amount:             amount,
-				Decimals:           decimals,
-			})
-		}
-	}
-
-	if len(matchedInsts) == 0 {
-		log.Infof("%s 交易Id[%s] 未找到符合条件的 TransferChecked 指令，跳过", prefix, txSig.Signature.String())
-		return
-	}
-
-	// 4. 填充 DecodedSolanaTransaction
-	decodedTx := entity.DecodedSolanaTransaction{
-		TxID:                        txSig.Signature,
-		FromNativeAccount:           accountKeys[0],
-		TransferCheckedInstructions: matchedInsts,
-	}
-
 	// 5. 发送 Kafka 消息
 	rmqMsg := entity.KafkaTxMsg{
 		MsgType: "NewScannedTransaction",
@@ -610,7 +636,7 @@ func (t *TxScanTask) handleMarketBuyTokenTx(prefix, service, subService string, 
 			Service:    service,
 			SubService: subService,
 			TxSig:      txSig,
-			DecodedTx:  decodedTx,
+			DecodedTx:  *decodedTx,
 		},
 	}
 	if err := t.sendMsgToKafka(rmqMsg); err != nil {

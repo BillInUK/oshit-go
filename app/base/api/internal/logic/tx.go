@@ -3,11 +3,15 @@ package logic
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"net"
+	"strings"
 	"time"
 
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/gofiber/fiber/v2/log"
 	"gorm.io/gorm"
 
@@ -111,7 +115,45 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 		}
 	}
 
-	// 7. 异步广播，不重试
+	// 7. 模拟执行交易，失败则直接返回错误
+	l.svcCtx.ConfigMu.RLock()
+	rpcClient := l.svcCtx.RpcClient
+	l.svcCtx.ConfigMu.RUnlock()
+	if rpcClient == nil {
+		if confirm && recordID != "" {
+			l.updateServiceTxState(recordID, constants.TxStateFailed)
+		}
+		return nil, fmt.Errorf("rpc client is nil")
+	}
+
+	simCtx, simCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer simCancel()
+
+	simResult, simErr := rpcClient.SimulateTransactionWithOpts(simCtx, tx, &rpc.SimulateTransactionOpts{
+		SigVerify:              false,
+		ReplaceRecentBlockhash: true,
+	})
+	if simErr != nil {
+		// 模拟 RPC 调用本身出错：区分网络层错误和 HTTP 层错误
+		if isNetworkError(simErr) {
+			log.Errorf("simulate tx [%s] network error: %v", txID, simErr)
+			if confirm && recordID != "" {
+				l.updateServiceTxState(recordID, constants.TxStateFailed)
+			}
+			return nil, fmt.Errorf("simulate transaction network error: %v", simErr)
+		}
+		// HTTP 层错误（400/500/timeout 等），跳过模拟，继续广播（保守策略）
+		log.Warnf("simulate tx [%s] non-fatal error, skip simulation: %v", txID, simErr)
+	} else if simResult != nil && simResult.Value != nil && simResult.Value.Err != nil {
+		// 模拟执行链上失败
+		log.Errorf("simulate tx [%s] execution failed: %v, logs: %v", txID, simResult.Value.Err, simResult.Value.Logs)
+		if confirm && recordID != "" {
+			l.updateServiceTxState(recordID, constants.TxStateFailed)
+		}
+		return nil, fmt.Errorf("simulate transaction failed: %v", simResult.Value.Err)
+	}
+
+	// 8. 异步广播
 	go l.broadcastTx(recordID, confirm, tx)
 
 	return &types.SendTransactionRsp{
@@ -120,7 +162,9 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 	}, nil
 }
 
-// broadcastTx 异步广播交易，失败直接标记 state=-1（仅 confirm=true 时写库），不重试
+// broadcastTx 异步广播交易：
+// - 网络传输层错误（connection reset/refused 等）：标记失败，交易根本没发出去
+// - HTTP 层/RPC 层错误（400/500/timeout 等）：仅打日志，不标记失败，留给 TxScanTask/TxExpireTask 兜底
 func (l *TxLogic) broadcastTx(recordID string, confirm bool, tx *solana.Transaction) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
@@ -129,7 +173,7 @@ func (l *TxLogic) broadcastTx(recordID string, confirm bool, tx *solana.Transact
 	rpcClient := l.svcCtx.RpcClient
 	l.svcCtx.ConfigMu.RUnlock()
 	if rpcClient == nil {
-		log.Errorf("broadcast tx record[%v] error: rpc client is nil", tx.Signatures[0])
+		log.Errorf("broadcast tx [%v] error: rpc client is nil", tx.Signatures[0])
 		if confirm && recordID != "" {
 			l.updateServiceTxState(recordID, constants.TxStateFailed)
 		}
@@ -137,14 +181,52 @@ func (l *TxLogic) broadcastTx(recordID string, confirm bool, tx *solana.Transact
 	}
 
 	if _, err := rpcClient.SendTransaction(ctx, tx); err != nil {
-		log.Errorf("broadcast tx record[%v] error: %v", tx.Signatures[0], err)
-		if confirm && recordID != "" {
-			l.updateServiceTxState(recordID, constants.TxStateFailed)
+		if isNetworkError(err) {
+			log.Errorf("broadcast tx [%v] network error: %v", tx.Signatures[0], err)
+			if confirm && recordID != "" {
+				l.updateServiceTxState(recordID, constants.TxStateFailed)
+			}
+		} else {
+			// HTTP 层错误，交易可能已到达节点，不标记失败，等兜底任务处理
+			log.Warnf("broadcast tx [%v] non-fatal error (will be handled by scan/expire task): %v", tx.Signatures[0], err)
 		}
 		return
 	}
 
-	log.Infof("broadcast tx record[%v] success", tx.Signatures[0])
+	log.Infof("broadcast tx [%v] success", tx.Signatures[0])
+}
+
+// isNetworkError 判断是否为网络传输层错误（交易根本没发出去）
+func isNetworkError(err error) bool {
+	if err == nil {
+		return false
+	}
+	// 标准库 net 包的错误（connection refused, connection reset, no such host 等）
+	var netErr *net.OpError
+	if errors.As(err, &netErr) {
+		return true
+	}
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		return true
+	}
+	// 部分场景下错误被包装为字符串，兜底用关键字匹配
+	msg := strings.ToLower(err.Error())
+	networkKeywords := []string{
+		"connection refused",
+		"connection reset by peer",
+		"no such host",
+		"network is unreachable",
+		"i/o timeout",
+		"dial tcp",
+		"eof",
+	}
+	for _, kw := range networkKeywords {
+		if strings.Contains(msg, kw) {
+			return true
+		}
+	}
+	return false
 }
 
 func (l *TxLogic) updateServiceTxState(recordID string, state constants.TxState) {
