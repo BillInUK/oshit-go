@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"math"
 	"oshit-go/app/reward/api/internal/logic"
 	rewardrpc "oshit-go/app/reward/api/internal/rpc"
 	"oshit-go/app/reward/api/internal/svc"
@@ -182,8 +183,10 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	takeTxInfo.RewardInfo = rewardInfo
 	takeTxInfo.InviteCodeValid = codeValid
 	takeTxInfo.QuoteSOLPrice = quoteSOLPrice
+	quotedSOLAmount := quoteSOLPrice * float64(totalRewardAmount) / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL)
 	takeTxInfo.TotalReward = float64(totalRewardAmount)
-	takeTxInfo.QuotedSOLAmount = quoteSOLPrice * float64(totalRewardAmount) / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL)
+	takeTxInfo.QuotedSOLAmount = quotedSOLAmount
+	takeTxInfo.CostFee = uint64(math.Ceil(quotedSOLAmount * l.serviceConfig.CostFeeRate / 100))
 	takeTxInfo.Invited = invited
 	takeTxInfo.Claims = sortedClaims
 	takeTxInfo.RewardInviterInfo = sortedItems

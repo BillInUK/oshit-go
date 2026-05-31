@@ -350,14 +350,14 @@ func (l *GiveTokenLogic) checkSOLTx(
 	}
 
 	// 检查成本费用是否符合规则
-	quoteSOLPrice, err := l.baseClient.GetTokenQuoteSOLPrice(l.ctx)
+	_, _, costFee, err := l.calcCostFee(l.ctx, float64(totalRewardAmount))
 	if err != nil {
 		log.Errorf("官方转账获取奖励 - 无法获取token兑换solana的价格: %v", err)
 		return nil, errors.New("can not get token quote sol price")
 	}
-	requiredDexFee := float64(totalRewardAmount) / l.srvCtx.TokenDecimal * quoteSOLPrice * float64(solana.LAMPORTS_PER_SOL)
+	requiredDexFee := float64(costFee)
 	var minRequiredDexFee = requiredDexFee * (1 - l.srvCtx.FeeTolerance.MaxLessRate)
-	log.Infof("官方转账获取奖励 要求dex fee %d 最小 dex fee %d", uint64(requiredDexFee), uint64(minRequiredDexFee))
+	log.Infof("官方转账获取奖励 要求dex fee %d 最小 dex fee %d", costFee, uint64(minRequiredDexFee))
 	if transferInst.Amount < uint64(minRequiredDexFee) {
 		log.Errorf("官方转账获取奖励 解析交易错误: 转给dex的手续费 [%d] 小于规则要求的 [%d]", transferInst.Amount, uint64(minRequiredDexFee))
 		return nil, errors.New("transfer funding less than serviceConfig required")

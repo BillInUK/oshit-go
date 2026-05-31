@@ -113,6 +113,7 @@ type TakeTokenTxInfo struct {
     QuoteSOLPrice   float64 `json:"quoteSOLPrice"`   // token/SOL 价格
     TotalReward     float64 `json:"totalReward"`     // 整笔交易奖励的 token 总额
     QuotedSOLAmount float64 `json:"quotedSOLAmount"` // 成本费 SOL 金额
+    CostFee         uint64  `json:"costFee"`         // SOL 成本费，单位 lamports
     Claims          []model.LevelRatio `json:"claims"`            // 各层邀请人奖励费率
     RewardInfo      RewardTokenItem    `json:"rewardInfo"`        // 领取人奖励项
     RewardInviterInfo []RewardTokenItem `json:"rewardInviterInfo"` // 各邀请人奖励项
@@ -143,7 +144,7 @@ sequenceDiagram
     R->>DB: 查 t_invite_relation 邀请关系是否已存在
     R->>B: Dubbo GetTokenQuoteSOLPrice
     B-->>R: token/SOL 价格
-    R-->>FE: TakeTokenTxInfo{RewardInfo, RewardInviterInfo, QuotedSOLAmount, InviteCodeValid, Invited,...}
+    R-->>FE: TakeTokenTxInfo{RewardInfo, RewardInviterInfo, CostFee, InviteCodeValid, Invited,...}
 ```
 
 ### 4.2 阶段二：提交交易（CommitTx）
@@ -235,7 +236,7 @@ flowchart TD
     D -- 是 --> E["③ CreateAssociatedTokenAccount(领取人)"]
     D -- 否 --> F
     E --> F["④ TransferChecked\nrewardTokenAccount → receiptTokenAccount\namount = InviteAmount（有邀请）或 Amount（无邀请）"]
-    F --> G["⑤ System.Transfer\nreceiptNativeAccount → dexNativeAccount\namount ≈ QuotedSOLAmount"]
+    F --> G["⑤ System.Transfer\nreceiptNativeAccount → costAccount\namount = CostFee（lamports）"]
     G --> H{有邀请人?}
     H -- 是 --> I["⑥ TransferChecked × N\nrewardTokenAccount → inviterTokenAccount[i]\namount = rewardAmount × Ratio[i]"]
     H -- 否 --> J
@@ -253,7 +254,7 @@ flowchart TD
     C --> D["decodeSOLTx\n按 ProgramID 分类解析：\nComputeBudget / SPLToken / System / LightHouse\n未知 Program → 直接报错拒绝"]
     D --> E{checkDecodedSOLTx}
     E --> F["数量校验\nTransferInstructions == 1\nTransferChecked == Claims数 + 1"]
-    E --> G["SOL 转账校验\nto == DexNativeAccount\nfrom == 用户 native\namount >= QuotedSOLAmount × (1 - MaxLessRate)"]
+    E --> G["SOL 转账校验\nto == CostAccount\nfrom == 用户 native\namount >= CostFee × (1 - MaxLessRate)"]
     E --> H["主奖励 TransferChecked 校验\nfrom == RewardTokenAccount\nmint == TokenMintAccount\nto == 用户 ATA\namount 精确匹配"]
     E --> I["邀请人 TransferChecked 校验（循环）\nowner == RewardNativeAccount\namount == rewardAmount × Ratio[i]"]
     F & G & H & I --> J{全部通过?}
@@ -385,6 +386,7 @@ flowchart TD
 | `quoteSOLPrice` | float64 | token/SOL 价格 |
 | `totalReward` | float64 | 整笔交易奖励的 token 总额（raw） |
 | `quotedSOLAmount` | float64 | 需支付的 SOL 成本费金额（lamports） |
+| `costFee` | uint64 | 后端计算后的 SOL 成本费，单位 lamports；前端直接用于 System.Transfer |
 | `claims` | []LevelRatio | 各层邀请人奖励费率配置 |
 | `rewardInfo` | RewardTokenItem | 领取人奖励项（index/receiptAccount/amount） |
 | `rewardInviterInfo` | []RewardTokenItem | 各层邀请人奖励项列表（按层级排序） |

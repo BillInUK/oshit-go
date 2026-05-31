@@ -73,6 +73,7 @@ type GiveTokenTxInfo struct {
 
     TotalReward     float64 `json:"totalReward"`     // 整笔交易下发的 token 奖励总额（raw）
     QuotedSOLAmount float64 `json:"quotedSOLAmount"` // 需支付的 SOL 成本费金额（lamports）
+    CostFee         uint64  `json:"costFee"`         // 需支付的 SOL 成本费，lamports 整数
 
     Claims            []model.LevelRatio `json:"claims"`            // 各层邀请人奖励费率
     GiveInfo          RewardTokenItem    `json:"giveInfo"`          // from → to 的转账项
@@ -107,7 +108,7 @@ sequenceDiagram
     R->>DB: 查 t_invite_relation 获取 from 的上级邀请人
     R->>B: Dubbo GetTokenQuoteSOLPrice
     B-->>R: token/SOL 价格
-    R-->>FE: GiveTokenTxInfo{GiveInfo, RewardInfo, RewardInviterInfo, QuotedSOLAmount,...}
+    R-->>FE: GiveTokenTxInfo{GiveInfo, RewardInfo, RewardInviterInfo, CostFee,...}
 ```
 
 ### 4.2 阶段二：提交交易（CommitTx）
@@ -200,7 +201,7 @@ flowchart TD
     D -- 否 --> F
     E --> F["④ TransferChecked\nfromTokenAccount → toTokenAccount\namount = GiveInfo.Amount，owner = from"]
     F --> G["⑤ TransferChecked\nrewardTokenAccount → fromTokenAccount\namount = RewardInfo.Amount，owner = rewardNativeAccount"]
-    G --> H["⑥ System.Transfer\nfrom → costAccount\namount = QuotedSOLAmount（lamports）"]
+    G --> H["⑥ System.Transfer\nfrom → costAccount\namount = CostFee（lamports）"]
     H --> I{有邀请人?}
     I -- 是 --> J["⑦ TransferChecked × N\nrewardTokenAccount → inviterTokenAccount[i]\namount = RewardInfo.Amount × Ratio[i]，owner = rewardNativeAccount"]
     I -- 否 --> K
@@ -326,6 +327,7 @@ flowchart TD
 | `quoteSOLPrice` | float64 | token/SOL 价格 |
 | `totalReward` | float64 | 整笔交易奖励的 token 总额（raw） |
 | `quotedSOLAmount` | float64 | 需支付的 SOL 成本费（lamports） |
+| `costFee` | uint64 | 需支付的 SOL 成本费，lamports 整数；前端构造 `System.Transfer` 时直接使用 |
 | `claims` | []LevelRatio | 各层邀请人奖励费率配置 |
 | `giveInfo` | RewardTokenItem | from → to 的转账项（index/receiptAccount/amount） |
 | `rewardInfo` | RewardTokenItem | 平台奖励 from 的项 |

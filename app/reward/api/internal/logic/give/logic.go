@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"math"
 	"oshit-go/app/reward/api/internal/logic"
 	rewardrpc "oshit-go/app/reward/api/internal/rpc"
 	"oshit-go/app/reward/api/internal/svc"
@@ -72,6 +73,15 @@ func (l *GiveTokenLogic) GetRecord(ctx context.Context, txId string) (*model.Giv
 	return &record, nil
 }
 
+func (l *GiveTokenLogic) calcCostFee(ctx context.Context, totalReward float64) (float64, float64, uint64, error) {
+	quoteSOLPrice, err := l.baseClient.GetTokenQuoteSOLPrice(ctx)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	quotedSOLAmount := quoteSOLPrice * totalReward / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL)
+	return quoteSOLPrice, quotedSOLAmount, uint64(math.Ceil(quotedSOLAmount)), nil
+}
+
 // GetTxInfo 获取 give token 的交易参数
 func (l *GiveTokenLogic) GetTxInfo(ctx context.Context, from, to string, amountUI float64) (*types.GiveTokenTxInfo, error) {
 	prefix := fmt.Sprintf("%s GetTxInfo from=%s to=%s -", l.prefix, from, to)
@@ -112,8 +122,8 @@ func (l *GiveTokenLogic) GetTxInfo(ctx context.Context, from, to string, amountU
 		totalReward += float64(item.Amount)
 	}
 
-	// 6. 获取 token/SOL 价格
-	quoteSOLPrice, err := l.baseClient.GetTokenQuoteSOLPrice(ctx)
+	// 6. 计算 token/SOL 成本费
+	quoteSOLPrice, quotedSOLAmount, costFee, err := l.calcCostFee(ctx, totalReward)
 	if err != nil {
 		log.Errorf("%s 获取 token/SOL 价格失败: %v", prefix, err)
 		return nil, fmt.Errorf("get token quote sol price failed")
@@ -132,7 +142,8 @@ func (l *GiveTokenLogic) GetTxInfo(ctx context.Context, from, to string, amountU
 		Decimals:          int32(l.srvCtx.TokenConfig.Decimals),
 		QuoteSOLPrice:     quoteSOLPrice,
 		TotalReward:       totalReward,
-		QuotedSOLAmount:   quoteSOLPrice * totalReward / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL),
+		QuotedSOLAmount:   quotedSOLAmount,
+		CostFee:           costFee,
 		GiveInfo:          giveInfo,
 		RewardInfo:        rewardInfo,
 		Claims:            sortedClaims,

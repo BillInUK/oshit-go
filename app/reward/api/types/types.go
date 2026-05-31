@@ -33,6 +33,7 @@ type GiveTokenTxInfo struct {
 
 	TotalReward     float64 `json:"totalReward"`     // 整笔交易下发的token奖励总额
 	QuotedSOLAmount float64 `json:"quotedSOLAmount"` // token兑换solana的金额
+	CostFee         uint64  `json:"costFee"`         // SOL 成本费，单位 lamports
 
 	Claims            []model.LevelRatio `json:"claims"`            // 向上奖励邀请人的级别以及每个级别的奖励费率
 	GiveInfo          RewardTokenItem    `json:"giveInfo"`          // give token 业务发起人 转给 to 地址的奖励项
@@ -66,6 +67,7 @@ type TakeTokenTxInfo struct {
 
 	TotalReward     float64 `json:"totalReward"`     // 整笔交易奖励的token总额
 	QuotedSOLAmount float64 `json:"quotedSOLAmount"` // token 兑换 solana 的金额
+	CostFee         uint64  `json:"costFee"`         // SOL 成本费，单位 lamports
 
 	Claims            []model.LevelRatio `json:"claims"`            // 向上奖励邀请人的级别以及每个级别的奖励费率
 	RewardInfo        RewardTokenItem    `json:"rewardInfo"`        // 发起 take token 流程地址的奖励项

@@ -80,6 +80,7 @@ func createHexEncodedTx(ctx context.Context, privKey solana.PrivateKey, inviteCo
 	fmt.Printf("total reward amount: %v\n", txInfo.TotalReward)
 	fmt.Printf("quote sol price: %v\n", txInfo.QuoteSOLPrice)
 	fmt.Printf("quoted sol amount: %v\n", txInfo.QuotedSOLAmount)
+	fmt.Printf("cost fee: %v\n", txInfo.CostFee)
 
 	rewardNativeAccount := solana.MPK(txInfo.RewardAccount)
 	tokenMintAccount := solana.MPK(txInfo.Mint)
@@ -135,7 +136,7 @@ func createHexEncodedTx(ctx context.Context, privKey solana.PrivateKey, inviteCo
 			SetOwnerAccount(rewardNativeAccount).
 			Build(),
 		system.NewTransferInstructionBuilder().
-			SetLamports(uint64(txInfo.QuotedSOLAmount)).
+			SetLamports(txInfo.CostFee).
 			SetFundingAccount(receiptPubKey).
 			SetRecipientAccount(dexNativeAccount).
 			Build(),
@@ -188,6 +189,7 @@ func TestGetTakeTokenTxInfo(t *testing.T) {
 	fmt.Printf("QuoteSOLPrice       : %v\n", txInfo.QuoteSOLPrice)
 	fmt.Printf("TotalReward         : %v\n", txInfo.TotalReward)
 	fmt.Printf("QuotedSOLAmount     : %v\n", txInfo.QuotedSOLAmount)
+	fmt.Printf("CostFee             : %v\n", txInfo.CostFee)
 	fmt.Printf("InviteCode          : %s\n", txInfo.InviteCode)
 	fmt.Printf("InviteCodeValid     : %v\n", txInfo.InviteCodeValid)
 	fmt.Printf("Invited             : %v\n", txInfo.Invited)

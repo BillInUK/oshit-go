@@ -83,6 +83,7 @@ func createGiveTokenHexEncodedTx(ctx context.Context, privKey solana.PrivateKey,
 	fmt.Printf("total reward amount: %v\n", txInfo.TotalReward)
 	fmt.Printf("quote sol price: %v\n", txInfo.QuoteSOLPrice)
 	fmt.Printf("quoted sol amount: %v\n", txInfo.QuotedSOLAmount)
+	fmt.Printf("cost fee: %v\n", txInfo.CostFee)
 
 	rewardNativeAccount := solana.MPK(txInfo.RewardAccount)
 	tokenMintAccount := solana.MPK(txInfo.Mint)
@@ -167,7 +168,7 @@ func createGiveTokenHexEncodedTx(ctx context.Context, privKey solana.PrivateKey,
 			Build(),
 		// 转账人支付 SOL 成本费
 		system.NewTransferInstructionBuilder().
-			SetLamports(uint64(txInfo.QuotedSOLAmount)).
+			SetLamports(txInfo.CostFee).
 			SetFundingAccount(fromPubKey).
 			SetRecipientAccount(costAccount).
 			Build(),
@@ -232,6 +233,7 @@ func TestGetGiveTokenTxInfo(t *testing.T) {
 	fmt.Printf("QuoteSOLPrice       : %v\n", txInfo.QuoteSOLPrice)
 	fmt.Printf("TotalReward         : %v\n", txInfo.TotalReward)
 	fmt.Printf("QuotedSOLAmount     : %v\n", txInfo.QuotedSOLAmount)
+	fmt.Printf("CostFee             : %v\n", txInfo.CostFee)
 	fmt.Printf("GiveInfo            : %+v\n", txInfo.GiveInfo)
 	fmt.Printf("RewardInfo          : %+v\n", txInfo.RewardInfo)
 	fmt.Printf("RewardInviterInfo   : %+v\n", txInfo.RewardInviterInfo)

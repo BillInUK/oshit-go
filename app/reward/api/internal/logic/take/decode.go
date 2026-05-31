@@ -157,9 +157,9 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 		log.Errorf("%s 解析交易错误: solana发送地址[%v]不是交易发起地址[%v]", prefix, transferInst.FromNativeAccount, decodedTx.FromNativeAccount)
 		return nil, errors.New("transfer funding account must be transaction fee payer")
 	}
-	requiredDexFee := txInfo.QuotedSOLAmount
+	requiredDexFee := float64(txInfo.CostFee)
 	var minRequiredDexFee = requiredDexFee * (1 - l.srvCtx.FeeTolerance.MaxLessRate)
-	log.Infof("%s 要求dex fee %d 最小 dex fee %d", prefix, uint64(requiredDexFee), uint64(minRequiredDexFee))
+	log.Infof("%s 要求dex fee %d 最小 dex fee %d", prefix, txInfo.CostFee, uint64(minRequiredDexFee))
 	if transferInst.Amount < uint64(minRequiredDexFee) {
 		log.Errorf("%s 解析交易错误: 转给dex的手续费 [%d] 小于规则要求的 [%d]", prefix, transferInst.Amount, uint64(minRequiredDexFee))
 		return nil, errors.New("transfer funding less than config required")
