@@ -95,6 +95,7 @@ type rewardGiveTokenConfig struct {
 	RewardAccount  string  `yaml:"reward_account"`
 	CostAccount    string  `yaml:"cost_account"`
 	RewardRate     float64 `yaml:"reward_rate"`
+	MaxReward      float64 `yaml:"max_reward"`
 	MaxValidReward float64 `yaml:"max_valid_reward"`
 	ValidRate      float64 `yaml:"valid_rate"`
 }
@@ -317,6 +318,7 @@ func (s *ServiceContext) applyRewardRuntimeContent(content string) error {
 		RewardAccount:  cfg.GiveTokenConfig.RewardAccount,
 		CostAccount:    cfg.GiveTokenConfig.CostAccount,
 		RewardRate:     cfg.GiveTokenConfig.RewardRate,
+		MaxReward:      cfg.GiveTokenConfig.MaxReward,
 		MaxValidReward: cfg.GiveTokenConfig.MaxValidReward,
 		ValidRate:      cfg.GiveTokenConfig.ValidRate,
 		CreatedAt:      now,

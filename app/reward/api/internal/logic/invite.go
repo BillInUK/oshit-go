@@ -207,18 +207,19 @@ func (l *RewardInviteLogic) RecordDetermineInvitationHierarchy(
 	if err != nil {
 		return nil, err
 	}
-	inviterRecord, err := l.QueryInviterRecordByNativeAccount(inviterNativeAccount)
-	if err != nil {
-		return nil, err
-	}
 	// 如果To地址没有过任何邀请记录，则确定邀请层级关系
 	if inviteeRecord != nil {
 		return inviteeRecord, nil
 	}
-	// 如果邀请人没有在邀请关系里面，则Level为1，如果邀请人已经在邀请关系里面了，则Level为邀请人的层级+1
+	// 查询邀请人作为 invitee 的记录，获取其所在层级
+	// 如果邀请人本身也是被邀请进来的，则新邀请关系的 level = 邀请人的 level + 1
+	// 如果邀请人不在邀请关系中（顶级用户），则 level = 1
+	var inviterAsInviteeRecord model.InviteRelation
 	var level int32 = 1
-	if inviterRecord != nil {
-		level = inviterRecord.InviterLevel + 1
+	if err := l.db.Table(model.TableNameInviteRelation).
+		Where("invitee = ?", inviterNativeAccount).
+		First(&inviterAsInviteeRecord).Error; err == nil {
+		level = inviterAsInviteeRecord.InviterLevel + 1
 	}
 	determineInviteRecord := model.InviteRelation{
 		Inviter:      inviterNativeAccount,
@@ -240,27 +241,41 @@ func (l *RewardInviteLogic) BuildSortedInviterItems(
 	levelRatio []model.LevelRatio,
 	directInviter *model.NativeAccountInfo,
 ) ([]types.RewardTokenItem, []model.LevelRatio, error) {
-	sortedInvites, err := l.GetUpInviterRecords(receiptNativeAccount, levelDist)
-	if err != nil {
-		return nil, nil, fmt.Errorf("recursive query up inviter records error: %w", err)
-	}
-
 	var sortedItems []types.RewardTokenItem
-	for index, record := range sortedInvites {
-		sortedItems = append(sortedItems, types.RewardTokenItem{
-			Index:          index + 1,
-			ReceiptAccount: record.Inviter,
-			Amount:         0,
-		})
-	}
 
 	if directInviter != nil {
-		directItem := types.RewardTokenItem{
+		// 首次建立邀请关系时，receiptAccount 尚未写入 t_invite_relation（Kafka 确认后才写入），
+		// 从 receiptAccount 开始的 CTE 查不到任何记录。
+		// 因此改为从 directInviter 开始向上查邀请链，再将 directInviter 自身前插到列表首位。
+		upInvites, err := l.GetUpInviterRecords(directInviter.NativeAccount, levelDist)
+		if err != nil {
+			return nil, nil, fmt.Errorf("recursive query up inviter records error: %w", err)
+		}
+		sortedItems = append(sortedItems, types.RewardTokenItem{
 			Index:          0,
 			ReceiptAccount: directInviter.NativeAccount,
 			Amount:         0,
+		})
+		for index, record := range upInvites {
+			sortedItems = append(sortedItems, types.RewardTokenItem{
+				Index:          index + 1,
+				ReceiptAccount: record.Inviter,
+				Amount:         0,
+			})
 		}
-		sortedItems = append([]types.RewardTokenItem{directItem}, sortedItems...)
+	} else {
+		// 邀请关系已存在，直接从 receiptAccount 向上查完整邀请链
+		sortedInvites, err := l.GetUpInviterRecords(receiptNativeAccount, levelDist)
+		if err != nil {
+			return nil, nil, fmt.Errorf("recursive query up inviter records error: %w", err)
+		}
+		for index, record := range sortedInvites {
+			sortedItems = append(sortedItems, types.RewardTokenItem{
+				Index:          index + 1,
+				ReceiptAccount: record.Inviter,
+				Amount:         0,
+			})
+		}
 	}
 
 	minLen := min(len(levelRatio), len(sortedItems))

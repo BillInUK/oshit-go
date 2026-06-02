@@ -2,7 +2,7 @@
 insert into t_level_dist(dist_level)values(2);
 insert into t_level_ratio(dist_level,ratio)values(1,10);
 insert into t_level_ratio(dist_level,ratio)values(2,1);
-insert into t_discount_rate(rate)values(1.25);
+insert into t_discount_rate(rate)values(1.40);
 
 -- take token 配置
 insert into public.t_take_token_config

@@ -38,11 +38,13 @@ func NewTxLogic(ctx context.Context, svcCtx *svc.ServiceContext) *TxLogic {
 // SendTransaction 根据 t_service_info 中的 multi_sign/confirm 配置，决定是否签名、是否写 t_service_tx，
 // 最后异步广播（不重试），同步返回 record_id 和 tx_id。
 func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTransactionRsp, error) {
+	log.Infof("base service send transaction entry: service: %s, sub service: %s", req.Service, req.SubService)
 	// 1. 查询服务配置
 	l.svcCtx.ConfigMu.RLock()
 	subSvcInfoMap, ok := l.svcCtx.ServiceInfoMap[req.Service]
 	if !ok {
 		l.svcCtx.ConfigMu.RUnlock()
+		log.Errorf("base service send transaction error: no service info configured for service [%s]", req.Service)
 		return nil, fmt.Errorf("no service info configured for service [%s]", req.Service)
 	}
 	serviceInfo, ok := subSvcInfoMap[req.SubService]
@@ -58,12 +60,14 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 	// 2. base64 解码
 	txBytes, err := base64.StdEncoding.DecodeString(req.EncodedTx)
 	if err != nil {
+		log.Errorf("base service send transaction error: decode encoded_tx base64 error: %v", err)
 		return nil, fmt.Errorf("decode encoded_tx base64 error: %v", err)
 	}
 
 	// 3. 反序列化 Solana 交易
 	tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(txBytes))
 	if err != nil {
+		log.Errorf("base service send transaction error: deserialize transaction error: %v", err)
 		return nil, fmt.Errorf("deserialize transaction error: %v", err)
 	}
 
@@ -94,18 +98,22 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 	if multiSign {
 		subSvcMap, ok := serviceKeyMap[req.Service]
 		if !ok {
+			log.Errorf("base service send transaction error: no key configured for service [%s]", req.Service)
 			return nil, fmt.Errorf("no key configured for service [%s]", req.Service)
 		}
 		privateKey, ok := subSvcMap[req.SubService]
 		if !ok {
+			log.Errorf("base service send transaction error: no key configured for service [%s] subService [%s]", req.Service, req.SubService)
 			return nil, fmt.Errorf("no key configured for service [%s] subService [%s]", req.Service, req.SubService)
 		}
 		messageContent, err := tx.Message.MarshalBinary()
 		if err != nil {
+			log.Errorf("base service send transaction error: marshal transaction message error: %v", err)
 			return nil, fmt.Errorf("marshal transaction message error: %v", err)
 		}
 		sig, err := privateKey.Sign(messageContent)
 		if err != nil {
+			log.Errorf("base service send transaction error: sign transaction error: %v", err)
 			return nil, fmt.Errorf("sign transaction error: %v", err)
 		}
 		if len(tx.Signatures) >= 2 {
@@ -140,6 +148,7 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 			if confirm && recordID != "" {
 				l.updateServiceTxState(recordID, constants.TxStateFailed)
 			}
+			log.Errorf("base service send transaction error: simulate transaction network error: %v", simErr)
 			return nil, fmt.Errorf("simulate transaction network error: %v", simErr)
 		}
 		// HTTP 层错误（400/500/timeout 等），跳过模拟，继续广播（保守策略）
@@ -150,6 +159,7 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 		if confirm && recordID != "" {
 			l.updateServiceTxState(recordID, constants.TxStateFailed)
 		}
+		log.Errorf("base service send transaction error: simulate transaction failed: %v", simResult.Value.Err)
 		return nil, fmt.Errorf("simulate transaction failed: %v", simResult.Value.Err)
 	}
 

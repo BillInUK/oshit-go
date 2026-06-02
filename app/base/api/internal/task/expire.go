@@ -181,9 +181,14 @@ func (t *TxExpireTask) processTransaction(ctx context.Context, posTxRecord model
 
 // markTxExpired 标记交易为失败并发送消息
 func (t *TxExpireTask) markTxExpired(ctx context.Context, posTxRecord model.ServiceTx) {
-	// 标记交易发现状态为失败
-	if err := t.MarkTxFetchState(posTxRecord.TxID, constants.TxFetchFailed); err != nil {
+	// 标记交易发现状态为失败（条件更新，防止与 TxScanTask 重复处理）
+	changed, err := t.MarkTxFetchState(posTxRecord.TxID, constants.TxFetchFailed)
+	if err != nil {
 		log.Errorf("%s 交易[%s] - 标记交易发现状态为失败 - 错误: %v", t.prefix, posTxRecord.TxID, err)
+		return
+	}
+	if !changed {
+		log.Infof("%s 交易[%s] - 已被其他任务标记，跳过", t.prefix, posTxRecord.TxID)
 		return
 	}
 
@@ -207,9 +212,14 @@ func (t *TxExpireTask) markTxExpired(ctx context.Context, posTxRecord model.Serv
 
 // markTxFetched 标记交易为已经发现
 func (t *TxExpireTask) markTxFetched(ctx context.Context, posTxRecord model.ServiceTx, txSig rpc.TransactionSignature, decodedTx *entity.DecodedSolanaTransaction) {
-	// 标记交易发现状态为成功
-	if err := t.MarkTxFetchState(posTxRecord.TxID, constants.TxFetchSuccess); err != nil {
+	// 标记交易发现状态为成功（条件更新，防止与 TxScanTask 重复处理）
+	changed, err := t.MarkTxFetchState(posTxRecord.TxID, constants.TxFetchSuccess)
+	if err != nil {
 		log.Errorf("%s 交易[%s] - 标记交易发现状态为成功 - 错误: %v", t.prefix, posTxRecord.TxID, err)
+		return
+	}
+	if !changed {
+		log.Infof("%s 交易[%s] - 已被其他任务标记，跳过Kafka发送", t.prefix, posTxRecord.TxID)
 		return
 	}
 
@@ -232,13 +242,16 @@ func (t *TxExpireTask) markTxFetched(ctx context.Context, posTxRecord model.Serv
 	log.Infof("%s 交易 %s 成功消息已经发送", t.prefix, posTxRecord.TxID)
 }
 
-// MarkTxFetchState 标记交易获取状态
-func (t *TxExpireTask) MarkTxFetchState(txId string, state int) error {
-	table := t.db.Table(model.TableNameServiceTx)
-	if err := table.Where("tx_id = ?", txId).Update("tx_state", state).Error; err != nil {
-		return err
+// MarkTxFetchState 条件标记交易获取状态，仅当状态尚未被设置时才更新。
+// 返回 changed=true 表示本次调用实际修改了状态，false 表示已被其他任务标记过。
+func (t *TxExpireTask) MarkTxFetchState(txId string, state int) (changed bool, err error) {
+	result := t.db.Table(model.TableNameServiceTx).
+		Where("tx_id = ? AND tx_state <> ?", txId, state).
+		Update("tx_state", state)
+	if result.Error != nil {
+		return false, result.Error
 	}
-	return nil
+	return result.RowsAffected > 0, nil
 }
 
 // sendMsgToKafka 发送消息到Kafka

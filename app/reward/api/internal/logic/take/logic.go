@@ -173,6 +173,11 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	}
 
 	// 7. 填写最终需要返回的交易信息
+	// TODO: 从discount rate表里面获取信息
+	costFeeRate := l.serviceConfig.CostFeeRate
+	if invited {
+		costFeeRate = 20
+	}
 	takeTxInfo.RewardAccount = l.serviceConfig.RewardAccount
 	takeTxInfo.Mint = l.srvCtx.TokenConfig.Mint
 	takeTxInfo.CostAccount = l.serviceConfig.CostAccount
@@ -186,7 +191,7 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	quotedSOLAmount := quoteSOLPrice * float64(totalRewardAmount) / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL)
 	takeTxInfo.TotalReward = float64(totalRewardAmount)
 	takeTxInfo.QuotedSOLAmount = quotedSOLAmount
-	takeTxInfo.CostFee = uint64(math.Ceil(quotedSOLAmount * l.serviceConfig.CostFeeRate / 100))
+	takeTxInfo.CostFee = uint64(math.Ceil(quotedSOLAmount * costFeeRate / 100))
 	takeTxInfo.Invited = invited
 	takeTxInfo.Claims = sortedClaims
 	takeTxInfo.RewardInviterInfo = sortedItems

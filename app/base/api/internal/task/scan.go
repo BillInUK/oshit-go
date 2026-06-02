@@ -262,13 +262,17 @@ func (t *TxScanTask) GetTxFetchState(txId string) (*model.ServiceTx, error) {
 	return &record, nil
 }
 
-// MarkTxFetchState 标记交易获取状态
-func (t *TxScanTask) MarkTxFetchState(txId string, state int) error {
-	table := t.db.Table(model.TableNameServiceTx)
-	if err := table.Where("tx_id = ?", txId).Update("tx_state", state).Error; err != nil {
-		return err
+// MarkTxFetchState 条件标记交易获取状态，仅当状态尚未被设置时才更新。
+// 返回 changed=true 表示本次调用实际修改了状态（应继续发送 Kafka），
+// changed=false 表示已被其他 goroutine 标记过（应跳过 Kafka 发送）。
+func (t *TxScanTask) MarkTxFetchState(txId string, state int) (changed bool, err error) {
+	result := t.db.Table(model.TableNameServiceTx).
+		Where("tx_id = ? AND tx_state <> ?", txId, state).
+		Update("tx_state", state)
+	if result.Error != nil {
+		return false, result.Error
 	}
-	return nil
+	return result.RowsAffected > 0, nil
 }
 
 // 获取最新交易
@@ -398,7 +402,10 @@ func (t *TxScanTask) handleServiceTx(service, subService string, txSig rpc.Trans
 		time.Sleep(time.Duration(10+rand.Intn(40)) * time.Millisecond)
 	}
 
-	handleMutex := t.redSync.NewMutex(fmt.Sprintf(txHandleLockFmt, txSig.Signature.String()))
+	handleMutex := t.redSync.NewMutex(
+		fmt.Sprintf(txHandleLockFmt, txSig.Signature.String()),
+		redsync.WithTries(1), // 同一笔交易可能被多个扫描任务发现（如 take token 和 lottery 共用地址），只允许一个处理
+	)
 	if err := handleMutex.Lock(); err != nil {
 		var errTaken *redsync.ErrTaken
 		if !errors.As(err, &errTaken) {
@@ -461,9 +468,14 @@ func (t *TxScanTask) handleServiceTx(service, subService string, txSig rpc.Trans
 		return
 	}
 
-	// 将交易设置为已经发现
-	if err := t.MarkTxFetchState(rewardTxRecord.TxID, constants.TxFetchSuccess); err != nil {
+	// 将交易设置为已经发现（条件更新，防止多个扫描任务重复发送 Kafka）
+	changed, err := t.MarkTxFetchState(rewardTxRecord.TxID, constants.TxFetchSuccess)
+	if err != nil {
 		log.Errorf("%s 交易Id[%s],设置交易Id为已经发现错误: %v", prefix, txSig.Signature.String(), err)
+		return
+	}
+	if !changed {
+		log.Infof("%s 交易Id[%s] 已被其他任务标记，跳过Kafka发送", prefix, txSig.Signature.String())
 		return
 	}
 

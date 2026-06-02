@@ -5,7 +5,7 @@ level_ratio:
   - dist_level: 1
     ratio: 10.00
   - dist_level: 2
-    ratio: 1.00
+    ratio: 5.00
 
 discount_rate:
   rate: 1.25
@@ -16,8 +16,8 @@ take_token:
   cost_account: "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K"
   amount: 500000
   invite_amount: 1500000
-  cost_fee_rate: 200
-  max_cost_fee: 400
+  cost_fee_rate: 140
+  max_cost_fee: 75000
   is_default: true
   reward_inviter: true
   invited: true
@@ -25,9 +25,10 @@ take_token:
 give_token:
   reward_account: "AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ"
   cost_account: "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K"
-  reward_rate: 200.00
-  max_valid_reward: 4000000
-  valid_rate: 300.000000
+  max_reward: 500000
+  max_valid_reward: 1500000
+  reward_rate: 200
+  valid_rate: 300
 
 campaign_quote:
   reward_account: "2NVji8RvQAFhg4YJKuxqhdMjWMLJmWbKm5MBvSJmTUHL"
