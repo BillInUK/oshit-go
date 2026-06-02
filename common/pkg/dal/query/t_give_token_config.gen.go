@@ -30,8 +30,9 @@ func newGiveTokenConfig(db *gorm.DB, opts ...gen.DOOption) giveTokenConfig {
 	_giveTokenConfig.ALL = field.NewAsterisk(tableName)
 	_giveTokenConfig.RewardAccount = field.NewString(tableName, "reward_account")
 	_giveTokenConfig.CostAccount = field.NewString(tableName, "cost_account")
-	_giveTokenConfig.RewardRate = field.NewFloat64(tableName, "reward_rate")
+	_giveTokenConfig.MaxReward = field.NewFloat64(tableName, "max_reward")
 	_giveTokenConfig.MaxValidReward = field.NewFloat64(tableName, "max_valid_reward")
+	_giveTokenConfig.RewardRate = field.NewFloat64(tableName, "reward_rate")
 	_giveTokenConfig.ValidRate = field.NewFloat64(tableName, "valid_rate")
 	_giveTokenConfig.CreatedAt = field.NewTime(tableName, "created_at")
 	_giveTokenConfig.UpdatedAt = field.NewTime(tableName, "updated_at")
@@ -47,8 +48,9 @@ type giveTokenConfig struct {
 	ALL            field.Asterisk
 	RewardAccount  field.String
 	CostAccount    field.String
-	RewardRate     field.Float64
+	MaxReward      field.Float64
 	MaxValidReward field.Float64
+	RewardRate     field.Float64
 	ValidRate      field.Float64
 	CreatedAt      field.Time
 	UpdatedAt      field.Time
@@ -70,8 +72,9 @@ func (g *giveTokenConfig) updateTableName(table string) *giveTokenConfig {
 	g.ALL = field.NewAsterisk(table)
 	g.RewardAccount = field.NewString(table, "reward_account")
 	g.CostAccount = field.NewString(table, "cost_account")
-	g.RewardRate = field.NewFloat64(table, "reward_rate")
+	g.MaxReward = field.NewFloat64(table, "max_reward")
 	g.MaxValidReward = field.NewFloat64(table, "max_valid_reward")
+	g.RewardRate = field.NewFloat64(table, "reward_rate")
 	g.ValidRate = field.NewFloat64(table, "valid_rate")
 	g.CreatedAt = field.NewTime(table, "created_at")
 	g.UpdatedAt = field.NewTime(table, "updated_at")
@@ -103,11 +106,12 @@ func (g *giveTokenConfig) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (g *giveTokenConfig) fillFieldMap() {
-	g.fieldMap = make(map[string]field.Expr, 7)
+	g.fieldMap = make(map[string]field.Expr, 8)
 	g.fieldMap["reward_account"] = g.RewardAccount
 	g.fieldMap["cost_account"] = g.CostAccount
-	g.fieldMap["reward_rate"] = g.RewardRate
+	g.fieldMap["max_reward"] = g.MaxReward
 	g.fieldMap["max_valid_reward"] = g.MaxValidReward
+	g.fieldMap["reward_rate"] = g.RewardRate
 	g.fieldMap["valid_rate"] = g.ValidRate
 	g.fieldMap["created_at"] = g.CreatedAt
 	g.fieldMap["updated_at"] = g.UpdatedAt

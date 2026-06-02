@@ -14,8 +14,9 @@ const TableNameGiveTokenConfig = "t_give_token_config"
 type GiveTokenConfig struct {
 	RewardAccount  string    `gorm:"column:reward_account;not null" json:"rewardAccount"`
 	CostAccount    string    `gorm:"column:cost_account;not null" json:"costAccount"`
-	RewardRate     float64   `gorm:"column:reward_rate;not null" json:"rewardRate"`
+	MaxReward      float64   `gorm:"column:max_reward;not null" json:"maxReward"`
 	MaxValidReward float64   `gorm:"column:max_valid_reward;not null" json:"maxValidReward"`
+	RewardRate     float64   `gorm:"column:reward_rate;not null" json:"rewardRate"`
 	ValidRate      float64   `gorm:"column:valid_rate;not null" json:"validRate"`
 	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
 	UpdatedAt      time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`

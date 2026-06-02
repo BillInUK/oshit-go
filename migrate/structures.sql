@@ -393,15 +393,15 @@ CREATE TABLE public.t_lottery_claim
 DROP TABLE IF EXISTS public.t_give_token_config;
 CREATE TABLE public.t_give_token_config
 (
-    reward_account   character varying(64) NOT NULL, -- 发放奖励的 solana 地址，对应 RewardNativeAccount
-    cost_account     character varying(64) NOT NULL, -- 接收成本费的 solana 地址，对应 DexNativeAccount
-    reward_rate      numeric(5, 2)        NOT NULL, -- 普通地址奖励费率，对应 RewardRate
-    max_valid_reward numeric(78, 0)        NOT NULL, -- 有效地址最大奖励金额，对应 MaxValidAddressRewardPerTx
-    valid_rate       numeric(10, 6)        NOT NULL, -- 有效地址奖励费率，对应 RewardValidAddressRate
+    reward_account   character varying(64) NOT NULL, -- 发放奖励的 solana 地址
+    cost_account     character varying(64) NOT NULL, -- 接收成本费的 solana 地址
+    reward_rate      numeric(5, 2)         NOT NULL, -- 普通地址奖励费率（to 有 token account 时）
+    max_reward       numeric(78, 0)        NOT NULL, -- 发送到有token account的地址的奖励金额上限
+    max_valid_reward numeric(78, 0)        NOT NULL, -- 发送到没有token account的地址的奖励金额上限
+    valid_rate       numeric(10, 6)        NOT NULL, -- 有效地址奖励费率（to 无 token account 时）
     created_at       timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at       timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
 -- give token 记录表
 -- 旧工程 t_sol_transfer_checked_record
 -- 预演导出只需要导出前 1000 条

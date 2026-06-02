@@ -199,8 +199,8 @@ delete from t_take_token_config;
 insert into public.t_take_token_config(invite_code,reward_account,cost_account,amount,invite_amount,cost_fee_rate,max_cost_fee,is_default,reward_inviter,invited,created_at,updated_at)values(NULL,'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', '6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K', 500000, 1500000, 200,400,true,true,true,NOW(),NOW());
 
 -- give token 配置
-delete from t_give_token_config;
-insert into public.t_give_token_config(reward_account,cost_account,reward_rate,max_valid_reward,valid_rate,created_at,updated_at)values('AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',200,4000000,300,NOW(),NOW());
+insert into public.t_give_token_config
+(reward_account,cost_account,reward_rate,max_reward,max_valid_reward,valid_rate,created_at,updated_at)values('AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',136,500000,1500000,300,NOW(),NOW());
 
 -- reward code
 delete from t_reward_code_config;

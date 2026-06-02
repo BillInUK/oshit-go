@@ -79,7 +79,7 @@ func (l *GiveTokenLogic) calcCostFee(ctx context.Context, totalReward float64) (
 		return 0, 0, 0, err
 	}
 	quotedSOLAmount := quoteSOLPrice * totalReward / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL)
-	return quoteSOLPrice, quotedSOLAmount, uint64(math.Ceil(quotedSOLAmount)), nil
+	return quoteSOLPrice, quotedSOLAmount, uint64(math.Ceil(quotedSOLAmount) * l.serviceConfig.RewardRate / 100), nil
 }
 
 // GetTxInfo 获取 give token 的交易参数
@@ -97,9 +97,9 @@ func (l *GiveTokenLogic) GetTxInfo(ctx context.Context, from, to string, amountU
 	amountRaw := uint64(amountUI * l.srvCtx.TokenDecimal)
 	var rewardAmount float64
 	if toTokenAccountExists {
-		rewardAmount = min(l.serviceConfig.MaxValidReward, float64(amountRaw)*l.serviceConfig.RewardRate/100)
-	} else {
 		rewardAmount = min(l.serviceConfig.MaxValidReward, float64(amountRaw)*l.serviceConfig.ValidRate/100)
+	} else {
+		rewardAmount = min(l.serviceConfig.MaxReward, float64(amountRaw)*l.serviceConfig.RewardRate/100)
 	}
 
 	// 3. 递归向上查询需要奖励的邀请人

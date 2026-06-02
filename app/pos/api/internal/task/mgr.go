@@ -35,6 +35,8 @@ func (m *TaskManager) RegisterExpiredTxHandler(subService string, handler Expire
 }
 
 func (m *TaskManager) StartAllTasks() {
+	NewPosSnapShotTask(m.taskCtx).Start()
+	NewStakeSnapShotTask(m.taskCtx).Start()
 	NewKafkaConsumerTask(m.taskCtx).Start()
 	NewSnapShotConsumerTask(m.taskCtx).Start()
 	NewStakeBuyTokenExpireTask(m.taskCtx).Start()
