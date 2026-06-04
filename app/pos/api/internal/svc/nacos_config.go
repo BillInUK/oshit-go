@@ -165,7 +165,18 @@ func (s *ServiceContext) initNacosConfigClient() error {
 		})
 	}
 	if len(serverConfigs) == 0 {
-		return fmt.Errorf("nacos server config is empty")
+		host := nacosCfg.Host
+		if host == "" {
+			return fmt.Errorf("nacos server config is empty")
+		}
+		port := nacosCfg.Port
+		if port == 0 {
+			port = 8848
+		}
+		serverConfigs = append(serverConfigs, constant.ServerConfig{
+			IpAddr: host,
+			Port:   port,
+		})
 	}
 
 	clientCfg := nacosCfg.ClientConfig
@@ -177,6 +188,12 @@ func (s *ServiceContext) initNacosConfigClient() error {
 	if timeout == 0 {
 		timeout = 5000
 	}
+	username := clientCfg.Username
+	password := clientCfg.Password
+	if username == "" {
+		username = nacosCfg.Username
+		password = nacosCfg.Password
+	}
 
 	configClient, err := clients.NewConfigClient(vo.NacosClientParam{
 		ClientConfig: &constant.ClientConfig{
@@ -186,8 +203,8 @@ func (s *ServiceContext) initNacosConfigClient() error {
 			LogDir:              defaultString(clientCfg.LogDir, "./log/nacos"),
 			CacheDir:            defaultString(clientCfg.CacheDir, "./cache/nacos"),
 			LogLevel:            defaultString(clientCfg.LogLevel, "info"),
-			Username:            clientCfg.Username,
-			Password:            clientCfg.Password,
+			Username:            username,
+			Password:            password,
 		},
 		ServerConfigs: serverConfigs,
 	})
@@ -450,9 +467,6 @@ func (s *ServiceContext) applyPosRuntimeContent(content string) error {
 
 func (s *ServiceContext) baseRuntimeSubscribeConfig() config.NacosSubscribeConfig {
 	sub := s.Config.Nacos.SubscribeConfigs.BaseRuntime
-	if sub.DataId == "" {
-		sub = s.Config.Nacos.SubscribeConfig
-	}
 	if sub.DataId == "" {
 		sub.DataId = defaultBaseRuntimeConfigDataID
 	}

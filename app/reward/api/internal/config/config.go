@@ -74,17 +74,13 @@ type NacosSubscribeConfigs struct {
 }
 
 type NacosConfig struct {
+	Host             string                `mapstructure:"host"`
+	Port             uint64                `mapstructure:"port"`
+	Username         string                `mapstructure:"username"`
+	Password         string                `mapstructure:"password"`
 	ServerConfig     []NacosServerConfig   `mapstructure:"server_config"`
 	ClientConfig     NacosClientConfig     `mapstructure:"client_config"`
-	SubscribeConfig  NacosSubscribeConfig  `mapstructure:"subscribe_config"`
 	SubscribeConfigs NacosSubscribeConfigs `mapstructure:"subscribe_configs"`
-}
-
-// NacosOrderCfg 原有业务配置结构体
-type NacosOrderCfg struct {
-	AccountRpcTimeout string `json:"accountRpcTimeout"`
-	AppName           string `json:"appName"`
-	LogLevel          string `json:"logLevel"`
 }
 
 func LoadConfig() (*Config, error) {

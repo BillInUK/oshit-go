@@ -15,20 +15,12 @@ type Config struct {
 }
 
 type DubboConfig struct {
-	Protocol ProtocolConfig `mapstructure:"protocol"`
-	Nacos    NacosConfig    `mapstructure:"nacos"`
-}
-
-type ProtocolConfig struct {
-	Name string `mapstructure:"name"`
-	Port int    `mapstructure:"port"`
+	Port int `mapstructure:"port"`
 }
 
 type NacosConfig struct {
 	Host             string                `mapstructure:"host"`
-	Port             int                   `mapstructure:"port"`
-	GrpcPort         int                   `mapstructure:"grpc-port"`
-	Namespace        string                `mapstructure:"namespace"`
+	Port             uint64                `mapstructure:"port"`
 	Username         string                `mapstructure:"username"`
 	Password         string                `mapstructure:"password"`
 	ServerConfig     []NacosServerConfig   `mapstructure:"server_config"`
@@ -36,14 +28,12 @@ type NacosConfig struct {
 	SubscribeConfigs NacosSubscribeConfigs `mapstructure:"subscribe_configs"`
 }
 
-// NacosServerConfig Nacos服务端配置结构体（匹配yaml中的server_config）
 type NacosServerConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     uint64 `mapstructure:"port"`
 	GrpcPort uint64 `mapstructure:"grpc_port"`
 }
 
-// NacosClientConfig Nacos客户端配置结构体（匹配yaml中的client_config）
 type NacosClientConfig struct {
 	NamespaceId         string `mapstructure:"namespace_id"`
 	TimeoutMs           uint64 `mapstructure:"timeout_ms"`

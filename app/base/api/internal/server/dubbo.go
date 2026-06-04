@@ -15,8 +15,12 @@ import (
 
 // StartDubboServer 启动 Dubbo Triple 服务，作为独立 goroutine 运行
 func StartDubboServer(svcCtx *svc.ServiceContext) {
-	cfg := svcCtx.Config.Dubbo
-	nacosAddr := fmt.Sprintf("%s:%d", cfg.Nacos.Host, cfg.Nacos.Port)
+	nacosCfg := svcCtx.Config.Nacos
+	port := nacosCfg.Port
+	if port == 0 {
+		port = 8848
+	}
+	nacosAddr := fmt.Sprintf("%s:%d", nacosCfg.Host, port)
 
 	registryOpts := []registry.Option{
 		registry.WithNacos(),
@@ -25,20 +29,22 @@ func StartDubboServer(svcCtx *svc.ServiceContext) {
 		registry.WithoutUseAsMetaReport(),
 		registry.WithoutUseAsConfigCenter(),
 	}
-	if cfg.Nacos.Namespace != "" {
-		registryOpts = append(registryOpts, registry.WithNamespace(cfg.Nacos.Namespace))
+	if nacosCfg.Username != "" {
+		registryOpts = append(registryOpts, registry.WithUsername(nacosCfg.Username))
+		registryOpts = append(registryOpts, registry.WithPassword(nacosCfg.Password))
 	}
-	if cfg.Nacos.Username != "" {
-		registryOpts = append(registryOpts, registry.WithUsername(cfg.Nacos.Username))
-		registryOpts = append(registryOpts, registry.WithPassword(cfg.Nacos.Password))
+
+	dubboPort := svcCtx.Config.Dubbo.Port
+	if dubboPort == 0 {
+		dubboPort = 20880
 	}
 
 	ins, err := dubbo.NewInstance(
-		dubbo.WithName(cfg.Protocol.Name),
+		dubbo.WithName(svcCtx.Config.App.Name),
 		dubbo.WithRegistry(registryOpts...),
 		dubbo.WithProtocol(
 			protocol.WithTriple(),
-			protocol.WithPort(cfg.Protocol.Port),
+			protocol.WithPort(dubboPort),
 		),
 	)
 	if err != nil {
@@ -57,10 +63,10 @@ func StartDubboServer(svcCtx *svc.ServiceContext) {
 		return
 	}
 
-	log.Infof("dubbo: BaseService listening on :%d (nacos=%s)", cfg.Protocol.Port, nacosAddr)
+	log.Infof("dubbo: BaseService listening on :%d (nacos=%s)", dubboPort, nacosAddr)
 	if err := srv.Serve(); err != nil {
 		if strings.Contains(err.Error(), "client not connected") {
-			log.Errorf("dubbo: Nacos not reachable at %s (gRPC port %d)", nacosAddr, cfg.Nacos.GrpcPort)
+			log.Errorf("dubbo: Nacos not reachable at %s", nacosAddr)
 		} else {
 			log.Errorf("dubbo: serve error: %v", err)
 		}

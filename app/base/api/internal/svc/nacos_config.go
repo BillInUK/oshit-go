@@ -113,28 +113,21 @@ func (s *ServiceContext) initNacosConfigClient() error {
 	}
 	if len(serverConfigs) == 0 {
 		host := nacosCfg.Host
-		port := nacosCfg.Port
-		grpcPort := nacosCfg.GrpcPort
-		if host == "" && s.Config.Dubbo.Nacos.Host != "" {
-			host = s.Config.Dubbo.Nacos.Host
-			port = s.Config.Dubbo.Nacos.Port
-			grpcPort = s.Config.Dubbo.Nacos.GrpcPort
-		}
-		if host == "" || port == 0 {
+		if host == "" {
 			return fmt.Errorf("nacos server config is empty")
 		}
+		port := nacosCfg.Port
+		if port == 0 {
+			port = 8848
+		}
 		serverConfigs = append(serverConfigs, constant.ServerConfig{
-			IpAddr:   host,
-			Port:     uint64(port),
-			GrpcPort: uint64(grpcPort),
+			IpAddr: host,
+			Port:   port,
 		})
 	}
 
 	clientCfg := nacosCfg.ClientConfig
 	namespace := clientCfg.NamespaceId
-	if namespace == "" {
-		namespace = nacosCfg.Namespace
-	}
 	if namespace == "public" {
 		namespace = ""
 	}
@@ -284,7 +277,23 @@ func (s *ServiceContext) applyRuntimeConfigContent(content string) error {
 	if cfg.UserWalletRPC.RPCURL != "" {
 		s.UserWalletRpcClient = rpc.New(cfg.UserWalletRPC.RPCURL)
 	}
-	log.Infof("loaded base runtime config from nacos")
+	fmt.Println("========== Nacos Runtime Config Loaded ==========")
+	fmt.Printf("  system.env          = %d\n", cfg.System.Env)
+	fmt.Printf("  chain.chain_name    = %s\n", cfg.Chain.ChainName)
+	fmt.Printf("  chain.rpc_url       = %s\n", cfg.Chain.RPCURL)
+	fmt.Printf("  chain.wss_url       = %s\n", cfg.Chain.WssURL)
+	fmt.Printf("  chain.decimals      = %d\n", cfg.Chain.Decimals)
+	fmt.Printf("  chain.symbol        = %s\n", cfg.Chain.Symbol)
+	fmt.Printf("  user_wallet_rpc.rpc = %s\n", cfg.UserWalletRPC.RPCURL)
+	fmt.Printf("  mainnet_rpc.rpc     = %s\n", cfg.MainnetRPC.RPCURL)
+	fmt.Printf("  token.name          = %s\n", cfg.Token.TokenName)
+	fmt.Printf("  token.symbol        = %s\n", cfg.Token.TokenSymbol)
+	fmt.Printf("  token.decimals      = %d\n", cfg.Token.Decimals)
+	fmt.Printf("  token.mint          = %s\n", cfg.Token.Mint)
+	fmt.Printf("  fee_tolerance.rate  = %f\n", cfg.FeeTolerance.MaxLessRate)
+	fmt.Printf("  lighthouse_address  = %s\n", lighthouseAddr.String())
+	fmt.Printf("  aws.region          = %s\n", cfg.AWS.Region)
+	fmt.Println("==================================================")
 	return nil
 }
 
@@ -359,7 +368,24 @@ func (s *ServiceContext) applyServiceRegistryContent(content string) ([]task.Sca
 	s.ServiceInfoMap = serviceInfoMap
 	s.ServiceKeyMap = serviceKeyMap
 	s.ConfigMu.Unlock()
-	log.Infof("loaded %d service registry configs from nacos", len(cfg.Services))
+	fmt.Println("========== Nacos Service Registry Loaded ==========")
+	fmt.Printf("  total services: %d\n", len(cfg.Services))
+	for i, item := range cfg.Services {
+		enabled := true
+		if item.Enabled != nil {
+			enabled = *item.Enabled
+		}
+		scanEnabled := false
+		if item.Scan.PdaAccount != "" {
+			scanEnabled = enabled
+			if item.Scan.Enabled != nil {
+				scanEnabled = *item.Scan.Enabled
+			}
+		}
+		fmt.Printf("  [%d] service=%s sub_service=%s enabled=%v address=%s hook_type=%d scan_enabled=%v\n",
+			i, item.Service, item.SubService, enabled, item.Address, item.HookType, scanEnabled)
+	}
+	fmt.Println("====================================================")
 	return scanConfigs, nil
 }
 

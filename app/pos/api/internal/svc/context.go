@@ -214,17 +214,31 @@ func (s *ServiceContext) initSolanaRPC() {
 }
 
 func (s *ServiceContext) initBaseClient() error {
-	nacosServers := s.Config.Nacos.ServerConfig
-	if len(nacosServers) == 0 {
-		return fmt.Errorf("nacos server config is empty")
+	nacosCfg := s.Config.Nacos
+	host := nacosCfg.Host
+	port := nacosCfg.Port
+	if len(nacosCfg.ServerConfig) > 0 {
+		host = nacosCfg.ServerConfig[0].Host
+		port = nacosCfg.ServerConfig[0].Port
 	}
-	nacosAddr := fmt.Sprintf("%s:%d", nacosServers[0].Host, nacosServers[0].Port)
+	if port == 0 {
+		port = 8848
+	}
+	nacosAddr := fmt.Sprintf("%s:%d", host, port)
+
+	username := nacosCfg.ClientConfig.Username
+	password := nacosCfg.ClientConfig.Password
+	if username == "" {
+		username = nacosCfg.Username
+		password = nacosCfg.Password
+	}
+
 	cli, err := posrpc.NewBaseClient(
 		nacosAddr,
 		s.Config.App.Name,
-		s.Config.Nacos.ClientConfig.NamespaceId,
-		s.Config.Nacos.ClientConfig.Username,
-		s.Config.Nacos.ClientConfig.Password,
+		nacosCfg.ClientConfig.NamespaceId,
+		username,
+		password,
 	)
 	if err != nil {
 		return fmt.Errorf("init base client error: %w", err)

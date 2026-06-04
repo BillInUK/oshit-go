@@ -3,7 +3,7 @@
 # 交叉编译目标：Linux amd64（部署到服务器）
 GOOS   := linux
 GOARCH := amd64
-OUTDIR := ./dist
+OUTDIR := ./bin
 
 build: build-base build-reward build-pos
 

@@ -6,6 +6,10 @@
 .idea/oshit-go.iml
 .idea/sqldialects.xml
 .idea/vcs.xml
- app/base/api/micro-server
- app/reward/api/micro-server
- app/pos/api/micro-server
+
+# Executables & shared libraries
+*.exe
+*.dll
+*.so
+*.dylib
+bin/
