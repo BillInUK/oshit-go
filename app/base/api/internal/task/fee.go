@@ -49,15 +49,21 @@ type FeeTask struct {
 
 // NewFeeTask 创建手续费任务
 func NewFeeTask(taskCtx *TaskContext) *FeeTask {
-	rpcURL := taskCtx.ChainConfig.RPCURL
-	rpcClient := rpc.New(rpcURL)
+	var rpcClient *rpc.Client
+	var rpcURL string
+	if taskCtx.RpcPool != nil {
+		rpcClient = taskCtx.RpcPool.First()
+		rpcURL = taskCtx.RpcPool.FirstURL()
+	} else if taskCtx.RpcClient != nil {
+		rpcClient = taskCtx.RpcClient
+	}
 	return &FeeTask{
 		db:         taskCtx.DB,
 		redis:      taskCtx.Redis,
 		redSync:    taskCtx.RedSync,
 		rpcClient:  rpcClient,
 		rpcURL:     rpcURL,
-		mainnetRpc: taskCtx.MainnetRPCConfig.RPCURL,
+		mainnetRpc: taskCtx.MainnetRpcURL,
 	}
 }
 

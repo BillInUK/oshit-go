@@ -168,19 +168,40 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 	}
 	s.ChainConfig = &chainConfig
 
-	// 初始化用户钱包RPC配置 - SOL链
-	var userWalletRPCConfig model.UserWalletRpcConfig
-	if err := s.DB.Where("chain_name = ?", "solana").First(&userWalletRPCConfig).Error; err != nil {
-		return fmt.Errorf("can not load solana user wallet rpc configure of chain SOL from database: %v", err)
+	// Load RPC endpoints from DB
+	var rpcEndpoints []model.RpcEndpoint
+	if err := s.DB.Where("weight > 0").Find(&rpcEndpoints).Error; err != nil {
+		fmt.Printf("Warning: cannot load rpc endpoints from database: %v\n", err)
 	}
-	s.UserWalletRPCConfig = &userWalletRPCConfig
-
-	// 初始化主网rpc，用于请求一些只能用主网才能请求的功能，比方说交易所买币，quicknode的手续费统计等
-	var mainnetRPCConfig model.MainnetRpcConfig
-	if err := s.DB.Where("chain_name = ?", "solana").First(&mainnetRPCConfig).Error; err != nil {
-		return fmt.Errorf("can not load solana user wallet rpc configure of chain SOL from database: %v", err)
+	var envEndpoints []utils.RPCEndpointConfig
+	for _, ep := range rpcEndpoints {
+		cfg := utils.RPCEndpointConfig{
+			Provider:    ep.Provider,
+			Endpoint:    ep.Endpoint,
+			APIKey:      ep.APIKey,
+			WssEndpoint: ep.WssEndpoint,
+			WssAPIKey:   ep.WssAPIKey,
+			Weight:      ep.Weight,
+		}
+		if ep.Scope == "env" {
+			envEndpoints = append(envEndpoints, cfg)
+		} else if ep.Scope == "mainnet" {
+			mainnetURL := utils.BuildRPCURL(ep.Provider, ep.Endpoint, ep.APIKey)
+			s.MainnetRpcClient = rpc.New(mainnetURL)
+			s.MainnetRpcURL = mainnetURL
+			if ep.Provider == "helius" && ep.APIKey != "" {
+				s.HeliusAPIKey = ep.APIKey
+			}
+		}
 	}
-	s.MainnetRPCConfig = &mainnetRPCConfig
+	if len(envEndpoints) > 0 {
+		pool, err := utils.NewRPCPool(envEndpoints)
+		if err != nil {
+			return fmt.Errorf("create rpc pool from db: %v", err)
+		}
+		s.RpcPool = pool
+		s.RpcClient = pool.First()
+	}
 
 	// 初始化Token配置
 	var tokenConfig model.TokenConfig
@@ -257,14 +278,8 @@ func (s *ServiceContext) initServiceKeys() error {
 }
 
 func (s *ServiceContext) initSolanaRPC() {
-	// 初始化Solana RPC客户端
-	if s.ChainConfig != nil && s.ChainConfig.RPCURL != "" {
-		s.RpcClient = rpc.New(s.ChainConfig.RPCURL)
-	}
-
-	if s.UserWalletRPCConfig != nil && s.UserWalletRPCConfig.RPCURL != "" {
-		s.UserWalletRpcClient = rpc.New(s.UserWalletRPCConfig.RPCURL)
-	}
+	// RPC clients are now initialized from t_rpc_endpoint in initDatabaseConfigs
+	// and may be overridden by Nacos config in applyRuntimeConfigContent
 }
 
 func (s *ServiceContext) startTasks() {

@@ -47,6 +47,7 @@ type TxScanTask struct {
 	rpcClient        *rpc.Client
 	mainnetRpcClient *rpc.Client
 	rpcURL           string
+	heliusAPIKey     string
 	kafkaWriter      *kafka.Writer
 	mu               sync.Mutex
 	runningScans     map[string]context.CancelFunc
@@ -64,12 +65,18 @@ type ScanConfig struct {
 
 // NewTxScanTask 创建交易扫描任务
 func NewTxScanTask(taskCtx *TaskContext) *TxScanTask {
-	rpcURL := taskCtx.ChainConfig.RPCURL
-	rpcClient := rpc.New(rpcURL)
-
 	var mainnetRpcClient *rpc.Client
-	if taskCtx.MainnetRPCConfig != nil && taskCtx.MainnetRPCConfig.RPCURL != "" {
-		mainnetRpcClient = rpc.New(taskCtx.MainnetRPCConfig.RPCURL)
+	if taskCtx.MainnetRpcClient != nil {
+		mainnetRpcClient = taskCtx.MainnetRpcClient
+	}
+
+	var rpcClient *rpc.Client
+	var rpcURL string
+	if taskCtx.RpcPool != nil {
+		rpcClient = taskCtx.RpcPool.First()
+		rpcURL = taskCtx.RpcPool.FirstURL()
+	} else if taskCtx.RpcClient != nil {
+		rpcClient = taskCtx.RpcClient
 	}
 
 	var kafkaWriter *kafka.Writer
@@ -86,6 +93,7 @@ func NewTxScanTask(taskCtx *TaskContext) *TxScanTask {
 		rpcClient:        rpcClient,
 		mainnetRpcClient: mainnetRpcClient,
 		rpcURL:           rpcURL,
+		heliusAPIKey:     taskCtx.HeliusAPIKey,
 		kafkaWriter:      kafkaWriter,
 		runningScans:     make(map[string]context.CancelFunc),
 	}
@@ -636,7 +644,7 @@ func (t *TxScanTask) handleMarketBuyTokenTx(prefix, service, subService string, 
 		log.Infof("%s 交易Id[%s] 交易失败，跳过", prefix, txSig.Signature.String())
 		return
 	}
-	decodedTx, err := utils.HeliusParseMarketBuyTx("a4309444-6229-433a-a89f-3fbe85f5f043", txSig.Signature)
+	decodedTx, err := utils.HeliusParseMarketBuyTx(t.heliusAPIKey, txSig.Signature)
 	if err != nil {
 		log.Errorf("%s 交易Id[%s] 交易解析错误: %v", prefix, txSig.Signature.String(), err)
 		return

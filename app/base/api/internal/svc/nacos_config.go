@@ -28,14 +28,14 @@ const (
 )
 
 type baseRuntimeNacosConfig struct {
-	System            runtimeSystemConfig `yaml:"system"`
-	Chain             runtimeChainConfig  `yaml:"chain"`
-	UserWalletRPC     runtimeRPCConfig    `yaml:"user_wallet_rpc"`
-	MainnetRPC        runtimeRPCConfig    `yaml:"mainnet_rpc"`
-	Token             runtimeTokenConfig  `yaml:"token"`
-	FeeTolerance      runtimeFeeTolerance `yaml:"fee_tolerance"`
-	AWS               runtimeAWSConfig    `yaml:"aws"`
-	LightHouseAddress string              `yaml:"lighthouse_address"`
+	System            runtimeSystemConfig      `yaml:"system"`
+	Chain             runtimeChainConfig       `yaml:"chain"`
+	RPCEndpoints      []runtimeRPCEndpoint     `yaml:"rpc_endpoints"`
+	MainnetRPC        runtimeMainnetRPCConfig  `yaml:"mainnet_rpc"`
+	Token             runtimeTokenConfig       `yaml:"token"`
+	FeeTolerance      runtimeFeeTolerance      `yaml:"fee_tolerance"`
+	AWS               runtimeAWSConfig         `yaml:"aws"`
+	LightHouseAddress string                   `yaml:"lighthouse_address"`
 }
 
 type runtimeSystemConfig struct {
@@ -44,16 +44,23 @@ type runtimeSystemConfig struct {
 
 type runtimeChainConfig struct {
 	ChainName string `yaml:"chain_name"`
-	RPCURL    string `yaml:"rpc_url"`
-	WssURL    string `yaml:"wss_url"`
 	Decimals  int32  `yaml:"decimals"`
 	Symbol    string `yaml:"symbol"`
 }
 
-type runtimeRPCConfig struct {
-	ChainName string `yaml:"chain_name"`
-	RPCURL    string `yaml:"rpc_url"`
-	WssURL    string `yaml:"wss_url"`
+type runtimeRPCEndpoint struct {
+	Provider    string `yaml:"provider"`
+	Endpoint    string `yaml:"endpoint"`
+	APIKey      string `yaml:"api_key"`
+	WssEndpoint string `yaml:"wss_endpoint"`
+	WssAPIKey   string `yaml:"wss_api_key"`
+	Weight      int    `yaml:"weight"`
+}
+
+type runtimeMainnetRPCConfig struct {
+	Provider string `yaml:"provider"`
+	Endpoint string `yaml:"endpoint"`
+	APIKey   string `yaml:"api_key"`
 }
 
 type runtimeTokenConfig struct {
@@ -244,8 +251,8 @@ func (s *ServiceContext) applyRuntimeConfigContent(content string) error {
 	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
 		return err
 	}
-	if cfg.Chain.ChainName == "" || cfg.Chain.RPCURL == "" {
-		return fmt.Errorf("chain.chain_name and chain.rpc_url are required")
+	if cfg.Chain.ChainName == "" {
+		return fmt.Errorf("chain.chain_name is required")
 	}
 	if cfg.Token.Mint == "" {
 		return fmt.Errorf("token.mint is required")
@@ -259,33 +266,63 @@ func (s *ServiceContext) applyRuntimeConfigContent(content string) error {
 		return fmt.Errorf("invalid lighthouse address: %v", err)
 	}
 
+	// Build RPC pool from endpoints
+	if len(cfg.RPCEndpoints) > 0 {
+		endpoints := make([]utils.RPCEndpointConfig, 0, len(cfg.RPCEndpoints))
+		for _, ep := range cfg.RPCEndpoints {
+			w := ep.Weight
+			if w == 0 {
+				w = 1
+			}
+			endpoints = append(endpoints, utils.RPCEndpointConfig{
+				Provider:    ep.Provider,
+				Endpoint:    ep.Endpoint,
+				APIKey:      ep.APIKey,
+				WssEndpoint: ep.WssEndpoint,
+				WssAPIKey:   ep.WssAPIKey,
+				Weight:      w,
+			})
+		}
+		pool, err := utils.NewRPCPool(endpoints)
+		if err != nil {
+			return fmt.Errorf("create rpc pool: %v", err)
+		}
+		s.RpcPool = pool
+		s.RpcClient = pool.First()
+	}
+
+	// Build mainnet RPC client
+	if cfg.MainnetRPC.Endpoint != "" {
+		mainnetURL := utils.BuildRPCURL(cfg.MainnetRPC.Provider, cfg.MainnetRPC.Endpoint, cfg.MainnetRPC.APIKey)
+		s.MainnetRpcClient = rpc.New(mainnetURL)
+		s.MainnetRpcURL = mainnetURL
+		if cfg.MainnetRPC.Provider == "helius" && cfg.MainnetRPC.APIKey != "" {
+			s.HeliusAPIKey = cfg.MainnetRPC.APIKey
+		}
+	}
+
 	now := time.Now()
 	s.ConfigMu.Lock()
 	defer s.ConfigMu.Unlock()
 	s.SystemConfig = &model.SystemConfig{Env: cfg.System.Env, CreatedAt: now, UpdatedAt: now}
-	s.ChainConfig = &model.ChainConfig{ChainName: cfg.Chain.ChainName, RPCURL: cfg.Chain.RPCURL, WssURL: cfg.Chain.WssURL, Decimals: cfg.Chain.Decimals, Symbol: cfg.Chain.Symbol, CreatedAt: now, UpdatedAt: now}
-	s.UserWalletRPCConfig = &model.UserWalletRpcConfig{ChainName: cfg.UserWalletRPC.ChainName, RPCURL: cfg.UserWalletRPC.RPCURL, WssURL: cfg.UserWalletRPC.WssURL, CreatedAt: now, UpdatedAt: now}
-	s.MainnetRPCConfig = &model.MainnetRpcConfig{ChainName: cfg.MainnetRPC.ChainName, RPCURL: cfg.MainnetRPC.RPCURL, WssURL: cfg.MainnetRPC.WssURL, CreatedAt: now, UpdatedAt: now}
+	s.ChainConfig = &model.ChainConfig{ChainName: cfg.Chain.ChainName, Decimals: cfg.Chain.Decimals, Symbol: cfg.Chain.Symbol, CreatedAt: now, UpdatedAt: now}
 	s.TokenConfig = &model.TokenConfig{TokenName: cfg.Token.TokenName, TokenSymbol: cfg.Token.TokenSymbol, Decimals: cfg.Token.Decimals, Mint: cfg.Token.Mint, CreatedAt: now, UpdatedAt: now}
 	s.TokenDecimal = math.Pow(10, float64(cfg.Token.Decimals))
 	s.FeeTolerance = model.FeeTolerance{MaxLessRate: cfg.FeeTolerance.MaxLessRate, CreatedAt: now, UpdatedAt: now}
 	s.AwsConfig = &model.AwsConfig{AccessKeyID: cfg.AWS.AccessKeyID, SecretAccessKey: cfg.AWS.SecretAccessKey, Region: cfg.AWS.Region, CreatedAt: now, UpdatedAt: now}
 	s.LightHouseAddress = lighthouseAddr
-	if cfg.Chain.RPCURL != "" {
-		s.RpcClient = rpc.New(cfg.Chain.RPCURL)
-	}
-	if cfg.UserWalletRPC.RPCURL != "" {
-		s.UserWalletRpcClient = rpc.New(cfg.UserWalletRPC.RPCURL)
-	}
 	fmt.Println("========== Nacos Runtime Config Loaded ==========")
 	fmt.Printf("  system.env          = %d\n", cfg.System.Env)
 	fmt.Printf("  chain.chain_name    = %s\n", cfg.Chain.ChainName)
-	fmt.Printf("  chain.rpc_url       = %s\n", cfg.Chain.RPCURL)
-	fmt.Printf("  chain.wss_url       = %s\n", cfg.Chain.WssURL)
 	fmt.Printf("  chain.decimals      = %d\n", cfg.Chain.Decimals)
 	fmt.Printf("  chain.symbol        = %s\n", cfg.Chain.Symbol)
-	fmt.Printf("  user_wallet_rpc.rpc = %s\n", cfg.UserWalletRPC.RPCURL)
-	fmt.Printf("  mainnet_rpc.rpc     = %s\n", cfg.MainnetRPC.RPCURL)
+	fmt.Printf("  rpc_endpoints       = %d configured\n", len(cfg.RPCEndpoints))
+	for i, ep := range cfg.RPCEndpoints {
+		fmt.Printf("    [%d] provider=%s endpoint=%s weight=%d\n", i, ep.Provider, ep.Endpoint, ep.Weight)
+	}
+	if cfg.MainnetRPC.Endpoint != "" {
+		fmt.Printf("  mainnet_rpc         = %s (%s)\n", cfg.MainnetRPC.Endpoint, cfg.MainnetRPC.Provider)
+	}
 	fmt.Printf("  token.name          = %s\n", cfg.Token.TokenName)
 	fmt.Printf("  token.symbol        = %s\n", cfg.Token.TokenSymbol)
 	fmt.Printf("  token.decimals      = %d\n", cfg.Token.Decimals)

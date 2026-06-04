@@ -30,8 +30,14 @@ type HoldersTask struct {
 
 // NewHoldersTask 创建手续费任务
 func NewHoldersTask(taskCtx *TaskContext) *HoldersTask {
-	rpcURL := taskCtx.ChainConfig.RPCURL
-	rpcClient := rpc.New(rpcURL)
+	var rpcClient *rpc.Client
+	var rpcURL string
+	if taskCtx.RpcPool != nil {
+		rpcClient = taskCtx.RpcPool.First()
+		rpcURL = taskCtx.RpcPool.FirstURL()
+	} else if taskCtx.RpcClient != nil {
+		rpcClient = taskCtx.RpcClient
+	}
 	return &HoldersTask{
 		db:        taskCtx.DB,
 		redis:     taskCtx.Redis,

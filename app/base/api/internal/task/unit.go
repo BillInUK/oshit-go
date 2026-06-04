@@ -47,8 +47,14 @@ type UnitTask struct {
 
 // NewUnitTask 创建手续费任务
 func NewUnitTask(taskCtx *TaskContext) *UnitTask {
-	rpcURL := taskCtx.ChainConfig.RPCURL
-	rpcClient := rpc.New(rpcURL)
+	var rpcClient *rpc.Client
+	var rpcURL string
+	if taskCtx.RpcPool != nil {
+		rpcClient = taskCtx.RpcPool.First()
+		rpcURL = taskCtx.RpcPool.FirstURL()
+	} else if taskCtx.RpcClient != nil {
+		rpcClient = taskCtx.RpcClient
+	}
 	return &UnitTask{
 		db:          taskCtx.DB,
 		redis:       taskCtx.Redis,
