@@ -35,6 +35,7 @@ func newTakeTokenConfig(db *gorm.DB, opts ...gen.DOOption) takeTokenConfig {
 	_takeTokenConfig.Amount = field.NewFloat64(tableName, "amount")
 	_takeTokenConfig.InviteAmount = field.NewFloat64(tableName, "invite_amount")
 	_takeTokenConfig.CostFeeRate = field.NewFloat64(tableName, "cost_fee_rate")
+	_takeTokenConfig.InvitedRate = field.NewFloat64(tableName, "invited_rate")
 	_takeTokenConfig.MaxCostFee = field.NewFloat64(tableName, "max_cost_fee")
 	_takeTokenConfig.IsDefault = field.NewBool(tableName, "is_default")
 	_takeTokenConfig.RewardInviter = field.NewBool(tableName, "reward_inviter")
@@ -58,6 +59,7 @@ type takeTokenConfig struct {
 	Amount        field.Float64
 	InviteAmount  field.Float64
 	CostFeeRate   field.Float64
+	InvitedRate   field.Float64
 	MaxCostFee    field.Float64
 	IsDefault     field.Bool
 	RewardInviter field.Bool
@@ -87,6 +89,7 @@ func (t *takeTokenConfig) updateTableName(table string) *takeTokenConfig {
 	t.Amount = field.NewFloat64(table, "amount")
 	t.InviteAmount = field.NewFloat64(table, "invite_amount")
 	t.CostFeeRate = field.NewFloat64(table, "cost_fee_rate")
+	t.InvitedRate = field.NewFloat64(table, "invited_rate")
 	t.MaxCostFee = field.NewFloat64(table, "max_cost_fee")
 	t.IsDefault = field.NewBool(table, "is_default")
 	t.RewardInviter = field.NewBool(table, "reward_inviter")
@@ -121,7 +124,7 @@ func (t *takeTokenConfig) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (t *takeTokenConfig) fillFieldMap() {
-	t.fieldMap = make(map[string]field.Expr, 13)
+	t.fieldMap = make(map[string]field.Expr, 14)
 	t.fieldMap["record_id"] = t.RecordID
 	t.fieldMap["invite_code"] = t.InviteCode
 	t.fieldMap["reward_account"] = t.RewardAccount
@@ -129,6 +132,7 @@ func (t *takeTokenConfig) fillFieldMap() {
 	t.fieldMap["amount"] = t.Amount
 	t.fieldMap["invite_amount"] = t.InviteAmount
 	t.fieldMap["cost_fee_rate"] = t.CostFeeRate
+	t.fieldMap["invited_rate"] = t.InvitedRate
 	t.fieldMap["max_cost_fee"] = t.MaxCostFee
 	t.fieldMap["is_default"] = t.IsDefault
 	t.fieldMap["reward_inviter"] = t.RewardInviter

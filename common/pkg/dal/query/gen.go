@@ -35,6 +35,7 @@ var (
 	LevelDist                   *levelDist
 	LevelRatio                  *levelRatio
 	LotteryClaim                *lotteryClaim
+	LotteryConfig               *lotteryConfig
 	LotteryReward               *lotteryReward
 	MainnetRpcConfig            *mainnetRpcConfig
 	NativeAccountInfo           *nativeAccountInfo
@@ -102,6 +103,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	LevelDist = &Q.LevelDist
 	LevelRatio = &Q.LevelRatio
 	LotteryClaim = &Q.LotteryClaim
+	LotteryConfig = &Q.LotteryConfig
 	LotteryReward = &Q.LotteryReward
 	MainnetRpcConfig = &Q.MainnetRpcConfig
 	NativeAccountInfo = &Q.NativeAccountInfo
@@ -170,6 +172,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		LevelDist:                   newLevelDist(db, opts...),
 		LevelRatio:                  newLevelRatio(db, opts...),
 		LotteryClaim:                newLotteryClaim(db, opts...),
+		LotteryConfig:               newLotteryConfig(db, opts...),
 		LotteryReward:               newLotteryReward(db, opts...),
 		MainnetRpcConfig:            newMainnetRpcConfig(db, opts...),
 		NativeAccountInfo:           newNativeAccountInfo(db, opts...),
@@ -239,6 +242,7 @@ type Query struct {
 	LevelDist                   levelDist
 	LevelRatio                  levelRatio
 	LotteryClaim                lotteryClaim
+	LotteryConfig               lotteryConfig
 	LotteryReward               lotteryReward
 	MainnetRpcConfig            mainnetRpcConfig
 	NativeAccountInfo           nativeAccountInfo
@@ -309,6 +313,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		LevelDist:                   q.LevelDist.clone(db),
 		LevelRatio:                  q.LevelRatio.clone(db),
 		LotteryClaim:                q.LotteryClaim.clone(db),
+		LotteryConfig:               q.LotteryConfig.clone(db),
 		LotteryReward:               q.LotteryReward.clone(db),
 		MainnetRpcConfig:            q.MainnetRpcConfig.clone(db),
 		NativeAccountInfo:           q.NativeAccountInfo.clone(db),
@@ -386,6 +391,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		LevelDist:                   q.LevelDist.replaceDB(db),
 		LevelRatio:                  q.LevelRatio.replaceDB(db),
 		LotteryClaim:                q.LotteryClaim.replaceDB(db),
+		LotteryConfig:               q.LotteryConfig.replaceDB(db),
 		LotteryReward:               q.LotteryReward.replaceDB(db),
 		MainnetRpcConfig:            q.MainnetRpcConfig.replaceDB(db),
 		NativeAccountInfo:           q.NativeAccountInfo.replaceDB(db),
@@ -453,6 +459,7 @@ type queryCtx struct {
 	LevelDist                   ILevelDistDo
 	LevelRatio                  ILevelRatioDo
 	LotteryClaim                ILotteryClaimDo
+	LotteryConfig               ILotteryConfigDo
 	LotteryReward               ILotteryRewardDo
 	MainnetRpcConfig            IMainnetRpcConfigDo
 	NativeAccountInfo           INativeAccountInfoDo
@@ -520,6 +527,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		LevelDist:                   q.LevelDist.WithContext(ctx),
 		LevelRatio:                  q.LevelRatio.WithContext(ctx),
 		LotteryClaim:                q.LotteryClaim.WithContext(ctx),
+		LotteryConfig:               q.LotteryConfig.WithContext(ctx),
 		LotteryReward:               q.LotteryReward.WithContext(ctx),
 		MainnetRpcConfig:            q.MainnetRpcConfig.WithContext(ctx),
 		NativeAccountInfo:           q.NativeAccountInfo.WithContext(ctx),

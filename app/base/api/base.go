@@ -1,18 +1,33 @@
 package main
 
 import (
+	"log"
+	"log/slog"
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	jsoniter "github.com/json-iterator/go"
-	"log"
+
 	"oshit-go/app/base/api/internal/handler"
 	"oshit-go/app/base/api/internal/server"
 	"oshit-go/app/base/api/internal/svc"
-	"strconv"
+	"oshit-go/common/pkg/logging"
 )
 
 func main() {
+	// 初始化日志：JSON 结构化输出 + lumberjack 轮转
+	logging.Setup(logging.Config{
+		ServiceName: "base-api",
+		LogDir:      "./log",
+		MaxSizeMB:   100,
+		MaxAgeDays:  30,
+		MaxBackups:  10,
+		Compress:    true,
+		Level:       slog.LevelInfo,
+	})
+
 	// 创建服务上下文
 	srvCtx, err := svc.NewServiceContext()
 	if err != nil {

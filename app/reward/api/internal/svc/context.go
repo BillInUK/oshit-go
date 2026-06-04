@@ -29,6 +29,7 @@ type ServiceContext struct {
 	DiscountRate        *model.DiscountRate
 	TakeTokenConfig     *model.TakeTokenConfig
 	GiveTokenConfig     *model.GiveTokenConfig
+	LotteryConfig       *model.LotteryConfig
 	CampaignQuoteConfig *model.CampaignQuoteConfig
 	RewardCodeConfig    *model.RewardCodeConfig
 	//RewardKeyMap        map[string]solana.PrivateKey
@@ -226,6 +227,13 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 		return fmt.Errorf("can not find take give config from database: %v", err)
 	}
 	s.GiveTokenConfig = &giveTokenConfig
+
+	// 加载 lottery 业务配置
+	var lotteryConfig model.LotteryConfig
+	if err := s.DB.First(&lotteryConfig).Error; err != nil {
+		return fmt.Errorf("can not find lottery config from database: %v", err)
+	}
+	s.LotteryConfig = &lotteryConfig
 
 	// 加载 campaign 业务配置
 	var campaignQuoteConfig model.CampaignQuoteConfig

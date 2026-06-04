@@ -137,7 +137,7 @@ func (t *FeeTask) readPriorityFee() {
 		return
 	}
 
-	log.Infof("%s 获取最新slot %d，当前区块交易数: %d", prefix, currentSlot, len(blockResponse.Result.Transactions))
+	log.Debugf("%s 获取最新slot %d，当前区块交易数: %d", prefix, currentSlot, len(blockResponse.Result.Transactions))
 
 	// 初始化SolFeeStatistic数组
 	var statistics []model.FeeStatistics
@@ -194,7 +194,7 @@ func (t *FeeTask) readPriorityFee() {
 			statistics = append(statistics, stat)
 		}
 	}
-	log.Infof("%s 获取最新slot %d，获取符合统计要求的交易数: %d", prefix, currentSlot, len(statistics))
+	log.Debugf("%s 获取最新slot %d，获取符合统计要求的交易数: %d", prefix, currentSlot, len(statistics))
 
 	if len(statistics) > 0 {
 		// 使用 Gorm 进行查询记录总数

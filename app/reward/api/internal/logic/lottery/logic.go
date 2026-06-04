@@ -22,32 +22,32 @@ import (
 )
 
 type LotteryLogic struct {
-	prefix          string
-	ctx             context.Context
-	srvCtx          *svc.ServiceContext
-	db              *gorm.DB
-	rd              redis.UniversalClient
-	rs              redsync.Redsync
-	rpcClient       *rpc.Client
-	baseClient      *rewardrpc.BaseClient
-	takeTokenConfig *model.TakeTokenConfig
-	service         constants.ServiceName
-	subService      constants.SubServiceName
+	prefix        string
+	ctx           context.Context
+	srvCtx        *svc.ServiceContext
+	db            *gorm.DB
+	rd            redis.UniversalClient
+	rs            redsync.Redsync
+	rpcClient     *rpc.Client
+	baseClient    *rewardrpc.BaseClient
+	serviceConfig *model.LotteryConfig
+	service       constants.ServiceName
+	subService    constants.SubServiceName
 }
 
 func NewLotteryLogic(ctx context.Context, srvCtx *svc.ServiceContext) *LotteryLogic {
 	return &LotteryLogic{
-		prefix:          "Lottery",
-		ctx:             ctx,
-		srvCtx:          srvCtx,
-		db:              srvCtx.DB,
-		rd:              srvCtx.Redis,
-		rs:              srvCtx.RedSync,
-		rpcClient:       srvCtx.RpcClient,
-		baseClient:      srvCtx.BaseClient,
-		takeTokenConfig: srvCtx.TakeTokenConfig,
-		service:         constants.ServiceReward,
-		subService:      constants.SubServiceLottery,
+		prefix:        "Lottery",
+		ctx:           ctx,
+		srvCtx:        srvCtx,
+		db:            srvCtx.DB,
+		rd:            srvCtx.Redis,
+		rs:            srvCtx.RedSync,
+		rpcClient:     srvCtx.RpcClient,
+		baseClient:    srvCtx.BaseClient,
+		serviceConfig: srvCtx.LotteryConfig,
+		service:       constants.ServiceReward,
+		subService:    constants.SubServiceLottery,
 	}
 }
 
@@ -196,15 +196,16 @@ func (l *LotteryLogic) GetTxInfo(ctx context.Context, recordId string) (*types.C
 		log.Errorf("%s 获取 token/SOL 价格失败: %v", prefix, err)
 		return nil, errors.New("get token quote sol price failed")
 	}
-	configAmount := float64(l.takeTokenConfig.Amount)
-	costFee := quoteSOLPrice * configAmount / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL)
+	costAmount := l.serviceConfig.CostAmount
+	costFee := quoteSOLPrice * costAmount / l.srvCtx.TokenDecimal * l.serviceConfig.CostFeeRate / 100 * float64(solana.LAMPORTS_PER_SOL)
 
 	txInfo := &types.ClaimLotteryTxInfo{
 		RecordId:      reward.RecordID,
 		RewardAccount: l.srvCtx.TakeTokenConfig.RewardAccount,
 		Mint:          l.srvCtx.TokenConfig.Mint,
-		CostAccount:   l.takeTokenConfig.CostAccount,
+		CostAccount:   l.serviceConfig.CostAccount,
 		Decimals:      int32(l.srvCtx.TokenConfig.Decimals),
+		QuoteSOLPrice: quoteSOLPrice,
 		LotteryAmount: reward.RewardAmount,
 		CostFee:       costFee,
 	}

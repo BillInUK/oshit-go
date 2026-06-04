@@ -306,8 +306,9 @@ CREATE TABLE public.t_take_token_config
     cost_account   character varying(64)                                 NOT NULL, -- 接收成本费的solana地址，对应 DexNativeAccount
     amount         numeric(78, 0)                                        NOT NULL, -- 奖励金额，对应 Amount
     invite_amount  numeric(78, 0)                                        NOT NULL, -- 确定邀请关系奖励金额，对应 InviteAmount
-    cost_fee_rate   numeric(78, 0)                                        NOT NULL, -- 成本费费率，对应 DexFeeRate
-    max_cost_fee    numeric(78, 0)                                        NOT NULL, -- 最大成本费，对应 MaxDexFee
+    cost_fee_rate  numeric(78, 0)                                        NOT NULL, -- 成本费费率，对应 DexFeeRate
+    invited_rate   numeric(78, 0)                                        NOT NULL, -- 新工程新增字段，确定邀请关系时的成本费率
+    max_cost_fee   numeric(78, 0)                                        NOT NULL, -- 最大成本费，对应 MaxDexFee
     is_default     boolean                     DEFAULT false,                      -- 是否是默认规则，对应 Default
     reward_inviter boolean                     DEFAULT true,                       -- 是否奖励邀请人，对应 RewardInviter
     invited        boolean                     DEFAULT true,                       -- 是否确定邀请关系，对应 DetermineInvite
@@ -357,6 +358,19 @@ CREATE TABLE public.t_daily_claim_stats
 ALTER TABLE t_daily_claim_stats
     ADD CONSTRAINT uq_daily_claim_stats_account_date UNIQUE (native_account, take_date);
 
+-- 抽奖奖励配置表
+-- 新工程新增表，用于控制抽奖时的成本费
+DROP TABLE IF EXISTS public.t_lottery_config;
+CREATE TABLE public.t_lottery_config
+(
+    reward_account character varying(64)    NOT NULL, -- 发放奖励的 solana 地址
+    cost_account   character varying(64)    NOT NULL, -- 接收成本费的 solana 地址
+    cost_amount    numeric(78, 0) DEFAULT 0 NOT NULL, -- 抽奖时的成本token额度，用户抽奖可能抽了1000多个token，但是我们可能按照500个来计算成本费
+    cost_fee_rate  numeric(5, 2)            NOT NULL, -- 抽奖时奖励金额的配置表
+    created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 抽奖奖励发放表
 -- 旧工程 t_reward_lottery
 -- 预演导出只需要导出前 1000 条
@@ -395,13 +409,14 @@ CREATE TABLE public.t_give_token_config
 (
     reward_account   character varying(64) NOT NULL, -- 发放奖励的 solana 地址
     cost_account     character varying(64) NOT NULL, -- 接收成本费的 solana 地址
-    reward_rate      numeric(5, 2)         NOT NULL, -- 普通地址奖励费率（to 有 token account 时）
     max_reward       numeric(78, 0)        NOT NULL, -- 发送到有token account的地址的奖励金额上限
     max_valid_reward numeric(78, 0)        NOT NULL, -- 发送到没有token account的地址的奖励金额上限
+    reward_rate      numeric(5, 2)         NOT NULL, -- 普通地址奖励费率（to 有 token account 时）
     valid_rate       numeric(10, 6)        NOT NULL, -- 有效地址奖励费率（to 无 token account 时）
     created_at       timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at       timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
+
 -- give token 记录表
 -- 旧工程 t_sol_transfer_checked_record
 -- 预演导出只需要导出前 1000 条

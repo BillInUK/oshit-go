@@ -12,9 +12,15 @@ values
 
 -- give token 配置
 insert into public.t_give_token_config
-(reward_account,cost_account,reward_rate,max_valid_reward,valid_rate,created_at,updated_at)
+(reward_account,cost_account,max_reward,max_valid_reward,reward_rate,valid_rate,created_at,updated_at)
 values
-    ('AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',200,4000000,300,NOW(),NOW());
+    ('AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',500000,1500000,200,300,NOW(),NOW());
+
+DELETE FROM t_lottery_config;
+INSERT INTO t_lottery_config
+(reward_account,cost_account,cost_amount,cost_fee_rate,created_at,updated_at)
+VALUES
+    ('GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', '6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',500000,110,NOW(),NOW());
 
 -- reward code
 INSERT INTO public.t_reward_code_config(reward_account,cost_account)VALUES('584AMuM1HkV4wRMMVPZuZy9g9mZbSAcTF7QiBrHJaZFE','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K');

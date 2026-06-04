@@ -101,6 +101,7 @@ type ClaimLotteryTxInfo struct {
 	Mint          string  `json:"mint"`          // token地址
 	Decimals      int32   `json:"decimals"`      // 币种精度
 	CostAccount   string  `json:"costAccount"`   // 成本费
+	QuoteSOLPrice float64 `json:"quoteSOLPrice"` // 兑换solana的价格
 	LotteryAmount float64 `json:"lotteryAmount"` // 奖励金额
 	CostFee       float64 `json:"costFee"`       // 成本费
 }

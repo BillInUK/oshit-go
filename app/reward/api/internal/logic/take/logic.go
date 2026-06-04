@@ -173,10 +173,10 @@ func (l *TakeTokenLogic) getTxInfo(ctx context.Context, receiptNativeAccount, in
 	}
 
 	// 7. 填写最终需要返回的交易信息
-	// TODO: 从discount rate表里面获取信息
+	// 如果确定邀请关系，则降低奖励的成本费
 	costFeeRate := l.serviceConfig.CostFeeRate
 	if invited {
-		costFeeRate = 20
+		costFeeRate = l.serviceConfig.InvitedRate
 	}
 	takeTxInfo.RewardAccount = l.serviceConfig.RewardAccount
 	takeTxInfo.Mint = l.srvCtx.TokenConfig.Mint

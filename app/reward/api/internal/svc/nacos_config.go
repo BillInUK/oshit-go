@@ -61,6 +61,7 @@ type rewardRuntimeNacosConfig struct {
 	DiscountRate        rewardDiscountRateConfig  `yaml:"discount_rate"`
 	TakeTokenConfig     rewardTakeTokenConfig     `yaml:"take_token"`
 	GiveTokenConfig     rewardGiveTokenConfig     `yaml:"give_token"`
+	LotteryTokenConfig  rewardLotteryTokenConfig  `yaml:"lottery_token"`
 	CampaignQuoteConfig rewardCampaignQuoteConfig `yaml:"campaign_quote"`
 	RewardCodeConfig    rewardRewardCodeConfig    `yaml:"reward_code"`
 }
@@ -98,6 +99,13 @@ type rewardGiveTokenConfig struct {
 	MaxReward      float64 `yaml:"max_reward"`
 	MaxValidReward float64 `yaml:"max_valid_reward"`
 	ValidRate      float64 `yaml:"valid_rate"`
+}
+
+type rewardLotteryTokenConfig struct {
+	RewardAccount string  `yaml:"reward_account"`
+	CostAccount   string  `yaml:"cost_account"`
+	CostAmount    float64 `yaml:"cost_amount"`
+	CostFeeRate   float64 `yaml:"cost_fee_rate"`
 }
 
 type rewardCampaignQuoteConfig struct {
@@ -275,6 +283,9 @@ func (s *ServiceContext) applyRewardRuntimeContent(content string) error {
 	if cfg.GiveTokenConfig.RewardAccount == "" || cfg.GiveTokenConfig.CostAccount == "" {
 		return fmt.Errorf("give_token.reward_account and give_token.cost_account are required")
 	}
+	if cfg.LotteryTokenConfig.RewardAccount == "" || cfg.LotteryTokenConfig.CostAccount == "" {
+		return fmt.Errorf("lottery_token.reward_account and lottery_token.cost_account are required")
+	}
 	if cfg.CampaignQuoteConfig.RewardAccount == "" || cfg.CampaignQuoteConfig.CostAccount == "" {
 		return fmt.Errorf("campaign_quote.reward_account and campaign_quote.cost_account are required")
 	}
@@ -323,6 +334,14 @@ func (s *ServiceContext) applyRewardRuntimeContent(content string) error {
 		ValidRate:      cfg.GiveTokenConfig.ValidRate,
 		CreatedAt:      now,
 		UpdatedAt:      now,
+	}
+	s.LotteryConfig = &model.LotteryConfig{
+		RewardAccount: cfg.LotteryTokenConfig.RewardAccount,
+		CostAccount:   cfg.LotteryTokenConfig.CostAccount,
+		CostAmount:    cfg.LotteryTokenConfig.CostAmount,
+		CostFeeRate:   cfg.LotteryTokenConfig.CostFeeRate,
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 	s.CampaignQuoteConfig = &model.CampaignQuoteConfig{
 		RewardAccount: cfg.CampaignQuoteConfig.RewardAccount,

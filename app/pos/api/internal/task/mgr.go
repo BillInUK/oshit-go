@@ -35,8 +35,10 @@ func (m *TaskManager) RegisterExpiredTxHandler(subService string, handler Expire
 }
 
 func (m *TaskManager) StartAllTasks() {
-	NewPosSnapShotTask(m.taskCtx).Start()
-	NewStakeSnapShotTask(m.taskCtx).Start()
+	// PosSnapShotTask 和 StakeSnapShotTask 的 Start() 内部会 Sleep 到下次执行时间后进入无限循环，
+	// 必须用 goroutine 启动，否则会阻塞后续所有任务（包括 Kafka 消费者）
+	go NewPosSnapShotTask(m.taskCtx).Start()
+	go NewStakeSnapShotTask(m.taskCtx).Start()
 	NewKafkaConsumerTask(m.taskCtx).Start()
 	NewSnapShotConsumerTask(m.taskCtx).Start()
 	NewStakeBuyTokenExpireTask(m.taskCtx).Start()

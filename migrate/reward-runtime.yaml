@@ -30,6 +30,12 @@ give_token:
   reward_rate: 200
   valid_rate: 300
 
+lottery_token:
+  reward_account: "GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E"
+  cost_account: "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K"
+  cost_amount: 500000
+  cost_fee_rate: 110
+
 campaign_quote:
   reward_account: "2NVji8RvQAFhg4YJKuxqhdMjWMLJmWbKm5MBvSJmTUHL"
   cost_account: "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K"

@@ -49,7 +49,7 @@ func (t *HoldersTask) Start() {
 func (t *HoldersTask) fetchHolderTask() {
 	holders, err := t.fetchHoldersNumber()
 	if err != nil {
-		log.Errorf("持有者查询失败: %v", err)
+		log.Warnf("持有者查询失败: %v", err)
 		return
 	}
 	if err := t.redis.Set(

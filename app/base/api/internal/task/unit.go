@@ -159,7 +159,7 @@ func (t *UnitTask) simulateUnitConsumed() {
 		log.Errorf("solana周期性评估 compute unit 1 错误: %v", err)
 		return
 	}
-	log.Infof("solana周期性更新优先费用 获取transfer checked unit consumed %d", *srTransferChecked.Value.UnitsConsumed)
+	log.Debugf("solana周期性更新优先费用 获取transfer checked unit consumed %d", *srTransferChecked.Value.UnitsConsumed)
 	if err := t.redis.Set(context.Background(), unitTransferChecked, *srTransferChecked.Value.UnitsConsumed, 1*time.Hour).Err(); err != nil {
 		log.Errorf("solana周期性更新优先费用，刷新Redis错误: %v", err)
 		return

@@ -33,7 +33,7 @@ func (l *LotteryLogic) decodeSOLTx(tx *solana.Transaction, rewardInfo *types.Cla
 	decodedTx.FromTokenAccount = userTokenAccount
 
 	// 解析 rewardTokenAccount（from RewardAccount）
-	rewardNativeKey, err := solana.PublicKeyFromBase58(l.takeTokenConfig.RewardAccount)
+	rewardNativeKey, err := solana.PublicKeyFromBase58(l.serviceConfig.RewardAccount)
 	if err != nil {
 		return nil, fmt.Errorf("invalid reward account: %v", err)
 	}
@@ -189,7 +189,7 @@ func (l *LotteryLogic) checkSOLTx(decodedTx *entity.DecodedSolanaTransaction, re
 	transferCheckedInst := decodedTx.TransferCheckedInstructions[0]
 
 	// from 必须是 rewardTokenAccount
-	rewardNativeKey, _ := solana.PublicKeyFromBase58(l.takeTokenConfig.RewardAccount)
+	rewardNativeKey, _ := solana.PublicKeyFromBase58(l.serviceConfig.RewardAccount)
 	tokenMintKey, _ := solana.PublicKeyFromBase58(rewardInfo.Mint)
 	rewardTokenAccount, _, _ := solana.FindAssociatedTokenAddress(rewardNativeKey, tokenMintKey)
 
