@@ -61,15 +61,12 @@ func (t *PriceTask) Start() {
 func (t *PriceTask) fetchRaydiumPrice() {
 	if err := t.fetchRaydiumQuoteTokenPrice("SOL", "So11111111111111111111111111111111111111112", 9); err != nil {
 		log.Errorf("获取token兑换solana价格获取失败: %v", err)
-		return
 	}
 	if err := t.fetchRaydiumQuoteTokenPrice("USDT", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", 6); err != nil {
 		log.Errorf("获取token兑换usdt价格获取失败: %v", err)
-		return
 	}
 	if err := t.fetchRaydiumUSDTQuoteSOLPrice("USDT", "SOL", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", "So11111111111111111111111111111111111111112", 1000000, 6, 9); err != nil {
 		log.Errorf("获取usdt兑换sol价格获取失败: %v", err)
-		return
 	}
 }
 

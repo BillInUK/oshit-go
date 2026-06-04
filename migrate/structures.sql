@@ -22,40 +22,12 @@ CREATE TABLE public.t_aws_config
     updated_at        timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
--- 用户钱包rpc配置表
--- 对应旧工程表 t_user_wallet_rpc_config
-DROP TABLE IF EXISTS public.t_user_wallet_rpc_config;
-CREATE TABLE public.t_user_wallet_rpc_config
-(
-    record_id  public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    chain_name character varying(64)                                 NOT NULL, -- 链名称, 对应旧工程 Chain
-    rpc_url    character varying(1024)                               NOT NULL, -- rpc url,对应旧工程 RpcUrl
-    wss_url    character varying(1024)                               NOT NULL, -- wss url,对应旧工程 WssUrl
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
--- 主网钱包rpc配置
--- 新工程新增表
-DROP TABLE IF EXISTS public.t_mainnet_rpc_config;
-CREATE TABLE public.t_mainnet_rpc_config
-(
-    record_id  public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
-    chain_name character varying(64)                                 NOT NULL, -- 链名称, 对应旧工程 Chain
-    rpc_url    character varying(1024)                               NOT NULL, -- rpc url,对应旧工程 RpcUrl
-    wss_url    character varying(1024)                               NOT NULL, -- wss url,对应旧工程 WssUrl
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
 -- 链配置表
 -- 对应旧工程 t_chain_config
 DROP TABLE IF EXISTS public.t_chain_config;
 CREATE TABLE public.t_chain_config
 (
     chain_name character varying(64)   NOT NULL, -- 链名称, 对应旧工程 Chain
-    rpc_url    character varying(1024) NOT NULL, -- rpc url,对应旧工程 RpcUrl
-    wss_url    character varying(1024) NOT NULL, -- wss url,对应旧工程 WssUrl
     decimals   integer                 NOT NULL,
     symbol     character varying(64)   NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
