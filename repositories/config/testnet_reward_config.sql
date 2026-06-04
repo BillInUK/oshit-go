@@ -5,10 +5,11 @@ insert into t_level_ratio(dist_level,ratio)values(2,1);
 insert into t_discount_rate(rate)values(1.40);
 
 -- take token 配置
+delete from t_take_token_config;
 insert into public.t_take_token_config
-(invite_code,reward_account,cost_account,amount,invite_amount,cost_fee_rate,max_cost_fee,is_default,reward_inviter,invited,created_at,updated_at)
+(invite_code,reward_account,cost_account,amount,invite_amount,cost_fee_rate,invited_rate,max_cost_fee,is_default,reward_inviter,invited,created_at,updated_at)
 values
-    (NULL,'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', '6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K', 500000, 1500000, 200,400,true,true,true,NOW(),NOW());
+    (NULL,'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', '6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K', 500000, 1500000, 200,20,75000,true,true,true,NOW(),NOW());
 
 -- give token 配置
 insert into public.t_give_token_config
