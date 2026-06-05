@@ -304,8 +304,9 @@ func (t *StakeSnapshotTask) saveSnapshots(snapshots []model.StakeSnapShot) error
 	).CreateInBatches(snapshots, 100).Error
 }
 
-// stakeInfoAccountSize = 8(discriminator) + 32(wallet) + 10*(1+8+8+8) = 290
-const stakeInfoAccountSize = 290
+// stakeInfoAccountSize = 8(discriminator) + 32(wallet) + 10*32(StakeRecord with alignment) = 360
+// Rust aligns StakeRecord{u8,u64,u64,u64} to 32 bytes (8-byte alignment adds 7 padding after u8)
+const stakeInfoAccountSize = 360
 
 // Helius getProgramAccountsV2 请求/响应结构
 type heliusProgramAccountsReq struct {
@@ -464,31 +465,27 @@ func (t *StakeSnapshotTask) parseStakeInfoAccount(data []byte) (*StakeInfoLocal,
 	offset += 32
 
 	// 解析 StakeRecord 数组
-	for i := 0; i < MaxStakeRecordNum && offset+25 <= len(data); i++ {
+	// Anchor 使用 Borsh 序列化（无 padding）: u8(1) + u64(8) + u64(8) + u64(8) = 25 bytes per record
+	const stakeRecordSize = 25
+	for i := 0; i < MaxStakeRecordNum && offset+stakeRecordSize <= len(data); i++ {
 		record := StakeRecordLocal{}
 
-		// stake_type (1 byte)
+		// stake_type (1 byte, no padding in Borsh)
 		record.StakeType = data[offset]
 		offset += 1
 
 		// staked_amount (8 bytes, little endian)
-		if offset+8 <= len(data) {
-			record.StakedAmount = binary.LittleEndian.Uint64(data[offset : offset+8])
-			record.StakedAmount = record.StakedAmount * t.dec
-			offset += 8
-		}
+		// 合约存的是不含精度的基础数量，乘以 10^decimals 还原为原始值（最小单位）
+		record.StakedAmount = binary.LittleEndian.Uint64(data[offset:offset+8]) * t.dec
+		offset += 8
 
 		// stake_start_slot (8 bytes, little endian)
-		if offset+8 <= len(data) {
-			record.StakeStartSlot = binary.LittleEndian.Uint64(data[offset : offset+8])
-			offset += 8
-		}
+		record.StakeStartSlot = binary.LittleEndian.Uint64(data[offset : offset+8])
+		offset += 8
 
 		// stake_end_slot (8 bytes, little endian)
-		if offset+8 <= len(data) {
-			record.StakeEndSlot = binary.LittleEndian.Uint64(data[offset : offset+8])
-			offset += 8
-		}
+		record.StakeEndSlot = binary.LittleEndian.Uint64(data[offset : offset+8])
+		offset += 8
 
 		stakeInfo.Stakes[i] = record
 	}
