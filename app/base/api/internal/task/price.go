@@ -1,227 +1,195 @@
 package task
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gagliardetto/solana-go/rpc"
+	"io"
+	"math"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/go-redsync/redsync/v4"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-	"io"
-	"math"
-	"net/http"
-	"oshit-go/common/pkg/dal/model"
-	"oshit-go/common/pkg/entity"
-	"strconv"
-	"strings"
-	"time"
+
+	"oshit-go/common/utils"
 )
 
 // 分布式锁 key
-const priceFetchRaydiumLock = "base:sol:price:fetch-raydium:lock"
+const priceFetchLock = "base:sol:price:fetch:lock"
 
-// PriceTask 手续费统计任务
-type PriceTask struct {
-	db          *gorm.DB
-	redis       redis.UniversalClient
-	redSync     redsync.Redsync
-	rpcClient   *rpc.Client
-	rpcURL      string
-	tokenDec    float64
-	tokenConfig *model.TokenConfig
+// Redis keys（保持与消费方一致）
+const (
+	redisKeyTokenQuoteSOL  = "base:sol:price:raydium-quote-sol"
+	redisKeyTokenQuoteUSDT = "base:sol:price:raydium-quote-usdt"
+	redisKeyUSDTQuoteSOL   = "base:sol:price:raydium-usdt-quote-sol"
+)
+
+// Helius getAsset 请求/响应结构
+type heliusGetAssetReq struct {
+	JSONRPC string      `json:"jsonrpc"`
+	ID      string      `json:"id"`
+	Method  string      `json:"method"`
+	Params  interface{} `json:"params"`
 }
 
-// NewPriceTask 创建手续费任务
+type heliusGetAssetRsp struct {
+	Result struct {
+		TokenInfo struct {
+			Symbol    string `json:"symbol"`
+			Supply    uint64 `json:"supply"`
+			Decimals  int    `json:"decimals"`
+			PriceInfo struct {
+				PricePerToken float64 `json:"price_per_token"`
+				Currency      string  `json:"currency"`
+			} `json:"price_info"`
+		} `json:"token_info"`
+	} `json:"result"`
+}
+
+// 主网 token mint 地址
+const (
+	shitTokenMint  = "ShitJuMfPKCQU7LedLERFYapDta7CCdKExPWX2gETRH"
+	wrappedSOLMint = "So11111111111111111111111111111111111111112"
+)
+
+// PriceTask 价格获取任务
+type PriceTask struct {
+	db           *gorm.DB
+	redis        redis.UniversalClient
+	redSync      redsync.Redsync
+	heliusAPIKey string
+	mainnetURL   string
+	tokenDec     float64 // 10^decimals
+}
+
+// NewPriceTask 创建价格任务
 func NewPriceTask(taskCtx *TaskContext) *PriceTask {
-	rpcURL := taskCtx.ChainConfig.RPCURL
-	rpcClient := rpc.New(rpcURL)
+	mainnetURL := taskCtx.MainnetRpcURL
+	heliusKey := taskCtx.HeliusAPIKey
+	if mainnetURL == "" && heliusKey != "" {
+		mainnetURL = utils.BuildRPCURL("helius", "https://mainnet.helius-rpc.com", heliusKey)
+	}
 	return &PriceTask{
-		db:          taskCtx.DB,
-		redis:       taskCtx.Redis,
-		redSync:     taskCtx.RedSync,
-		rpcClient:   rpcClient,
-		rpcURL:      rpcURL,
-		tokenDec:    taskCtx.TokenDecimal,
-		tokenConfig: taskCtx.TokenConfig,
+		db:           taskCtx.DB,
+		redis:        taskCtx.Redis,
+		redSync:      taskCtx.RedSync,
+		heliusAPIKey: heliusKey,
+		mainnetURL:   mainnetURL,
+		tokenDec:     taskCtx.TokenDecimal,
 	}
 }
 
 func (t *PriceTask) Start() {
-	go runPeriodic(&t.redSync, 15*time.Second, priceFetchRaydiumLock, 5*time.Minute, t.fetchRaydiumPrice)
+	go runPeriodic(&t.redSync, 15*time.Second, priceFetchLock, 5*time.Minute, t.fetchPrice)
 }
 
-func (t *PriceTask) fetchRaydiumPrice() {
-	if err := t.fetchRaydiumQuoteTokenPrice("SOL", "So11111111111111111111111111111111111111112", 9); err != nil {
-		log.Errorf("获取token兑换solana价格获取失败: %v", err)
+func (t *PriceTask) fetchPrice() {
+	if t.mainnetURL == "" {
+		log.Warnf("价格获取跳过: mainnet RPC URL 未配置")
 		return
 	}
-	if err := t.fetchRaydiumQuoteTokenPrice("USDT", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", 6); err != nil {
-		log.Errorf("获取token兑换usdt价格获取失败: %v", err)
+
+	// 1. 获取 SHIT token 的 USDC 价格
+	shitPrice, err := t.getAssetPrice(shitTokenMint)
+	if err != nil {
+		log.Errorf("获取 SHIT token 价格失败: %v", err)
 		return
 	}
-	if err := t.fetchRaydiumUSDTQuoteSOLPrice("USDT", "SOL", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", "So11111111111111111111111111111111111111112", 1000000, 6, 9); err != nil {
-		log.Errorf("获取usdt兑换sol价格获取失败: %v", err)
+	if shitPrice <= 0 {
+		log.Errorf("获取 SHIT token 价格无效: %v", shitPrice)
 		return
 	}
+
+	// 2. 获取 SOL 的 USDC 价格
+	solPrice, err := t.getAssetPrice(wrappedSOLMint)
+	if err != nil {
+		log.Errorf("获取 SOL 价格失败: %v", err)
+		return
+	}
+	if solPrice <= 0 {
+		log.Errorf("获取 SOL 价格无效: %v", solPrice)
+		return
+	}
+
+	// 3. 计算各种价格并写入 Redis
+	ctx := context.Background()
+
+	// token/SOL 价格: 1 个 token 值多少 lamports
+	// shitPrice(USDC) / solPrice(USDC) = token/SOL (display)
+	// × LAMPORTS_PER_SOL = lamports
+	tokenPerSOL := shitPrice / solPrice
+	tokenPerSOLLamports := int64(tokenPerSOL * 1e9)
+	if err := t.redis.Set(ctx, redisKeyTokenQuoteSOL, strconv.FormatInt(tokenPerSOLLamports, 10), 0).Err(); err != nil {
+		log.Errorf("Redis 写入 token/SOL 价格失败: %v", err)
+	}
+
+	// token/USDT 价格: 1 个 token 值多少 USDT 最小单位（1e6）
+	tokenPerUSDT := int64(shitPrice * 1e6)
+	if err := t.redis.Set(ctx, redisKeyTokenQuoteUSDT, strconv.FormatInt(tokenPerUSDT, 10), 0).Err(); err != nil {
+		log.Errorf("Redis 写入 token/USDT 价格失败: %v", err)
+	}
+
+	// USDT/SOL 价格: 1 USDT 值多少 SOL (display float)
+	usdtPerSOL := 1.0 / solPrice
+	usdtPerSOLStr := strconv.FormatFloat(usdtPerSOL, 'f', 9, 64)
+	if err := t.redis.Set(ctx, redisKeyUSDTQuoteSOL, usdtPerSOLStr, 0).Err(); err != nil {
+		log.Errorf("Redis 写入 USDT/SOL 价格失败: %v", err)
+	}
+
+	log.Infof("价格更新成功: SHIT=$%.6f, SOL=$%.2f, token/SOL=%d lamports, token/USDT=%d, USDT/SOL=%s",
+		shitPrice, solPrice, tokenPerSOLLamports, tokenPerUSDT, usdtPerSOLStr)
 }
 
-func (t *PriceTask) fetchRaydiumQuoteTokenPrice(symbol, account string, decimal int) error {
-	priceTTL := 2 * time.Minute
-	redisKey := fmt.Sprintf("base:sol:price:raydium-quote-%s", strings.ToLower(symbol))
-	url := fmt.Sprintf("https://transaction-v1.raydium.io/compute/swap-base-in?inputMint=ShitJuMfPKCQU7LedLERFYapDta7CCdKExPWX2gETRH&outputMint=%s&amount=1000&slippageBps=50&txVersion=V0", account)
-	// Create a new HTTP client with a timeout
-	client := &http.Client{
-		Timeout: 10 * time.Second,
+// getAssetPrice 通过 Helius getAsset API 获取 token 的 USDC 价格
+func (t *PriceTask) getAssetPrice(mintAddress string) (float64, error) {
+	reqBody := heliusGetAssetReq{
+		JSONRPC: "2.0",
+		ID:      "1",
+		Method:  "getAsset",
+		Params: map[string]interface{}{
+			"id": mintAddress,
+			"displayOptions": map[string]bool{
+				"showFungible": true,
+			},
+		},
 	}
-	// Send the GET request
-	resp, err := client.Get(url)
+
+	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
-		return fmt.Errorf("failed to send request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Check for non-200 HTTP status
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected HTTP status: %s", resp.Status)
+		return 0, fmt.Errorf("marshal request: %w", err)
 	}
 
-	// Read the response body
-	body, err := io.ReadAll(resp.Body)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Post(t.mainnetURL, "application/json", bytes.NewReader(jsonData))
 	if err != nil {
-		return fmt.Errorf("failed to read response body: %v", err)
-	}
-
-	// Parse the JSON response
-	var result entity.RaydiumPriceRes
-	if err = json.Unmarshal(body, &result); err != nil {
-		return fmt.Errorf("failed to parse JSON: %v", err)
-	}
-
-	// 安全数值转换
-	inputAmount, err := strconv.ParseUint(result.Data.InputAmount, 10, 64)
-	if err != nil {
-		log.Errorf("输入金额解析失败: %v", err)
-		return fmt.Errorf("parse input amount error: %v", err)
-	}
-
-	outputAmount, err := strconv.ParseUint(result.Data.OutputAmount, 10, 64)
-	if err != nil {
-		log.Errorf("输出金额解析失败: %v", err)
-		return fmt.Errorf("parse output amount error: %v", err)
-	}
-
-	// 防除零保护
-	tokenAmount := float64(inputAmount) / t.tokenDec
-	if tokenAmount <= 0 {
-		log.Error("无效的Token数量")
-		return fmt.Errorf("invalid token amount")
-	}
-
-	// 价格计算
-	solAmount := float64(outputAmount) / math.Pow10(decimal)
-	price := solAmount / tokenAmount
-	if math.IsInf(price, 0) || math.IsNaN(price) {
-		log.Error("价格计算异常（无穷或非数字）")
-		return fmt.Errorf("calculate price exception")
-	}
-
-	scaled := int64(price * math.Pow10(decimal))
-
-	// 原子化写入Redis
-	if err := t.redis.Set(
-		context.Background(),
-		redisKey,
-		strconv.FormatInt(scaled, 10),
-		priceTTL,
-	).Err(); err != nil {
-		log.Errorf("Redis写入失败: %v", err)
-	}
-
-	return nil
-}
-
-func (t *PriceTask) fetchRaydiumUSDTQuoteSOLPrice(inputSymbol, outputSymbol, inputMint, outputMint string, inputAmount uint64, inputDecimal, outputDecimal int) error {
-	priceTTL := 2 * time.Minute
-	redisKey := fmt.Sprintf("base:sol:price:raydium-%s-quote-%s", strings.ToLower(inputSymbol), strings.ToLower(outputSymbol))
-	url := fmt.Sprintf("https://transaction-v1.raydium.io/compute/swap-base-in?inputMint=%s&outputMint=%s&amount=%d&slippageBps=50&txVersion=V0", inputMint, outputMint, inputAmount)
-	prefix := fmt.Sprintf("获取 raydium %s 兑换 %s 价格 -", inputSymbol, outputSymbol)
-	// Create a new HTTP client with a timeout
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	// Send the GET request
-	resp, err := client.Get(url)
-	if err != nil {
-		log.Errorf("%s 发送请求到raydium错误: %v", prefix, err)
-		return fmt.Errorf("failed to send request: %v", err)
+		return 0, fmt.Errorf("send request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Errorf("%s 发送请求到raydium错误，错误码: %s", prefix, resp.Status)
-		return fmt.Errorf("unexpected HTTP status: %s", resp.Status)
+		body, _ := io.ReadAll(resp.Body)
+		return 0, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
 	}
 
-	// Read the response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Errorf("%s 发送请求到raydium错误，无法读取返回body: %s", prefix, err)
-		return fmt.Errorf("failed to read response body: %v", err)
+		return 0, fmt.Errorf("read response: %w", err)
 	}
 
-	// Parse the JSON response
-	var result entity.RaydiumPriceRes
-	if err = json.Unmarshal(body, &result); err != nil {
-		log.Errorf("%s 发送请求到raydium错误，解析body为json错误: %s", prefix, err)
-		return fmt.Errorf("failed to parse JSON: %v", err)
-	}
-	log.Tracef("%s raydium 返回价格 inputAmount %s outputAmount %s", prefix, result.Data.InputAmount, result.Data.OutputAmount)
-
-	// 安全数值转换
-	inputAmountBaseUnit, err := strconv.ParseUint(result.Data.InputAmount, 10, 64)
-	if err != nil {
-		log.Errorf("%s 发送请求到raydium错误，输入金额解析失败: %v", prefix, err)
-		return fmt.Errorf("parse input amount error: %v", err)
+	var result heliusGetAssetRsp
+	if err := json.Unmarshal(body, &result); err != nil {
+		return 0, fmt.Errorf("parse response: %w", err)
 	}
 
-	outputAmountBaseUnit, err := strconv.ParseUint(result.Data.OutputAmount, 10, 64)
-	if err != nil {
-		log.Errorf("%s 发送请求到raydium错误，输出金额解析失败: %v", prefix, err)
-		return fmt.Errorf("parse output amount error: %v", err)
-	}
-	log.Tracef("%s raydium 返回价格 inputAmountBaseUnit %d outputAmountBaseUnit %d", prefix, inputAmountBaseUnit, outputAmountBaseUnit)
-
-	// 防除零保护
-	inputAmountDisplay := float64(inputAmountBaseUnit) / math.Pow10(inputDecimal)
-	if inputAmountDisplay <= 0 {
-		log.Errorf("%s 发送请求到raydium错误，raydium返回无效的输入金额", prefix)
-		return fmt.Errorf("invalid token amount")
-	}
-
-	// 价格计算
-	outputAmountDisplay := float64(outputAmountBaseUnit) / math.Pow10(outputDecimal)
-
-	log.Tracef("%s raydium 返回价格 inputAmountDisplay %v outputAmountDisplay %v", prefix, inputAmountDisplay, outputAmountDisplay)
-
-	price := outputAmountDisplay / inputAmountDisplay
+	price := result.Result.TokenInfo.PriceInfo.PricePerToken
 	if math.IsInf(price, 0) || math.IsNaN(price) {
-		log.Errorf("%s 发送请求到raydium错误，价格计算异常（无穷或非数字)", prefix)
-		return fmt.Errorf("calculate price exception")
-	}
-	log.Tracef("%s raydium 返回价格 %v", prefix, price)
-
-	priceStr := strconv.FormatFloat(price, 'f', outputDecimal, 64)
-	if err := t.redis.Set(
-		context.Background(),
-		redisKey,
-		priceStr,
-		priceTTL,
-	).Err(); err != nil {
-		log.Errorf("%s 发送请求到raydium错误，Redis写入失败: %v", prefix, err)
-		return fmt.Errorf("faild to store price in redis")
+		return 0, fmt.Errorf("invalid price for %s: %v", mintAddress, price)
 	}
 
-	return nil
+	return price, nil
 }

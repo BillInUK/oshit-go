@@ -68,6 +68,9 @@ func (h *GiveTokenHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 	if _, err := solana.PublicKeyFromBase58(req.To); err != nil {
 		return response.FailWithError(fiberCtx, "malformed to account", err)
 	}
+	if fromAccount == req.To {
+		return response.FailWithError(fiberCtx, "cannot send tokens to yourself", nil)
+	}
 
 	// 获取打包take token的交易信息
 	l := give.NewGiveTokenLogic(fiberCtx.Context(), h.srvCtx)
@@ -105,6 +108,12 @@ func (h *GiveTokenHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 	if err != nil {
 		log.Errorf("%s 预检查打包的交易错误: %v", prefix, err)
 		return response.FailWithError(fiberCtx, "check transaction error: %v", err)
+	}
+
+	// 3.1 禁止自己给自己发送 token
+	if preCheckedTx.From.Equals(toNativeAccount) {
+		log.Errorf("%s 拒绝交易: 发送方和接收方是同一个地址 %s", prefix, req.To)
+		return response.FailWithError(fiberCtx, "cannot send tokens to yourself", nil)
 	}
 
 	// 4. 打印交易id以及业务信息

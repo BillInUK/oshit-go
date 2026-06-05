@@ -37,7 +37,6 @@ var (
 	LotteryClaim                *lotteryClaim
 	LotteryConfig               *lotteryConfig
 	LotteryReward               *lotteryReward
-	MainnetRpcConfig            *mainnetRpcConfig
 	NativeAccountInfo           *nativeAccountInfo
 	PosMissionConfig            *posMissionConfig
 	PosReward                   *posReward
@@ -80,7 +79,6 @@ var (
 	TokenConfig                 *tokenConfig
 	TxScanInfo                  *txScanInfo
 	UserDailyQuota              *userDailyQuota
-	UserWalletRpcConfig         *userWalletRpcConfig
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
@@ -105,7 +103,6 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	LotteryClaim = &Q.LotteryClaim
 	LotteryConfig = &Q.LotteryConfig
 	LotteryReward = &Q.LotteryReward
-	MainnetRpcConfig = &Q.MainnetRpcConfig
 	NativeAccountInfo = &Q.NativeAccountInfo
 	PosMissionConfig = &Q.PosMissionConfig
 	PosReward = &Q.PosReward
@@ -148,7 +145,6 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	TokenConfig = &Q.TokenConfig
 	TxScanInfo = &Q.TxScanInfo
 	UserDailyQuota = &Q.UserDailyQuota
-	UserWalletRpcConfig = &Q.UserWalletRpcConfig
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
@@ -174,7 +170,6 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		LotteryClaim:                newLotteryClaim(db, opts...),
 		LotteryConfig:               newLotteryConfig(db, opts...),
 		LotteryReward:               newLotteryReward(db, opts...),
-		MainnetRpcConfig:            newMainnetRpcConfig(db, opts...),
 		NativeAccountInfo:           newNativeAccountInfo(db, opts...),
 		PosMissionConfig:            newPosMissionConfig(db, opts...),
 		PosReward:                   newPosReward(db, opts...),
@@ -217,7 +212,6 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		TokenConfig:                 newTokenConfig(db, opts...),
 		TxScanInfo:                  newTxScanInfo(db, opts...),
 		UserDailyQuota:              newUserDailyQuota(db, opts...),
-		UserWalletRpcConfig:         newUserWalletRpcConfig(db, opts...),
 	}
 }
 
@@ -244,7 +238,6 @@ type Query struct {
 	LotteryClaim                lotteryClaim
 	LotteryConfig               lotteryConfig
 	LotteryReward               lotteryReward
-	MainnetRpcConfig            mainnetRpcConfig
 	NativeAccountInfo           nativeAccountInfo
 	PosMissionConfig            posMissionConfig
 	PosReward                   posReward
@@ -287,7 +280,6 @@ type Query struct {
 	TokenConfig                 tokenConfig
 	TxScanInfo                  txScanInfo
 	UserDailyQuota              userDailyQuota
-	UserWalletRpcConfig         userWalletRpcConfig
 }
 
 func (q *Query) Available() bool { return q.db != nil }
@@ -315,7 +307,6 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		LotteryClaim:                q.LotteryClaim.clone(db),
 		LotteryConfig:               q.LotteryConfig.clone(db),
 		LotteryReward:               q.LotteryReward.clone(db),
-		MainnetRpcConfig:            q.MainnetRpcConfig.clone(db),
 		NativeAccountInfo:           q.NativeAccountInfo.clone(db),
 		PosMissionConfig:            q.PosMissionConfig.clone(db),
 		PosReward:                   q.PosReward.clone(db),
@@ -358,7 +349,6 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		TokenConfig:                 q.TokenConfig.clone(db),
 		TxScanInfo:                  q.TxScanInfo.clone(db),
 		UserDailyQuota:              q.UserDailyQuota.clone(db),
-		UserWalletRpcConfig:         q.UserWalletRpcConfig.clone(db),
 	}
 }
 
@@ -393,7 +383,6 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		LotteryClaim:                q.LotteryClaim.replaceDB(db),
 		LotteryConfig:               q.LotteryConfig.replaceDB(db),
 		LotteryReward:               q.LotteryReward.replaceDB(db),
-		MainnetRpcConfig:            q.MainnetRpcConfig.replaceDB(db),
 		NativeAccountInfo:           q.NativeAccountInfo.replaceDB(db),
 		PosMissionConfig:            q.PosMissionConfig.replaceDB(db),
 		PosReward:                   q.PosReward.replaceDB(db),
@@ -436,7 +425,6 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		TokenConfig:                 q.TokenConfig.replaceDB(db),
 		TxScanInfo:                  q.TxScanInfo.replaceDB(db),
 		UserDailyQuota:              q.UserDailyQuota.replaceDB(db),
-		UserWalletRpcConfig:         q.UserWalletRpcConfig.replaceDB(db),
 	}
 }
 
@@ -461,7 +449,6 @@ type queryCtx struct {
 	LotteryClaim                ILotteryClaimDo
 	LotteryConfig               ILotteryConfigDo
 	LotteryReward               ILotteryRewardDo
-	MainnetRpcConfig            IMainnetRpcConfigDo
 	NativeAccountInfo           INativeAccountInfoDo
 	PosMissionConfig            IPosMissionConfigDo
 	PosReward                   IPosRewardDo
@@ -504,7 +491,6 @@ type queryCtx struct {
 	TokenConfig                 ITokenConfigDo
 	TxScanInfo                  ITxScanInfoDo
 	UserDailyQuota              IUserDailyQuotaDo
-	UserWalletRpcConfig         IUserWalletRpcConfigDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
@@ -529,7 +515,6 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		LotteryClaim:                q.LotteryClaim.WithContext(ctx),
 		LotteryConfig:               q.LotteryConfig.WithContext(ctx),
 		LotteryReward:               q.LotteryReward.WithContext(ctx),
-		MainnetRpcConfig:            q.MainnetRpcConfig.WithContext(ctx),
 		NativeAccountInfo:           q.NativeAccountInfo.WithContext(ctx),
 		PosMissionConfig:            q.PosMissionConfig.WithContext(ctx),
 		PosReward:                   q.PosReward.WithContext(ctx),
@@ -572,7 +557,6 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		TokenConfig:                 q.TokenConfig.WithContext(ctx),
 		TxScanInfo:                  q.TxScanInfo.WithContext(ctx),
 		UserDailyQuota:              q.UserDailyQuota.WithContext(ctx),
-		UserWalletRpcConfig:         q.UserWalletRpcConfig.WithContext(ctx),
 	}
 }
 

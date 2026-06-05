@@ -101,7 +101,7 @@ func (l *CampaignLogic) GetExchangeQuotaInfo(ctx context.Context, userId uint64)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			globalLimit = &model.CampaignQuoteLimit{
-				DailyLimit: 500000000,
+				DailyLimit: l.serviceConfig.GlobalDailyLimit,
 				QuotaDate:  globalQuotaDate,
 				Session:    session,
 				CreatedAt:  time.Now(),
@@ -129,9 +129,9 @@ func (l *CampaignLogic) GetExchangeQuotaInfo(ctx context.Context, userId uint64)
 			userQuota = &model.UserDailyQuota{
 				UserID:         userIdStr,
 				QuotaDate:      userQuotaDate,
-				MaxQuota:       30000000,
+				MaxQuota:       l.serviceConfig.UserDailyLimit,
 				FrozenQuota:    0,
-				AvailableQuota: 30000000,
+				AvailableQuota: l.serviceConfig.UserDailyLimit,
 				CreatedAt:      time.Now(),
 				UpdatedAt:      time.Now(),
 			}
@@ -175,90 +175,6 @@ func (l *CampaignLogic) GetTxInfo(ctx context.Context, userId uint64, scoreUIAmo
 		CostFee:       costRawFee,
 	}, nil
 }
-
-//func (l *CampaignLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, req types.CampaignQuoteReq, userId uint64) error {
-//	txIdStr := preCheckedTx.TxId.String()
-//	scoreUIAmount := req.Score
-//	prefix := fmt.Sprintf("%s 处理用户提交交易Id %v -", l.prefix, txIdStr)
-//
-//	// 1. 解析出来交易里面的 transfer checked 和 transfer 指令集合
-//	decodedTx, err := app_utils.DecodeSolanaTransaction(l.rpcClient, l.db, &preCheckedTx.SOLTx, solana.Signature{})
-//	if err != nil {
-//		log.Errorf("%s 解析solana交易错误: %v", prefix, err)
-//		return fmt.Errorf("decode transaction error:%s", err)
-//	}
-//
-//	// 2. 检查transfer checked 指令和transfer 指令是否符合奖励要求
-//	decodedServiceTx, err := l.checkSOLTx(scoreUIAmount, decodedTx, preCheckedTx.From.String())
-//	if err != nil {
-//		log.Errorf("%s 校验solana交易当中的指令错误: %v", prefix, err)
-//		return fmt.Errorf("check transaction instruction failed: %v", err)
-//	}
-//
-//	// 3. 查询当天的全局token兑换额度
-//	userQuota, globalLimit, err := l.GetExchangeQuotaInfo(ctx, userId)
-//	if err != nil {
-//		log.Errorf("%s 查询当天额度信息错误: %v", prefix, err)
-//		return fmt.Errorf("get exchange quota info error: %v", err)
-//	}
-//
-//	// 计算本次兑换的token数量（单位：1/1000 token）
-//	tokenUIAmount := float64(scoreUIAmount) * l.serviceConfig.Rate
-//	tokenInstAmount := uint64(tokenUIAmount * l.srvCtx.TokenDecimal)
-//
-//	// 检查全局额度是否足够
-//	if float64(tokenInstAmount) > globalLimit.DailyLimit {
-//		log.Errorf("%s 全局兑换额度不足，本次兑换需要 %f，剩余额度 %f", prefix, float64(tokenInstAmount), globalLimit.DailyLimit)
-//		return fmt.Errorf("insufficient global daily exchange limit")
-//	}
-//
-//	// 检查用户额度是否足够
-//	if float64(tokenInstAmount) > userQuota.AvailableQuota {
-//		log.Errorf("%s 用户兑换额度不足，本次兑换需要 %f，剩余可用额度 %f", prefix, float64(tokenInstAmount), userQuota.AvailableQuota)
-//		return fmt.Errorf("insufficient user daily exchange quota")
-//	}
-//
-//	// 查询积分
-//	scoreData, err := l.srvCtx.CampaignClientV1.QueryScore(userId)
-//	if err != nil {
-//		log.Errorf("%s 校验solana交易当中的指令错误: %v", prefix, err)
-//		return fmt.Errorf("query user campaign score amount failed")
-//	}
-//	if scoreData.TotalAvailable < scoreUIAmount*1000 {
-//		log.Errorf("%s 请求兑换积分 %d 大于可兑换积分 %d", prefix, scoreUIAmount*1000, scoreData.TotalAvailable)
-//		return fmt.Errorf("insufficient available score amount")
-//	}
-//	// 4. 从交易签名获取txId（Solana交易的第一个签名就是交易ID）
-//	txId := preCheckedTx.SOLTx.Signatures[0]
-//
-//	// 5. 请求冻结积分
-//	opResult, err := l.srvCtx.CampaignClientV1.FreezeScore(userId, txId.String(), scoreUIAmount*1000, ExchangeSys, ExchangeBiz, ReasonFreeze)
-//	if err != nil {
-//		log.Errorf("%s 用户 %s 请求冻结积分错误: %v", prefix, userQuota.UserID, err)
-//		return fmt.Errorf("freeze core error")
-//	}
-//
-//	// 6. 通过 base 模块的dubbo接口签名并异步广播
-//	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, "Campaign", "ExchangeToken")
-//	if err != nil {
-//		log.Errorf("%s 调用base模块dubbo接口发送交易失败,错误: %v", prefix, err)
-//		return errors.New(utils.FilterAndTranslateSOLError(err))
-//	}
-//	// 如果发送的交易Id与预期的不一致，则报错
-//	if sentTxId == "" || sentTxId != txIdStr {
-//		log.Errorf("%s 调用base模块dubbo接口发送的交易Id %s 与预期的不一致", prefix, sentTxId)
-//		return errors.New("sent transaction id not equal expected")
-//	}
-//
-//	// 7. 记录领取记录到数据库（包含冻结用户兑换额度）
-//	decodedServiceTx.TxID = txId.String()
-//	if err = l.recordExchangeRecord(decodedServiceTx, userQuota.UserID, opResult, float64(tokenInstAmount), userQuota, globalLimit); err != nil {
-//		log.Errorf("%s 记录交易信息,错误: %v", prefix, err)
-//		return errors.New("record official transfer token error")
-//	}
-//
-//	return nil
-//}
 
 func (l *CampaignLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, req types.CampaignQuoteReq, userId uint64) error {
 	userIdStr := strconv.FormatUint(userId, 10)
@@ -304,6 +220,17 @@ func (l *CampaignLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_u
 	if err != nil {
 		log.Errorf("%s 查询当天额度信息错误: %v", prefix, err)
 		return fmt.Errorf("get exchange quota info error: %v", err)
+	}
+
+	// 4.1 校验全局额度是否充足
+	if globalLimit.DailyLimit < txInfo.TokenAmount {
+		log.Errorf("%s 全局兑换额度不足: 剩余 %.0f, 本次需要 %.0f", prefix, globalLimit.DailyLimit, txInfo.TokenAmount)
+		return errors.New("global exchange quota exceeded, please try again later")
+	}
+	// 4.2 校验个人额度是否充足
+	if userQuota.AvailableQuota < txInfo.TokenAmount {
+		log.Errorf("%s 个人兑换额度不足: 剩余 %.0f, 本次需要 %.0f", prefix, userQuota.AvailableQuota, txInfo.TokenAmount)
+		return errors.New("your daily exchange quota exceeded")
 	}
 
 	// 5. 从交易签名获取txId（Solana交易的第一个签名就是交易ID）

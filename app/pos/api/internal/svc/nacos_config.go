@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
@@ -16,6 +15,7 @@ import (
 
 	"oshit-go/app/pos/api/internal/config"
 	"oshit-go/common/pkg/dal/model"
+	"oshit-go/common/utils"
 )
 
 const (
@@ -27,11 +27,21 @@ const (
 // ============ base-runtime.yaml 结构 ============
 
 type baseRuntimeNacosConfig struct {
-	System            runtimeSystemConfig `yaml:"system"`
-	Chain             runtimeChainConfig  `yaml:"chain"`
-	Token             runtimeTokenConfig  `yaml:"token"`
-	FeeTolerance      runtimeFeeTolerance `yaml:"fee_tolerance"`
-	LightHouseAddress string              `yaml:"lighthouse_address"`
+	System            runtimeSystemConfig  `yaml:"system"`
+	Chain             runtimeChainConfig   `yaml:"chain"`
+	RPCEndpoints      []runtimeRPCEndpoint `yaml:"rpc_endpoints"`
+	Token             runtimeTokenConfig   `yaml:"token"`
+	FeeTolerance      runtimeFeeTolerance  `yaml:"fee_tolerance"`
+	LightHouseAddress string               `yaml:"lighthouse_address"`
+}
+
+type runtimeRPCEndpoint struct {
+	Provider    string `yaml:"provider"`
+	Endpoint    string `yaml:"endpoint"`
+	APIKey      string `yaml:"api_key"`
+	WssEndpoint string `yaml:"wss_endpoint"`
+	WssAPIKey   string `yaml:"wss_api_key"`
+	Weight      int    `yaml:"weight"`
 }
 
 type runtimeSystemConfig struct {
@@ -40,8 +50,6 @@ type runtimeSystemConfig struct {
 
 type runtimeChainConfig struct {
 	ChainName string `yaml:"chain_name"`
-	RPCURL    string `yaml:"rpc_url"`
-	WssURL    string `yaml:"wss_url"`
 	Decimals  int32  `yaml:"decimals"`
 	Symbol    string `yaml:"symbol"`
 }
@@ -288,8 +296,8 @@ func (s *ServiceContext) applyBaseRuntimeContent(content string) error {
 	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
 		return err
 	}
-	if cfg.Chain.ChainName == "" || cfg.Chain.RPCURL == "" {
-		return fmt.Errorf("chain.chain_name and chain.rpc_url are required")
+	if cfg.Chain.ChainName == "" {
+		return fmt.Errorf("chain.chain_name is required")
 	}
 	if cfg.Token.Mint == "" {
 		return fmt.Errorf("token.mint is required")
@@ -303,18 +311,37 @@ func (s *ServiceContext) applyBaseRuntimeContent(content string) error {
 		return fmt.Errorf("invalid lighthouse address: %v", err)
 	}
 
+	// Build RPC client from endpoints
+	if len(cfg.RPCEndpoints) > 0 {
+		endpoints := make([]utils.RPCEndpointConfig, 0, len(cfg.RPCEndpoints))
+		for _, ep := range cfg.RPCEndpoints {
+			w := ep.Weight
+			if w == 0 {
+				w = 1
+			}
+			endpoints = append(endpoints, utils.RPCEndpointConfig{
+				Provider: ep.Provider,
+				Endpoint: ep.Endpoint,
+				APIKey:   ep.APIKey,
+				Weight:   w,
+			})
+		}
+		pool, err := utils.NewRPCPool(endpoints)
+		if err == nil {
+			s.RpcClient = pool.First()
+			s.RpcURL = pool.FirstURL()
+		}
+	}
+
 	now := time.Now()
 	s.ConfigMu.Lock()
 	defer s.ConfigMu.Unlock()
 	s.SystemConfig = &model.SystemConfig{Env: cfg.System.Env, CreatedAt: now, UpdatedAt: now}
-	s.ChainConfig = &model.ChainConfig{ChainName: cfg.Chain.ChainName, RPCURL: cfg.Chain.RPCURL, WssURL: cfg.Chain.WssURL, Decimals: cfg.Chain.Decimals, Symbol: cfg.Chain.Symbol, CreatedAt: now, UpdatedAt: now}
+	s.ChainConfig = &model.ChainConfig{ChainName: cfg.Chain.ChainName, Decimals: cfg.Chain.Decimals, Symbol: cfg.Chain.Symbol, CreatedAt: now, UpdatedAt: now}
 	s.TokenConfig = &model.TokenConfig{TokenName: cfg.Token.TokenName, TokenSymbol: cfg.Token.TokenSymbol, Decimals: cfg.Token.Decimals, Mint: cfg.Token.Mint, CreatedAt: now, UpdatedAt: now}
 	s.TokenDecimal = math.Pow(10, float64(cfg.Token.Decimals))
 	s.FeeTolerance = &model.FeeTolerance{MaxLessRate: cfg.FeeTolerance.MaxLessRate, CreatedAt: now, UpdatedAt: now}
 	s.LightHouseAddress = lighthouseAddr
-	if cfg.Chain.RPCURL != "" {
-		s.RpcClient = rpc.New(cfg.Chain.RPCURL)
-	}
 	log.Infof("loaded base runtime config from nacos")
 	return nil
 }

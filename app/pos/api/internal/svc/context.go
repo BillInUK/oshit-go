@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/go-redsync/redsync/v4"
 	"github.com/go-redsync/redsync/v4/redis/goredis/v9"
 	"github.com/redis/go-redis/v9"
@@ -208,9 +207,7 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 
 func (s *ServiceContext) initSolanaRPC() {
 	// 初始化Solana RPC客户端
-	if s.ChainConfig != nil && s.ChainConfig.RPCURL != "" {
-		s.RpcClient = rpc.New(s.ChainConfig.RPCURL)
-	}
+	// RPC clients are now initialized from Nacos config or via Dubbo client
 }
 
 func (s *ServiceContext) initBaseClient() error {

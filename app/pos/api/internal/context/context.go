@@ -28,6 +28,7 @@ type CoreContext struct {
 
 	// 全局变量
 	RpcClient             *rpc.Client        // solana rpc 客户端
+	RpcURL                string             // solana rpc URL（给需要 HTTP 直接调用的场景）
 	LightHouseAddress     solana.PublicKey    // light house 指令
 	TokenDecimal          float64            // token 精度基数
 	KafkaProducer         interface{}        // *kafka.Writer，在kafka.go中定义

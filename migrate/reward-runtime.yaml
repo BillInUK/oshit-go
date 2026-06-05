@@ -16,7 +16,8 @@ take_token:
   cost_account: "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K"
   amount: 500000
   invite_amount: 1500000
-  cost_fee_rate: 140
+  cost_fee_rate: 200
+  invited_rate: 20
   max_cost_fee: 75000
   is_default: true
   reward_inviter: true
@@ -41,6 +42,8 @@ campaign_quote:
   cost_account: "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K"
   quote_rate: 500.00
   cost_rate: 17.00
+  global_daily_limit: 500000000
+  user_daily_limit: 50000000
 
 reward_code:
   reward_account: "584AMuM1HkV4wRMMVPZuZy9g9mZbSAcTF7QiBrHJaZFE"

@@ -1,22 +1,25 @@
 system:
-  env: 1
+  env: 1  # 0=主网, 1=测试网
 
 chain:
   chain_name: "solana"
-  rpc_url: "https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
-  wss_url: "wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
   decimals: 9
   symbol: "SOL"
 
-user_wallet_rpc:
-  chain_name: "solana"
-  rpc_url: "https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
-  wss_url: "wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
+# 跟随环境的 RPC（测试网用 devnet，支持多个 provider 轮询）
+rpc_endpoints:
+  - provider: "quicknode"
+    endpoint: "https://solitary-solitary-brook.solana-devnet.quiknode.pro"
+    api_key: "59ff9976f07ec18f5fceb2766ebecbb9b2247bc8"
+    wss_endpoint: "wss://solitary-solitary-brook.solana-devnet.quiknode.pro"
+    wss_api_key: "59ff9976f07ec18f5fceb2766ebecbb9b2247bc8"
+    weight: 1
 
+# 固定主网 RPC（监听交易所买币 + 手续费估算，无论测试/正式都用主网）
 mainnet_rpc:
-  chain_name: "solana"
-  rpc_url: "https://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043"
-  wss_url: "wss://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043"
+  provider: "helius"
+  endpoint: "https://mainnet.helius-rpc.com"
+  api_key: "a4309444-6229-433a-a89f-3fbe85f5f043"
 
 token:
   token_name: "OShit"

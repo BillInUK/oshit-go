@@ -1,21 +1,27 @@
 package task
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io"
+	"math"
+	"net/http"
+	"time"
+
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/segmentio/kafka-go"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"math"
+
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"oshit-go/common/utils"
-	"time"
 )
 
 const (
@@ -26,6 +32,7 @@ const (
 type StakeSnapshotTask struct {
 	db          *gorm.DB
 	rpcClient   *rpc.Client
+	rpcURL      string
 	kafkaWriter *kafka.Writer
 	programID   solana.PublicKey
 	mint        solana.PublicKey
@@ -58,6 +65,7 @@ func NewStakeSnapShotTask(taskCtx *TaskContext) *StakeSnapshotTask {
 	return &StakeSnapshotTask{
 		db:          taskCtx.DB,
 		rpcClient:   taskCtx.RpcClient,
+		rpcURL:      taskCtx.RpcURL,
 		kafkaWriter: kafkaWriter,
 		programID:   solana.MustPublicKeyFromBase58(taskCtx.RewardConfig.ProgramID),
 		mint:        solana.MustPublicKeyFromBase58(taskCtx.TokenConfig.Mint),
@@ -74,7 +82,7 @@ func (t *StakeSnapshotTask) startTask() {
 	//计算第一次执行的时间
 	location, err := time.LoadLocation("Asia/Singapore")
 	if err != nil {
-		log.Fatalf("Pos业务 - 无法加载时区: %v", err)
+		log.Fatalf("Stake业务 - 无法加载时区: %v", err)
 	}
 	now := time.Now().In(location)
 	nextExecution := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, location)
@@ -164,15 +172,15 @@ func (t *StakeSnapshotTask) startTask() {
 			MsgContent: day,
 		}
 		if err := t.sendMsgToKafka(rmqMsg); err != nil {
-			log.Errorf("Stake业务 - 分发RocketMQ消息错误: %v", err)
+			log.Errorf("Stake业务 - 分发Kafka消息错误: %v", err)
 			break
 		}
 
 		// 等待到第二天的新加坡时间12点
-		log.Infof("Pos业务 - 快照结束")
+		log.Infof("Stake业务 - 快照结束")
 		nextExecution = nextExecution.Add(24 * time.Hour)
 		timeUntilNextExecution = time.Until(nextExecution)
-		log.Infof("Pos业务 - 距离下次快照任务执行时间还有: %v", timeUntilNextExecution)
+		log.Infof("Stake业务 - 距离下次快照任务执行时间还有: %v", timeUntilNextExecution)
 		time.Sleep(timeUntilNextExecution)
 
 	}
@@ -255,7 +263,7 @@ func (t *StakeSnapshotTask) StartTaskManually() {
 		MsgContent: today,
 	}
 	if err := t.sendMsgToKafka(rmqMsg); err != nil {
-		log.Errorf("Pos业务 - 分发RocketMQ消息错误: %v", err)
+		log.Errorf("Stake业务 - 分发Kafka消息错误: %v", err)
 		return
 	}
 }
@@ -296,40 +304,147 @@ func (t *StakeSnapshotTask) saveSnapshots(snapshots []model.StakeSnapShot) error
 	).CreateInBatches(snapshots, 100).Error
 }
 
-// findAllStakeInfoAccounts 查找所有质押信息账户
-func (t *StakeSnapshotTask) findAllStakeInfoAccounts() ([]*StakeInfoLocal, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+// stakeInfoAccountSize = 8(discriminator) + 32(wallet) + 10*(1+8+8+8) = 290
+const stakeInfoAccountSize = 290
 
-	// 使用GetProgramAccounts获取所有程序账户
-	accounts, err := t.rpcClient.GetProgramAccountsWithOpts(
-		ctx,
-		t.programID,
-		&rpc.GetProgramAccountsOpts{},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get program accounts: %w", err)
+// Helius getProgramAccountsV2 请求/响应结构
+type heliusProgramAccountsReq struct {
+	JSONRPC string        `json:"jsonrpc"`
+	ID      string        `json:"id"`
+	Method  string        `json:"method"`
+	Params  []interface{} `json:"params"`
+}
+
+type heliusProgramAccountsRsp struct {
+	Result struct {
+		Accounts []struct {
+			Pubkey  string `json:"pubkey"`
+			Account struct {
+				Data []string `json:"data"` // [base64_data, "base64"]
+			} `json:"account"`
+		} `json:"accounts"`
+		PaginationKey *string `json:"paginationKey"`
+	} `json:"result"`
+	Error *struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
+}
+
+// findAllStakeInfoAccounts 获取所有质押信息账户
+// 如果 RPC 是 Helius，使用 getProgramAccountsV2 分页；否则用标准 RPC
+func (t *StakeSnapshotTask) findAllStakeInfoAccounts() ([]*StakeInfoLocal, error) {
+	if t.rpcURL == "" {
+		return t.findAllStakeInfoAccountsStandard()
 	}
 
-	log.Infof("Found %d program accounts", len(accounts))
-
 	var stakeInfos []*StakeInfoLocal
+	var paginationKey *string
+	page := 0
+	httpClient := &http.Client{Timeout: 30 * time.Second}
 
-	for _, account := range accounts {
-		data := account.Account.Data.GetBinary()
+	for {
+		page++
+		opts := map[string]interface{}{
+			"encoding": "base64",
+			"filters":  []map[string]interface{}{{"dataSize": stakeInfoAccountSize}},
+			"limit":    5000,
+		}
+		if paginationKey != nil {
+			opts["paginationKey"] = *paginationKey
+		}
 
-		// 只处理大小合适的账户（质押信息账户）
-		if len(data) > 100 {
-			stakeInfo, err := t.parseStakeInfoAccount(data)
-			if err != nil {
-				log.Infof("Failed to parse account %s as stake info: %v", account.Pubkey, err)
+		reqBody := heliusProgramAccountsReq{
+			JSONRPC: "2.0",
+			ID:      "1",
+			Method:  "getProgramAccountsV2",
+			Params:  []interface{}{t.programID.String(), opts},
+		}
+		jsonData, err := json.Marshal(reqBody)
+		if err != nil {
+			return nil, fmt.Errorf("marshal request: %w", err)
+		}
+
+		resp, err := httpClient.Post(t.rpcURL, "application/json", bytes.NewReader(jsonData))
+		if err != nil {
+			return nil, fmt.Errorf("page %d request failed: %w", page, err)
+		}
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, fmt.Errorf("page %d read response: %w", page, err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("page %d HTTP %d: %s", page, resp.StatusCode, string(body))
+		}
+
+		var result heliusProgramAccountsRsp
+		if err := json.Unmarshal(body, &result); err != nil {
+			return nil, fmt.Errorf("page %d parse response: %w", page, err)
+		}
+		if result.Error != nil {
+			return nil, fmt.Errorf("page %d RPC error %d: %s", page, result.Error.Code, result.Error.Message)
+		}
+
+		for _, acct := range result.Result.Accounts {
+			if len(acct.Account.Data) < 1 {
 				continue
 			}
-
+			data, err := base64.StdEncoding.DecodeString(acct.Account.Data[0])
+			if err != nil {
+				log.Infof("Failed to decode account %s: %v", acct.Pubkey, err)
+				continue
+			}
+			if len(data) < stakeInfoAccountSize {
+				continue
+			}
+			stakeInfo, err := t.parseStakeInfoAccount(data)
+			if err != nil {
+				log.Infof("Failed to parse account %s: %v", acct.Pubkey, err)
+				continue
+			}
 			stakeInfos = append(stakeInfos, stakeInfo)
+		}
+
+		log.Infof("Page %d: fetched %d accounts, total parsed: %d", page, len(result.Result.Accounts), len(stakeInfos))
+
+		paginationKey = result.Result.PaginationKey
+		if paginationKey == nil {
+			break
 		}
 	}
 
+	log.Infof("Found %d stake info accounts in %d pages", len(stakeInfos), page)
+	return stakeInfos, nil
+}
+
+// findAllStakeInfoAccountsStandard 标准 RPC fallback（无分页，适用于小规模数据）
+func (t *StakeSnapshotTask) findAllStakeInfoAccountsStandard() ([]*StakeInfoLocal, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	dataSize := uint64(stakeInfoAccountSize)
+	accounts, err := t.rpcClient.GetProgramAccountsWithOpts(ctx, t.programID, &rpc.GetProgramAccountsOpts{
+		Filters: []rpc.RPCFilter{{DataSize: dataSize}},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get program accounts: %w", err)
+	}
+
+	log.Infof("Found %d program accounts (standard RPC)", len(accounts))
+	var stakeInfos []*StakeInfoLocal
+	for _, account := range accounts {
+		data := account.Account.Data.GetBinary()
+		if len(data) < stakeInfoAccountSize {
+			continue
+		}
+		stakeInfo, err := t.parseStakeInfoAccount(data)
+		if err != nil {
+			log.Infof("Failed to parse account %s: %v", account.Pubkey, err)
+			continue
+		}
+		stakeInfos = append(stakeInfos, stakeInfo)
+	}
 	return stakeInfos, nil
 }
 

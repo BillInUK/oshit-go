@@ -33,8 +33,14 @@ type KLineTask struct {
 
 // KLineTask 创建手续费任务
 func NewKLineTask(taskCtx *TaskContext) *KLineTask {
-	rpcURL := taskCtx.ChainConfig.RPCURL
-	rpcClient := rpc.New(rpcURL)
+	var rpcClient *rpc.Client
+	var rpcURL string
+	if taskCtx.RpcPool != nil {
+		rpcClient = taskCtx.RpcPool.First()
+		rpcURL = taskCtx.RpcPool.FirstURL()
+	} else if taskCtx.RpcClient != nil {
+		rpcClient = taskCtx.RpcClient
+	}
 	return &KLineTask{
 		db:        taskCtx.DB,
 		redis:     taskCtx.Redis,

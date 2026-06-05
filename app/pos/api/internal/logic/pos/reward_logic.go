@@ -171,14 +171,14 @@ func (l *PosRewardLogic) GetRewards(nativeAccount string) ([]model.PosReward, er
 
 // CalculatePosClaimRewardFee 计算质押费用
 func (l *PosRewardLogic) calCostFee(totalRewardAmount, tokenQuoteUSDTPrice, usdtQuoteSOLPrice float64) float64 {
-	defaultUSDTFee := totalRewardAmount / 1000 * tokenQuoteUSDTPrice * 0.2
-	// 如果小于0.01美金
-	if defaultUSDTFee < 0.01 {
-		return 0.01 * usdtQuoteSOLPrice * float64(solana.LAMPORTS_PER_SOL)
+	defaultUSDTFee := totalRewardAmount / 1000 * tokenQuoteUSDTPrice * 0.02
+	// 如果小于 0.02 美金
+	if defaultUSDTFee < 0.02 {
+		return 0.02 * usdtQuoteSOLPrice * float64(solana.LAMPORTS_PER_SOL)
 	}
-	// 如果大于1美金
-	if defaultUSDTFee > 1 {
-		return 1 * usdtQuoteSOLPrice * float64(solana.LAMPORTS_PER_SOL)
+	// 如果大于 1.5 美金
+	if defaultUSDTFee > 1.5 {
+		return 1.5 * usdtQuoteSOLPrice * float64(solana.LAMPORTS_PER_SOL)
 	}
 	return defaultUSDTFee * usdtQuoteSOLPrice * float64(solana.LAMPORTS_PER_SOL)
 }
