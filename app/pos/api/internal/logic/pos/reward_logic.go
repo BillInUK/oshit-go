@@ -169,7 +169,7 @@ func (l *PosRewardLogic) GetRewards(nativeAccount string) ([]model.PosReward, er
 	return rewards, nil
 }
 
-// CalculatePosClaimRewardFee 计算质押费用
+// calCostFee 计算质押费用
 func (l *PosRewardLogic) calCostFee(totalRewardAmount, tokenQuoteUSDTPrice, usdtQuoteSOLPrice float64) float64 {
 	defaultUSDTFee := totalRewardAmount / 1000 * tokenQuoteUSDTPrice * 0.02
 	// 如果小于 0.02 美金

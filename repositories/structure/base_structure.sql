@@ -85,9 +85,9 @@ CREATE TABLE public.t_fee_tolerance
     updated_at    timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
--- 手续费统计表
+-- 手续费统计表 (TTL: 2天, 按天分区)
 -- 对应旧工程 t_sol_fee_statistics
-DROP TABLE IF EXISTS public.t_fee_statistics;
+DROP TABLE IF EXISTS public.t_fee_statistics CASCADE;
 CREATE TABLE public.t_fee_statistics
 (
     record_id      public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
@@ -101,15 +101,16 @@ CREATE TABLE public.t_fee_statistics
     fee            numeric(78, 0),         -- 交易消耗手续费，对应 Fee
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
+) PARTITION BY RANGE (created_at);
 ALTER TABLE ONLY public.t_fee_statistics
-    ADD CONSTRAINT fee_slot_tx_index UNIQUE (slot, tx_index);
+    ADD CONSTRAINT fee_slot_tx_index UNIQUE (slot, tx_index, created_at);
 ALTER TABLE ONLY public.t_fee_statistics
-    ADD CONSTRAINT fee_tx_id UNIQUE (tx_id);
+    ADD CONSTRAINT fee_tx_id UNIQUE (tx_id, created_at);
+CREATE TABLE public.t_fee_statistics_default PARTITION OF public.t_fee_statistics DEFAULT;
 
--- quicknode接口手续费统计表
+-- quicknode接口手续费统计表 (TTL: 2天, 按天分区)
 -- 对应旧工程 t_sol_qn_fee
-DROP TABLE IF EXISTS public.t_qn_fee;
+DROP TABLE IF EXISTS public.t_qn_fee CASCADE;
 CREATE TABLE public.t_qn_fee
 (
     id         integer NOT NULL, -- 主键id, 对应 Id
@@ -119,9 +120,10 @@ CREATE TABLE public.t_qn_fee
     high_avg   numeric(78, 0),   -- 高平均优先费用，对应 HighAvg
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
+) PARTITION BY RANGE (created_at);
 ALTER TABLE ONLY public.t_qn_fee
-    ADD CONSTRAINT t_sol_qn_fee_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT t_qn_fee_pkey PRIMARY KEY (id, created_at);
+CREATE TABLE public.t_qn_fee_default PARTITION OF public.t_qn_fee DEFAULT;
 
 -- 地址信息表
 -- 对应旧工程 t_sol_native_account_info
@@ -203,14 +205,12 @@ CREATE TABLE public.t_tx_scan_info
 );
 CREATE UNIQUE INDEX uq_tx_scan_info_service_sub_service_pda ON public.t_tx_scan_info (service, sub_service, pda_account);
 
--- 业务交易表
+-- 业务交易表 (TTL: 7天, 按天分区)
 -- 新工程整合旧工程里面的 t_reward_tx,t_pos_tx等几张表
--- 预演只需要导出 tx_state=0的数据1000条
--- 后续需要增加 ttl 机制减少表体积
-DROP TABLE IF EXISTS public.t_service_tx;
+DROP TABLE IF EXISTS public.t_service_tx CASCADE;
 CREATE TABLE public.t_service_tx
 (
-    record_id       ULID      DEFAULT gen_ulid() NOT NULL PRIMARY KEY,
+    record_id       ULID      DEFAULT gen_ulid() NOT NULL,
     service         VARCHAR(64)                  NOT NULL, -- 微服务业务名称，新工程重新定义
     sub_service     VARCHAR(64)                  NOT NULL, -- 子业务名称，新工程重新定义
     tx_id           VARCHAR(128)                 NOT NULL, -- 交易id
@@ -219,8 +219,10 @@ CREATE TABLE public.t_service_tx
     next_retry_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,   -- 下次重试查询时间
     max_retries     INTEGER   DEFAULT 5          NOT NULL, -- 最大重试次数
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (record_id, created_at)
+) PARTITION BY RANGE (created_at);
+CREATE TABLE public.t_service_tx_default PARTITION OF public.t_service_tx DEFAULT;
 
 -- 旧工程 t_sol_fund_flow
 -- 需要导入并且搞分表，减少单表体积

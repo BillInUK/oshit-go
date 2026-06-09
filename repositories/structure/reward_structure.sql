@@ -45,10 +45,9 @@ CREATE TABLE public.t_take_token_config
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
--- take token 记录表
+-- take token 记录表 (TTL: 1月, 按周分区)
 -- 旧工程 t_sol_official_give_token_record
--- 预演导出只需要导出前 1000 条
-DROP TABLE IF EXISTS public.t_take_token_record;
+DROP TABLE IF EXISTS public.t_take_token_record CASCADE;
 CREATE TABLE public.t_take_token_record
 (
     record_id       public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
@@ -64,11 +63,12 @@ CREATE TABLE public.t_take_token_record
     invited         boolean,                                                        -- 是否确定邀请关系，DetermineInvite
     created_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
+) PARTITION BY RANGE (created_at);
+CREATE TABLE public.t_take_token_record_default PARTITION OF public.t_take_token_record DEFAULT;
 
--- 当日take token和lottery统计表
+-- 当日take token和lottery统计表 (TTL: 1月, 按周分区, 分区键: take_date)
 -- 旧工程 t_daily_claim_stats
-DROP TABLE IF EXISTS public.t_daily_claim_stats;
+DROP TABLE IF EXISTS public.t_daily_claim_stats CASCADE;
 CREATE TABLE public.t_daily_claim_stats
 (
     record_id      public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
@@ -82,10 +82,11 @@ CREATE TABLE public.t_daily_claim_stats
     lottery_count  integer                     DEFAULT 0                 NOT NULL, -- 抽奖次数，对应 LotteryCount
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
+) PARTITION BY RANGE (take_date);
 
 ALTER TABLE t_daily_claim_stats
     ADD CONSTRAINT uq_daily_claim_stats_account_date UNIQUE (native_account, take_date);
+CREATE TABLE public.t_daily_claim_stats_default PARTITION OF public.t_daily_claim_stats DEFAULT;
 
 -- 抽奖奖励配置表
 -- 新工程新增表，用于控制抽奖时的成本费
@@ -100,10 +101,9 @@ CREATE TABLE public.t_lottery_config
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
--- 抽奖奖励发放表
+-- 抽奖奖励发放表 (TTL: 1月, 按周分区, 分区键: reward_day)
 -- 旧工程 t_reward_lottery
--- 预演导出只需要导出前 1000 条
-DROP TABLE IF EXISTS public.t_lottery_reward;
+DROP TABLE IF EXISTS public.t_lottery_reward CASCADE;
 CREATE TABLE public.t_lottery_reward
 (
     record_id      public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
@@ -115,12 +115,12 @@ CREATE TABLE public.t_lottery_reward
     reward_day     date                                                  NOT NULL, -- 奖励当天，对应 Day
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
+) PARTITION BY RANGE (reward_day);
+CREATE TABLE public.t_lottery_reward_default PARTITION OF public.t_lottery_reward DEFAULT;
 
--- 领取抽奖奖励记录表
+-- 领取抽奖奖励记录表 (TTL: 1月, 按周分区)
 -- 旧工程 t_reward_lottery_claim_record
--- 预演导出只需要导出前 1000 条
-DROP TABLE IF EXISTS public.t_lottery_claim;
+DROP TABLE IF EXISTS public.t_lottery_claim CASCADE;
 CREATE TABLE public.t_lottery_claim
 (
     record_id    public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
@@ -129,7 +129,8 @@ CREATE TABLE public.t_lottery_claim
     tx_state integer                     DEFAULT 0,                          -- 奖励状态,对应 State
     created_at   timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at   timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
+) PARTITION BY RANGE (created_at);
+CREATE TABLE public.t_lottery_claim_default PARTITION OF public.t_lottery_claim DEFAULT;
 
 -- give token 奖励配置
 -- 旧工程 t_sol_transfer_token_reward_rule
@@ -146,10 +147,9 @@ CREATE TABLE public.t_give_token_config
     updated_at       timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
--- give token 记录表
+-- give token 记录表 (TTL: 1月, 按周分区)
 -- 旧工程 t_sol_transfer_checked_record
--- 预演导出只需要导出前 1000 条
-DROP TABLE IF EXISTS public.t_give_token_record;
+DROP TABLE IF EXISTS public.t_give_token_record CASCADE;
 CREATE TABLE public.t_give_token_record
 (
     record_id       public.ulid                 DEFAULT public.gen_ulid() NOT NULL,
@@ -160,7 +160,8 @@ CREATE TABLE public.t_give_token_record
     tx_state        integer,                                                        -- 交易状态，对应 State
     created_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
+) PARTITION BY RANGE (created_at);
+CREATE TABLE public.t_give_token_record_default PARTITION OF public.t_give_token_record DEFAULT;
 
 -- 奖励码奖励规则
 -- 旧工程 t_reward_code_rule
@@ -175,9 +176,9 @@ CREATE TABLE public.t_reward_code_config
     PRIMARY KEY (record_id)
 );
 
--- 奖励码
+-- 奖励码 (TTL: 1月, 按周分区)
 -- 旧工程 t_reward_code
-DROP TABLE IF EXISTS public.t_reward_code;
+DROP TABLE IF EXISTS public.t_reward_code CASCADE;
 CREATE TABLE public.t_reward_code
 (
     record_id      ulid                        DEFAULT gen_ulid() NOT NULL,
@@ -190,7 +191,8 @@ CREATE TABLE public.t_reward_code
     expired_at     timestamp without time zone DEFAULT (CURRENT_TIMESTAMP + '24:00:00':: interval),
     created_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at     timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
+) PARTITION BY RANGE (created_at);
+CREATE TABLE public.t_reward_code_default PARTITION OF public.t_reward_code DEFAULT;
 
 -- 奖励码兑换费率表
 -- 旧工程 t_reward_code_fee
@@ -247,10 +249,9 @@ CREATE TABLE t_user_daily_quota
     UNIQUE (user_id, quota_date)
 );
 
--- 兑换社交媒体积分为token的记录
+-- 兑换社交媒体积分为token的记录 (TTL: 1月, 按周分区)
 -- 旧工程表 t_sol_exchange_campaign_score_to_token_record
--- 预演导出只需要导出前 1000 条
-DROP TABLE IF EXISTS public.t_campaign_quote_record;
+DROP TABLE IF EXISTS public.t_campaign_quote_record CASCADE;
 CREATE TABLE public.t_campaign_quote_record
 (
     record_id       ulid           NOT NULL     DEFAULT gen_ulid(), -- 记录Id
@@ -268,8 +269,9 @@ CREATE TABLE public.t_campaign_quote_record
     user_quota_date DATE           NOT NULL     DEFAULT CURRENT_DATE, -- 下单时用户所在的SGT自然日，用于Kafka回调时精确恢复用户额度
     created_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (record_id)
-);
+    PRIMARY KEY (record_id, created_at)
+) PARTITION BY RANGE (created_at);
 CREATE INDEX ON public.t_campaign_quote_record (receipt_account);
 CREATE INDEX ON public.t_campaign_quote_record (provider, user_id);
 CREATE INDEX ON public.t_campaign_quote_record (tx_id);
+CREATE TABLE public.t_campaign_quote_record_default PARTITION OF public.t_campaign_quote_record DEFAULT;

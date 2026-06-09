@@ -29,8 +29,6 @@ func newChainConfig(db *gorm.DB, opts ...gen.DOOption) chainConfig {
 	tableName := _chainConfig.chainConfigDo.TableName()
 	_chainConfig.ALL = field.NewAsterisk(tableName)
 	_chainConfig.ChainName = field.NewString(tableName, "chain_name")
-	_chainConfig.RPCURL = field.NewString(tableName, "rpc_url")
-	_chainConfig.WssURL = field.NewString(tableName, "wss_url")
 	_chainConfig.Decimals = field.NewInt32(tableName, "decimals")
 	_chainConfig.Symbol = field.NewString(tableName, "symbol")
 	_chainConfig.CreatedAt = field.NewTime(tableName, "created_at")
@@ -46,8 +44,6 @@ type chainConfig struct {
 
 	ALL       field.Asterisk
 	ChainName field.String
-	RPCURL    field.String
-	WssURL    field.String
 	Decimals  field.Int32
 	Symbol    field.String
 	CreatedAt field.Time
@@ -69,8 +65,6 @@ func (c chainConfig) As(alias string) *chainConfig {
 func (c *chainConfig) updateTableName(table string) *chainConfig {
 	c.ALL = field.NewAsterisk(table)
 	c.ChainName = field.NewString(table, "chain_name")
-	c.RPCURL = field.NewString(table, "rpc_url")
-	c.WssURL = field.NewString(table, "wss_url")
 	c.Decimals = field.NewInt32(table, "decimals")
 	c.Symbol = field.NewString(table, "symbol")
 	c.CreatedAt = field.NewTime(table, "created_at")
@@ -101,10 +95,8 @@ func (c *chainConfig) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *chainConfig) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 7)
+	c.fieldMap = make(map[string]field.Expr, 5)
 	c.fieldMap["chain_name"] = c.ChainName
-	c.fieldMap["rpc_url"] = c.RPCURL
-	c.fieldMap["wss_url"] = c.WssURL
 	c.fieldMap["decimals"] = c.Decimals
 	c.fieldMap["symbol"] = c.Symbol
 	c.fieldMap["created_at"] = c.CreatedAt

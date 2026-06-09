@@ -112,6 +112,12 @@ CT_ID = {"record_id": "RecordId", **CT}
 CA = {"created_at": "CreatedAt", "updated_at": "UpdatedAt"}
 CA_ID = {"record_id": "RecordId", **CA}
 
+# ─── TTL 过滤条件（用旧库列名，迁移时丢弃超过 TTL 的数据）────────
+TTL_2D_CT = """"CreateTime" >= NOW() - INTERVAL '2 days'"""
+TTL_7D_CT = """"CreateTime" >= NOW() - INTERVAL '7 days'"""
+TTL_1M_CT = """"CreateTime" >= NOW() - INTERVAL '1 month'"""
+TTL_2D_CA = """"CreatedAt" >= NOW() - INTERVAL '2 days'"""
+
 
 # ═══════════════════════════════════════════════════════════════════
 # 所有表迁移映射（基于旧库实际列名）
@@ -140,23 +146,11 @@ MIGRATIONS: list[TableMigration] = [
     ),
 
     TableMigration(
-        new_table="t_user_wallet_rpc_config",
-        old_table="t_user_wallet_rpc_config",
-        # 旧列: RecordId, Chain, RpcUrl, WssUrl, CreateTime (无 UpdateTime)
-        column_map={
-            "record_id": "RecordId",
-            "chain_name": "Chain", "rpc_url": "RpcUrl", "wss_url": "WssUrl",
-            "created_at": "CreateTime",
-        },
-    ),
-
-    TableMigration(
         new_table="t_chain_config",
         old_table="t_chain_config",
         # 旧列: Chain, RpcUrl, WssUrl, Decimal, Symbol, CreateTime, UpdateTime
         column_map={
-            "chain_name": "Chain", "rpc_url": "RpcUrl", "wss_url": "WssUrl",
-            "decimals": "Decimal", "symbol": "Symbol",
+            "chain_name": "Chain","decimals": "Decimal", "symbol": "Symbol",
             **CT,
         },
     ),
@@ -190,8 +184,9 @@ MIGRATIONS: list[TableMigration] = [
             "units_consumed": "UnitsConsumed", "fee": "Fee",
             **CT_ID,
         },
+        where=TTL_2D_CT,
         limit=1000,
-        note="数据量大，预演限1000条",
+        note="TTL 2天，分区表",
     ),
 
     TableMigration(
@@ -203,6 +198,8 @@ MIGRATIONS: list[TableMigration] = [
             "low_avg": "LowAvg", "medium_avg": "MediumAvg", "high_avg": "HighAvg",
             **CT,
         },
+        where=TTL_2D_CT,
+        note="TTL 2天，分区表",
     ),
 
     TableMigration(
@@ -307,7 +304,9 @@ MIGRATIONS: list[TableMigration] = [
             "tx_state": "State", "invited": "DetermineInvite",
             **CT_ID,
         },
+        where=TTL_1M_CT,
         limit=1000,
+        note="TTL 1月，分区表",
     ),
 
     TableMigration(
@@ -323,6 +322,8 @@ MIGRATIONS: list[TableMigration] = [
             "lottery_count": "LotteryCount",
             **CT_ID,
         },
+        where=TTL_1M_CT,
+        note="TTL 1月，按 take_date 分区",
     ),
 
     TableMigration(
@@ -335,7 +336,9 @@ MIGRATIONS: list[TableMigration] = [
             "pending": "Pending", "reward_day": "Day",
             **CT_ID,
         },
+        where=TTL_1M_CT,
         limit=1000,
+        note="TTL 1月，按 reward_day 分区",
     ),
 
     TableMigration(
@@ -346,7 +349,9 @@ MIGRATIONS: list[TableMigration] = [
             "reward_ids": "RewardIds", "tx_id": "TxId", "tx_state": "State",
             **CT_ID,
         },
+        where=TTL_1M_CT,
         limit=1000,
+        note="TTL 1月，分区表",
     ),
 
     TableMigration(
@@ -379,7 +384,9 @@ MIGRATIONS: list[TableMigration] = [
             "tx_id": "TransferTxId", "amount": "TransferAmount", "tx_state": "State",
             **CT_ID,
         },
+        where=TTL_1M_CT,
         limit=1000,
+        note="TTL 1月，分区表",
     ),
 
     TableMigration(
@@ -406,6 +413,8 @@ MIGRATIONS: list[TableMigration] = [
             "tx_id": "TxId", "expired_at": "ExpireTime",
             **CT_ID,
         },
+        where=TTL_1M_CT,
+        note="TTL 1月，分区表",
     ),
 
     TableMigration(
@@ -467,8 +476,9 @@ MIGRATIONS: list[TableMigration] = [
             **CT_ID,
         },
         defaults={"session": 0, "user_quota_date": "2024-01-01"},
+        where=TTL_1M_CT,
         limit=1000,
-        note="旧库无 session/user_quota_date，填默认值",
+        note="TTL 1月，分区表；旧库无 session/user_quota_date，填默认值",
     ),
 
     # ─── pos_structure.sql ────────────────────────────────────────
@@ -528,7 +538,9 @@ MIGRATIONS: list[TableMigration] = [
             "range_base": "RangeBase", "snap_day": "Day",
             **CT_ID,
         },
+        where=TTL_1M_CT,
         limit=1000,
+        note="TTL 1月，按 snap_day 分区",
     ),
 
     TableMigration(
@@ -544,7 +556,9 @@ MIGRATIONS: list[TableMigration] = [
             "pending": "Pending", "snap_day": "Day",
             **CT_ID,
         },
+        where=TTL_1M_CT,
         limit=1000,
+        note="TTL 1月，按 snap_day 分区",
     ),
 
     TableMigration(
@@ -555,7 +569,9 @@ MIGRATIONS: list[TableMigration] = [
             "reward_ids": "RewardIds", "tx_id": "TxId", "tx_state": "State",
             **CT_ID,
         },
+        where=TTL_1M_CT,
         limit=1000,
+        note="TTL 1月，分区表",
     ),
 
     # ─── stake_structure.sql ──────────────────────────────────────
@@ -650,7 +666,9 @@ MIGRATIONS: list[TableMigration] = [
             **CT_ID,
         },
         defaults={"stake_type": 0},
+        where="""("CreateTime" >= NOW() - INTERVAL '1 month') OR ("RewardType" = 0 AND "State" = 0)""",
         limit=1000,
+        note="TTL 1月，DELETE+VACUUM清理；保留未领取的固定利息(type=0,state=0)",
     ),
 
     TableMigration(
@@ -661,7 +679,9 @@ MIGRATIONS: list[TableMigration] = [
             "reward_ids": "RewardIds", "tx_id": "TxId", "tx_state": "State",
             **CT_ID,
         },
+        where=TTL_1M_CT,
         limit=1000,
+        note="TTL 1月，DELETE+VACUUM清理",
     ),
 
     TableMigration(
@@ -673,7 +693,9 @@ MIGRATIONS: list[TableMigration] = [
             "stake_type": "StakeType", "snap_day": "Day",
             **CT_ID,
         },
+        where=TTL_1M_CT,
         limit=1000,
+        note="TTL 1月，按 snap_day 分区",
     ),
 
     TableMigration(
@@ -703,7 +725,9 @@ MIGRATIONS: list[TableMigration] = [
             "staked_amount": "StakedAmount", "remaining_amount": "RemainingAmount",
             "created_at": "CreatedAt",
         },
+        where=TTL_2D_CA,
         limit=1000,
+        note="TTL 2天，分区表",
     ),
 
     TableMigration(
@@ -840,7 +864,7 @@ MERGE_MIGRATIONS: list[MergeTableMigration] = [
             ),
         ],
         limit_per_source=500,
-        where='"State" = 0',
+        where=""" "State" = 0 AND "CreateTime" >= NOW() - INTERVAL '7 days'""",
     ),
 ]
 

@@ -201,7 +201,6 @@ insert into public.t_take_token_config
 values
     (NULL,'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', '6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K', 500000, 1500000, 200,20,75000,true,true,true,NOW(),NOW());
 
-
 -- give token 配置
 delete from public.t_give_token_config;
 insert into public.t_give_token_config
@@ -234,7 +233,6 @@ INSERT INTO t_campaign_quote_config
     (reward_account,cost_account,quote_rate,cost_rate)
 VALUES
     ('2NVji8RvQAFhg4YJKuxqhdMjWMLJmWbKm5MBvSJmTUHL','6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K',500,17);
-
 
 -- pos奖励配置
 delete from t_pos_reward_config;

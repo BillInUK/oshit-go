@@ -112,6 +112,20 @@ func (l *StakeRewardLogic) GetStakeSnapShot(nativeAccount string, snapShotDay ti
 	return snapShots, nil
 }
 
+// calCostFee 计算质押费用
+func (l *StakeRewardLogic) calCostFee(totalRewardAmount, tokenQuoteUSDTPrice, usdtQuoteSOLPrice float64) float64 {
+	defaultUSDTFee := totalRewardAmount / 1000 * tokenQuoteUSDTPrice * 0.04
+	// 如果小于 0.02 美金
+	if defaultUSDTFee < 0.02 {
+		return 0.02 * usdtQuoteSOLPrice * float64(solana.LAMPORTS_PER_SOL)
+	}
+	// 如果大于 1.5 美金
+	if defaultUSDTFee > 1.5 {
+		return 1.5 * usdtQuoteSOLPrice * float64(solana.LAMPORTS_PER_SOL)
+	}
+	return defaultUSDTFee * usdtQuoteSOLPrice * float64(solana.LAMPORTS_PER_SOL)
+}
+
 // GetTxInfo 获取领取 stake 奖励的交易参数
 func (l *StakeRewardLogic) GetTxInfo(nativeAccount string) (*types.ClaimStakeRewardTxInfo, error) {
 	config := l.srvCtx.StakeRewardConfig
@@ -135,24 +149,23 @@ func (l *StakeRewardLogic) GetTxInfo(nativeAccount string) (*types.ClaimStakeRew
 	for _, r := range rewards {
 		totalReward += r.RewardAmount
 	}
-
-	// 获取 token/SOL 价格
-	quoteSOLPrice, err := l.baseClient.GetTokenQuoteSOLPrice(l.ctx)
+	// 获取 token/USDT 价格
+	tokenQuoteUSDTPrice, err := l.baseClient.GetTokenQuoteUSDTPrice(l.ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get token quote usdt price error: %v", err)
+	}
+	// 获取 usdt/SOL 价格
+	usdtQuoteSOLPrice, err := l.baseClient.GetUSDTQuoteSOLPrice(l.ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get token quote sol price error: %v", err)
 	}
-
-	// 成本费用：基于配置固定金额 QuoteTokenAmount 计算（不随本次奖励金额变化）
-	costFee := quoteSOLPrice * config.QuoteTokenAmount / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL)
-	// 用户本次奖励对应的 SOL 报价（仅供前端展示参考）
-	quoteAmount := quoteSOLPrice * totalReward / l.srvCtx.TokenDecimal * float64(solana.LAMPORTS_PER_SOL)
-
+	// 计算最终手续费
+	costFee := l.calCostFee(totalReward, tokenQuoteUSDTPrice, usdtQuoteSOLPrice)
 	return &types.ClaimStakeRewardTxInfo{
 		RewardAccount: config.RewardAccount,
 		Mint:          l.srvCtx.TokenConfig.Mint,
 		Decimals:      int32(l.srvCtx.TokenConfig.Decimals),
 		TotalReward:   totalReward,
-		QuoteAmount:   quoteAmount,
 		CostAccount:   config.CostAccount,
 		CostFeeRate:   config.CostFeeRate,
 		CostFee:       costFee,

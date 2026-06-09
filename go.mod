@@ -23,6 +23,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.17.3
 	github.com/segmentio/kafka-go v0.4.47
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.16.0
 	google.golang.org/grpc v1.61.2
 	google.golang.org/protobuf v1.36.5

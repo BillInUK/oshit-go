@@ -50,6 +50,7 @@ var (
 	RewardCodeConfig            *rewardCodeConfig
 	RewardCodeFee               *rewardCodeFee
 	RewardKeyConfig             *rewardKeyConfig
+	RpcEndpoint                 *rpcEndpoint
 	ServiceInfo                 *serviceInfo
 	ServiceKey                  *serviceKey
 	ServiceTx                   *serviceTx
@@ -116,6 +117,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	RewardCodeConfig = &Q.RewardCodeConfig
 	RewardCodeFee = &Q.RewardCodeFee
 	RewardKeyConfig = &Q.RewardKeyConfig
+	RpcEndpoint = &Q.RpcEndpoint
 	ServiceInfo = &Q.ServiceInfo
 	ServiceKey = &Q.ServiceKey
 	ServiceTx = &Q.ServiceTx
@@ -183,6 +185,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		RewardCodeConfig:            newRewardCodeConfig(db, opts...),
 		RewardCodeFee:               newRewardCodeFee(db, opts...),
 		RewardKeyConfig:             newRewardKeyConfig(db, opts...),
+		RpcEndpoint:                 newRpcEndpoint(db, opts...),
 		ServiceInfo:                 newServiceInfo(db, opts...),
 		ServiceKey:                  newServiceKey(db, opts...),
 		ServiceTx:                   newServiceTx(db, opts...),
@@ -251,6 +254,7 @@ type Query struct {
 	RewardCodeConfig            rewardCodeConfig
 	RewardCodeFee               rewardCodeFee
 	RewardKeyConfig             rewardKeyConfig
+	RpcEndpoint                 rpcEndpoint
 	ServiceInfo                 serviceInfo
 	ServiceKey                  serviceKey
 	ServiceTx                   serviceTx
@@ -320,6 +324,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		RewardCodeConfig:            q.RewardCodeConfig.clone(db),
 		RewardCodeFee:               q.RewardCodeFee.clone(db),
 		RewardKeyConfig:             q.RewardKeyConfig.clone(db),
+		RpcEndpoint:                 q.RpcEndpoint.clone(db),
 		ServiceInfo:                 q.ServiceInfo.clone(db),
 		ServiceKey:                  q.ServiceKey.clone(db),
 		ServiceTx:                   q.ServiceTx.clone(db),
@@ -396,6 +401,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		RewardCodeConfig:            q.RewardCodeConfig.replaceDB(db),
 		RewardCodeFee:               q.RewardCodeFee.replaceDB(db),
 		RewardKeyConfig:             q.RewardKeyConfig.replaceDB(db),
+		RpcEndpoint:                 q.RpcEndpoint.replaceDB(db),
 		ServiceInfo:                 q.ServiceInfo.replaceDB(db),
 		ServiceKey:                  q.ServiceKey.replaceDB(db),
 		ServiceTx:                   q.ServiceTx.replaceDB(db),
@@ -462,6 +468,7 @@ type queryCtx struct {
 	RewardCodeConfig            IRewardCodeConfigDo
 	RewardCodeFee               IRewardCodeFeeDo
 	RewardKeyConfig             IRewardKeyConfigDo
+	RpcEndpoint                 IRpcEndpointDo
 	ServiceInfo                 IServiceInfoDo
 	ServiceKey                  IServiceKeyDo
 	ServiceTx                   IServiceTxDo
@@ -528,6 +535,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		RewardCodeConfig:            q.RewardCodeConfig.WithContext(ctx),
 		RewardCodeFee:               q.RewardCodeFee.WithContext(ctx),
 		RewardKeyConfig:             q.RewardKeyConfig.WithContext(ctx),
+		RpcEndpoint:                 q.RpcEndpoint.WithContext(ctx),
 		ServiceInfo:                 q.ServiceInfo.WithContext(ctx),
 		ServiceKey:                  q.ServiceKey.WithContext(ctx),
 		ServiceTx:                   q.ServiceTx.WithContext(ctx),

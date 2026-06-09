@@ -119,6 +119,8 @@ CREATE TABLE public.t_stake_reward
 create index on public.t_stake_reward (group_id);
 create index on public.t_stake_reward (native_account, reward_state, pending);
 create unique index on public.t_stake_reward (native_account, snap_day, reward_type, starred);
+-- TTL清理用索引: DELETE条件为 created_at < threshold AND NOT (reward_type=0 AND reward_state=0)
+create index idx_stake_reward_ttl on public.t_stake_reward (created_at) where not (reward_type = 0 and reward_state = 0);
 
 -- 质押奖励领取记录表
 -- 旧工程 t_sol_stake_reward_claim_record
@@ -135,10 +137,12 @@ create table public.t_stake_reward_claim
 );
 create index on public.t_stake_reward_claim (tx_id);
 create index on public.t_stake_reward_claim (tx_state, created_at);
+-- TTL清理用索引
+create index idx_stake_reward_claim_ttl on public.t_stake_reward_claim (created_at);
 
--- stake 每日快照表
+-- stake 每日快照表 (TTL: 1月, 按周分区, 分区键: snap_day)
 -- 旧工程 t_sol_stake_snap_shot
-drop table if exists public.t_stake_snap_shot;
+drop table if exists public.t_stake_snap_shot cascade;
 create table public.t_stake_snap_shot
 (
     record_id      ulid        not null        default gen_ulid(),        -- 记录Id
@@ -148,10 +152,11 @@ create table public.t_stake_snap_shot
     snap_day       date        not null,                                  -- 快照的日期
     created_at     timestamp without time zone default current_timestamp, -- 记录创建时间
     updated_at     timestamp without time zone default current_timestamp, -- 记录更新时间
-    primary key (record_id)
-);
+    primary key (record_id, snap_day)
+) partition by range (snap_day);
 create index on public.t_stake_snap_shot (native_account);
 create unique index on public.t_stake_snap_shot (native_account, stake_type, snap_day);
+create table public.t_stake_snap_shot_default partition of public.t_stake_snap_shot default;
 
 -- 质押记录表
 drop table if exists public.t_stake_record;
@@ -169,8 +174,8 @@ create table public.t_stake_record
     primary key (record_id)
 );
 
--- 购买token记录表
-drop table if exists public.t_stake_buy_token;
+-- 购买token记录表 (TTL: 2天, 按天分区)
+drop table if exists public.t_stake_buy_token cascade;
 create table public.t_stake_buy_token
 (
     tx_id            varchar(128) collate "pg_catalog"."default" not null,
@@ -186,13 +191,14 @@ create table public.t_stake_buy_token
     expired          bool                                       not null default false,
     created_at       timestamp without time zone default current_timestamp,
     expired_at timestamp without time zone default current_timestamp
-);
+) partition by range (created_at);
 
 create index idx_stake_buy_token_locked on public.t_stake_buy_token (locked);
 create index idx_stake_buy_token_locked_at on public.t_stake_buy_token (locked_at);
 create index idx_stake_buy_token_locked_by on public.t_stake_buy_token (locked_by);
 create index idx_stake_buy_token_slot on public.t_stake_buy_token (slot);
-alter table t_stake_buy_token add constraint uq_stake_buy_token_tx_id unique (tx_id);
+alter table t_stake_buy_token add constraint uq_stake_buy_token_tx_id unique (tx_id, created_at);
+create table public.t_stake_buy_token_default partition of public.t_stake_buy_token default;
 
 -- 区域经理奖励配置
 drop table if exists public.t_stake_leader_reward_config;

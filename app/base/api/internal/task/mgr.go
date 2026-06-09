@@ -32,6 +32,12 @@ func (m *TaskManager) StartAllTasks() {
 
 	txExpireTask := NewTxExpireTask(m.taskCtx)
 	txExpireTask.Start()
+
+	ttlPartitionTask := NewTTLPartitionTask(m.taskCtx)
+	ttlPartitionTask.Start()
+
+	ttlCleanupTask := NewTTLCleanupTask(m.taskCtx)
+	ttlCleanupTask.Start()
 }
 
 func (m *TaskManager) ReconcileScanConfigs(configs []ScanConfig) error {
