@@ -101,6 +101,7 @@ class TableMigration:
     limit: Optional[int] = None                 # 行数限制
     where: Optional[str] = None                 # WHERE 条件（用旧库列名）
     defaults: dict = field(default_factory=dict) # 新表需要填充的默认值 {new_col: value}
+    on_conflict_skip: bool = False              # 唯一键冲突时跳过（ON CONFLICT DO NOTHING）
     note: str = ""
 
 
@@ -134,44 +135,48 @@ MIGRATIONS: list[TableMigration] = [
         column_map={"env": "Env", **CT},
     ),
 
-    TableMigration(
-        new_table="t_aws_config",
-        old_table="t_aws_config",
-        # 旧列: AccessKeyId, SecretAccessKey, Region (无时间戳列)
-        column_map={
-            "access_key_id": "AccessKeyId",
-            "secret_access_key": "SecretAccessKey",
-            "region": "Region",
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_aws_config",
+    #     old_table="t_aws_config",
+    #     # 旧列: AccessKeyId, SecretAccessKey, Region (无时间戳列)
+    #     column_map={
+    #         "access_key_id": "AccessKeyId",
+    #         "secret_access_key": "SecretAccessKey",
+    #         "region": "Region",
+    #     },
+    # ),
 
-    TableMigration(
-        new_table="t_chain_config",
-        old_table="t_chain_config",
-        # 旧列: Chain, RpcUrl, WssUrl, Decimal, Symbol, CreateTime, UpdateTime
-        column_map={
-            "chain_name": "Chain","decimals": "Decimal", "symbol": "Symbol",
-            **CT,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_chain_config",
+    #     old_table="t_chain_config",
+    #     # 旧列: Chain, RpcUrl, WssUrl, Decimal, Symbol, CreateTime, UpdateTime
+    #     column_map={
+    #         "chain_name": "Chain","decimals": "Decimal", "symbol": "Symbol",
+    #         **CT,
+    #     },
+    # ),
 
-    TableMigration(
-        new_table="t_token_config",
-        old_table="t_sol_token_config",
-        # 旧列: Brand, TokenSymbol, Decimal, TokenMintAccount, + 更多旧库独有列
-        column_map={
-            "token_name": "Brand", "token_symbol": "TokenSymbol",
-            "decimals": "Decimal", "mint": "TokenMintAccount",
-            **CT,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_token_config",
+    #     old_table="t_sol_token_config",
+    #     # 旧列: Brand, TokenSymbol, Decimal, TokenMintAccount, + 更多旧库独有列
+    #     column_map={
+    #         "token_name": "Brand", "token_symbol": "TokenSymbol",
+    #         "decimals": "Decimal", "mint": "TokenMintAccount",
+    #         **CT,
+    #     },
+    # ),
 
-    TableMigration(
-        new_table="t_fee_tolerance",
-        old_table="t_fee_tolerance",
-        # 旧列: Brand, TokenSymbol, MaxLessRate (无时间戳)
-        column_map={"max_less_rate": "MaxLessRate"},
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_fee_tolerance",
+    #     old_table="t_fee_tolerance",
+    #     # 旧列: Brand, TokenSymbol, MaxLessRate (无时间戳)
+    #     column_map={"max_less_rate": "MaxLessRate"},
+    # ),
 
     TableMigration(
         new_table="t_fee_statistics",
@@ -220,12 +225,15 @@ MIGRATIONS: list[TableMigration] = [
         # 旧列: RecordId, Brand, TokenSymbol, InviterTokenAccount, InviterNativeAccount,
         #        InviteeTokenAccount, InviteeNativeAccount, TransferTxId, InviteChannel,
         #        CreateTime, UpdateTime, Level
+        # 新表有 UNIQUE(invitee) 和 UNIQUE(tx_id)，冲突时跳过
         column_map={
             "inviter": "InviterTokenAccount", "invitee": "InviteeNativeAccount",
             "channel": "InviteChannel", "inviter_level": "Level",
             "tx_id": "TransferTxId",
             **CT_ID,
         },
+        on_conflict_skip=True,
+        note="唯一键(invitee, tx_id)冲突时跳过",
     ),
 
     TableMigration(
@@ -248,46 +256,50 @@ MIGRATIONS: list[TableMigration] = [
 
     # ─── reward_structure.sql ─────────────────────────────────────
 
-    TableMigration(
-        new_table="t_level_dist",
-        old_table="t_sol_transfer_reward_distribution",
-        # 旧列: Brand, TokenSymbol, Level
-        column_map={"dist_level": "Level"},
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_level_dist",
+    #     old_table="t_sol_transfer_reward_distribution",
+    #     # 旧列: Brand, TokenSymbol, Level
+    #     column_map={"dist_level": "Level"},
+    # ),
 
-    TableMigration(
-        new_table="t_level_ratio",
-        old_table="t_sol_transfer_reward_claim",
-        # 旧列: Brand, TokenSymbol, Level, ClaimRatio
-        column_map={"dist_level": "Level", "ratio": "ClaimRatio"},
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_level_ratio",
+    #     old_table="t_sol_transfer_reward_claim",
+    #     # 旧列: Brand, TokenSymbol, Level, ClaimRatio
+    #     column_map={"dist_level": "Level", "ratio": "ClaimRatio"},
+    # ),
 
-    TableMigration(
-        new_table="t_discount_rate",
-        old_table="t_reward_discount_rate",
-        # 旧列: RecordId, Rate, CreateTime (无 UpdateTime)
-        # 注意: 新表只有 record_id, rate 两列，无时间戳
-        column_map={"record_id": "RecordId", "rate": "Rate"},
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_discount_rate",
+    #     old_table="t_reward_discount_rate",
+    #     # 旧列: RecordId, Rate, CreateTime (无 UpdateTime)
+    #     # 注意: 新表只有 record_id, rate 两列，无时间戳
+    #     column_map={"record_id": "RecordId", "rate": "Rate"},
+    # ),
 
-    TableMigration(
-        new_table="t_take_token_config",
-        old_table="t_sol_official_give_token_reward_rule",
-        # 旧列: RecordId, InviteCode, Brand, TokenSymbol, Decimal, TokenMintAccount,
-        #        RewardTokenAccount, RewardNativeAccount, DexNativeAccount, Amount,
-        #        InviteAmount, DexFeeRate, MaxDexFee, Interval, Default, RewardInviter,
-        #        DetermineInvite, CreateTime, UpdateTime
-        column_map={
-            "invite_code": "InviteCode", "reward_account": "RewardNativeAccount",
-            "cost_account": "DexNativeAccount", "amount": "Amount",
-            "invite_amount": "InviteAmount", "cost_fee_rate": "DexFeeRate",
-            "max_cost_fee": "MaxDexFee", "is_default": "Default",
-            "reward_inviter": "RewardInviter", "invited": "DetermineInvite",
-            **CT_ID,
-        },
-        where='"Default" = true',
-        note="只导出 Default=true 的默认规则",
-    ),
+    # 配置表，跳过，后续会手动配置
+    # TableMigration(
+    #     new_table="t_take_token_config",
+    #     old_table="t_sol_official_give_token_reward_rule",
+    #     # 旧列: RecordId, InviteCode, Brand, TokenSymbol, Decimal, TokenMintAccount,
+    #     #        RewardTokenAccount, RewardNativeAccount, DexNativeAccount, Amount,
+    #     #        InviteAmount, DexFeeRate, MaxDexFee, Interval, Default, RewardInviter,
+    #     #        DetermineInvite, CreateTime, UpdateTime
+    #     column_map={
+    #         "invite_code": "InviteCode", "reward_account": "RewardNativeAccount",
+    #         "cost_account": "DexNativeAccount", "amount": "Amount",
+    #         "invite_amount": "InviteAmount", "cost_fee_rate": "DexFeeRate",
+    #         "max_cost_fee": "MaxDexFee", "is_default": "Default",
+    #         "reward_inviter": "RewardInviter", "invited": "DetermineInvite",
+    #         **CT_ID,
+    #     },
+    #     where='"Default" = true',
+    #     note="只导出 Default=true 的默认规则",
+    # ),
 
     TableMigration(
         new_table="t_take_token_record",
@@ -354,23 +366,24 @@ MIGRATIONS: list[TableMigration] = [
         note="TTL 1月，分区表",
     ),
 
-    TableMigration(
-        new_table="t_give_token_config",
-        old_table="t_sol_transfer_token_reward_rule",
-        # 旧列: Brand, TokenSymbol, Decimal, TokenMintAccount, RewardTokenAccount,
-        #        RewardNativeAccount, AccountExistSlot, AccountExistBufferSlot,
-        #        RewardRate, MaxRewardPerTx, CreateTime, UpdateTime
-        # 注意: 旧库无 DexNativeAccount(cost_account) 和 RewardValidAddressRate(valid_rate)
-        # cost_account 和 valid_rate 是 NOT NULL，需要提供默认值
-        column_map={
-            "reward_account": "RewardNativeAccount",
-            "reward_rate": "RewardRate",
-            "max_valid_reward": "MaxRewardPerTx",
-            **CT,
-        },
-        defaults={"cost_account": "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K", "valid_rate": 300},
-        note="cost_account 测试环境=6MeXfY..，生产=4DZ3ry..；valid_rate 固定 300",
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_give_token_config",
+    #     old_table="t_sol_transfer_token_reward_rule",
+    #     # 旧列: Brand, TokenSymbol, Decimal, TokenMintAccount, RewardTokenAccount,
+    #     #        RewardNativeAccount, AccountExistSlot, AccountExistBufferSlot,
+    #     #        RewardRate, MaxRewardPerTx, CreateTime, UpdateTime
+    #     # 注意: 旧库无 DexNativeAccount(cost_account) 和 RewardValidAddressRate(valid_rate)
+    #     # cost_account 和 valid_rate 是 NOT NULL，需要提供默认值
+    #     column_map={
+    #         "reward_account": "RewardNativeAccount",
+    #         "reward_rate": "RewardRate",
+    #         "max_valid_reward": "MaxRewardPerTx",
+    #         **CT,
+    #     },
+    #     defaults={"cost_account": "6MeXfYMhXpQSz3fqHtEa72V1XgKG7WGsECDy9jEv9e2K", "valid_rate": 300},
+    #     note="cost_account 测试环境=6MeXfY..，生产=4DZ3ry..；valid_rate 固定 300",
+    # ),
 
     TableMigration(
         new_table="t_give_token_record",
@@ -389,17 +402,18 @@ MIGRATIONS: list[TableMigration] = [
         note="TTL 1月，分区表",
     ),
 
-    TableMigration(
-        new_table="t_reward_code_config",
-        old_table="t_reward_code_rule",
-        # 旧列: RecordId, Brand, TokenSymbol, Decimal, TokenMintAccount,
-        #        RewardTokenAccount, RewardNativeAccount, DexNativeAccount,
-        #        DexFeeRate, MaxDexFee, CreateTime, UpdateTime
-        column_map={
-            "reward_account": "RewardNativeAccount", "cost_account": "DexNativeAccount",
-            **CT_ID,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_reward_code_config",
+    #     old_table="t_reward_code_rule",
+    #     # 旧列: RecordId, Brand, TokenSymbol, Decimal, TokenMintAccount,
+    #     #        RewardTokenAccount, RewardNativeAccount, DexNativeAccount,
+    #     #        DexFeeRate, MaxDexFee, CreateTime, UpdateTime
+    #     column_map={
+    #         "reward_account": "RewardNativeAccount", "cost_account": "DexNativeAccount",
+    #         **CT_ID,
+    #     },
+    # ),
 
     TableMigration(
         new_table="t_reward_code",
@@ -417,24 +431,27 @@ MIGRATIONS: list[TableMigration] = [
         note="TTL 1月，分区表",
     ),
 
-    TableMigration(
-        new_table="t_reward_code_fee",
-        old_table="t_reward_code_fee",
-        # 旧列: Amount, CostFeeRate, CreateTime, UpdateTime
-        column_map={"amount": "Amount", "fee_rate": "CostFeeRate", **CT},
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_reward_code_fee",
+    #     old_table="t_reward_code_fee",
+    #     # 旧列: Amount, CostFeeRate, CreateTime, UpdateTime
+    #     column_map={"amount": "Amount", "fee_rate": "CostFeeRate", **CT},
+    # ),
 
-    TableMigration(
-        new_table="t_campaign_quote_config",
-        old_table="t_sol_campaign_exchange_score_rule",
-        # 旧列: RecordId, Decimal, TokenMintAccount, RewardTokenAccount,
-        #        RewardNativeAccount, Rate, DexNativeAccount, CostRate, CreateTime, UpdateTime
-        column_map={
-            "reward_account": "RewardNativeAccount", "cost_account": "DexNativeAccount",
-            "quote_rate": "Rate", "cost_rate": "CostRate",
-            **CT_ID,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_campaign_quote_config",
+    #     old_table="t_sol_campaign_exchange_score_rule",
+    #     # 旧列: RecordId, Decimal, TokenMintAccount, RewardTokenAccount,
+    #     #        RewardNativeAccount, Rate, DexNativeAccount, CostRate, CreateTime, UpdateTime
+    #     column_map={
+    #         "reward_account": "RewardNativeAccount", "cost_account": "DexNativeAccount",
+    #         "quote_rate": "Rate", "cost_rate": "CostRate",
+    #         **CT_ID,
+    #     },
+    # ),
+
 
     TableMigration(
         new_table="t_campaign_quote_limit",
@@ -483,30 +500,33 @@ MIGRATIONS: list[TableMigration] = [
 
     # ─── pos_structure.sql ────────────────────────────────────────
 
-    TableMigration(
-        new_table="t_pos_reward_config",
-        old_table="t_sol_pos_reward_rule",
-        # 旧列: RecordId, Brand, TokenSymbol, Decimal, TokenMintAccount, RewardTokenAccount,
-        #        RewardNativeAccount, DexNativeAccount, DexFeeRate, MaxDexFee,
-        #        QuoteTokenAmount, CreateTime, UpdateTime
-        column_map={
-            "reward_account": "RewardNativeAccount", "cost_account": "DexNativeAccount",
-            "cost_fee_rate": "DexFeeRate", "max_cost_fee": "MaxDexFee",
-            "quote_token_amount": "QuoteTokenAmount",
-            **CT_ID,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_pos_reward_config",
+    #     old_table="t_sol_pos_reward_rule",
+    #     # 旧列: RecordId, Brand, TokenSymbol, Decimal, TokenMintAccount, RewardTokenAccount,
+    #     #        RewardNativeAccount, DexNativeAccount, DexFeeRate, MaxDexFee,
+    #     #        QuoteTokenAmount, CreateTime, UpdateTime
+    #     column_map={
+    #         "reward_account": "RewardNativeAccount", "cost_account": "DexNativeAccount",
+    #         "cost_fee_rate": "DexFeeRate", "max_cost_fee": "MaxDexFee",
+    #         "quote_token_amount": "QuoteTokenAmount",
+    #         **CT_ID,
+    #     },
+    # ),
 
-    TableMigration(
-        new_table="t_pos_star_level_rule",
-        old_table="t_sol_pos_star_level_rule",
-        # 旧列: RecordId, Amount, GroupAmount, StarLevel, Rate, CreateTime, UpdateTime
-        column_map={
-            "amount": "Amount", "group_amount": "GroupAmount",
-            "star_level": "StarLevel", "rate": "Rate",
-            **CT_ID,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_pos_star_level_rule",
+    #     old_table="t_sol_pos_star_level_rule",
+    #     # 旧列: RecordId, Amount, GroupAmount, StarLevel, Rate, CreateTime, UpdateTime
+    #     column_map={
+    #         "amount": "Amount", "group_amount": "GroupAmount",
+    #         "star_level": "StarLevel", "rate": "Rate",
+    #         **CT_ID,
+    #     },
+    # ),
+
 
     TableMigration(
         new_table="t_pos_star_whitelist",
@@ -518,15 +538,16 @@ MIGRATIONS: list[TableMigration] = [
         },
     ),
 
-    TableMigration(
-        new_table="t_pos_mission_config",
-        old_table="t_sol_pos_mission_config",
-        # 旧列: RecordId, RewardType, Starred, Rate, CreateTime, UpdateTime
-        column_map={
-            "reward_type": "RewardType", "starred": "Starred", "rate": "Rate",
-            **CT_ID,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_pos_mission_config",
+    #     old_table="t_sol_pos_mission_config",
+    #     # 旧列: RecordId, RewardType, Starred, Rate, CreateTime, UpdateTime
+    #     column_map={
+    #         "reward_type": "RewardType", "starred": "Starred", "rate": "Rate",
+    #         **CT_ID,
+    #     },
+    # ),
 
     TableMigration(
         new_table="t_pos_snap_shot",
@@ -576,55 +597,61 @@ MIGRATIONS: list[TableMigration] = [
 
     # ─── stake_structure.sql ──────────────────────────────────────
 
-    TableMigration(
-        new_table="t_stake_amm_config",
-        old_table="t_stake_amm_config",
-        # 旧列: QuoteToken, PublicKey (无时间戳)
-        column_map={"quote_token": "QuoteToken", "public_key": "PublicKey"},
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_stake_amm_config",
+    #     old_table="t_stake_amm_config",
+    #     # 旧列: QuoteToken, PublicKey (无时间戳)
+    #     column_map={"quote_token": "QuoteToken", "public_key": "PublicKey"},
+    # ),
 
-    TableMigration(
-        new_table="t_stake_token_pool",
-        old_table="t_stake_token_pool",
-        # 旧列: Source, FromTokenAccount (无时间戳)
-        column_map={"source_account": "Source", "from_token_account": "FromTokenAccount"},
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_stake_token_pool",
+    #     old_table="t_stake_token_pool",
+    #     # 旧列: Source, FromTokenAccount (无时间戳)
+    #     column_map={"source_account": "Source", "from_token_account": "FromTokenAccount"},
+    # ),
 
-    TableMigration(
-        new_table="t_stake_fix_rate_config",
-        old_table="t_sol_stake_fix_interest_config",
-        # 旧列: RecordId, MinAmount, StakeType, FixRate, IndividualRate, CreateTime, UpdateTime
-        column_map={
-            "min_amount": "MinAmount", "stake_type": "StakeType",
-            "fix_rate": "FixRate", "individual_rate": "IndividualRate",
-            **CT_ID,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_stake_fix_rate_config",
+    #     old_table="t_sol_stake_fix_interest_config",
+    #     # 旧列: RecordId, MinAmount, StakeType, FixRate, IndividualRate, CreateTime, UpdateTime
+    #     column_map={
+    #         "min_amount": "MinAmount", "stake_type": "StakeType",
+    #         "fix_rate": "FixRate", "individual_rate": "IndividualRate",
+    #         **CT_ID,
+    #     },
+    # ),
 
-    TableMigration(
-        new_table="t_stake_invite_dist",
-        old_table="t_sol_stake_invite_dist",
-        # 旧列: Level
-        column_map={"dist_level": "Level"},
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_stake_invite_dist",
+    #     old_table="t_sol_stake_invite_dist",
+    #     # 旧列: Level
+    #     column_map={"dist_level": "Level"},
+    # ),
 
-    TableMigration(
-        new_table="t_stake_invite_rate",
-        old_table="t_sol_stake_invite_rate",
-        # 旧列: Level, Rate
-        column_map={"dist_level": "Level", "rate": "Rate"},
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_stake_invite_rate",
+    #     old_table="t_sol_stake_invite_rate",
+    #     # 旧列: Level, Rate
+    #     column_map={"dist_level": "Level", "rate": "Rate"},
+    # ),
 
-    TableMigration(
-        new_table="t_stake_star_level_rule",
-        old_table="t_sol_stake_star_level_rule",
-        # 旧列: RecordId, Amount, GroupAmount, StarLevel, Rate, CreateTime, UpdateTime
-        column_map={
-            "amount": "Amount", "group_amount": "GroupAmount",
-            "star_level": "StarLevel", "rate": "Rate",
-            **CT_ID,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_stake_star_level_rule",
+    #     old_table="t_sol_stake_star_level_rule",
+    #     # 旧列: RecordId, Amount, GroupAmount, StarLevel, Rate, CreateTime, UpdateTime
+    #     column_map={
+    #         "amount": "Amount", "group_amount": "GroupAmount",
+    #         "star_level": "StarLevel", "rate": "Rate",
+    #         **CT_ID,
+    #     },
+    # ),
 
     TableMigration(
         new_table="t_stake_star_whitelist",
@@ -636,20 +663,21 @@ MIGRATIONS: list[TableMigration] = [
         },
     ),
 
-    TableMigration(
-        new_table="t_stake_reward_config",
-        old_table="t_sol_stake_reward_rule",
-        # 旧列: RecordId, Decimal, TokenMintAccount, StakeAdmin, ProgramId,
-        #        FaucetTokenAccount, FaucetNativeAccount, RewardTokenAccount,
-        #        RewardNativeAccount, DexNativeAccount, QuoteTokenAmount, DexFeeRate,
-        #        CreateTime, UpdateTime
-        column_map={
-            "program_id": "ProgramId", "reward_account": "RewardNativeAccount",
-            "cost_account": "DexNativeAccount", "quote_token_amount": "QuoteTokenAmount",
-            "cost_fee_rate": "DexFeeRate",
-            **CT_ID,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_stake_reward_config",
+    #     old_table="t_sol_stake_reward_rule",
+    #     # 旧列: RecordId, Decimal, TokenMintAccount, StakeAdmin, ProgramId,
+    #     #        FaucetTokenAccount, FaucetNativeAccount, RewardTokenAccount,
+    #     #        RewardNativeAccount, DexNativeAccount, QuoteTokenAmount, DexFeeRate,
+    #     #        CreateTime, UpdateTime
+    #     column_map={
+    #         "program_id": "ProgramId", "reward_account": "RewardNativeAccount",
+    #         "cost_account": "DexNativeAccount", "quote_token_amount": "QuoteTokenAmount",
+    #         "cost_fee_rate": "DexFeeRate",
+    #         **CT_ID,
+    #     },
+    # ),
 
     TableMigration(
         new_table="t_stake_reward",
@@ -730,26 +758,28 @@ MIGRATIONS: list[TableMigration] = [
         note="TTL 2天，分区表",
     ),
 
-    TableMigration(
-        new_table="t_stake_total_leader",
-        old_table="t_stake_total_area_leader",
-        # 旧列: RecordId, NativeAccount, Share, CreateTime, UpdateTime
-        column_map={
-            "native_account": "NativeAccount", "stake_share": "Share",
-            **CT_ID,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_stake_total_leader",
+    #     old_table="t_stake_total_area_leader",
+    #     # 旧列: RecordId, NativeAccount, Share, CreateTime, UpdateTime
+    #     column_map={
+    #         "native_account": "NativeAccount", "stake_share": "Share",
+    #         **CT_ID,
+    #     },
+    # ),
 
-    TableMigration(
-        new_table="t_stake_leader",
-        old_table="t_stake_area_leader",
-        # 旧列: RecordId, NativeAccount, Level, Share, Leader, CreateTime, UpdateTime
-        column_map={
-            "native_account": "NativeAccount", "leader_level": "Level",
-            "up_leader": "Leader",
-            **CT_ID,
-        },
-    ),
+    # 配置表，跳过，后续会手动迁移
+    # TableMigration(
+    #     new_table="t_stake_leader",
+    #     old_table="t_stake_area_leader",
+    #     # 旧列: RecordId, NativeAccount, Level, Share, Leader, CreateTime, UpdateTime
+    #     column_map={
+    #         "native_account": "NativeAccount", "leader_level": "Level",
+    #         "up_leader": "Leader",
+    #         **CT_ID,
+    #     },
+    # ),
 
     TableMigration(
         new_table="t_stake_leader_reward",
@@ -780,50 +810,50 @@ MIGRATIONS: list[TableMigration] = [
 
     # ─── 直接平移（旧库已是 snake_case）───────────────────────────
 
-    TableMigration(
-        new_table="t_stake_team_reward_deduction",
-        old_table="t_stake_team_reward_deduction",
-        # 旧列: native_account, total, deducted, remaining, created_at, updated_at (已 snake_case)
-        column_map={
-            "native_account": "native_account", "total": "total",
-            "deducted": "deducted", "remaining": "remaining",
-            "created_at": "created_at", "updated_at": "updated_at",
-        },
-        note="新旧一致，直接平移",
-    ),
-
-    TableMigration(
-        new_table="t_stake_team_reward_deduction_log",
-        old_table="t_stake_team_reward_deduction_log",
-        # 旧列: record_id, native_account, snap_day, reward_type, original, deduction, created_at, updated_at (已 snake_case)
-        column_map={
-            "record_id": "record_id", "native_account": "native_account",
-            "snap_day": "snap_day", "reward_type": "reward_type",
-            "original": "original", "deduction": "deduction",
-            "created_at": "created_at", "updated_at": "updated_at",
-        },
-        note="新旧一致，直接平移",
-    ),
+    # TableMigration(
+    #     new_table="t_stake_team_reward_deduction",
+    #     old_table="t_stake_team_reward_deduction",
+    #     # 旧列: native_account, total, deducted, remaining, created_at, updated_at (已 snake_case)
+    #     column_map={
+    #         "native_account": "native_account", "total": "total",
+    #         "deducted": "deducted", "remaining": "remaining",
+    #         "created_at": "created_at", "updated_at": "updated_at",
+    #     },
+    #     note="新旧一致，直接平移",
+    # ),
+    #
+    # TableMigration(
+    #     new_table="t_stake_team_reward_deduction_log",
+    #     old_table="t_stake_team_reward_deduction_log",
+    #     # 旧列: record_id, native_account, snap_day, reward_type, original, deduction, created_at, updated_at (已 snake_case)
+    #     column_map={
+    #         "record_id": "record_id", "native_account": "native_account",
+    #         "snap_day": "snap_day", "reward_type": "reward_type",
+    #         "original": "original", "deduction": "deduction",
+    #         "created_at": "created_at", "updated_at": "updated_at",
+    #     },
+    #     note="新旧一致，直接平移",
+    # ),
 
     # ─── 大表: t_fund_flow ────────────────────────────────────────
 
-    TableMigration(
-        new_table="t_fund_flow",
-        old_table="t_sol_fund_flow",
-        # 旧列 (snake_case): record_id, brand, token_symbol, is_token, from_native_account,
-        #    to_native_account, tx_id, direction, service_type, flow_type, decimals, amount,
-        #    create_time, update_time
-        # 注意: 旧库列名是 snake_case，from_native_account→from_account, to_native_account→to_account
-        column_map={
-            "record_id": "record_id",
-            "is_token": "is_token", "from_account": "from_native_account",
-            "to_account": "to_native_account", "tx_id": "tx_id",
-            "direction": "direction", "service_type": "service_type",
-            "flow_type": "flow_type", "decimals": "decimals", "amount": "amount",
-            "created_at": "create_time", "updated_at": "update_time",
-        },
-        limit=1000,
-    ),
+    # TableMigration(
+    #     new_table="t_fund_flow",
+    #     old_table="t_sol_fund_flow",
+    #     # 旧列 (snake_case): record_id, brand, token_symbol, is_token, from_native_account,
+    #     #    to_native_account, tx_id, direction, service_type, flow_type, decimals, amount,
+    #     #    create_time, update_time
+    #     # 注意: 旧库列名是 snake_case，from_native_account→from_account, to_native_account→to_account
+    #     column_map={
+    #         "record_id": "record_id",
+    #         "is_token": "is_token", "from_account": "from_native_account",
+    #         "to_account": "to_native_account", "tx_id": "tx_id",
+    #         "direction": "direction", "service_type": "service_type",
+    #         "flow_type": "flow_type", "decimals": "decimals", "amount": "amount",
+    #         "created_at": "create_time", "updated_at": "update_time",
+    #     },
+    #     limit=1000,
+    # ),
 ]
 
 
@@ -990,6 +1020,8 @@ class Migrator:
         placeholders = ", ".join(["%s"] * len(all_new_cols))
         insert_cols = ", ".join(all_new_cols)
         insert_sql = f"INSERT INTO {m.new_table} ({insert_cols}) VALUES ({placeholders})"
+        if m.on_conflict_skip:
+            insert_sql += " ON CONFLICT DO NOTHING"
 
         # 清空目标表并写入
         dst_cur = self.dst_conn.cursor()

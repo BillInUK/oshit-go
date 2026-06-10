@@ -9,8 +9,8 @@ import (
 
 const ttlCleanupBatchSize = 5000
 
-// TTLCleanupTask 处理无法用分区表 DROP 的 TTL 表（需条件保留的表）
-// 目前包含: t_stake_reward, t_stake_reward_claim
+// TTLCleanupTask 统一管理所有 TTL 表的 DELETE + VACUUM FULL 清理
+// 每天 SGT 04:00 执行，凌晨低流量时段
 type TTLCleanupTask struct {
 	taskCtx *TaskContext
 }
@@ -21,14 +21,47 @@ func NewTTLCleanupTask(taskCtx *TaskContext) *TTLCleanupTask {
 
 func (t *TTLCleanupTask) Start() {
 	go func() {
-		// 启动时不立即执行，等分区任务先跑完
 		for {
 			now := time.Now().In(time.FixedZone("SGT", 8*3600))
-			next := time.Date(now.Year(), now.Month(), now.Day()+1, 4, 5, 0, 0, now.Location())
+			next := time.Date(now.Year(), now.Month(), now.Day()+1, 4, 0, 0, 0, now.Location())
 			time.Sleep(time.Until(next))
 			t.run()
 		}
 	}()
+}
+
+// ttlTable 描述一张需要 TTL 清理的表
+type ttlTable struct {
+	name  string
+	where string        // DELETE WHERE 条件，? 占位符
+	ttl   time.Duration // 数据保留时长
+}
+
+var ttlTables = []ttlTable{
+	// ── TTL 2天 ──
+	{name: "t_qn_fee", where: "created_at < ?", ttl: 2 * 24 * time.Hour},
+	{name: "t_fee_statistics", where: "created_at < ?", ttl: 2 * 24 * time.Hour},
+	{name: "t_stake_buy_token", where: "created_at < ?", ttl: 2 * 24 * time.Hour},
+
+	// ── TTL 7天 ──
+	{name: "t_service_tx", where: "created_at < ?", ttl: 7 * 24 * time.Hour},
+
+	// ── TTL 1月 ──
+	{name: "t_take_token_record", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_give_token_record", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_lottery_claim", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_daily_claim_stats", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_lottery_reward", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_campaign_quote_record", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_pos_snap_shot", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_pos_reward", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_pos_reward_claim", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_stake_snap_shot", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_stake_reward_claim", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_reward_code", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+
+	// ── TTL 1月 (特殊条件: 保留未领取的固定利息) ──
+	{name: "t_stake_reward", where: "created_at < ? AND NOT (reward_type = 0 AND reward_state = 0)", ttl: 30 * 24 * time.Hour},
 }
 
 func (t *TTLCleanupTask) run() {
@@ -39,27 +72,13 @@ func (t *TTLCleanupTask) run() {
 	}
 	defer mutex.Unlock()
 
-	log.Info("[TTLCleanup] 开始清理 t_stake_reward / t_stake_reward_claim")
+	log.Info("[TTLCleanup] 开始清理")
 
-	cutoff := time.Now().AddDate(0, -1, 0)
-
-	// 1. 清理 t_stake_reward: 删除1月前的数据，但保留 reward_type=0 AND reward_state=0 (未领取的固定利息)
-	t.batchDelete(
-		"t_stake_reward",
-		"created_at < ? AND NOT (reward_type = 0 AND reward_state = 0)",
-		cutoff,
-	)
-
-	// 2. 清理 t_stake_reward_claim: 删除1月前的所有数据
-	t.batchDelete(
-		"t_stake_reward_claim",
-		"created_at < ?",
-		cutoff,
-	)
-
-	// 3. VACUUM FULL 回收磁盘空间
-	t.vacuumFull("t_stake_reward")
-	t.vacuumFull("t_stake_reward_claim")
+	for _, tbl := range ttlTables {
+		cutoff := time.Now().Add(-tbl.ttl)
+		t.batchDelete(tbl.name, tbl.where, cutoff)
+		t.vacuumFull(tbl.name)
+	}
 
 	log.Info("[TTLCleanup] 清理完成")
 }
@@ -67,7 +86,6 @@ func (t *TTLCleanupTask) run() {
 func (t *TTLCleanupTask) batchDelete(tableName, where string, args ...interface{}) {
 	totalDeleted := int64(0)
 	for {
-		// ctid 子查询限制每次删除批量大小，避免长事务
 		sql := "DELETE FROM " + tableName + " WHERE ctid IN (SELECT ctid FROM " + tableName + " WHERE " + where + " LIMIT ?)"
 		allArgs := append(args, ttlCleanupBatchSize)
 		result := t.taskCtx.DB.Exec(sql, allArgs...)
@@ -86,7 +104,6 @@ func (t *TTLCleanupTask) batchDelete(tableName, where string, args ...interface{
 }
 
 func (t *TTLCleanupTask) vacuumFull(tableName string) {
-	// VACUUM FULL 不能在事务内执行，需要用原生连接
 	sqlDB, err := t.taskCtx.DB.DB()
 	if err != nil {
 		log.Errorf("[TTLCleanup] 获取 DB 连接失败: %v", err)

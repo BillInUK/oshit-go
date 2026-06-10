@@ -59,9 +59,9 @@ CREATE TABLE public.t_pos_mission_config
 );
 CREATE INDEX ON public.t_pos_mission_config (reward_type);
 
--- POS 每日快照表 (TTL: 1月, 按周分区, 分区键: snap_day)
+-- POS 每日快照表 (TTL: 1月, DELETE+VACUUM清理)
 -- 旧工程 t_sol_pos_snap_shot
-DROP TABLE IF EXISTS public.t_pos_snap_shot CASCADE;
+DROP TABLE IF EXISTS public.t_pos_snap_shot;
 CREATE TABLE public.t_pos_snap_shot
 (
     record_id      ulid        NOT NULL        DEFAULT gen_ulid(), -- 记录Id
@@ -73,14 +73,14 @@ CREATE TABLE public.t_pos_snap_shot
     snap_day       DATE        NOT NULL,                           -- 快照的日期，对应 Day
     created_at     TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (record_id, snap_day)
-) PARTITION BY RANGE (snap_day);
+    PRIMARY KEY (record_id)
+);
 CREATE UNIQUE INDEX ON public.t_pos_snap_shot (native_account, snap_day);
-CREATE TABLE public.t_pos_snap_shot_default PARTITION OF public.t_pos_snap_shot DEFAULT;
+CREATE INDEX idx_pos_snap_shot_ttl ON public.t_pos_snap_shot (created_at);
 
--- POS 奖励明细表 (TTL: 1月, 按周分区, 分区键: snap_day)
+-- POS 奖励明细表 (TTL: 1月, DELETE+VACUUM清理)
 -- 旧工程 t_sol_pos_reward
-DROP TABLE IF EXISTS public.t_pos_reward CASCADE;
+DROP TABLE IF EXISTS public.t_pos_reward;
 CREATE TABLE public.t_pos_reward
 (
     record_id      ulid        NOT NULL        DEFAULT gen_ulid(), -- 记录Id
@@ -97,16 +97,16 @@ CREATE TABLE public.t_pos_reward
     snap_day       DATE        NOT NULL,                           -- 快照的日期，对应 Day
     created_at     TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (record_id, snap_day)
-) PARTITION BY RANGE (snap_day);
+    PRIMARY KEY (record_id)
+);
 CREATE INDEX ON public.t_pos_reward (group_id);
 CREATE INDEX ON public.t_pos_reward (native_account, reward_state, pending);
 CREATE UNIQUE INDEX ON public.t_pos_reward (native_account, snap_day, reward_type, starred);
-CREATE TABLE public.t_pos_reward_default PARTITION OF public.t_pos_reward DEFAULT;
+CREATE INDEX idx_pos_reward_ttl ON public.t_pos_reward (created_at);
 
--- POS 奖励领取表 (TTL: 1月, 按周分区)
+-- POS 奖励领取表 (TTL: 1月, DELETE+VACUUM清理)
 -- 旧工程 t_sol_pos_reward_claim_record
-DROP TABLE IF EXISTS public.t_pos_reward_claim CASCADE;
+DROP TABLE IF EXISTS public.t_pos_reward_claim;
 CREATE TABLE public.t_pos_reward_claim
 (
     record_id  ulid   NOT NULL             DEFAULT gen_ulid(), -- 记录Id
@@ -115,9 +115,8 @@ CREATE TABLE public.t_pos_reward_claim
     tx_state   INT                         DEFAULT 0,          -- 状态,-2.过期 -1.失败 0.初始化 1.成功，对应 State
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (record_id, created_at)
-) PARTITION BY RANGE (created_at);
+    PRIMARY KEY (record_id)
+);
 CREATE INDEX ON "public"."t_pos_reward_claim" (tx_id);
 CREATE INDEX ON "public"."t_pos_reward_claim" (tx_state, created_at);
-CREATE TABLE public.t_pos_reward_claim_default PARTITION OF public.t_pos_reward_claim DEFAULT;
 

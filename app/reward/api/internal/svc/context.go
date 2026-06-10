@@ -10,6 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"math"
 	"oshit-go/app/reward/api/internal/config"
 	core_context "oshit-go/app/reward/api/internal/context"
@@ -131,7 +132,9 @@ func initDatabase(cfg config.DatabaseConfig) (*gorm.DB, error) {
 		" port=" + portStr +
 		" sslmode=" + cfg.SSLMode
 
-	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	return gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Warn),
+	})
 }
 
 func initRedis(cfg config.RedisConfig) (*redis.UniversalClient, error) {

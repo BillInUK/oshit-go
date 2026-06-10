@@ -33,6 +33,8 @@ func newCampaignQuoteConfig(db *gorm.DB, opts ...gen.DOOption) campaignQuoteConf
 	_campaignQuoteConfig.CostAccount = field.NewString(tableName, "cost_account")
 	_campaignQuoteConfig.QuoteRate = field.NewFloat64(tableName, "quote_rate")
 	_campaignQuoteConfig.CostRate = field.NewFloat64(tableName, "cost_rate")
+	_campaignQuoteConfig.GlobalDailyLimit = field.NewFloat64(tableName, "global_daily_limit")
+	_campaignQuoteConfig.UserDailyLimit = field.NewFloat64(tableName, "user_daily_limit")
 	_campaignQuoteConfig.CreatedAt = field.NewTime(tableName, "created_at")
 	_campaignQuoteConfig.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -44,14 +46,16 @@ func newCampaignQuoteConfig(db *gorm.DB, opts ...gen.DOOption) campaignQuoteConf
 type campaignQuoteConfig struct {
 	campaignQuoteConfigDo campaignQuoteConfigDo
 
-	ALL           field.Asterisk
-	RecordID      field.String
-	RewardAccount field.String
-	CostAccount   field.String
-	QuoteRate     field.Float64
-	CostRate      field.Float64
-	CreatedAt     field.Time
-	UpdatedAt     field.Time
+	ALL              field.Asterisk
+	RecordID         field.String
+	RewardAccount    field.String
+	CostAccount      field.String
+	QuoteRate        field.Float64
+	CostRate         field.Float64
+	GlobalDailyLimit field.Float64
+	UserDailyLimit   field.Float64
+	CreatedAt        field.Time
+	UpdatedAt        field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -73,6 +77,8 @@ func (c *campaignQuoteConfig) updateTableName(table string) *campaignQuoteConfig
 	c.CostAccount = field.NewString(table, "cost_account")
 	c.QuoteRate = field.NewFloat64(table, "quote_rate")
 	c.CostRate = field.NewFloat64(table, "cost_rate")
+	c.GlobalDailyLimit = field.NewFloat64(table, "global_daily_limit")
+	c.UserDailyLimit = field.NewFloat64(table, "user_daily_limit")
 	c.CreatedAt = field.NewTime(table, "created_at")
 	c.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -103,12 +109,14 @@ func (c *campaignQuoteConfig) GetFieldByName(fieldName string) (field.OrderExpr,
 }
 
 func (c *campaignQuoteConfig) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 7)
+	c.fieldMap = make(map[string]field.Expr, 9)
 	c.fieldMap["record_id"] = c.RecordID
 	c.fieldMap["reward_account"] = c.RewardAccount
 	c.fieldMap["cost_account"] = c.CostAccount
 	c.fieldMap["quote_rate"] = c.QuoteRate
 	c.fieldMap["cost_rate"] = c.CostRate
+	c.fieldMap["global_daily_limit"] = c.GlobalDailyLimit
+	c.fieldMap["user_daily_limit"] = c.UserDailyLimit
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
 }
