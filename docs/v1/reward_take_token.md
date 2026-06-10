@@ -199,7 +199,6 @@ sequenceDiagram
     K->>R: consume NewScannedTransaction
     alt TxSig.Err == nil（链上成功）
         R->>DB: UPDATE t_take_token_record state=1
-        R->>DB: INSERT t_sol_fund_flow（upsert：dex入账 + token出账×N）
         opt takeTokenRecord.Invited == true
             R->>DB: INSERT t_invite_relation（确定邀请层级）
         end
@@ -300,9 +299,7 @@ flowchart TD
         B --> C{TxSig.Err?}
         C -- 链上失败 --> D[UPDATE state=-1]
         C -- 链上成功 --> E[UPDATE state=1]
-        E --> F[DecodeServiceTransaction]
-        F --> G["INSERT t_sol_fund_flow（upsert，唯一键=tx_id+to+flow_type）\n① SOL 入账：dex fee\n② token 出账：奖励领取人\n③ token 出账×N：奖励各邀请人"]
-        G --> H{takeTokenRecord.Invited?}
+        E --> H{takeTokenRecord.Invited?}
         H -- true --> I["INSERT t_invite_relation\nlevel = inviter.Level + 1（inviter 无记录则 level=1）\n幂等：invitee 已存在则跳过"]
         H -- false --> J([Commit])
         I --> J

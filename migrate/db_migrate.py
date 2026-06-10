@@ -117,7 +117,8 @@ CA_ID = {"record_id": "RecordId", **CA}
 TTL_2D_CT = """"CreateTime" >= NOW() - INTERVAL '2 days'"""
 TTL_7D_CT = """"CreateTime" >= NOW() - INTERVAL '7 days'"""
 TTL_1M_CT = """"CreateTime" >= NOW() - INTERVAL '1 month'"""
-TTL_2D_CA = """"CreatedAt" >= NOW() - INTERVAL '2 days'"""
+TTL_3M_CT = """"CreateTime" >= NOW() - INTERVAL '3 months'"""
+TTL_3M_CA = """"CreatedAt" >= NOW() - INTERVAL '3 months'"""
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -191,19 +192,6 @@ MIGRATIONS: list[TableMigration] = [
         },
         where=TTL_2D_CT,
         limit=1000,
-        note="TTL 2天，分区表",
-    ),
-
-    TableMigration(
-        new_table="t_qn_fee",
-        old_table="t_sol_qn_fee",
-        # 旧列: Id, Slot, LowAvg, MediumAvg, HighAvg, CreateTime, UpdateTime
-        column_map={
-            "id": "Id", "slot": "Slot",
-            "low_avg": "LowAvg", "medium_avg": "MediumAvg", "high_avg": "HighAvg",
-            **CT,
-        },
-        where=TTL_2D_CT,
         note="TTL 2天，分区表",
     ),
 
@@ -427,8 +415,8 @@ MIGRATIONS: list[TableMigration] = [
             "tx_id": "TxId", "expired_at": "ExpireTime",
             **CT_ID,
         },
-        where=TTL_1M_CT,
-        note="TTL 1月，分区表",
+        where=""""State" = -2 AND "CreateTime" >= NOW() - INTERVAL '1 month'""",
+        note="TTL 1月，只导入已超时的奖励码(State=-2)近1月数据",
     ),
 
     # 配置表，跳过，后续会手动迁移
@@ -559,9 +547,9 @@ MIGRATIONS: list[TableMigration] = [
             "range_base": "RangeBase", "snap_day": "Day",
             **CT_ID,
         },
-        where=TTL_1M_CT,
+        where=TTL_3M_CT,
         limit=1000,
-        note="TTL 1月，按 snap_day 分区",
+        note="TTL 3月",
     ),
 
     TableMigration(
@@ -577,9 +565,9 @@ MIGRATIONS: list[TableMigration] = [
             "pending": "Pending", "snap_day": "Day",
             **CT_ID,
         },
-        where=TTL_1M_CT,
+        where=TTL_3M_CT,
         limit=1000,
-        note="TTL 1月，按 snap_day 分区",
+        note="TTL 3月",
     ),
 
     TableMigration(
@@ -590,9 +578,9 @@ MIGRATIONS: list[TableMigration] = [
             "reward_ids": "RewardIds", "tx_id": "TxId", "tx_state": "State",
             **CT_ID,
         },
-        where=TTL_1M_CT,
+        where=TTL_3M_CT,
         limit=1000,
-        note="TTL 1月，分区表",
+        note="TTL 3月",
     ),
 
     # ─── stake_structure.sql ──────────────────────────────────────
@@ -694,9 +682,9 @@ MIGRATIONS: list[TableMigration] = [
             **CT_ID,
         },
         defaults={"stake_type": 0},
-        where="""("CreateTime" >= NOW() - INTERVAL '1 month') OR ("RewardType" = 0 AND "State" = 0)""",
+        where="""("CreateTime" >= NOW() - INTERVAL '3 months') OR ("RewardType" = 0 AND "State" = 0)""",
         limit=1000,
-        note="TTL 1月，DELETE+VACUUM清理；保留未领取的固定利息(type=0,state=0)",
+        note="TTL 3月；保留未领取的固定利息(type=0,state=0)",
     ),
 
     TableMigration(
@@ -707,9 +695,9 @@ MIGRATIONS: list[TableMigration] = [
             "reward_ids": "RewardIds", "tx_id": "TxId", "tx_state": "State",
             **CT_ID,
         },
-        where=TTL_1M_CT,
+        where=TTL_3M_CT,
         limit=1000,
-        note="TTL 1月，DELETE+VACUUM清理",
+        note="TTL 3月",
     ),
 
     TableMigration(
@@ -721,9 +709,9 @@ MIGRATIONS: list[TableMigration] = [
             "stake_type": "StakeType", "snap_day": "Day",
             **CT_ID,
         },
-        where=TTL_1M_CT,
+        where=TTL_3M_CT,
         limit=1000,
-        note="TTL 1月，按 snap_day 分区",
+        note="TTL 3月",
     ),
 
     TableMigration(
@@ -753,9 +741,9 @@ MIGRATIONS: list[TableMigration] = [
             "staked_amount": "StakedAmount", "remaining_amount": "RemainingAmount",
             "created_at": "CreatedAt",
         },
-        where=TTL_2D_CA,
+        where=TTL_3M_CA,
         limit=1000,
-        note="TTL 2天，分区表",
+        note="TTL 3月",
     ),
 
     # 配置表，跳过，后续会手动迁移
@@ -833,26 +821,6 @@ MIGRATIONS: list[TableMigration] = [
     #         "created_at": "created_at", "updated_at": "updated_at",
     #     },
     #     note="新旧一致，直接平移",
-    # ),
-
-    # ─── 大表: t_fund_flow ────────────────────────────────────────
-
-    # TableMigration(
-    #     new_table="t_fund_flow",
-    #     old_table="t_sol_fund_flow",
-    #     # 旧列 (snake_case): record_id, brand, token_symbol, is_token, from_native_account,
-    #     #    to_native_account, tx_id, direction, service_type, flow_type, decimals, amount,
-    #     #    create_time, update_time
-    #     # 注意: 旧库列名是 snake_case，from_native_account→from_account, to_native_account→to_account
-    #     column_map={
-    #         "record_id": "record_id",
-    #         "is_token": "is_token", "from_account": "from_native_account",
-    #         "to_account": "to_native_account", "tx_id": "tx_id",
-    #         "direction": "direction", "service_type": "service_type",
-    #         "flow_type": "flow_type", "decimals": "decimals", "amount": "amount",
-    #         "created_at": "create_time", "updated_at": "update_time",
-    #     },
-    #     limit=1000,
     # ),
 ]
 

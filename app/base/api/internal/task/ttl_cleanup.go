@@ -39,9 +39,7 @@ type ttlTable struct {
 
 var ttlTables = []ttlTable{
 	// ── TTL 2天 ──
-	{name: "t_qn_fee", where: "created_at < ?", ttl: 2 * 24 * time.Hour},
 	{name: "t_fee_statistics", where: "created_at < ?", ttl: 2 * 24 * time.Hour},
-	{name: "t_stake_buy_token", where: "created_at < ?", ttl: 2 * 24 * time.Hour},
 
 	// ── TTL 7天 ──
 	{name: "t_service_tx", where: "created_at < ?", ttl: 7 * 24 * time.Hour},
@@ -53,15 +51,18 @@ var ttlTables = []ttlTable{
 	{name: "t_daily_claim_stats", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
 	{name: "t_lottery_reward", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
 	{name: "t_campaign_quote_record", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
-	{name: "t_pos_snap_shot", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
-	{name: "t_pos_reward", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
-	{name: "t_pos_reward_claim", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
-	{name: "t_stake_snap_shot", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
-	{name: "t_stake_reward_claim", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
-	{name: "t_reward_code", where: "created_at < ?", ttl: 30 * 24 * time.Hour},
+	{name: "t_reward_code", where: "reward_state = -2 AND created_at < ?", ttl: 30 * 24 * time.Hour}, // 只清理已超时的奖励码
 
-	// ── TTL 1月 (特殊条件: 保留未领取的固定利息) ──
-	{name: "t_stake_reward", where: "created_at < ? AND NOT (reward_type = 0 AND reward_state = 0)", ttl: 30 * 24 * time.Hour},
+	// ── TTL 3月 ──
+	{name: "t_pos_snap_shot", where: "created_at < ?", ttl: 90 * 24 * time.Hour},
+	{name: "t_pos_reward", where: "created_at < ?", ttl: 90 * 24 * time.Hour},
+	{name: "t_pos_reward_claim", where: "created_at < ?", ttl: 90 * 24 * time.Hour},
+	{name: "t_stake_snap_shot", where: "created_at < ?", ttl: 90 * 24 * time.Hour},
+	{name: "t_stake_reward_claim", where: "created_at < ?", ttl: 90 * 24 * time.Hour},
+	{name: "t_stake_buy_token", where: "created_at < ?", ttl: 90 * 24 * time.Hour},
+
+	// ── TTL 3月 (特殊条件: 保留未领取的固定利息) ──
+	{name: "t_stake_reward", where: "created_at < ? AND NOT (reward_type = 0 AND reward_state = 0)", ttl: 90 * 24 * time.Hour},
 }
 
 func (t *TTLCleanupTask) run() {

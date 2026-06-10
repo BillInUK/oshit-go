@@ -13,11 +13,10 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
-	"oshit-go/common/utils"
 	"time"
 )
 
@@ -26,15 +25,12 @@ const (
 	feeStatChainFeeLock  = "base:sol:fee:stat-chain-fee:lock"
 	feeUpdatePerUnitLock = "base:sol:fee:update-per-unit:lock"
 	feeUpdatePerTxLock   = "base:sol:fee:update-per-tx:lock"
-	feeEstWeightAvgLock  = "base:sol:fee:est-weight-avg:lock"
 )
 
 // Redis 数据 key
 const (
 	feePriorityPerUnit  = "base:sol:fee:priority-per-unit"
 	feePriorityPerTx    = "base:sol:fee:priority-per-tx"
-	feeWeightAvgPerUnit = "base:sol:fee:weight-avg-per-unit"
-	feeWeightAvgPerTx   = "base:sol:fee:weight-avg-per-tx"
 )
 
 // FeeTask 手续费统计任务
@@ -72,7 +68,6 @@ func (t *FeeTask) Start() {
 	go runPeriodic(&t.redSync, 5*time.Second, feeStatChainFeeLock, 2*time.Minute, t.readPriorityFee)
 	go runPeriodic(&t.redSync, 5*time.Second, feeUpdatePerUnitLock, 2*time.Minute, t.updatePerUnitFee)
 	go runPeriodic(&t.redSync, 5*time.Second, feeUpdatePerTxLock, 2*time.Minute, t.updatePerTxFee)
-	go runPeriodic(&t.redSync, 5*time.Second, feeEstWeightAvgLock, 2*time.Minute, t.estimateWeightAvgFee)
 }
 
 // readPriorityFee 读取优先费用
@@ -129,7 +124,7 @@ func (t *FeeTask) readPriorityFee() {
 	defer resp.Body.Close()
 
 	// 读取响应数据
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Errorf("%s 读取RPC回复错误: %v", prefix, err)
 		return
@@ -389,67 +384,3 @@ func (t *FeeTask) updatePerTxFee() {
 	t.redis.Set(ctx, feePriorityPerTx, jsonData, 0).Err()
 }
 
-func (t *FeeTask) estimateWeightAvgFee() {
-	maxRecordNum := 20
-
-	// 执行核心业务逻辑
-	fee, err := utils.GetQnEstimatePriorityFees(t.mainnetRpc, 100, solana.TokenProgramID)
-	if err != nil || fee == nil {
-		log.Errorf("手续费获取失败: %v", err)
-		return
-	}
-
-	// 计算加权平均值（反映Solana局部费用市场特性[1](@ref)）
-	ps := fee.Result.PerComputeUnit.Percentiles
-	slot := fee.Result.Context.Slot
-	lowAvg := (ps.P50 + ps.P55 + ps.P60) / 3 // 基础费用优化策略[1](@ref)
-	mediumAvg := (ps.P65 + ps.P70 + ps.P75 + ps.P80 + ps.P85) / 5
-	highAvg := (ps.P90 + ps.P95) / 2 // 优先费用高区间统计[2](@ref)
-
-	// 数据库写入（支持动态更新）
-	record := model.QnFee{
-		ID:        int32(slot%maxRecordNum) + 1,
-		Slot:      int64(slot),
-		LowAvg:    float64(lowAvg),
-		MediumAvg: float64(mediumAvg),
-		HighAvg:   float64(highAvg),
-		UpdatedAt: time.Now(),
-	}
-	if err := t.db.Table(model.TableNameQnFee).
-		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "id"}},
-			DoUpdates: clause.AssignmentColumns([]string{"slot", "low_avg", "medium_avg", "high_avg", "updated_at"}),
-		}).Create(&record).Error; err != nil {
-		log.Errorf("数据库写入失败: %v", err)
-		return
-	}
-
-	// 动态计算平均费用（基于最近20条记录）
-	var feeDetail entity.FeeDetail
-	if err := t.db.Raw(`
-                SELECT
-                    CAST(AVG(low_avg) AS BIGINT) AS low,
-                    CAST(AVG(medium_avg) AS BIGINT) AS medium,
-                    CAST(AVG(high_avg) AS BIGINT) AS high,
-                    CAST(AVG(high_avg) AS BIGINT) AS extreme
-                FROM (
-                    SELECT low_avg, medium_avg, high_avg
-                    FROM public.t_qn_fee
-                    ORDER BY updated_at DESC
-                    LIMIT 20
-                ) AS recent_records
-            `).Scan(&feeDetail).Error; err != nil {
-		log.Errorf("费用统计失败: %v", err)
-		return
-	}
-
-	// 缓存到Redis（双Key策略）
-	if jsonData, err := json.Marshal(feeDetail); err == nil {
-		ctx := context.Background()
-		_ = t.redis.Set(ctx, feeWeightAvgPerUnit, jsonData, 0)
-		_ = t.redis.Set(ctx, feeWeightAvgPerTx, jsonData, 0)
-	} else {
-		log.Errorf("序列化失败: %v", err)
-		return
-	}
-}

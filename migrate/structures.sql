@@ -107,23 +107,6 @@ ALTER TABLE ONLY public.t_fee_statistics
     ADD CONSTRAINT fee_tx_id UNIQUE (tx_id);
 CREATE INDEX idx_fee_statistics_ttl ON public.t_fee_statistics (created_at);
 
--- quicknode接口手续费统计表
--- 对应旧工程 t_sol_qn_fee
-DROP TABLE IF EXISTS public.t_qn_fee;
-CREATE TABLE public.t_qn_fee
-(
-    id         integer NOT NULL, -- 主键id, 对应 Id
-    slot       bigint,           -- 交易所在slot, 对应 Slot
-    low_avg    numeric(78, 0),   -- 最低平均优先费用，对应 LowAvg
-    medium_avg numeric(78, 0),   -- 中等平均优先费用，对应 MediumAvg
-    high_avg   numeric(78, 0),   -- 高平均优先费用，对应 HighAvg
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-ALTER TABLE ONLY public.t_qn_fee
-    ADD CONSTRAINT t_qn_fee_pkey PRIMARY KEY (id);
-CREATE INDEX idx_qn_fee_ttl ON public.t_qn_fee (created_at);
-
 -- 地址信息表
 -- 对应旧工程 t_sol_native_account_info
 DROP TABLE IF EXISTS public.t_native_account_info;
@@ -227,27 +210,6 @@ CREATE TABLE public.t_service_tx
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_service_tx_ttl ON public.t_service_tx (created_at);
-
--- 旧工程 t_sol_fund_flow
--- 需要导入并且搞分表，减少单表体积
--- 预演导出只需要导出前 1000 条
-DROP TABLE IF EXISTS public.t_fund_flow;
-CREATE TABLE public.t_fund_flow
-(
-    record_id public.ulid DEFAULT public.gen_ulid() NOT NULL,
-    is_token     boolean                NOT NULL, -- 流水资金是否是token
-    from_account character varying(64)  NOT NULL, -- 流水资金发起地址
-    to_account   character varying(64)  NOT NULL, -- 流水地址金接收地址
-    tx_id        character varying(128) NOT NULL, -- 交易id
-    direction    character varying(8)   NOT NULL, -- 流水方向
-    service_type character varying(32)  NOT NULL, -- 业务类型(一般指sub service,例如: take token ,give token等)
-    flow_type    character varying(32)  NOT NULL, -- 流水类型
-    decimals     smallint               NOT NULL, -- 资金的金额精度
-    amount       numeric(78, 0)         NOT NULL, -- 流水资金金额，原始值
-    created_at   timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at   timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE UNIQUE INDEX uq_fund_flow_tx_to_flow ON public.t_fund_flow (tx_id, to_account, flow_type);
 
 -- 奖励黑客表
 -- 对应旧工程 t_reward_hacker

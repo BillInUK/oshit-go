@@ -161,20 +161,7 @@ oshit-go/
 | QuoteStateInit | 兑换初始化 |
 | QuoteStateSuccess | 兑换成功 |
 
-* * 流水方向常量
-
-| 常量 | 说明 |
-|---|---|
-| FlowInput | 入账流水 |
-| FlowOutput | 出账流水 |
-
-* * 流水类型常量
-
-| 常量 | 说明 |
-|---|---|
-| FlowCost | 流水类型，成本费，当用户领取或者兑换token的时候所支付给我们的成本费 |
-| FlowReceipt | 流水类型，接收token，当用户领取token或者兑换token的时候，会产生该类型流水 |
-| FlowInviter | 流水类型，奖励邀请人token，当奖励邀请人的时候会产生该类型流水 |
+> 注意：旧版的流水方向常量（FlowInput/FlowOutput）和流水类型常量（FlowCost/FlowReceipt/FlowInviter）已废弃，`t_fund_flow` 表不再使用。
 
 ---
 
@@ -417,6 +404,35 @@ go run gen.go
 
 该命令会生成 gorm的model和query到 common/pkg/dal 目录下
 
-## 10. 其他(待补充)
+## 10. TTL 数据清理
+
+base 服务包含一个 `TTLCleanupTask`（`app/base/api/internal/task/ttl_cleanup.go`），每天 SGT 04:00 执行，统一清理所有过期业务数据。
+
+清理方式：批量 DELETE + VACUUM FULL 回收磁盘空间。
+
+| 表 | TTL | 备注 |
+|---|---|---|
+| `t_fee_statistics` | 2天 | |
+| `t_service_tx` | 7天 | |
+| `t_take_token_record` | 1月 | |
+| `t_give_token_record` | 1月 | |
+| `t_lottery_claim` | 1月 | |
+| `t_daily_claim_stats` | 1月 | |
+| `t_lottery_reward` | 1月 | |
+| `t_campaign_quote_record` | 1月 | |
+| `t_reward_code` | 1月 | 只清理 reward_state=-2 的已超时奖励码 |
+| `t_pos_snap_shot` | 3月 | |
+| `t_pos_reward` | 3月 | |
+| `t_pos_reward_claim` | 3月 | |
+| `t_stake_snap_shot` | 3月 | |
+| `t_stake_reward_claim` | 3月 | |
+| `t_stake_buy_token` | 3月 | |
+| `t_stake_reward` | 3月 | 保留 reward_type=0 且 reward_state=0 的未领取固定利息 |
+
+已废弃的表：
+- `t_qn_fee` — QuickNode 手续费统计表，`estimateWeightAvgFee` 任务已删除
+- `t_fund_flow` — 资金流水表，各业务模块已移除流水记录逻辑
+
+## 11. 其他(待补充)
 
 

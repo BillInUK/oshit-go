@@ -296,7 +296,6 @@ sequenceDiagram
     alt TxSig.Err == nil（链上成功）
         R->>DB: UPDATE t_stake_reward_claim tx_state=1
         R->>DB: UPDATE t_stake_reward reward_state=1, pending=false（by tx_id）
-        R->>DB: INSERT t_fund_flow（SOL入账 + token出账，upsert）
     else TxSig.Err != nil（链上失败）
         R->>DB: UPDATE t_stake_reward_claim tx_state=-1（未实现，仅日志）
         R->>DB: UPDATE t_stake_reward reward_state=0, pending=false, tx_id=nil
@@ -364,7 +363,7 @@ flowchart TD
         direction TD
         A([收到 NewScannedTx]) --> C{TxSig.Err?}
         C -- 链上失败 --> D["UPDATE t_stake_reward reward_state=0, pending=false, tx_id=nil\n（重置为可重新领取）"]
-        C -- 链上成功 --> E["UPDATE t_stake_reward_claim tx_state=1\nUPDATE t_stake_reward reward_state=1, pending=false\nINSERT t_fund_flow（SOL入账+token出账，upsert）"]
+        C -- 链上成功 --> E["UPDATE t_stake_reward_claim tx_state=1\nUPDATE t_stake_reward reward_state=1, pending=false"]
         D --> F([Commit])
         E --> F
     end
@@ -377,13 +376,6 @@ flowchart TD
 
     S ~~~ E2
 ```
-
-**资金流水（HandleScannedTx 成功路径）**：
-
-| 流水 | 方向 | flow_type | 说明 |
-|---|---|---|---|
-| SOL 入账 | FlowInput | FlowCost | 用户 → costAccount 的 SOL 成本费 |
-| token 出账 | FlowOutput | FlowReceipt | rewardAccount → 用户 的 token 奖励 |
 
 ---
 

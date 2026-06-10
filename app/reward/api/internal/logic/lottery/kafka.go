@@ -107,12 +107,6 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 			return err
 		}
 
-		// 记录流水
-		if err := l.recordFundFlow(dbTx, txId, &reward, &msg.DecodedTx); err != nil {
-			log.Errorf("%s 记录流水失败: %v", prefix, err)
-			dbTx.Rollback()
-			return err
-		}
 	}
 
 	if err := dbTx.Commit().Error; err != nil {
@@ -189,69 +183,3 @@ func (l *LotteryLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	return nil
 }
 
-// recordFundFlow 记录抽奖的资金流水（在 dbTx 事务内）
-// 使用 decodedTx 的 TransferInstructions[0] 作为 SOL cost，TransferCheckedInstructions[0] 作为 token reward
-func (l *LotteryLogic) recordFundFlow(dbTx *gorm.DB, txId string, reward *model.LotteryReward, decodedTx *entity.DecodedSolanaTransaction) error {
-	var fundFlows []model.FundFlow
-
-	// 1. SOL 成本入账流水
-	if len(decodedTx.TransferInstructions) > 0 {
-		solInst := decodedTx.TransferInstructions[0]
-		log.Infof("记录抽奖流水 - 记录SOL成本入账 from %v to %v amount %v",
-			solInst.FromNativeAccount, solInst.ToNativeAccount, solInst.Amount)
-		fundFlows = append(fundFlows, model.FundFlow{
-			IsToken:     false,
-			FromAccount: solInst.FromNativeAccount.String(),
-			ToAccount:   solInst.ToNativeAccount.String(),
-			TxID:        txId,
-			Direction:   constants.FlowInput.String(),
-			ServiceType: constants.SubServiceLottery.String(),
-			FlowType:    constants.FlowCost.String(),
-			Decimals:    9,
-			Amount:      float64(solInst.Amount),
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		})
-	}
-
-	// 2. Token 奖励出账流水
-	if len(decodedTx.TransferCheckedInstructions) > 0 {
-		tokenInst := decodedTx.TransferCheckedInstructions[0]
-		log.Infof("记录抽奖流水 - 记录token奖励出账 from %v to %v amount %v",
-			tokenInst.FromNativeAccount, tokenInst.ToNativeAccount, tokenInst.Amount)
-		fundFlows = append(fundFlows, model.FundFlow{
-			IsToken:     true,
-			FromAccount: tokenInst.FromNativeAccount.String(),
-			ToAccount:   tokenInst.ToNativeAccount.String(),
-			TxID:        txId,
-			Direction:   constants.FlowOutput.String(),
-			ServiceType: constants.SubServiceLottery.String(),
-			FlowType:    constants.FlowReceipt.String(),
-			Decimals:    int16(tokenInst.Decimals),
-			Amount:      float64(tokenInst.Amount),
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		})
-	}
-
-	if len(fundFlows) == 0 {
-		return nil
-	}
-
-	batchSize := 100
-	if err := dbTx.Table(model.TableNameFundFlow).Omit("record_id").Clauses(clause.OnConflict{
-		Columns: []clause.Column{
-			{Name: "tx_id"},
-			{Name: "to_account"},
-			{Name: "flow_type"},
-		},
-		DoUpdates: clause.Assignments(map[string]interface{}{
-			"updated_at": time.Now(),
-		}),
-	}).CreateInBatches(&fundFlows, batchSize).Error; err != nil {
-		log.Errorf("Lottery - 记录流水错误: %v", err)
-		return err
-	}
-
-	return nil
-}

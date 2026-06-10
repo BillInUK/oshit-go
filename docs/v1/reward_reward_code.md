@@ -265,7 +265,7 @@ flowchart TD
     S ~~~ E2
 ```
 
-> RewardCode 无资金流水记录（`t_fund_flow`），Kafka 处理仅更新奖励码状态。
+> RewardCode Kafka 处理仅更新奖励码状态。
 
 ---
 

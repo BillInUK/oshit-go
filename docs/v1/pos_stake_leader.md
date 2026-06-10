@@ -247,7 +247,6 @@ sequenceDiagram
     alt TxSig.Err == nil（链上成功）
         R->>DB: UPDATE t_stake_leader_reward_claim tx_state=1
         R->>DB: UPDATE t_stake_leader_reward reward_state=1, pending=false
-        R->>DB: INSERT t_fund_flow（token出账流水，upsert）
     else TxSig.Err != nil（链上失败）
         R->>DB: UPDATE t_stake_leader_reward_claim tx_state=-1
         R->>DB: UPDATE t_stake_leader_reward reward_state=0, pending=false, tx_id=nil
@@ -317,7 +316,7 @@ flowchart TD
         direction TD
         A([收到 NewScannedTx\nSubService=StakeLeaderReward]) --> B{TxSig.Err?}
         B -- 链上失败 --> C["UPDATE t_stake_leader_reward_claim tx_state=-1\nUPDATE t_stake_leader_reward reward_state=0, pending=false, tx_id=nil\n（重置为可重新领取）"]
-        B -- 链上成功 --> D["UPDATE t_stake_leader_reward_claim tx_state=1\nUPDATE t_stake_leader_reward reward_state=1, pending=false\nINSERT t_fund_flow（token出账，upsert）"]
+        B -- 链上成功 --> D["UPDATE t_stake_leader_reward_claim tx_state=1\nUPDATE t_stake_leader_reward reward_state=1, pending=false"]
         C --> E([Commit])
         D --> E
     end

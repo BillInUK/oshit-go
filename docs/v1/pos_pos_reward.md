@@ -301,7 +301,6 @@ sequenceDiagram
     alt TxSig.Err == nil（链上成功）
         R->>DB: UPDATE t_pos_reward_claim tx_state=1
         R->>DB: UPDATE t_pos_reward reward_state=1, pending=false（by rewardIds）
-        R->>DB: INSERT t_fund_flow（SOL入账 + token出账，upsert）
     else TxSig.Err != nil（链上失败）
         R->>DB: UPDATE t_pos_reward_claim tx_state=-1
         R->>DB: UPDATE t_pos_reward reward_state=0, pending=false（重置，可重新领取）
@@ -348,7 +347,7 @@ flowchart TD
         B --> C["解析 rewardIds = ParseDbArray(claimRecord.RewardIds)"]
         C --> D{TxSig.Err?}
         D -- 链上失败 --> E["UPDATE t_pos_reward_claim tx_state=-1\nUPDATE t_pos_reward reward_state=0, pending=false\n（重置为可重新领取）"]
-        D -- 链上成功 --> F["UPDATE t_pos_reward_claim tx_state=1\nUPDATE t_pos_reward reward_state=1, pending=false\nINSERT t_fund_flow（SOL入账+token出账，upsert）"]
+        D -- 链上成功 --> F["UPDATE t_pos_reward_claim tx_state=1\nUPDATE t_pos_reward reward_state=1, pending=false"]
         E --> G([Commit])
         F --> G
     end

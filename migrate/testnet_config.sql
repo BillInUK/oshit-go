@@ -137,32 +137,32 @@ delete from t_tx_scan_info;
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
-    ('reward', 'take token', 'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', 'EHEu46gQMTFw1ieiok5XVYLV9MrKUFyk6sRLDjUpEQAd', '5mgtNggkqkKUTu4WweeArYTq55epKxof1WE8KH25c1k5QSA1esrNa99pLyFHuixpemoUj9pRPKtejzmbM1aGHWbm', '', '454355929', NOW(),NOW());
+    ('reward', 'take token', 'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', 'EHEu46gQMTFw1ieiok5XVYLV9MrKUFyk6sRLDjUpEQAd', '83oLjcGuacQMri8TsweCiHsmvjsTAuZhThd9RYGEfxYsL5eyua2Mu8C1SdzvS2ezk5D266F1F21ELh9RmP1ATKY', '', '468419669', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
-    ('reward', 'give token', 'AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ', '6zimN4MMo5CJW7VwhD3nAdXt6EpVoc5V7SCnZiS1kLPd', '3c1DoVsbMeYjzVjo4Ju4VYzwgWwXJQWUF4DRirN8138eCEiPNxMCHpnxJ1a7NHUPLZWdMXpu5oGAnhD324LLxFAQ', '', '452939864', NOW(),NOW());
+    ('reward', 'give token', 'AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ', '6zimN4MMo5CJW7VwhD3nAdXt6EpVoc5V7SCnZiS1kLPd', '4kuhDmiVUH8Kmxd77rHsd6q9WevoToQ119E4n1bQQaiGJYYKVwR2YNJHWoQNgtDGSutYQgTR5hr8SaRPKdi6PHFz', '', '468413162', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
-    ('reward', 'lottery', 'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', 'EHEu46gQMTFw1ieiok5XVYLV9MrKUFyk6sRLDjUpEQAd', '5mgtNggkqkKUTu4WweeArYTq55epKxof1WE8KH25c1k5QSA1esrNa99pLyFHuixpemoUj9pRPKtejzmbM1aGHWbm', '', '454355929', NOW(),NOW());
+    ('reward', 'lottery', 'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', 'EHEu46gQMTFw1ieiok5XVYLV9MrKUFyk6sRLDjUpEQAd', '83oLjcGuacQMri8TsweCiHsmvjsTAuZhThd9RYGEfxYsL5eyua2Mu8C1SdzvS2ezk5D266F1F21ELh9RmP1ATKY', '', '468419669', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
-    ('reward', 'reward code', '584AMuM1HkV4wRMMVPZuZy9g9mZbSAcTF7QiBrHJaZFE', '7AqjQqMB6WGUd6Tc84b81GDRVz65pcCiEePcZZtMBjSm', '2pJZsh4R9WX6dpgrn9NZEbFAyXPadvsn1USg2VKSSUHyzDBRG7eqVUdynJfFJ35Ke8dmLgDWgsWQohb2LX1aqLpY', '', '448363883', NOW(),NOW());
+    ('reward', 'reward code', '584AMuM1HkV4wRMMVPZuZy9g9mZbSAcTF7QiBrHJaZFE', '7AqjQqMB6WGUd6Tc84b81GDRVz65pcCiEePcZZtMBjSm', '59jM2yhLQHxy7hmJU2hctR5JctcA4GqVLgS5owzt1XGYUKqFWhqJ8urHVo7e3qcWsGdFxRphNk8TPHQTvdHTx2d5', '', '463871508', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
-    ("service", "sub_service", "native_account", "pda_account", "until_tx_id", "before_tx_id", "slot", "created_at", "updated_at")
+    (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
     ('reward', 'campaign quote', 'Gacw8xMnWtdSefjTqFhutA6yEdhymDThN7p95vRrThms', '2NVji8RvQAFhg4YJKuxqhdMjWMLJmWbKm5MBvSJmTUHL', '4Vteqp2SFBsq4EJF3dKvGJqQxL3CubrtnyE3pA6DCWaRZPoUJ8wekR7rDTWA4wHwiAKvECLD5BHxRJf49CU4MGuv', '', '451413105', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
-    ('pos', 'pos reward', 'C2E7K1fDUzpihX77xMNnhYNidRHkWnLMTRejWRvfjkDH', '2q66HpBbncGSy3iTMoJhhFZFeSsc6JofwV8xoRdGxtdK', '2ggyqAnaxhtbTZiURqjivXrHvpssg1QDKwvZtXiRTprucHfEjp2jJJnEic76PFc5L6CPQA9C6zaJscuYYZs382gT', '', '450913917', NOW(),NOW());
+    ('pos', 'pos reward', 'C2E7K1fDUzpihX77xMNnhYNidRHkWnLMTRejWRvfjkDH', '2q66HpBbncGSy3iTMoJhhFZFeSsc6JofwV8xoRdGxtdK', '2EjeyS6EBekiFNNpt76rMRRj7BQZnfTj9wwGZGK4VSEo6uCUz8wV83F26RSZK32uvNovrefoxLwL2tX5h6cozjdF', '', '468179450', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
@@ -172,16 +172,18 @@ VALUES
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
-    ('pos', 'stake token', 'CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6', 'CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6', '3BUhdNDeSNFRXLCF4Y3fnVUXE4VXTwXguXPZ6pZteaQqZ9RqZhRTUazXbPUZ6kCtMBXXBsNEaXyUacvL4icqV8mH', '', '454568185', NOW(),NOW());
-
-INSERT INTO public.t_tx_scan_info
-    (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
-VALUES ('pos', 'stake reward', 'H5WmBY45gxP8rj7gecLXsv6yNHqHFXNH4Acmp2U9E2Tb', 'ERYPoieDaHoh9jz1Gbmi9whHLd1QyWPKANvtZTnECufw', '4ev21ymUwMR9EJAWUB58bBZzgT9KfaX3WB4G1tssu5MoM9UwKmL8CU8bfdYZGjracdyChCUE3rvUZLCeBdnj6ud1', '', '454329612', NOW(),NOW());
+    ('pos', 'stake token', 'CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6', 'CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6', '4CATtfwvXKKdwj4exQsg6EobJFhHye8TnbkSQJUa1mPG9zm9YZj66ghKYbH5Tn2M6N8BaCA5kQ6J8VWMrHjzYMAB', '', '468179889', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
-    ('pos', 'stake leader reward', '2yRkofKW7xKRbN79MHKGX8HFyuHZEtTJDhTwAQjJHnMX', 'HqAp7uFZAckGA9jKFCZXg7rq1GX9CB2kwpGBKoq5geg6', '29dZDL5PFTaBYdqUz7E3gFBJsLzMsHckgwSiga2y1c2RBL95t2RL4y6PRepaZkfQcqxQhRCpe2RKPDn7UUyL9U7p', '', '453414783',NOW(),NOW());
+    ('pos', 'stake reward', 'H5WmBY45gxP8rj7gecLXsv6yNHqHFXNH4Acmp2U9E2Tb', 'ERYPoieDaHoh9jz1Gbmi9whHLd1QyWPKANvtZTnECufw', 'UeVGdCUHKTiPBEsikutc9HUw2mb1dsCy8jKT1Hwz8TPrHXNRK1bznzCkojbkF5ZhHvg2fUMMcc7LDbhpmKBHQTF', '', '468179455', NOW(),NOW());
+
+INSERT INTO public.t_tx_scan_info
+    (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
+VALUES
+    ('pos', 'stake leader reward', '2yRkofKW7xKRbN79MHKGX8HFyuHZEtTJDhTwAQjJHnMX', 'HqAp7uFZAckGA9jKFCZXg7rq1GX9CB2kwpGBKoq5geg6', '4EjeyG9GvWGhFVYjJDnXHA7Pije91HoFSfpUoMAg9dW68Xf1jDxCvdB5n3m74rAQM7cXZ1GxL9oad5j3FpjT6urp', '', '467320074', NOW(),NOW());
+
 
 -- reward服务初始化数据
 delete from t_level_dist;

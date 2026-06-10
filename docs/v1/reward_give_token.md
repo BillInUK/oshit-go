@@ -167,7 +167,6 @@ sequenceDiagram
     K->>R: consume NewScannedTransaction
     alt TxSig.Err == nil（链上成功）
         R->>DB: UPDATE t_give_token_record state=1
-        R->>DB: INSERT t_fund_flow（upsert：SOL入账 + token出账×(1+N)）
     else TxSig.Err != nil（链上失败）
         R->>DB: UPDATE t_give_token_record state=-1
     end
@@ -264,9 +263,7 @@ flowchart TD
         B --> C{TxSig.Err?}
         C -- 链上失败 --> D[UPDATE state=-1]
         C -- 链上成功 --> E[UPDATE state=1]
-        E --> F[DecodeServiceTransaction]
-        F --> G["INSERT t_fund_flow（upsert，唯一键=tx_id+to_account+flow_type）\n① SOL 入账：成本费（FlowCost）\n② token 出账：奖励 from（FlowReceipt）\n③ token 出账×N：奖励各邀请人（FlowInviter）"]
-        G --> H([Commit])
+        E --> H([Commit])
         D --> H
     end
 

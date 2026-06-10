@@ -196,7 +196,6 @@ sequenceDiagram
         R->>DB: UPDATE t_lottery_claim state=1
         R->>DB: UPDATE t_lottery_reward reward_state=1, pending=false
         R->>DB: UPDATE t_daily_claim_stats need_lottery=false
-        R->>DB: INSERT t_fund_flow（upsert：SOL入账 + token出账）
     else TxSig.Err != nil（链上失败）
         R->>DB: UPDATE t_lottery_claim state=-1
         R->>DB: UPDATE t_lottery_reward reward_state=-1, pending=false
@@ -287,8 +286,7 @@ flowchart TD
         D -- 链上失败 --> E["UPDATE t_lottery_claim state=-1\nUPDATE t_lottery_reward reward_state=-1, pending=false"]
         D -- 链上成功 --> F["UPDATE t_lottery_claim state=1\nUPDATE t_lottery_reward reward_state=1, pending=false"]
         F --> G["UPDATE t_daily_claim_stats\nneed_lottery=false（today）"]
-        G --> H["INSERT t_fund_flow（upsert，唯一键=tx_id+to_account+flow_type）\n① SOL 入账：成本费（FlowCost）\n② token 出账：奖励用户（FlowReceipt）"]
-        H --> I([Commit])
+        G --> I([Commit])
         E --> I
     end
 

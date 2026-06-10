@@ -3,7 +3,6 @@ package stake
 import (
 	"github.com/gofiber/fiber/v2/log"
 	"gorm.io/gorm/clause"
-	app_utils "oshit-go/app/utils"
 	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
@@ -71,19 +70,6 @@ func (l *StakeRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 			"updated_at":   time.Now(),
 		}).Error; err != nil {
 			log.Errorf("%s 更新stake reward状态失败，错误: %v", l.prefix, err)
-			return err
-		}
-		// 记录流水
-		decodedServiceTx, err := app_utils.DecodeServiceTransaction(&msg.DecodedTx)
-		if err != nil {
-			log.Errorf("%s 处理Kafka消息 - 解码服务交易失败: %v", l.prefix, err)
-			dbTx.Rollback()
-			return err
-		}
-		err = l.recordClaimRewardFlow(decodedServiceTx)
-		if err != nil {
-			log.Errorf("%s 记录流水失败: %v", l.prefix, err)
-			dbTx.Rollback()
 			return err
 		}
 	}
@@ -229,15 +215,6 @@ func (l *StakeRewardLogic) HandleLeaderScannedTx(msg entity.NewScannedTx) error 
 			log.Errorf("%s HandleLeaderScannedTx - 更新leader reward状态失败 txId=%s: %v", l.prefix, txId, err)
 			return err
 		}
-		decodedServiceTx, err := app_utils.DecodeServiceTransaction(&msg.DecodedTx)
-		if err != nil {
-			log.Errorf("%s HandleLeaderScannedTx - 解码服务交易失败 txId=%s: %v", l.prefix, txId, err)
-			return err
-		}
-		if err := l.recordLeaderClaimFlow(txId, decodedServiceTx); err != nil {
-			log.Errorf("%s HandleLeaderScannedTx - 记录流水失败 txId=%s: %v", l.prefix, txId, err)
-			return err
-		}
 	}
 
 	if err := dbTx.Commit().Error; err != nil {
@@ -303,89 +280,3 @@ func (l *StakeRewardLogic) HandleLeaderExpiredTx(msg entity.NewExpiredTx) error 
 	return nil
 }
 
-// recordLeaderClaimFlow 记录区域经理领取奖励的资金流水
-func (l *StakeRewardLogic) recordLeaderClaimFlow(txId string, decodedServiceTx *entity.DecodedServiceTransaction) error {
-	rewardFlow := model.FundFlow{
-		IsToken:     true,
-		FromAccount: decodedServiceTx.RewardInst.FromNativeAccount,
-		ToAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
-		TxID:        txId,
-		Direction:   constants.FlowOutput.String(),
-		ServiceType: constants.SubServiceStakeReward.String(),
-		FlowType:    constants.FlowReceipt.String(),
-		Decimals:    int16(decodedServiceTx.RewardInst.Decimals),
-		Amount:      decodedServiceTx.RewardInst.Amount,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	return l.db.Table(model.TableNameFundFlow).
-		Omit("record_id").
-		Clauses(clause.OnConflict{
-			Columns: []clause.Column{
-				{Name: "tx_id"},
-				{Name: "to_account"},
-				{Name: "flow_type"},
-			},
-			DoUpdates: clause.Assignments(map[string]interface{}{
-				"updated_at": time.Now(),
-			}),
-		}).
-		Create(&rewardFlow).Error
-}
-
-// recordClaimRewardFlow 记录Stake领取token记录
-func (l *StakeRewardLogic) recordClaimRewardFlow(decodedServiceTx *entity.DecodedServiceTransaction) error {
-	var err error
-	var fundFlows []model.FundFlow
-
-	db := l.db.Table(model.TableNameFundFlow)
-	// 1.记录dex入账sol流水
-	dexInputFlow := model.FundFlow{
-		IsToken:     false,
-		FromAccount: decodedServiceTx.FromNativeAccount,
-		ToAccount:   decodedServiceTx.ToDexInst.ToNativeAccount,
-		TxID:        decodedServiceTx.TxID,
-		Direction:   constants.FlowInput.String(),
-		ServiceType: constants.SubServiceStakeReward.String(),
-		FlowType:    constants.FlowCost.String(),
-		Decimals:    9,
-		Amount:      float64(decodedServiceTx.ToDexInst.Amount),
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	fundFlows = append(fundFlows, dexInputFlow)
-	// 2.记录奖励转账人出账流水
-	rewardOutputFlow := model.FundFlow{
-		IsToken:     true,
-		FromAccount: decodedServiceTx.RewardInst.FromNativeAccount,
-		ToAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
-		TxID:        decodedServiceTx.TxID,
-		Direction:   constants.FlowOutput.String(),
-		ServiceType: constants.SubServiceStakeReward.String(),
-		FlowType:    constants.FlowReceipt.String(),
-		Decimals:    int16(decodedServiceTx.RewardInst.Decimals),
-		Amount:      decodedServiceTx.RewardInst.Amount,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	fundFlows = append(fundFlows, rewardOutputFlow)
-	// 批量插入，当唯一键冲突时更新UpdateTime
-	batchSize := 100
-
-	// 使用ON CONFLICT DO UPDATE SET (推荐)
-	if err = db.Omit("record_id").Clauses(clause.OnConflict{
-		Columns: []clause.Column{
-			{Name: "tx_id"},
-			{Name: "to_account"},
-			{Name: "flow_type"},
-		},
-		DoUpdates: clause.Assignments(map[string]interface{}{
-			"updated_at": time.Now(),
-		}),
-	}).CreateInBatches(&fundFlows, batchSize).Error; err != nil {
-		log.Errorf("%s - 记录流水错误: %v", l.prefix, err)
-		return err
-	}
-
-	return nil
-}

@@ -5,7 +5,6 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	app_utils "oshit-go/app/utils"
 	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
@@ -95,19 +94,6 @@ func (l *PosRewardLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 				return err
 			}
 		}
-		// 记录流水
-		decodedServiceTx, err := app_utils.DecodeServiceTransaction(&msg.DecodedTx)
-		if err != nil {
-			log.Errorf("pos业务 - 解码服务交易失败: %v", err)
-			dbTx.Rollback()
-			return err
-		}
-		err = l.recordClaimRewardFlow(decodedServiceTx)
-		if err != nil {
-			log.Errorf("pos业务 - 记录流水失败: %v", err)
-			dbTx.Rollback()
-			return err
-		}
 	}
 
 	// 提交事务
@@ -177,60 +163,3 @@ func (l *PosRewardLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 	return nil
 }
 
-// recordClaimRewardFlow 记录POS领取token记录
-func (l *PosRewardLogic) recordClaimRewardFlow(decodedServiceTx *entity.DecodedServiceTransaction) error {
-	var err error
-	var fundFlows []model.FundFlow
-
-	table := l.db.Table(model.TableNameFundFlow)
-	// 1.记录dex入账sol流水
-	dexInputFlow := model.FundFlow{
-		IsToken:     false,
-		FromAccount: decodedServiceTx.FromNativeAccount,
-		ToAccount:   decodedServiceTx.ToDexInst.ToNativeAccount,
-		TxID:        decodedServiceTx.TxID,
-		Direction:   constants.FlowInput.String(),
-		ServiceType: constants.SubServicePosReward.String(),
-		FlowType:    constants.FlowCost.String(),
-		Decimals:    9,
-		Amount:      float64(decodedServiceTx.ToDexInst.Amount),
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	fundFlows = append(fundFlows, dexInputFlow)
-	// 2.记录奖励转账人出账流水
-	rewardOutputFlow := model.FundFlow{
-		IsToken:     true,
-		FromAccount: decodedServiceTx.RewardInst.FromNativeAccount,
-		ToAccount:   decodedServiceTx.RewardInst.ToNativeAccount,
-		TxID:        decodedServiceTx.TxID,
-		Direction:   constants.FlowOutput.String(),
-		ServiceType: constants.SubServicePosReward.String(),
-		FlowType:    constants.FlowReceipt.String(),
-		Decimals:    int16(decodedServiceTx.RewardInst.Decimals),
-		Amount:      decodedServiceTx.RewardInst.Amount,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	fundFlows = append(fundFlows, rewardOutputFlow)
-
-	// 批量插入，当唯一键冲突时更新UpdateTime
-	batchSize := 100
-
-	// 使用ON CONFLICT DO UPDATE SET (推荐)
-	if err = table.Omit("record_id").Clauses(clause.OnConflict{
-		Columns: []clause.Column{
-			{Name: "tx_id"},
-			{Name: "to_account"},
-			{Name: "flow_type"},
-		},
-		DoUpdates: clause.Assignments(map[string]interface{}{
-			"updated_at": time.Now(),
-		}),
-	}).CreateInBatches(&fundFlows, batchSize).Error; err != nil {
-		log.Errorf("%s - 记录流水错误: %v", l.prefix, err)
-		return err
-	}
-
-	return nil
-}

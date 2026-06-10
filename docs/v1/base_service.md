@@ -45,7 +45,8 @@ app/base/api/
 │   ├── task/
 │   │   ├── context.go           # TaskContext + runPeriodic / runPeriodicWithWatchdog
 │   │   ├── mgr.go               # TaskManager.StartAllTasks()
-│   │   ├── fee.go               # FeeTask（4 个子任务）
+│   │   ├── fee.go               # FeeTask（3 个子任务）
+│   │   ├── ttl_cleanup.go      # TTLCleanupTask（TTL 数据清理）
 │   │   ├── unit.go              # UnitTask（compute unit 模拟）
 │   │   ├── price.go             # PriceTask（Raydium 价格）
 │   │   ├── kline.go             # KLineTask（K 线爬虫）
@@ -300,18 +301,18 @@ runPeriodicWithWatchdog(rs, interval, lockKey, initTTL, fn)
 
 ### 9.1 FeeTask（`task/fee.go`）
 
-4 个子任务，各自独立的 redsync 锁，每 5s 触发，锁 TTL 2min：
+3 个子任务，各自独立的 redsync 锁，每 5s 触发，锁 TTL 2min：
 
 | 子任务 | 锁 key | 说明 |
 |---|---|---|
 | `readPriorityFee` | `base:sol:fee:stat-chain-fee:lock` | 调用 `getBlock` RPC 获取最新 slot 区块，解析每笔交易的 `SetComputeUnitPrice` / `SetComputeUnitLimit` 指令，写入 `t_fee_statistics`（上限 10000 条，超出则滚动覆盖最旧记录） |
 | `updatePerUnitFee` | `base:sol:fee:update-per-unit:lock` | 对 `t_fee_statistics` 按 `compute_unit_price` 4 分位（NTILE）加权平均，结果写 Redis `base:sol:fee:priority-per-unit` |
 | `updatePerTxFee` | `base:sol:fee:update-per-tx:lock` | 按百分比排名（PERCENT_RANK）分 4 组，取中位数（PERCENTILE_CONT 0.5），写 Redis `base:sol:fee:priority-per-tx` |
-| `estimateWeightAvgFee` | `base:sol:fee:est-weight-avg:lock` | 调用 QuickNode `qn_estimatePriorityFees` API，写 `t_qn_fee`（滚动 20 条），再均值写 Redis |
+
+> 旧版的 `estimateWeightAvgFee`（调用 QuickNode `qn_estimatePriorityFees` API）已删除，前端统一使用 `readPriorityFee` 链路的 `priority-per-unit` / `priority-per-tx` 数据。`t_qn_fee` 表已废弃。
 
 Redis key 格式：
 - `base:sol:fee:priority-per-unit` / `base:sol:fee:priority-per-tx`
-- `base:sol:fee:weight-avg-per-unit` / `base:sol:fee:weight-avg-per-tx`
 
 Redis 值为 `entity.FeeDetail` 的 JSON：`{Low, Medium, High, Extreme uint64}`
 
@@ -400,5 +401,32 @@ MarketBuyToken 是 DEX 购买行为，交易不经过 CommitTx，故不存在 t_
       - 找到且解析成功 → MarkTxFetchState(TxFetchSuccess) + 发 Kafka "NewScannedTransaction"
       - 其他错误 → 跳过（等下轮重试）
 ```
+
+### 9.8 TTLCleanupTask（`task/ttl_cleanup.go`）
+
+**职责**：定期清理过期业务数据，防止表膨胀导致磁盘不足。每天 SGT 04:00 执行，Redsync 分布式锁（`lock:ttl_cleanup`，30min TTL，WithTries(1)）。
+
+**清理方式**：批量 DELETE（每批 5000 行） + VACUUM FULL 回收磁盘空间。
+
+| 表 | TTL | 清理条件 |
+|---|---|---|
+| `t_fee_statistics` | 2天 | `created_at < cutoff` |
+| `t_service_tx` | 7天 | `created_at < cutoff` |
+| `t_take_token_record` | 1月 | `created_at < cutoff` |
+| `t_give_token_record` | 1月 | `created_at < cutoff` |
+| `t_lottery_claim` | 1月 | `created_at < cutoff` |
+| `t_daily_claim_stats` | 1月 | `created_at < cutoff` |
+| `t_lottery_reward` | 1月 | `created_at < cutoff` |
+| `t_campaign_quote_record` | 1月 | `created_at < cutoff` |
+| `t_reward_code` | 1月 | `reward_state = -2 AND created_at < cutoff`（只清理已超时的奖励码） |
+| `t_pos_snap_shot` | 3月 | `created_at < cutoff` |
+| `t_pos_reward` | 3月 | `created_at < cutoff` |
+| `t_pos_reward_claim` | 3月 | `created_at < cutoff` |
+| `t_stake_snap_shot` | 3月 | `created_at < cutoff` |
+| `t_stake_reward_claim` | 3月 | `created_at < cutoff` |
+| `t_stake_buy_token` | 3月 | `created_at < cutoff` |
+| `t_stake_reward` | 3月 | `created_at < cutoff AND NOT (reward_type=0 AND reward_state=0)`（保留未领取的固定利息） |
+
+> VACUUM FULL 会锁全表，但凌晨执行且数据量小，锁表时间通常在秒级。
 
 ---
