@@ -2,18 +2,19 @@
 delete from t_system_config;
 insert into t_system_config(env)values(1);
 
+-- aws配置
 delete from t_aws_config;
 insert into t_aws_config
 (access_key_id,secret_access_key,region)
 values
-    ('AKIAUBM64K3O3GFSHN7W','7eGqmuBxHO8x82s8gU6pjQRVtU4bkCgE5XC8qTvI','ap-southeast-1');
+    ('ENC~sqgSgTyY0NVv6pekNSkwHQrkYlKWOkg5oMKAX+hfaIZOwuG80Ky54xC7JS4WB938ZWU+lKm/m9WEtr10wPjKyQ==','ENC~CRD3d4mB6UQ4SG10t4qOEfp/Zp88hWWvsAo6ktxD1qwG2j82H6ULNy8zsGTTl6e+7gIgpHz1DFcW+/+VQ3XPOZzm1rptBvnFKHJm/JWZdVU=','ap-southeast-1');
 
 -- rpc 配置
 INSERT INTO public.t_rpc_endpoint
     (scope, provider, endpoint, api_key, wss_endpoint, wss_api_key, weight)
 VALUES
-    ('env', 'helius', 'https://devnet.helius-rpc.com', 'a4309444-6229-433a-a89f-3fbe85f5f043', 'wss://devnet.helius-rpc.com', 'a4309444-6229-433a-a89f-3fbe85f5f043', 1),
-    ('mainnet', 'helius', 'https://mainnet.helius-rpc.com', 'a4309444-6229-433a-a89f-3fbe85f5f043', 'wss://mainnet.helius-rpc.com', 'a4309444-6229-433a-a89f-3fbe85f5f043', 1);
+    ('env', 'helius', 'https://devnet.helius-rpc.com', 'ENC~At1eC+h77eD+A1jXTu0Acf8Ug9fLbV5CiB8lYl7y5agOo76Pdh5Zy8RfyvPdp5gMIMV5SAq1bLIUoE67+65ORvHmUitZ/PUIkaUgo0s9XbU=', 'wss://devnet.helius-rpc.com', 'ENC~At1eC+h77eD+A1jXTu0Acf8Ug9fLbV5CiB8lYl7y5agOo76Pdh5Zy8RfyvPdp5gMIMV5SAq1bLIUoE67+65ORvHmUitZ/PUIkaUgo0s9XbU=', 1),
+    ('mainnet', 'helius', 'https://mainnet.helius-rpc.com', 'ENC~At1eC+h77eD+A1jXTu0Acf8Ug9fLbV5CiB8lYl7y5agOo76Pdh5Zy8RfyvPdp5gMIMV5SAq1bLIUoE67+65ORvHmUitZ/PUIkaUgo0s9XbU=', 'wss://mainnet.helius-rpc.com', 'ENC~At1eC+h77eD+A1jXTu0Acf8Ug9fLbV5CiB8lYl7y5agOo76Pdh5Zy8RfyvPdp5gMIMV5SAq1bLIUoE67+65ORvHmUitZ/PUIkaUgo0s9XbU=', 1);
 
 delete from t_chain_config;
 insert into t_chain_config
@@ -169,17 +170,17 @@ delete from t_tx_scan_info;
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
-    ('reward', 'take token', 'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', 'EHEu46gQMTFw1ieiok5XVYLV9MrKUFyk6sRLDjUpEQAd', '83oLjcGuacQMri8TsweCiHsmvjsTAuZhThd9RYGEfxYsL5eyua2Mu8C1SdzvS2ezk5D266F1F21ELh9RmP1ATKY', '', '468419669', NOW(),NOW());
+    ('reward', 'take token', 'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', 'EHEu46gQMTFw1ieiok5XVYLV9MrKUFyk6sRLDjUpEQAd', '5WQPkuVLDaJhp5xRKYLPTXBGirLidd5C6iZjV4tit2sMLwPPHBKBPCcwiVsh7xh65ij7QfoX5AfNNqbSv4N2MggY', '', '468657714', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
-    ('reward', 'give token', 'AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ', '6zimN4MMo5CJW7VwhD3nAdXt6EpVoc5V7SCnZiS1kLPd', '4kuhDmiVUH8Kmxd77rHsd6q9WevoToQ119E4n1bQQaiGJYYKVwR2YNJHWoQNgtDGSutYQgTR5hr8SaRPKdi6PHFz', '', '468413162', NOW(),NOW());
+    ('reward', 'give token', 'AjhUm6o9eV2xV9G2ZPH3pSb8DhTAjb27MDrTkKMrDVVZ', '6zimN4MMo5CJW7VwhD3nAdXt6EpVoc5V7SCnZiS1kLPd', '3Nt2sTD6PU8Xp7LhPyAKkAHB9UR3tgDF1KBNwzvucVNzmUEoBMzs7qUzcvJfALb5wHMKcTfwVTZ9hZbf2KhZ3hAJ', '', '468657801', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
-    ('reward', 'lottery', 'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', 'EHEu46gQMTFw1ieiok5XVYLV9MrKUFyk6sRLDjUpEQAd', '83oLjcGuacQMri8TsweCiHsmvjsTAuZhThd9RYGEfxYsL5eyua2Mu8C1SdzvS2ezk5D266F1F21ELh9RmP1ATKY', '', '468419669', NOW(),NOW());
+    ('reward', 'lottery', 'GmKsGRytiVoeMZGmBVCWPcUzJGHVqcvzhP5K9cstdr3E', 'EHEu46gQMTFw1ieiok5XVYLV9MrKUFyk6sRLDjUpEQAd', '5WQPkuVLDaJhp5xRKYLPTXBGirLidd5C6iZjV4tit2sMLwPPHBKBPCcwiVsh7xh65ij7QfoX5AfNNqbSv4N2MggY', '', '468657714', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
@@ -235,6 +236,7 @@ INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
     ('gs-relay', 'refund', 'AUq3iXbJjBjED6ZN2JqJDdZ3mknd7cXv9HQqNdYuEZ6q', '7BV3LUAhoq4JpsLYejzx5dCdPpesB2ubAevxMNEoSbWE', '5xJDwFhzR1d9h2BLncVKUUCKdwwYdY38HNKRMiXFPPYRMMkq83Y4AMZJQvCqRnDXJkQSSanb7wEzNWritHCNLvkh', '', '467262544', NOW(),NOW());
+
 
 
 

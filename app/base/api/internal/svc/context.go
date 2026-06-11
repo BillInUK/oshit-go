@@ -198,6 +198,12 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 	if err := s.DB.Where("weight > 0").Find(&rpcEndpoints).Error; err != nil {
 		fmt.Printf("Warning: cannot load rpc endpoints from database: %v\n", err)
 	}
+	// 解密 ENC~ 字段（api_key, wss_api_key）
+	for i := range rpcEndpoints {
+		if err := utils.JasyptDecode(&rpcEndpoints[i], s.serviceKeyDecryptPwd, serviceKeyDecryptAlgo); err != nil {
+			return fmt.Errorf("decrypt rpc endpoint: %w", err)
+		}
+	}
 	var envEndpoints []utils.RPCEndpointConfig
 	for _, ep := range rpcEndpoints {
 		cfg := utils.RPCEndpointConfig{
@@ -249,6 +255,10 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 	var awsConfig model.AwsConfig
 	if err := s.DB.First(&awsConfig).Error; err != nil {
 		return fmt.Errorf("can not load aws config from database: %v", err)
+	}
+	// 解密 ENC~ 字段（access_key_id, secret_access_key）
+	if err := utils.JasyptDecode(&awsConfig, s.serviceKeyDecryptPwd, serviceKeyDecryptAlgo); err != nil {
+		return fmt.Errorf("decrypt aws config: %w", err)
 	}
 	s.AwsConfig = &awsConfig
 

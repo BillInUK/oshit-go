@@ -7,9 +7,9 @@ queries Solana RPC for the latest transaction signature per pda_account,
 and rewrites the t_tx_scan_info INSERT statements with fresh until_tx_id and slot.
 
 Usage:
-    python3 refresh_scan_checkpoint.py                          # default: testnet_config.sql
-    python3 refresh_scan_checkpoint.py --config mainnet_config.sql
-    python3 refresh_scan_checkpoint.py --dry-run                # preview without writing
+    python3 refresh_scan_checkpoint.py --rpc-url "https://devnet.helius-rpc.com/?api-key=xxx"
+    python3 refresh_scan_checkpoint.py --rpc-url "..." --mainnet-rpc-url "..." --config testnet/config.sql
+    python3 refresh_scan_checkpoint.py --rpc-url "..." --dry-run
 """
 
 import argparse
@@ -158,8 +158,10 @@ def replace_scan_info_block(sql: str, new_block: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Refresh t_tx_scan_info checkpoints with latest on-chain signatures")
-    parser.add_argument("--config", default="testnet_config.sql", help="Config SQL file name (default: testnet_config.sql)")
+    parser.add_argument("--config", default="testnet/config.sql", help="Config SQL file path (default: testnet/config.sql)")
     parser.add_argument("--dry-run", action="store_true", help="Preview changes without writing to file")
+    parser.add_argument("--rpc-url", required=True, help="Env RPC URL (e.g. https://devnet.helius-rpc.com/?api-key=xxx)")
+    parser.add_argument("--mainnet-rpc-url", help="Mainnet RPC URL (required if config has market buy token scans)")
     args = parser.parse_args()
 
     config_path = os.path.join(os.path.dirname(__file__), args.config)
@@ -171,11 +173,12 @@ def main():
     with open(config_path, "r") as f:
         sql = f.read()
 
-    # 1. Parse RPC endpoints (env + mainnet)
-    endpoints = parse_rpc_endpoints(sql)
-    if "env" not in endpoints:
-        print("ERROR: No scope='env' RPC endpoint found in config")
-        sys.exit(1)
+    # 1. RPC endpoints from command line args
+    endpoints = {"env": args.rpc_url}
+    print(f"  RPC [env]: {args.rpc_url}")
+    if args.mainnet_rpc_url:
+        endpoints["mainnet"] = args.mainnet_rpc_url
+        print(f"  RPC [mainnet]: {args.mainnet_rpc_url}")
 
     # 2. Parse existing scan info records
     records = parse_scan_info_records(sql)
