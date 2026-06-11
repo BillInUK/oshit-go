@@ -1,39 +1,29 @@
 app:
-  name: "base-api"
+  name: base-api
   port: 1100
-
 database:
-  host: "localhost"
+  dbname: oshit_db
+  host: localhost
+  password: ENC~GBVqLKtpUw0RMQOo1G2YbkzcUg7Ou4Gfm0W1jZdyy32VZtP/TJetJ0hXOUasRRzb
   port: 5432
-  user: "postgres"
-  password: "postgres"
-  dbname: "oshit_db"
-  sslmode: "disable"
-
-redis:
-  hosts: localhost:6379
-  password:
-
-#redis:
-#  master-name: mymaster
-#  hosts: 172.31.7.31:26379,172.31.0.184:26379,172.31.1.124:26379
-#  password:
-
-kafka:
-  brokers:
-    - "localhost:9092"
-
+  sslmode: disable
+  user: postgres
 dubbo:
   port: 20880
-
+kafka:
+  brokers:
+    - localhost:9092
 nacos:
-  host: "127.0.0.1"
-  username: "nacos"
-  password: "lJPQwjjO9k"
+  host: 127.0.0.1
+  username: ENC~1tIK+CyqorggOgWriIcBQtIkfzM903GHguHpQaHeihVcX7qMq4fcIH1eIcVs+mDr
+  password: ENC~iUkzP43GuCeTE+NgXsOhVWhrYNla4B6scKcPx6uDUDKuCK2Vd9cNr2H0iT1Xlldx
   subscribe_configs:
     base_runtime:
-      data_id: "base-runtime.yaml"
-      group: "oshit-go"
+      data_id: base-runtime.yaml
+      group: oshit-go
     service_registry:
-      data_id: "base-service-registry.yaml"
-      group: "oshit-go"
+      data_id: base-service-registry.yaml
+      group: oshit-go
+redis:
+  hosts: localhost:6379
+  password: null

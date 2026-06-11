@@ -17,14 +17,15 @@ const (
 	defaultAWSRegion  = "ap-southeast-1"
 )
 
-// LoadConfigDecryptKey loads the AES decryption key for Nacos config fields.
+// LoadConfigDecryptKey loads the AES decryption key via KMS envelope decryption.
 //
-// Resolution order:
-//  1. KMS envelope decryption: read base64-encoded KMS ciphertext from
-//     $CONFIG_KEY_ENC_FILE (or /etc/credentials/oshit-config-key.enc),
-//     call KMS Decrypt → return plaintext key.
-//  2. Fallback: if the enc file does not exist (local dev), return fallbackKey.
-func LoadConfigDecryptKey(fallbackKey string) (string, error) {
+// Reads base64-encoded KMS ciphertext from $CONFIG_KEY_ENC_FILE
+// (default: /etc/credentials/oshit-config-key.enc), calls KMS Decrypt,
+// and returns the plaintext AES key.
+//
+// Local dev: set CONFIG_KEY_ENC_FILE=./etc/dev-config-key.enc
+// and AWS_PROFILE=oshit-testnet (or whichever profile has kms:Decrypt).
+func LoadConfigDecryptKey() (string, error) {
 	encFile := os.Getenv("CONFIG_KEY_ENC_FILE")
 	if encFile == "" {
 		encFile = defaultEncKeyFile
@@ -32,15 +33,7 @@ func LoadConfigDecryptKey(fallbackKey string) (string, error) {
 
 	ciphertextB64, err := os.ReadFile(encFile)
 	if err != nil {
-		// file not found → local dev, use fallback
-		if os.IsNotExist(err) {
-			if fallbackKey == "" {
-				return "", fmt.Errorf("encrypted key file %s not found and no fallback key provided", encFile)
-			}
-			fmt.Printf("[credential] KMS enc file not found, using fallback key (local dev mode)\n")
-			return fallbackKey, nil
-		}
-		return "", fmt.Errorf("read encrypted key file %s: %w", encFile, err)
+		return "", fmt.Errorf("read encrypted key file %s: %w (set CONFIG_KEY_ENC_FILE for local dev)", encFile, err)
 	}
 
 	ciphertext, err := base64.StdEncoding.DecodeString(strings.TrimSpace(string(ciphertextB64)))

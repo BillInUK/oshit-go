@@ -1,35 +1,29 @@
-system:
-  env: 1
-
+aws:
+  access_key_id: ENC~wkoz8rAlO7Wl/VF395n3vCcFUaRPNtu5Y7/CnUBct8J50Lx/fIcB2VemP+oJ+t9fY6cyslzfJUaQzfS3wyZ0Bw==
+  region: ap-southeast-1
+  secret_access_key: ENC~ydI8NctmbzpLqmlj8fXVExSTEh7CHxYg9RZa0D8a1C+Sa1npsJ2iwM5d0tbdB6/xA/LLCWZ8tXmMsIbMTL0ZJBcEYtZ6S0dBDjTQE6sMfXc=
 chain:
-  chain_name: "solana"
-  rpc_url: "https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
-  wss_url: "wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
+  chain_name: solana
   decimals: 9
-  symbol: "SOL"
-
-user_wallet_rpc:
-  chain_name: "solana"
-  rpc_url: "https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
-  wss_url: "wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
-
-mainnet_rpc:
-  chain_name: "solana"
-  rpc_url: "https://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043"
-  wss_url: "wss://mainnet.helius-rpc.com/?api-key=a4309444-6229-433a-a89f-3fbe85f5f043"
-
-token:
-  token_name: "OShit"
-  token_symbol: "OShit"
-  decimals: 3
-  mint: "wtnrTujJqBRUknLRhQQcUSwzAzx8LvcxKXEuBwvFnJM"
-
+  symbol: SOL
 fee_tolerance:
   max_less_rate: 0.05
-
-aws:
-  access_key_id: "AKIAUBM64K3O3GFSHN7W"
-  secret_access_key: "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"
-  region: "ap-southeast-1"
-
-lighthouse_address: "L2TExMFKdjpN9kozasaurPirfHy9P8sbXoAN1qA3S95"
+lighthouse_address: L2TExMFKdjpN9kozasaurPirfHy9P8sbXoAN1qA3S95
+mainnet_rpc:
+  api_key: ENC~Y5CdEUaVyQkY75AYfvDXQBH3Kj39eLrlyBz8HrwPFwTQVzD6Rpg+N6ajtnSel/wNlvl+/J9RU2HDiO3NDstB3OTGIFlNh59tN0NDiznXvXY=
+  endpoint: https://mainnet.helius-rpc.com
+  provider: helius
+rpc_endpoints:
+  - api_key: ENC~0Ewrw0kwkD9CmychCxi7FP16O+QMTXDj4NCjrPhzskSkbQzsGZD8MNd0LVGbS5xNdm+1ReX4pAoTsWJKC3IBVVBWsslp/W+4HJ1HWquiVh8=
+    endpoint: https://devnet.helius-rpc.com
+    provider: helius
+    weight: 1
+    wss_api_key: ENC~cWNKa1xSQXe9m4g9PDUlLHiT5gwDSeEU+fmj3LAsloQyPKD7H1PS9SitrFcqyr+uiNRlO4gq9D9lbboZuWjz4JDlfxwLlaNfEVaq4L6BSe4=
+    wss_endpoint: wss://devnet.helius-rpc.com
+system:
+  env: 1
+token:
+  decimals: 3
+  mint: wtnrTujJqBRUknLRhQQcUSwzAzx8LvcxKXEuBwvFnJM
+  token_name: OShit
+  token_symbol: OShit

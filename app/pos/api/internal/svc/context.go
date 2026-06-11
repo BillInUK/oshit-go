@@ -50,11 +50,6 @@ type ServiceContext struct {
 	configDecryptKey   string
 }
 
-const (
-	// fallback for local dev only; production reads from $CREDENTIALS_DIRECTORY
-	configDecryptKeyFallback = "fktYimwMl3OfUF3m"
-)
-
 func NewServiceContext() (*ServiceContext, error) {
 	// 加载配置
 	cfg, err := config.LoadConfig()
@@ -63,7 +58,7 @@ func NewServiceContext() (*ServiceContext, error) {
 	}
 
 	// 加载解密密钥
-	decryptKey, err := utils.LoadConfigDecryptKey(configDecryptKeyFallback)
+	decryptKey, err := utils.LoadConfigDecryptKey()
 	if err != nil {
 		return nil, fmt.Errorf("load config decrypt key: %w", err)
 	}

@@ -158,10 +158,9 @@ aws kms encrypt --profile oshit-mainnet ...
 | RPC API Key | Nacos `base-runtime.yaml` | QuickNode/Helius 等 API Key |
 | AWS 凭据 | Nacos `base-runtime.yaml` | AccessKey / SecretKey |
 
-### 4.2 Solana 私钥类（用 `reencrypt_keys` 工具迁移）
+### 4.2 Solana 私钥类（用 `reencrypt_keys` 工具加密）
 
-这些字段**已经是** jasypt 加密的密文，但加密时用的是旧的硬编码密码 `fktYimwMl3OfUF3m`。
-切换到新 AES 密钥后，必须用新密码**重新加密**，否则运行时解密会失败。
+这些字段存储 jasypt 加密的 Solana 私钥密文（无 `ENC~` 前缀），加密密钥为 KMS 管理的 AES 密钥。
 
 | 敏感项 | 当前位置 | 说明 |
 |---|---|---|
@@ -169,8 +168,8 @@ aws kms encrypt --profile oshit-mainnet ...
 | 服务私钥 (数据库) | `t_service_key` 表 → `encrypted_key` 列 | 同上，数据库中的备份 |
 
 > **注意**：这两类加密方式不同，不能混用工具。
-> - 配置密码类：明文 → `encrypt_config` 加密 → `ENC~xxx` 密文
-> - 私钥类：旧密文 → `reencrypt_keys` 用旧密码解密 → 用新密码重新加密 → 新密文（无 `ENC~` 前缀）
+> - 配置密码类：明文 → `encrypt_config` 加密 → `ENC~xxx` 密文（运行时 `JasyptDecode` 自动解密）
+> - 私钥类：明文 → `reencrypt_keys --plaintext` 加密 → jasypt 密文（运行时 `JasyptDecrypt` 单独解密）
 
 ---
 
@@ -187,7 +186,8 @@ aws kms encrypt --profile oshit-mainnet ...
 | 额外依赖 | 无 | AWS SDK v2（`~2MB` 编译体积） |
 | 额外费用 | 无 | ~$1/月 |
 | 启动延迟 | 无 | +100~200ms（一次 KMS API 调用） |
-| 本地开发 | 无影响（fallback） | 无影响（fallback） |
+| 本地开发 | 无需配置 | 需配置 AWS CLI profile + `.enc` 文件 |
+| 代码中明文密码 | 有（硬编码 fallback） | **无** |
 
 ---
 
@@ -263,36 +263,29 @@ go build -o reencrypt_keys ./cmd/reencrypt_keys/
 > 注：`encrypt_config` 不处理 `base-service-registry.yaml` 中的 `encrypted_key`，
 > 那些是 jasypt 加密的 Solana 私钥，由下面的 `reencrypt_keys` 工具单独处理。
 
-**B4. 重新加密 Solana 私钥**（用新密码替换旧硬编码密码）
+**B4. 加密 Solana 私钥**
 
 ```bash
-# Nacos YAML 中的私钥（先 dry-run 预览）
+# 加密单个私钥（输出 jasypt 密文，填入 YAML 或数据库）
 ./reencrypt_keys \
-  --old-key "fktYimwMl3OfUF3m" \
   --new-key "$(cat /tmp/oshit-key.txt)" \
-  --file migrate/testnet/base-service-registry.yaml \
-  --dry-run
+  --plaintext "<Base58 格式的 Solana 私钥>"
 
-# 确认无误后正式执行
+# 批量迁移 YAML（旧密文 → 新密文，用于密钥轮换场景）
 ./reencrypt_keys \
-  --old-key "fktYimwMl3OfUF3m" \
+  --old-key "<旧AES密钥>" \
   --new-key "$(cat /tmp/oshit-key.txt)" \
   --file migrate/testnet/base-service-registry.yaml
 ```
 
-```bash
-# 数据库 t_service_key 表中的私钥（逐条处理）
-# 对每条记录：
-./reencrypt_keys \
-  --old-key "fktYimwMl3OfUF3m" \
-  --new-key "$(cat /tmp/oshit-key.txt)" \
-  --value "<数据库中的 encrypted_key 值>"
-# 输出新密文，然后更新数据库：
-# UPDATE t_service_key SET encrypted_key = '<新密文>'
-#   WHERE service = '...' AND sub_service = '...';
-```
+将输出的密文填入：
+- `base-service-registry.yaml` 的 `encrypted_key` 字段
+- 数据库 `t_service_key` 表的 `encrypted_key` 列
 
-> 完成后，旧硬编码密码 `fktYimwMl3OfUF3m` 不再被任何生产环境依赖（仅保留为本地开发 fallback）。
+> `reencrypt_keys` 工具三种模式：
+> - `--plaintext`：明文私钥 → 加密（新增私钥时用）
+> - `--value`：单条旧密文 → 新密文（密钥轮换时用）
+> - `--file`：批量迁移 YAML 中的所有 `encrypted_key`（密钥轮换时用）
 
 **B5. 更新 Nacos 配置**
 
@@ -347,7 +340,27 @@ curl http://<host>:1200/health   # reward
 
 #### E. 本地开发
 
-不需要任何改动。本地没有 `/etc/credentials/oshit-config-key.enc` 文件时，自动 fallback 到代码中的旧密码，开发体验完全不变。
+本地开发与服务器使用相同的 KMS 解密流程，代码中**没有任何硬编码密码**。
+
+**一次性配置：**
+
+1. 安装 AWS CLI 并配置 profile（需要有 `kms:Decrypt` 权限的 IAM 用户）：
+   ```bash
+   aws configure --profile oshit-testnet
+   ```
+2. 生成本地开发用的 `.enc` 文件（用与测试环境相同的 KMS Key 加密同一把 AES 密钥）：
+   ```bash
+   cp encrypted-dek.b64 /etc/credentials/oshit-config-key.enc
+   ```
+3. 用 AES 密钥加密本地 `application.yaml` 中的敏感字段
+
+**启动方式：**
+```bash
+# GoLand Run Configuration 或命令行设置环境变量
+AWS_PROFILE=oshit-testnet go run base.go
+```
+
+> 如果 `.enc` 文件放在非默认路径，可通过 `CONFIG_KEY_ENC_FILE` 环境变量指定。
 
 ---
 
@@ -355,9 +368,9 @@ curl http://<host>:1200/health   # reward
 
 | 文件 | 改动 | 状态 |
 |---|---|---|
-| `common/utils/credential.go` | 新增：KMS 信封解密，本地 fallback | 已完成 |
+| `common/utils/credential.go` | 新增：KMS 信封解密，无硬编码密码 | 已完成 |
 | `go.mod` | 新增：`aws-sdk-go-v2/service/kms` | 已完成 |
-| `app/base/api/internal/svc/context.go` | 硬编码密码 → `LoadConfigDecryptKey()` | 已完成 |
+| `app/base/api/internal/svc/context.go` | 删除硬编码密码，改为 `LoadConfigDecryptKey()` + `JasyptDecode` 解密 application.yaml / DB 数据 | 已完成 |
 | `app/reward/api/internal/svc/context.go` | 同上 | 已完成 |
 | `app/pos/api/internal/svc/context.go` | 同上 | 已完成 |
 | `app/base/api/internal/svc/nacos_config.go` | YAML 解析后 `JasyptDecode()` 解密 | 已完成 |

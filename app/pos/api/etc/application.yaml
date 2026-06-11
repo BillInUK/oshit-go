@@ -1,39 +1,36 @@
 app:
-  name: "pos-api"
+  name: pos-api
   port: 1300
-
 database:
-  host: "localhost"
+  dbname: oshit_db
+  host: localhost
+  password: ENC~GBVqLKtpUw0RMQOo1G2YbkzcUg7Ou4Gfm0W1jZdyy32VZtP/TJetJ0hXOUasRRzb
   port: 5432
-  user: "postgres"
-  password: "postgres"
-  dbname: "oshit_db"
-  sslmode: "disable"
-
-redis:
-  addr: "localhost"
-  port: 6379
-  password: ""
-  db: 0
-
+  sslmode: disable
+  user: postgres
 kafka:
   brokers:
-    - "localhost:9092"
+    - localhost:9092
   consumer:
-    group_id: "pos-service"
-    topic: "ServiceTransaction"
+    group_id: pos-service
     snapshot_topics:
-      - "StakeTopic"
-      - "PosTopic"
-
+      - StakeTopic
+      - PosTopic
+    topic: ServiceTransaction
 nacos:
-  host: "127.0.0.1"
-  username: "nacos"
-  password: "lJPQwjjO9k"
+  host: 127.0.0.1
+  username: ENC~1tIK+CyqorggOgWriIcBQtIkfzM903GHguHpQaHeihVcX7qMq4fcIH1eIcVs+mDr
+  password: ENC~iUkzP43GuCeTE+NgXsOhVWhrYNla4B6scKcPx6uDUDKuCK2Vd9cNr2H0iT1Xlldx
   subscribe_configs:
     base_runtime:
-      data_id: "base-runtime.yaml"
-      group: "oshit-go"
+      data_id: base-runtime.yaml
+      group: oshit-go
     pos_runtime:
-      data_id: "pos-runtime.yaml"
-      group: "oshit-go"
+      data_id: pos-runtime.yaml
+      group: oshit-go
+
+redis:
+  addr: localhost
+  db: 0
+  password: ""
+  port: 6379

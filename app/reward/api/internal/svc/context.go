@@ -45,8 +45,6 @@ type ServiceContext struct {
 
 const (
 	decryptAlgo = "PBEWithHMACSHA512AndAES_256"
-	// fallback for local dev only; production reads from $CREDENTIALS_DIRECTORY
-	decryptPwdFallback = "fktYimwMl3OfUF3m"
 )
 
 func NewServiceContext() (*ServiceContext, error) {
@@ -57,7 +55,7 @@ func NewServiceContext() (*ServiceContext, error) {
 	}
 
 	// 加载解密密钥
-	decryptKey, err := utils.LoadConfigDecryptKey(decryptPwdFallback)
+	decryptKey, err := utils.LoadConfigDecryptKey()
 	if err != nil {
 		return nil, fmt.Errorf("load config decrypt key: %w", err)
 	}

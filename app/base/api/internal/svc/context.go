@@ -26,9 +26,7 @@ import (
 
 const (
 	serviceKeyDecryptAlgo = "PBEWithHMACSHA512AndAES_256"
-	// fallback for local dev only; production reads from $CREDENTIALS_DIRECTORY
-	serviceKeyDecryptPwdFallback = "fktYimwMl3OfUF3m"
-	rsaPublicKey                 = `-----BEGIN PUBLIC KEY-----
+	rsaPublicKey          = `-----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCym6SwEHnkHqpVcS9sxP4I2D4b
 aSxPflUNtEqE0dmLfbA8kZw7Rs8eGkUj4kOEMSZA4y4jtp1wn0QJJF31Obop60j1
 9j3KtTuSLBY9xuJoGNMxzYZCybzxcp+h2olUsp0SrjEfs/Z6ePY0k+5+0umwbvM4
@@ -50,7 +48,7 @@ func NewServiceContext() (*ServiceContext, error) {
 	}
 
 	// 加载解密密钥
-	decryptKey, err := utils.LoadConfigDecryptKey(serviceKeyDecryptPwdFallback)
+	decryptKey, err := utils.LoadConfigDecryptKey()
 	if err != nil {
 		return nil, fmt.Errorf("load config decrypt key: %w", err)
 	}

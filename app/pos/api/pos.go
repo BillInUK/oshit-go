@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"log/slog"
+	"os"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -30,6 +32,7 @@ func main() {
 	// 创建服务上下文
 	srvCtx, err := svc.NewServiceContext()
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "[FATAL] %v\n", err)
 		log.Fatal(err)
 	}
 	defer srvCtx.Close()

@@ -142,6 +142,8 @@ type TaskContext struct {
 main()
  └── svc.NewServiceContext()
       ├── config.LoadConfig()           → viper 读 ./etc/application.yaml
+      ├── LoadConfigDecryptKey()        → KMS 信封解密，获取 AES 密钥（仅存内存）
+      ├── JasyptDecode(cfg)             → 解密 application.yaml 中的 ENC~ 字段（DB/Redis/Nacos 密码）
       ├── initDatabase()                → GORM postgres 连接
       ├── initRedis()                   → go-redis UniversalClient（支持 Sentinel）
       ├── redsync.New(pool)             → 分布式锁
@@ -150,13 +152,15 @@ main()
       │    SystemConfig / ChainConfig / UserWalletRPCConfig / MainnetRPCConfig
       │    TokenConfig / FeeTolerance / AwsConfig / LightHouseAddress
       │    ServiceInfoMap（从 t_service_info 加载，二维索引 [service][subService]）
+      │    t_rpc_endpoint / t_aws_config 读取后 JasyptDecode 解密 ENC~ 字段
       ├── initServiceKeys()             → 从 DB 兜底加载 t_service_key 加密私钥
-      │    解密算法: PBEWithHMACSHA512AndAES_256，密码: fktYimwMl3OfUF3m
+      │    解密算法: PBEWithHMACSHA512AndAES_256，密钥来自 KMS
       │    存入 CoreContext.ServiceKeyMap[service][subService] = solana.PrivateKey
       ├── initNacosConfigClient()       → 初始化 Nacos config client
       ├── initNacosRuntimeAndRegistry() → 优先从 Nacos 覆盖 DB 兜底配置：
       │    base-runtime.yaml: chain/token/system/fee_tolerance/aws/lighthouse
       │    base-service-registry.yaml: service_info/service_key/scan 静态注册配置
+      │    YAML 解析后 JasyptDecode 解密 ENC~ 字段
       ├── initSolanaRPC()               → rpc.New(ChainConfig.RPCURL)，分别初始化
       │    RpcClient（服务端）和 UserWalletRpcClient（给前端用）
       ├── initKafkaProducer()           → kafka-go writer
