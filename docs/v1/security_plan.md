@@ -128,7 +128,7 @@ key, err := os.ReadFile(os.Getenv("CREDENTIALS_DIRECTORY") + "/CONFIG_DECRYPT_KE
 | 3 | 编写 systemd unit 文件 | `deploy/` | 加入 `LoadCredential` + `LimitCORE=0` + `User=appuser` |
 | 4 | 新增 credential 工具 | `common/utils/credential.go` | 从 `$CREDENTIALS_DIRECTORY` 读密钥；无此变量时 fallback 旧方式（兼容本地开发） |
 | 5 | jasypt 密码迁移 | 三个服务的 `svc/context.go` | 从硬编码改为 credential 读取 |
-| 6 | 编写加密工具脚本 | `migrate/encrypt_config.py` | 用 AES 密钥加密 Nacos yaml 中的敏感字段 |
+| 6 | 编写加密工具 | `cmd/encrypt_config/` | 用 AES 密钥加密 Nacos yaml 中的敏感字段 |
 | 7 | Nacos 配置解密 | 三个服务的 `svc/nacos_config.go` | 加载 Nacos 配置时对密文字段解密 |
 | 8 | 测试验证 | — | 3 个服务正常启动、配置热更新正常 |
 

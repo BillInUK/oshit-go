@@ -180,7 +180,7 @@ pos 当前订阅两个 Nacos dataId，Group 均为 `oshit-go`：
 | Data ID | 用途 | 来源 |
 |---|---|---|
 | `base-runtime.yaml` | 全局链、Token、环境、手续费容错、LightHouse 地址配置 | 与 base / reward 服务共用 |
-| `pos-runtime.yaml` | pos/stake 自身业务规则配置 | `migrate/pos-runtime.yaml` |
+| `pos-runtime.yaml` | pos/stake 自身业务规则配置 | `migrate/testnet/pos-runtime.yaml` |
 
 `base-runtime.yaml` 中 pos 使用的字段：
 
@@ -203,7 +203,7 @@ fee_tolerance:
 lighthouse_address: "..."
 ```
 
-`pos-runtime.yaml` 包含以下业务规则（详见 `migrate/pos-runtime.yaml`）：
+`pos-runtime.yaml` 包含以下业务规则（详见 `migrate/testnet/pos-runtime.yaml`）：
 
 | 配置项 | 说明 |
 |---|---|

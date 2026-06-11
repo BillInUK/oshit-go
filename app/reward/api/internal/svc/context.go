@@ -2,6 +2,10 @@ package svc
 
 import (
 	"context"
+	"log"
+	"os"
+	"time"
+
 	_ "dubbo.apache.org/dubbo-go/v3/imports"
 	"fmt"
 	"github.com/gagliardetto/solana-go"
@@ -36,11 +40,13 @@ type ServiceContext struct {
 	LightHouseAddress solana.PublicKey
 	TaskMgr           *task.TaskManager
 	CampaignClientV1  *rewardrpc.CampaignClient
+	configDecryptKey  string
 }
 
 const (
 	decryptAlgo = "PBEWithHMACSHA512AndAES_256"
-	decryptPwd  = "fktYimwMl3OfUF3m"
+	// fallback for local dev only; production reads from $CREDENTIALS_DIRECTORY
+	decryptPwdFallback = "fktYimwMl3OfUF3m"
 )
 
 func NewServiceContext() (*ServiceContext, error) {
@@ -48,6 +54,17 @@ func NewServiceContext() (*ServiceContext, error) {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		return nil, err
+	}
+
+	// 加载解密密钥
+	decryptKey, err := utils.LoadConfigDecryptKey(decryptPwdFallback)
+	if err != nil {
+		return nil, fmt.Errorf("load config decrypt key: %w", err)
+	}
+
+	// 解密 application.yaml 中的 ENC~ 字段
+	if err := utils.JasyptDecode(cfg, decryptKey, decryptAlgo); err != nil {
+		return nil, fmt.Errorf("decrypt application config: %w", err)
 	}
 
 	// 初始化数据库
@@ -67,6 +84,7 @@ func NewServiceContext() (*ServiceContext, error) {
 
 	// 创建 ServiceContext
 	srvCtx := &ServiceContext{
+		configDecryptKey: decryptKey,
 		CoreContext: core_context.CoreContext{
 			Config:  cfg,
 			DB:      db,
@@ -133,7 +151,11 @@ func initDatabase(cfg config.DatabaseConfig) (*gorm.DB, error) {
 		" sslmode=" + cfg.SSLMode
 
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
+		Logger: logger.New(log.New(os.Stderr, "\r\n", log.LstdFlags), logger.Config{
+			SlowThreshold:             200 * time.Millisecond,
+			LogLevel:                  logger.Warn,
+			IgnoreRecordNotFoundError: true,
+		}),
 	})
 }
 

@@ -59,8 +59,19 @@ oshit-go/
 │   │   └── response/     # HTTP 响应结构
 │   └── utils/            # 通用工具（amount, jwt, jasypt, solana_util）
 ├── repositories/
-│   ├── base_structure.sql          # Base 服务所有表的 DDL
-│   └── reward_structure.sql        # Reward 服务所有表的 DDL
+│   └── structures.sql              # 所有服务的数据库表 DDL
+├── migrate/
+│   ├── testnet/                    # 测试网 Nacos 配置和初始化 SQL
+│   │   ├── base-runtime.yaml
+│   │   ├── base-service-registry.yaml
+│   │   ├── reward-runtime.yaml
+│   │   ├── pos-runtime.yaml
+│   │   └── config.sql
+│   ├── db_migrate.py               # 数据库迁移脚本
+│   └── refresh_scan_checkpoint.py
+├── cmd/
+│   ├── encrypt_config/             # Nacos YAML 敏感字段加密工具
+│   └── reencrypt_keys/             # Solana 私钥重新加密迁移工具
 └── docs/v1               # 参考文档（本文件所在目录）
 └── deploy                # 部署相关脚本和docker file,scripts下的server.sh用作线上启动程序脚本
 ```

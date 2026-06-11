@@ -63,7 +63,7 @@ app/base/api/
 
 ## 4. 数据库表
 
-* base 服务的数据库表结构在 repositories/structure/base_structure.sql 里面定义
+* 数据库表结构在 repositories/structures.sql 里面定义
 
 ---
 

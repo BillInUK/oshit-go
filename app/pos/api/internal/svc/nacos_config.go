@@ -296,6 +296,9 @@ func (s *ServiceContext) applyBaseRuntimeContent(content string) error {
 	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
 		return err
 	}
+	if err := utils.JasyptDecode(&cfg, s.configDecryptKey, utils.JasyptDefaultAlgorithm); err != nil {
+		return fmt.Errorf("decrypt nacos base runtime config: %w", err)
+	}
 	if cfg.Chain.ChainName == "" {
 		return fmt.Errorf("chain.chain_name is required")
 	}
@@ -350,6 +353,9 @@ func (s *ServiceContext) applyPosRuntimeContent(content string) error {
 	var cfg posRuntimeNacosConfig
 	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
 		return err
+	}
+	if err := utils.JasyptDecode(&cfg, s.configDecryptKey, utils.JasyptDefaultAlgorithm); err != nil {
+		return fmt.Errorf("decrypt nacos pos runtime config: %w", err)
 	}
 	if cfg.PosReward.RewardAccount == "" || cfg.PosReward.CostAccount == "" {
 		return fmt.Errorf("pos_reward.reward_account and pos_reward.cost_account are required")

@@ -2,6 +2,10 @@ package svc
 
 import (
 	"context"
+	"log"
+	"os"
+	"time"
+
 	_ "dubbo.apache.org/dubbo-go/v3/imports"
 	"errors"
 	"fmt"
@@ -43,13 +47,30 @@ type ServiceContext struct {
 	StakeTokenPoolMap  map[string]model.StakeTokenPool     // stake token 池配置
 	StakeDistLevel     int32                               // stake 奖励层级配置
 	StakeStarWhitelist map[string]model.StakeStarWhitelist // stake 星级用户白名单
+	configDecryptKey   string
 }
+
+const (
+	// fallback for local dev only; production reads from $CREDENTIALS_DIRECTORY
+	configDecryptKeyFallback = "fktYimwMl3OfUF3m"
+)
 
 func NewServiceContext() (*ServiceContext, error) {
 	// 加载配置
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		return nil, err
+	}
+
+	// 加载解密密钥
+	decryptKey, err := utils.LoadConfigDecryptKey(configDecryptKeyFallback)
+	if err != nil {
+		return nil, fmt.Errorf("load config decrypt key: %w", err)
+	}
+
+	// 解密 application.yaml 中的 ENC~ 字段
+	if err := utils.JasyptDecode(cfg, decryptKey, utils.JasyptDefaultAlgorithm); err != nil {
+		return nil, fmt.Errorf("decrypt application config: %w", err)
 	}
 
 	// 初始化数据库
@@ -69,6 +90,7 @@ func NewServiceContext() (*ServiceContext, error) {
 
 	// 创建 ServiceContext
 	srvCtx := &ServiceContext{
+		configDecryptKey: decryptKey,
 		CoreContext: core_context.CoreContext{
 			Config:  cfg,
 			DB:      db,
@@ -147,7 +169,11 @@ func initDatabase(cfg config.DatabaseConfig) (*gorm.DB, error) {
 		" sslmode=" + cfg.SSLMode
 
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
+		Logger: logger.New(log.New(os.Stderr, "\r\n", log.LstdFlags), logger.Config{
+			SlowThreshold:             200 * time.Millisecond,
+			LogLevel:                  logger.Warn,
+			IgnoreRecordNotFoundError: true,
+		}),
 	})
 }
 

@@ -62,7 +62,7 @@ reward服务的目录结构如下
 
 # 4. 数据库表
 
-* reward 服务的数据库表结构在 repositories/structure/reward_structure.sql 里面定义
+* 数据库表结构在 repositories/structures.sql 里面定义
 
 # 5. 核心数据结构
 
@@ -266,7 +266,7 @@ reward 当前订阅两个 Nacos dataId，Group 均为 `oshit-go`：
 | Data ID | 用途 | 来源 |
 |---|---|---|
 | `base-runtime.yaml` | 全局链、Token、环境、手续费容错、LightHouse 地址配置 | 与 base 服务共用 |
-| `reward-runtime.yaml` | reward 自身奖励规则配置 | `migrate/reward-runtime.yaml` |
+| `reward-runtime.yaml` | reward 自身奖励规则配置 | `migrate/testnet/reward-runtime.yaml` |
 
 `base-runtime.yaml` 中 reward 使用的字段如下：
 

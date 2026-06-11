@@ -251,6 +251,9 @@ func (s *ServiceContext) applyRuntimeConfigContent(content string) error {
 	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
 		return err
 	}
+	if err := utils.JasyptDecode(&cfg, s.serviceKeyDecryptPwd, serviceKeyDecryptAlgo); err != nil {
+		return fmt.Errorf("decrypt nacos runtime config: %w", err)
+	}
 	if cfg.Chain.ChainName == "" {
 		return fmt.Errorf("chain.chain_name is required")
 	}
@@ -339,6 +342,9 @@ func (s *ServiceContext) applyServiceRegistryContent(content string) ([]task.Sca
 	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
 		return nil, err
 	}
+	if err := utils.JasyptDecode(&cfg, s.serviceKeyDecryptPwd, serviceKeyDecryptAlgo); err != nil {
+		return nil, fmt.Errorf("decrypt nacos service registry config: %w", err)
+	}
 	serviceInfoMap := make(map[string]map[string]model.ServiceInfo)
 	serviceKeyMap := make(core_context.ServiceKey)
 	scanConfigs := make([]task.ScanConfig, 0, len(cfg.Services))
@@ -370,7 +376,7 @@ func (s *ServiceContext) applyServiceRegistryContent(content string) ([]task.Sca
 			UpdatedAt:  now,
 		}
 		if strings.TrimSpace(item.EncryptedKey) != "" {
-			plainKey, err := utils.JasyptDecrypt(item.EncryptedKey, serviceKeyDecryptPwd, serviceKeyDecryptAlgo)
+			plainKey, err := utils.JasyptDecrypt(item.EncryptedKey, s.serviceKeyDecryptPwd, serviceKeyDecryptAlgo)
 			if err != nil {
 				return nil, fmt.Errorf("decrypt service key [%s/%s] error: %v", item.Service, item.SubService, err)
 			}

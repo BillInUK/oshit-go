@@ -1,0 +1,21 @@
+[Unit]
+Description=OShit Reward API Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/data/dist/oshit/reward/backend/bin
+ExecStart=/data/dist/oshit/reward/backend/bin/micro-server
+Environment=APP_CONF=/data/dist/oshit/reward/backend/etc/application.yaml
+
+LimitCORE=0
+
+Restart=on-failure
+RestartSec=3
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=oshit-reward
+
+[Install]
+WantedBy=multi-user.target

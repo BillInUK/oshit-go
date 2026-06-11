@@ -1,0 +1,29 @@
+aws:
+  access_key_id: ENC~ihWNxeVRQ0slBhNekwpyYPvSS8P+d8Kah0eO8RkedaWgwB74S4IExXSM6GOLnq2OrPMYeMsHAVPI4OSDAzr/0Q==
+  region: ap-southeast-1
+  secret_access_key: ENC~Xl7Y8NhJD98V4DEhadNf52jmSSzhPPu+4N/PyszrCV2tqtQNxHhuIbNmFEvXdcwkqsX875Q7BecAGKGVn7CmudOHRMYFMhSiV2VAj0caV6Q=
+chain:
+  chain_name: solana
+  decimals: 9
+  symbol: SOL
+fee_tolerance:
+  max_less_rate: 0.05
+lighthouse_address: L2TExMFKdjpN9kozasaurPirfHy9P8sbXoAN1qA3S95
+mainnet_rpc:
+  api_key: ENC~GgrggKY/1PC586i+8KBuzW7X/E0QqbGfM2VAea12hGSUygM11uKfkn3+46xZiqjf6whVJOLvvZUOKqGgEodFtDLW+wYWjPoBxPwXx5vgLD0=
+  endpoint: https://mainnet.helius-rpc.com
+  provider: helius
+rpc_endpoints:
+  - api_key: ENC~oFmcW1pscXV7HDkidtA27ndWg15yZiaC9RwJ4P9b3nxo8sbzN3wpf13fBpSjPrHmGZPXVTPBk+dsHW3C1kxfr1TvL9zb8HEOXtibzfgUTW0=
+    endpoint: https://devnet.helius-rpc.com
+    provider: helius
+    weight: 1
+    wss_api_key: ENC~e+DQt5utcdvetXOETnn8gGI/9oRCWy0ydhOx2zmAwh9hK81UlQNw3ASy45BdQuu7gfuxzzCFpYlmKuJyB7i9Q2PAKYmVS2ujyOMW7t1ZVHw=
+    wss_endpoint: wss://devnet.helius-rpc.com
+system:
+  env: 1
+token:
+  decimals: 3
+  mint: wtnrTujJqBRUknLRhQQcUSwzAzx8LvcxKXEuBwvFnJM
+  token_name: OShit
+  token_symbol: OShit

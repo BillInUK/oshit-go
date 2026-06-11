@@ -3,6 +3,10 @@ package svc
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"time"
+
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/go-redsync/redsync/v4"
@@ -22,8 +26,9 @@ import (
 
 const (
 	serviceKeyDecryptAlgo = "PBEWithHMACSHA512AndAES_256"
-	serviceKeyDecryptPwd  = "fktYimwMl3OfUF3m"
-	rsaPublicKey          = `-----BEGIN PUBLIC KEY-----
+	// fallback for local dev only; production reads from $CREDENTIALS_DIRECTORY
+	serviceKeyDecryptPwdFallback = "fktYimwMl3OfUF3m"
+	rsaPublicKey                 = `-----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCym6SwEHnkHqpVcS9sxP4I2D4b
 aSxPflUNtEqE0dmLfbA8kZw7Rs8eGkUj4kOEMSZA4y4jtp1wn0QJJF31Obop60j1
 9j3KtTuSLBY9xuJoGNMxzYZCybzxcp+h2olUsp0SrjEfs/Z6ePY0k+5+0umwbvM4
@@ -33,7 +38,8 @@ aSxPflUNtEqE0dmLfbA8kZw7Rs8eGkUj4kOEMSZA4y4jtp1wn0QJJF31Obop60j1
 
 type ServiceContext struct {
 	core_context.CoreContext
-	TaskMgr *task.TaskManager
+	TaskMgr              *task.TaskManager
+	serviceKeyDecryptPwd string
 }
 
 func NewServiceContext() (*ServiceContext, error) {
@@ -41,6 +47,17 @@ func NewServiceContext() (*ServiceContext, error) {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		return nil, err
+	}
+
+	// 加载解密密钥
+	decryptKey, err := utils.LoadConfigDecryptKey(serviceKeyDecryptPwdFallback)
+	if err != nil {
+		return nil, fmt.Errorf("load config decrypt key: %w", err)
+	}
+
+	// 解密 application.yaml 中的 ENC~ 字段（DB密码、Redis密码、Nacos凭据等）
+	if err := utils.JasyptDecode(cfg, decryptKey, serviceKeyDecryptAlgo); err != nil {
+		return nil, fmt.Errorf("decrypt application config: %w", err)
 	}
 
 	// 初始化数据库
@@ -60,6 +77,7 @@ func NewServiceContext() (*ServiceContext, error) {
 
 	// 创建ServiceContext
 	svcCtx := &ServiceContext{
+		serviceKeyDecryptPwd: decryptKey,
 		CoreContext: core_context.CoreContext{
 			Config:  cfg,
 			DB:      db,
@@ -128,7 +146,11 @@ func initDatabase(cfg config.DatabaseConfig) (*gorm.DB, error) {
 		" sslmode=" + cfg.SSLMode
 
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
+		Logger: logger.New(log.New(os.Stderr, "\r\n", log.LstdFlags), logger.Config{
+			SlowThreshold:             200 * time.Millisecond,
+			LogLevel:                  logger.Warn,
+			IgnoreRecordNotFoundError: true,
+		}),
 	})
 }
 
@@ -264,7 +286,7 @@ func (s *ServiceContext) initServiceKeys() error {
 
 	s.ServiceKeyMap = make(core_context.ServiceKey)
 	for _, k := range keys {
-		plainKey, err := utils.JasyptDecrypt(k.EncryptedKey, serviceKeyDecryptPwd, serviceKeyDecryptAlgo)
+		plainKey, err := utils.JasyptDecrypt(k.EncryptedKey, s.serviceKeyDecryptPwd, serviceKeyDecryptAlgo)
 		if err != nil {
 			return fmt.Errorf("decrypt service key [%s/%s] error: %v", k.Service, k.SubService, err)
 		}

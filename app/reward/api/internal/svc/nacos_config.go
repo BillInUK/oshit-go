@@ -262,6 +262,9 @@ func (s *ServiceContext) applyBaseRuntimeContent(content string) error {
 	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
 		return err
 	}
+	if err := utils.JasyptDecode(&cfg, s.configDecryptKey, decryptAlgo); err != nil {
+		return fmt.Errorf("decrypt nacos base runtime config: %w", err)
+	}
 	if cfg.Chain.ChainName == "" {
 		return fmt.Errorf("chain.chain_name is required")
 	}
@@ -315,6 +318,9 @@ func (s *ServiceContext) applyRewardRuntimeContent(content string) error {
 	var cfg rewardRuntimeNacosConfig
 	if err := yaml.Unmarshal([]byte(content), &cfg); err != nil {
 		return err
+	}
+	if err := utils.JasyptDecode(&cfg, s.configDecryptKey, decryptAlgo); err != nil {
+		return fmt.Errorf("decrypt nacos reward runtime config: %w", err)
 	}
 	if cfg.LevelDist.DistLevel <= 0 {
 		return fmt.Errorf("level_dist.dist_level must be greater than 0")
