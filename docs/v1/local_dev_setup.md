@@ -225,7 +225,44 @@ docker exec -it postgres18.2 psql -U postgres -d oshit_db -c "\dt"
 
 应能看到 `t_system_config`、`t_chain_config`、`t_token_config`、`t_service_tx` 等表。
 
-### 4.2 导入初始配置数据
+### 4.2 刷新扫描检查点（重要）
+
+`config.sql` 中包含 `t_tx_scan_info` 表的初始扫描检查点（`until_tx_id` / `slot`）。如果这些检查点过旧，base 服务启动后的 `TxScanTask` 会从旧位置开始追赶，短时间内大量请求 Solana RPC，可能触发限流。
+
+**导入数据前**，使用 `refresh_scan_checkpoint.py` 将检查点刷新到链上最新位置：
+
+```bash
+cd migrate
+
+# 基本用法（仅 devnet/testnet RPC）
+python3 refresh_scan_checkpoint.py \
+    --config local/config.sql \
+    --rpc-url "https://devnet.helius-rpc.com/?api-key=<你的API Key>"
+
+# 如果 config.sql 中包含 MarketBuyToken 扫描（需要主网 RPC）
+python3 refresh_scan_checkpoint.py \
+    --config local/config.sql \
+    --rpc-url "https://devnet.helius-rpc.com/?api-key=<你的API Key>" \
+    --mainnet-rpc-url "https://mainnet.helius-rpc.com/?api-key=<你的API Key>"
+```
+
+可先用 `--dry-run` 预览变更：
+
+```bash
+python3 refresh_scan_checkpoint.py \
+    --config local/config.sql \
+    --rpc-url "https://devnet.helius-rpc.com/?api-key=<你的API Key>" \
+    --dry-run
+```
+
+脚本工作原理：
+1. 解析 `config.sql` 中所有 `t_tx_scan_info` 的 INSERT 记录
+2. 对每个 `pda_account` 调用 Solana RPC `getSignaturesForAddress` 获取最新交易签名和 slot
+3. 将 `until_tx_id` 和 `slot` 更新为最新值，直接回写到 `config.sql`
+
+> RPC URL 可以向项目负责人获取，或使用自己在 Helius / QuickNode 等服务商申请的 API Key。
+
+### 4.3 导入初始配置数据
 
 ```bash
 docker exec -i postgres18.2 psql -U postgres -d oshit_db < migrate/local/config.sql
@@ -237,9 +274,10 @@ docker exec -i postgres18.2 psql -U postgres -d oshit_db < migrate/local/config.
 - `t_rpc_endpoint` — Solana RPC 节点地址（devnet + mainnet，加密）
 - `t_chain_config` — 区块链配置（Solana）
 - `t_token_config` — Token 配置（OShit token mint 地址）
+- `t_tx_scan_info` — 扫描检查点（已通过 4.2 步骤刷新到最新）
 - 以及其他业务初始配置表
 
-### 4.3 导入 Nacos 配置
+### 4.4 导入 Nacos 配置
 
 打开 Nacos 控制台 http://127.0.0.1:8080/index.html，登录后执行以下操作：
 
