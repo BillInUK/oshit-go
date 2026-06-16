@@ -53,6 +53,11 @@ type CommitTakeTokenTxInfoReq struct {
 	InviteCode string `json:"inviteCode"`
 }
 
+type CommitTxResult struct {
+	TxId    string `json:"txId"`
+	TxState int32  `json:"txState"` // 1=链上成功, -1=链上失败, -2=交易过期
+}
+
 type TakeTokenTxInfo struct {
 	RewardAccount   string  `json:"rewardAccount"`   // 下发奖励的 solana 地址
 	Mint            string  `json:"mint"`            // token 地址

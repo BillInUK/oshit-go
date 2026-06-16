@@ -77,7 +77,7 @@ func (l *TakeTokenLogic) GetRecordByTxId(txId string) (*model.TakeTokenRecord, e
 	if err := db.Where("tx_id = ?", txId).First(&record).Error; err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return &record, nil
 }
 
 // inviteCodeValid 判断邀请码是否有效
@@ -276,8 +276,9 @@ func (l *TakeTokenLogic) checkNeedLottery(ctx context.Context, nativeAccount str
 	return nil
 }
 
-// ProcessCommitTx 处理提交上来的交易
-func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, inviteCode string) error {
+// ProcessCommitTx 处理提交上来的交易，同步等待链上确认结果。
+// 返回 (txState, error)：txState=1 成功，-1 链上失败，-2 过期；error 非 nil 表示提交前出错或等待超时。
+func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, inviteCode string) (int32, error) {
 	txIdStr := preCheckedTx.TxId.String()
 	prefix := fmt.Sprintf("%s 处理用户提交交易Id %v -", l.prefix, txIdStr)
 
@@ -287,57 +288,74 @@ func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 		var errTaken *redsync.ErrTaken
 		if !errors.As(err, &errTaken) {
 			log.Errorf("%s 获取处理交易的分布式锁错误: %v", prefix, err)
-			return errors.New("process transaction error")
+			return 0, errors.New("process transaction error")
 		}
-		return errors.New("you have unfinished service.please try again later")
+		return 0, errors.New("you have unfinished service.please try again later")
 	}
 	defer mutex.Unlock()
 
 	// 2. 检查是否必须要抽奖
 	if err := l.checkNeedLottery(ctx, preCheckedTx.From.String()); err != nil {
 		log.Errorf("%s 获取钱包是否需要抽奖错误: %v", prefix, err)
-		return err
+		return 0, err
 	}
+
 	// 3. 获取take token的交易信息
 	takeTxInfo, err := l.getTxInfo(ctx, preCheckedTx.From.String(), inviteCode)
 	if err != nil {
 		log.Errorf("%s 获取交易信息错误: %v", prefix, err)
-		return fmt.Errorf("get take token transaction info error: %v", err)
+		return 0, fmt.Errorf("get take token transaction info error: %v", err)
 	}
 
 	// 4. 解析出来交易里面的 transfer checked 和 transfer 指令集合
 	decodedTx, err := l.decodeSOLTx(takeTxInfo, &preCheckedTx.SOLTx)
 	if err != nil {
 		log.Errorf("%s 解析solana交易错误: %v", prefix, err)
-		return fmt.Errorf("decode transaction error:%s", err)
+		return 0, fmt.Errorf("decode transaction error:%s", err)
 	}
 
 	// 5. 检查 transfer checked 指令和 transfer 指令是否符合奖励要求
 	decodedServiceTx, err := l.checkDecodedSOLTx(takeTxInfo, decodedTx)
 	if err != nil {
 		log.Errorf("%s 校验solana交易当中的指令错误: %v", prefix, err)
-		return fmt.Errorf("check transaction instruction failed: %v", err)
+		return 0, fmt.Errorf("check transaction instruction failed: %v", err)
 	}
 
-	// 6. 通过 base 模块的dubbo接口签名并异步广播
+	// 6. 在广播前注册 channel，确保 Kafka 消费者通知不会早于 select 执行
+	ch := make(chan int32, 1)
+	takePendingMap.Store(txIdStr, ch)
+	defer takePendingMap.Delete(txIdStr)
+
+	// 7. 通过 base 模块的dubbo接口签名并异步广播
 	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 调用base模块dubbo接口发送交易失败,错误: %v", prefix, err)
-		return errors.New(utils.FilterAndTranslateSOLError(err))
+		return 0, errors.New(utils.FilterAndTranslateSOLError(err))
 	}
 
-	// 7. 如果发送的交易Id与预期的不一致，则报错
+	// 8. 如果发送的交易Id与预期的不一致，则报错
 	if sentTxId == "" || sentTxId != txIdStr {
 		log.Errorf("%s 调用base模块dubbo接口发送的交易Id %s 与预期的不一致", prefix, sentTxId)
-		return errors.New("sent transaction id not equal expected")
+		return 0, errors.New("sent transaction id not equal expected")
 	}
 
-	// 8. 记录领取记录到数据库
+	// 9. 记录领取记录到数据库
 	decodedServiceTx.TxID = txIdStr
 	if err = l.recordTakeToken(takeTxInfo, decodedServiceTx, takeTxInfo.Invited); err != nil {
 		log.Errorf("%s 记录交易信息,错误: %v", prefix, err)
-		return errors.New("record official transfer token error")
+		return 0, errors.New("record official transfer token error")
 	}
 
-	return nil
+	// 10. 同步等待链上确认，最长 90 秒
+	select {
+	case txState := <-ch:
+		log.Infof("%s 链上确认结果 txState=%d", prefix, txState)
+		return txState, nil
+	case <-ctx.Done():
+		log.Infof("%s 请求取消，客户端已断开", prefix)
+		return 0, errors.New("request cancelled")
+	case <-time.After(90 * time.Second):
+		log.Infof("%s 等待链上确认超时（90s），txId=%s", prefix, txIdStr)
+		return 0, errors.New("confirmation timeout, please refresh to check result")
+	}
 }

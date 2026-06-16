@@ -141,6 +141,18 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		dbTx.Rollback()
 		return err
 	}
+
+	// 通知 ProcessCommitTx 中等待确认的 channel
+	finalState := constants.TxStateSuccess
+	if msg.TxSig.Err != nil {
+		finalState = constants.TxStateFailed
+	}
+	if ch, ok := takePendingMap.LoadAndDelete(txId); ok {
+		if c, ok := ch.(chan int32); ok {
+			c <- int32(finalState)
+		}
+	}
+
 	return nil
 }
 
@@ -194,6 +206,14 @@ func (l *TakeTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		dbTx.Rollback()
 		return err
 	}
+
+	// 通知 ProcessCommitTx 中等待确认的 channel（交易已过期）
+	if ch, ok := takePendingMap.LoadAndDelete(txId); ok {
+		if c, ok := ch.(chan int32); ok {
+			c <- int32(constants.TxStateExpired)
+		}
+	}
+
 	return nil
 }
 

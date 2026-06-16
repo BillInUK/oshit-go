@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -19,6 +20,7 @@ import (
 	"oshit-go/app/base/api/internal/types"
 	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
+	"oshit-go/common/pkg/entity"
 )
 
 type TxLogic struct {
@@ -164,7 +166,7 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 	}
 
 	// 8. 异步广播
-	go l.broadcastTx(recordID, confirm, tx)
+	go l.broadcastTx(recordID, confirm, tx, req.Service, req.SubService)
 
 	return &types.SendTransactionRsp{
 		RecordID: recordID,
@@ -173,37 +175,61 @@ func (l *TxLogic) SendTransaction(req *types.SendTransactionReq) (*types.SendTra
 }
 
 // broadcastTx 异步广播交易：
-// - 网络传输层错误（connection reset/refused 等）：标记失败，交易根本没发出去
+// - 网络传输层错误（connection reset/refused 等）：标记失败 + 发 Kafka 通知，交易根本没发出去
 // - HTTP 层/RPC 层错误（400/500/timeout 等）：仅打日志，不标记失败，留给 TxScanTask/TxExpireTask 兜底
-func (l *TxLogic) broadcastTx(recordID string, confirm bool, tx *solana.Transaction) {
+func (l *TxLogic) broadcastTx(recordID string, confirm bool, tx *solana.Transaction, service, subService string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
+
+	txID := tx.Signatures[0].String()
 
 	l.svcCtx.ConfigMu.RLock()
 	rpcClient := l.svcCtx.RpcClient
 	l.svcCtx.ConfigMu.RUnlock()
 	if rpcClient == nil {
-		log.Errorf("broadcast tx [%v] error: rpc client is nil", tx.Signatures[0])
+		log.Errorf("broadcast tx [%v] error: rpc client is nil", txID)
 		if confirm && recordID != "" {
 			l.updateServiceTxState(recordID, constants.TxStateFailed)
+			l.publishExpiredTxEvent(txID, service, subService)
 		}
 		return
 	}
 
 	if _, err := rpcClient.SendTransaction(ctx, tx); err != nil {
 		if isNetworkError(err) {
-			log.Errorf("broadcast tx [%v] network error: %v", tx.Signatures[0], err)
+			log.Errorf("broadcast tx [%v] network error: %v", txID, err)
 			if confirm && recordID != "" {
 				l.updateServiceTxState(recordID, constants.TxStateFailed)
+				l.publishExpiredTxEvent(txID, service, subService)
 			}
 		} else {
 			// HTTP 层错误，交易可能已到达节点，不标记失败，等兜底任务处理
-			log.Warnf("broadcast tx [%v] non-fatal error (will be handled by scan/expire task): %v", tx.Signatures[0], err)
+			log.Warnf("broadcast tx [%v] non-fatal error (will be handled by scan/expire task): %v", txID, err)
 		}
 		return
 	}
 
-	log.Infof("broadcast tx [%v] success", tx.Signatures[0])
+	log.Infof("broadcast tx [%v] success", txID)
+}
+
+// publishExpiredTxEvent 向 Kafka 发送失败/过期交易通知，使 reward 服务立即收到结果而非等待超时
+func (l *TxLogic) publishExpiredTxEvent(txID, service, subService string) {
+	msg := entity.KafkaExpiredTxMsg{
+		MsgType: "NewExpiredTransaction",
+		MsgContent: entity.NewExpiredTx{
+			Service:    service,
+			SubService: subService,
+			TxID:       txID,
+		},
+	}
+	body, err := json.Marshal(msg)
+	if err != nil {
+		log.Errorf("broadcast tx [%s] marshal kafka message error: %v", txID, err)
+		return
+	}
+	if err := l.svcCtx.SendKafkaMessage("ServiceTransaction", []byte(msg.MsgType), body); err != nil {
+		log.Errorf("broadcast tx [%s] send kafka message error: %v", txID, err)
+	}
 }
 
 // isNetworkError 判断是否为网络传输层错误（交易根本没发出去）
