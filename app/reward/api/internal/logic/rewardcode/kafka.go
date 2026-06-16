@@ -58,9 +58,13 @@ func (l *RewardCodeLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		log.Infof("%s 交易成功，设置 tx_state=1", prefix)
 	}
 
+	updates := map[string]interface{}{"tx_state": newState}
+	if newState == constants.TxStateSuccess {
+		updates["reward_state"] = constants.RewardStateClaimed
+	}
 	if err := dbTx.Table(model.TableNameRewardCode).
 		Where("record_id = ?", rc.RecordID).
-		Update("tx_state", newState).Error; err != nil {
+		Updates(updates).Error; err != nil {
 		log.Errorf("%s 更新奖励码状态错误: %v", prefix, err)
 		dbTx.Rollback()
 		return err

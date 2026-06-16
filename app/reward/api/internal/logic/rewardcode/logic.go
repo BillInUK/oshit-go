@@ -82,9 +82,15 @@ func (l *RewardCodeLogic) GetTxInfo(ctx context.Context, rewardCode string) (*ty
 		return nil, errors.New("query reward code error")
 	}
 
-	// 2. 检查奖励码是否已过期
-	if rc.RewardState < 0 || rc.ExpiredAt.Before(time.Now()) {
+	// 2. 检查奖励码是否已被使用或已过期
+	if rc.RewardState != int32(constants.RewardStateInit) {
+		return nil, errors.New("reward code has been used or expired")
+	}
+	if rc.ExpiredAt.Before(time.Now()) {
 		return nil, errors.New("reward code has expired")
+	}
+	if rc.TxID != "" {
+		return nil, errors.New("reward code has been used")
 	}
 
 	// 3. 根据 reward_amount 查询 t_reward_code_fee 获取 cost_rate
@@ -151,8 +157,14 @@ func (l *RewardCodeLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app
 		log.Errorf("%s 查询奖励码错误: %v", prefix, err)
 		return errors.New("query reward code error")
 	}
-	if rc.RewardState < 0 || rc.ExpiredAt.Before(time.Now()) {
+	if rc.RewardState != int32(constants.RewardStateInit) {
+		return errors.New("reward code has been used or expired")
+	}
+	if rc.ExpiredAt.Before(time.Now()) {
 		return errors.New("reward code has expired")
+	}
+	if rc.TxID != "" {
+		return errors.New("reward code has been used")
 	}
 
 	// 3. 获取交易信息用于校验

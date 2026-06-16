@@ -402,6 +402,7 @@ CREATE TABLE public.t_give_token_record
     updated_at      timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_give_token_record_ttl ON public.t_give_token_record (created_at);
+CREATE UNIQUE INDEX uq_give_token_record_tx_id ON public.t_give_token_record (tx_id);
 
 -- 奖励码奖励规则
 -- 旧工程 t_reward_code_rule
@@ -933,5 +934,18 @@ END $$;
 -- 2. 让 meme_server 可以在 public schema 下建表（分区表需要）
 GRANT CREATE ON SCHEMA public TO meme_server;
 
--- 3. 设置默认权限：以后 postgres 用户建的表自动授权给 meme_server
+-- 3. 把现有所有序列的 owner 改成 meme_server
+DO $$
+DECLARE r RECORD;
+BEGIN
+FOR r IN
+    SELECT sequence_name
+    FROM information_schema.sequences
+    WHERE sequence_schema = 'public' LOOP
+          EXECUTE 'ALTER SEQUENCE public.' || quote_ident(r.sequence_name) || ' OWNER TO meme_server';
+END LOOP;
+END $$;
+
+-- 4. 设置默认权限：以后 postgres 用户建的表和序列自动授权给 meme_server
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO meme_server;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO meme_server;

@@ -1,0 +1,50 @@
+level_dist:
+  dist_level: 2
+
+level_ratio:
+  - dist_level: 1
+    ratio: 10.00
+  - dist_level: 2
+    ratio: 5.00
+
+discount_rate:
+  rate: 1.25
+
+take_token:
+  invite_code: ""
+  reward_account: "4fLi61UtmjtKXJHL1aKb1cdUv3KZfCVnQv45hPN8h3Sf"
+  cost_account: "4DZ3ry8LfaM3kEc6KCL4nDpNpnVX6g4Z6EFvYyNXsiqn"
+  amount: 500000
+  invite_amount: 1500000
+  cost_fee_rate: 200
+  invited_rate: 20
+  max_cost_fee: 75000
+  is_default: true
+  reward_inviter: true
+  invited: true
+
+give_token:
+  reward_account: "5xaFm7Xj2kFvjFmW3kFU2A9Ush6Hx3mqK86cYo6aJsbY"
+  cost_account: "4DZ3ry8LfaM3kEc6KCL4nDpNpnVX6g4Z6EFvYyNXsiqn"
+  max_reward: 500000
+  max_valid_reward: 1500000
+  reward_rate: 200
+  valid_rate: 300
+
+lottery_token:
+  reward_account: "4fLi61UtmjtKXJHL1aKb1cdUv3KZfCVnQv45hPN8h3Sf"
+  cost_account: "4DZ3ry8LfaM3kEc6KCL4nDpNpnVX6g4Z6EFvYyNXsiqn"
+  cost_amount: 500000
+  cost_fee_rate: 110
+
+campaign_quote:
+  reward_account: "4e1QkZ6mM3bXskMqESVKDs1GRgPGEyVQyPXjWM8GoTjS"
+  cost_account: "4DZ3ry8LfaM3kEc6KCL4nDpNpnVX6g4Z6EFvYyNXsiqn"
+  quote_rate: 500.00
+  cost_rate: 17.00
+  global_daily_limit: 500000000
+  user_daily_limit: 50000000
+
+reward_code:
+  reward_account: "3WwtCT8m2rrjTHK1hgL47eBNZd1KNZQZNvCZhiVsCbN3"
+  cost_account: "4DZ3ry8LfaM3kEc6KCL4nDpNpnVX6g4Z6EFvYyNXsiqn"

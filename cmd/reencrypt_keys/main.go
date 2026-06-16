@@ -17,9 +17,9 @@ import (
 //   - 数据库 t_service_key 表中的 encrypted_key（输出 SQL）
 //
 // 用法：
-//   reencrypt_keys --old-key <旧密码> --new-key <新密码> --file base-service-registry.yaml [--dry-run]
-//   reencrypt_keys --old-key <旧密码> --new-key <新密码> --value <单个密文> (输出新密文)
-
+//
+//	reencrypt_keys --old-key <旧密码> --new-key <新密码> --file base-service-registry.yaml [--dry-run]
+//	reencrypt_keys --old-key <旧密码> --new-key <新密码> --value <单个密文> (输出新密文)
 const algo = utils.JasyptDefaultAlgorithm
 
 func main() {
@@ -77,19 +77,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	var root interface{}
+	var root yaml.Node
 	if err := yaml.Unmarshal(data, &root); err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing YAML: %v\n", err)
 		os.Exit(1)
 	}
 
 	changed := 0
-	if err := processServices(root, *oldKey, *newKey, &changed); err != nil {
+	if err := processServicesNode(&root, *oldKey, *newKey, &changed); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	out, err := yaml.Marshal(root)
+	out, err := yaml.Marshal(&root)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error marshaling YAML: %v\n", err)
 		os.Exit(1)
@@ -120,44 +120,60 @@ func main() {
 	fmt.Fprintln(os.Stderr, "  UPDATE t_service_key SET encrypted_key = '<新密文>' WHERE service = '...' AND sub_service = '...';")
 }
 
-func processServices(root interface{}, oldKey, newKey string, changed *int) error {
-	rootMap, ok := root.(map[string]interface{})
-	if !ok {
+// processServicesNode 在 yaml.Node 树中找到 services 列表，遍历每个 item 的 encrypted_key 并重新加密
+func processServicesNode(node *yaml.Node, oldKey, newKey string, changed *int) error {
+	// 找到 document 根节点下的 mapping
+	rootMap := node
+	if node.Kind == yaml.DocumentNode && len(node.Content) > 0 {
+		rootMap = node.Content[0]
+	}
+	if rootMap.Kind != yaml.MappingNode {
 		return fmt.Errorf("YAML root is not a map")
 	}
 
-	services, ok := rootMap["services"]
-	if !ok {
+	// 找到 "services" key
+	var servicesNode *yaml.Node
+	for i := 0; i+1 < len(rootMap.Content); i += 2 {
+		if rootMap.Content[i].Value == "services" {
+			servicesNode = rootMap.Content[i+1]
+			break
+		}
+	}
+	if servicesNode == nil {
 		return fmt.Errorf("no 'services' key in YAML")
 	}
-
-	serviceList, ok := services.([]interface{})
-	if !ok {
+	if servicesNode.Kind != yaml.SequenceNode {
 		return fmt.Errorf("'services' is not a list")
 	}
 
-	for i, item := range serviceList {
-		svc, ok := item.(map[string]interface{})
-		if !ok {
+	for idx, itemNode := range servicesNode.Content {
+		if itemNode.Kind != yaml.MappingNode {
 			continue
 		}
-		encKeyRaw, ok := svc["encrypted_key"]
-		if !ok {
-			continue
+		var serviceName, subService string
+		var encKeyNode *yaml.Node
+		for i := 0; i+1 < len(itemNode.Content); i += 2 {
+			k := itemNode.Content[i].Value
+			v := itemNode.Content[i+1]
+			switch k {
+			case "service":
+				serviceName = v.Value
+			case "sub_service":
+				subService = v.Value
+			case "encrypted_key":
+				encKeyNode = v
+			}
 		}
-		encKey, ok := encKeyRaw.(string)
-		if !ok || strings.TrimSpace(encKey) == "" {
+		if encKeyNode == nil || strings.TrimSpace(encKeyNode.Value) == "" {
 			continue
 		}
 
-		serviceName, _ := svc["service"].(string)
-		subService, _ := svc["sub_service"].(string)
-
-		newEncKey, err := reencryptValue(encKey, oldKey, newKey)
+		newEncKey, err := reencryptValue(encKeyNode.Value, oldKey, newKey)
 		if err != nil {
-			return fmt.Errorf("service[%d] %s/%s: %w", i, serviceName, subService, err)
+			return fmt.Errorf("service[%d] %s/%s: %w", idx, serviceName, subService, err)
 		}
-		svc["encrypted_key"] = newEncKey
+		encKeyNode.Value = newEncKey
+		encKeyNode.Tag = "!!str"
 		*changed++
 		fmt.Fprintf(os.Stderr, "  [R] %s/%s\n", serviceName, subService)
 	}

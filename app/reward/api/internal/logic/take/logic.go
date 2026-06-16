@@ -227,20 +227,7 @@ func (l *TakeTokenLogic) recordTakeToken(takeTokenTxInfo *types.TakeTokenTxInfo,
 		return dbTx.Error
 	}
 
-	// 记录领取的交易ID
-	txRecord := model.ServiceTx{
-		Service:    l.service.String(),
-		SubService: l.subService.String(),
-		TxID:       decodedServiceTx.TxID,
-		CreatedAt:  time.Now(),
-	}
-	if err := dbTx.Table(model.TableNameServiceTx).Create(&txRecord).Error; err != nil {
-		dbTx.Rollback() // 回滚事务
-		log.Errorf("官网领取奖励 - 插入交易业务类型表错误: %v", err)
-		return err
-	}
-
-	// 记录领取奖励记录
+	// 记录领取奖励记录（t_service_tx 由 base 服务 SendTransaction 写入，reward 不再重复写）
 	takeTokenRecord := model.TakeTokenRecord{
 		RewardAccount:  decodedServiceTx.RewardInst.FromNativeAccount,
 		ReceiptAccount: decodedServiceTx.RewardInst.ToNativeAccount,

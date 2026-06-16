@@ -213,22 +213,11 @@ func (l *LotteryLogic) GetTxInfo(ctx context.Context, recordId string) (*types.C
 	return txInfo, nil
 }
 
-// recordLotteryClaim 创建 t_lottery_claim_record 和 t_service_tx（在同一事务中）
+// recordLotteryClaim 创建 t_lottery_claim_record（t_service_tx 由 base 服务写入）
 func (l *LotteryLogic) recordLotteryClaim(txId, rewardId string) error {
 	dbTx := l.db.Begin()
 	if dbTx.Error != nil {
 		return errors.New("begin transaction error")
-	}
-	// 创建 service_tx 记录
-	txRecord := model.ServiceTx{
-		Service:    l.service.String(),
-		SubService: l.subService.String(),
-		TxID:       txId,
-		CreatedAt:  time.Now(),
-	}
-	if err := dbTx.Table(model.TableNameServiceTx).Create(&txRecord).Error; err != nil {
-		dbTx.Rollback()
-		return fmt.Errorf("insert service tx error: %v", err)
 	}
 
 	// 创建 lottery_claim_record 记录

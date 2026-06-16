@@ -86,20 +86,20 @@ func (l *GiveTokenLogic) calcCostFee(ctx context.Context, totalReward float64) (
 func (l *GiveTokenLogic) GetTxInfo(ctx context.Context, from, to string, amountUI float64) (*types.GiveTokenTxInfo, error) {
 	prefix := fmt.Sprintf("%s GetTxInfo from=%s to=%s -", l.prefix, from, to)
 
-	// 1. 确定 to 地址的 token account 是否存在，决定奖励费率
-	toNativeKey, _ := solana.PublicKeyFromBase58(to)
-	tokenMintKey, _ := solana.PublicKeyFromBase58(l.srvCtx.TokenConfig.Mint)
-	toTokenAccount, _, _ := solana.FindAssociatedTokenAddress(toNativeKey, tokenMintKey)
-	accountInfo, _ := l.rpcClient.GetAccountInfo(ctx, toTokenAccount)
-	toTokenAccountExists := accountInfo != nil && accountInfo.Value != nil
+	// 1. 使用 accountValid 判断 to 地址是否为有效地址（与 CommitTx 校验逻辑一致）
+	valid, err := l.accountValid(to)
+	if err != nil {
+		log.Errorf("%s 查询接收地址是否是有效地址错误: %v", prefix, err)
+		return nil, fmt.Errorf("query receipt account valid error")
+	}
 
 	// 2. 计算 from 的奖励金额（原始单位）
 	amountRaw := uint64(amountUI * l.srvCtx.TokenDecimal)
 	var rewardAmount float64
-	if toTokenAccountExists {
-		rewardAmount = min(l.serviceConfig.MaxReward, float64(amountRaw)*l.serviceConfig.RewardRate/100)
-	} else {
+	if valid {
 		rewardAmount = min(l.serviceConfig.MaxValidReward, float64(amountRaw)*l.serviceConfig.ValidRate/100)
+	} else {
+		rewardAmount = min(l.serviceConfig.MaxReward, float64(amountRaw)*l.serviceConfig.RewardRate/100)
 	}
 	log.Infof("%s 有效地址最大奖励 %0.2f 普通地址最大奖励 %0.2f  有效地址奖励费率 %0.2f 普通地址奖励费率 %0.2f", l.prefix,
 		l.serviceConfig.MaxValidReward, l.serviceConfig.MaxReward, l.serviceConfig.ValidRate, l.serviceConfig.RewardRate)
@@ -254,18 +254,7 @@ func (l *GiveTokenLogic) recordGiveToken(serviceTx *entity.DecodedServiceTransac
 		return dbTx.Error
 	}
 
-	txRecord := model.ServiceTx{
-		Service:    l.service.String(),
-		SubService: l.subService.String(),
-		TxID:       serviceTx.TxID,
-		CreatedAt:  time.Now(),
-	}
-	if err := dbTx.Table(model.TableNameServiceTx).Create(&txRecord).Error; err != nil {
-		dbTx.Rollback()
-		log.Errorf("官网转账流程 - 插入交易业务类型表错误: %v", err)
-		return err
-	}
-
+	// t_service_tx 由 base 服务 SendTransaction 写入，reward 不再重复写
 	inst := serviceTx.TransferTokenInst
 	record := model.GiveTokenRecord{
 		FromAccount:    serviceTx.FromNativeAccount,

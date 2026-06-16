@@ -20,10 +20,9 @@ var sensitiveFields = []string{
 	"mainnet_rpc.api_key",
 	"rpc_endpoints.*.api_key",
 	"rpc_endpoints.*.wss_api_key",
-	// NOTE: services.*.encrypted_key 不在此列表中
-	// 它是 jasypt 加密的 Solana 私钥，需要用 reencrypt_keys 工具单独迁移
 	// application.yaml
 	"database.password",
+	"database.user",
 	"redis.password",
 	"nacos.username",
 	"nacos.password",
@@ -50,16 +49,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	var root interface{}
+	var root yaml.Node
 	if err := yaml.Unmarshal(data, &root); err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing YAML: %v\n", err)
 		os.Exit(1)
 	}
 
 	changed := 0
-	processYAML(root, *key, *decrypt, "", &changed)
+	processNode(&root, *key, *decrypt, "", &changed)
 
-	out, err := yaml.Marshal(root)
+	out, err := yaml.Marshal(&root)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error marshaling YAML: %v\n", err)
 		os.Exit(1)
@@ -87,32 +86,40 @@ func main() {
 	fmt.Printf("%s %d fields → %s\n", action, changed, outPath)
 }
 
-func processYAML(obj interface{}, key string, decrypt bool, path string, changed *int) {
-	switch v := obj.(type) {
-	case map[string]interface{}:
-		for k, val := range v {
-			current := k
+func processNode(node *yaml.Node, key string, decrypt bool, path string, changed *int) {
+	switch node.Kind {
+	case yaml.DocumentNode:
+		for _, child := range node.Content {
+			processNode(child, key, decrypt, path, changed)
+		}
+	case yaml.MappingNode:
+		// Content 交替存放 key, value
+		for i := 0; i+1 < len(node.Content); i += 2 {
+			keyNode := node.Content[i]
+			valNode := node.Content[i+1]
+			current := keyNode.Value
 			if path != "" {
-				current = path + "." + k
+				current = path + "." + keyNode.Value
 			}
-			if s, ok := val.(string); ok && isSensitive(current) {
-				result, err := processValue(s, key, decrypt)
+			if valNode.Kind == yaml.ScalarNode && isSensitive(current) {
+				result, err := processValue(valNode.Value, key, decrypt)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Warning: %s: %v\n", current, err)
 					continue
 				}
-				if result != s {
-					v[k] = result
+				if result != valNode.Value {
+					valNode.Value = result
+					valNode.Tag = "!!str"
 					*changed++
 					fmt.Fprintf(os.Stderr, "  %s %s\n", actionSymbol(decrypt), current)
 				}
 			} else {
-				processYAML(val, key, decrypt, current, changed)
+				processNode(valNode, key, decrypt, current, changed)
 			}
 		}
-	case []interface{}:
-		for i, item := range v {
-			processYAML(item, key, decrypt, fmt.Sprintf("%s.%d", path, i), changed)
+	case yaml.SequenceNode:
+		for i, child := range node.Content {
+			processNode(child, key, decrypt, fmt.Sprintf("%s.%d", path, i), changed)
 		}
 	}
 }
@@ -171,4 +178,3 @@ func actionSymbol(decrypt bool) string {
 	}
 	return "[E]"
 }
-

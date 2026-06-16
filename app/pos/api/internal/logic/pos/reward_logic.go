@@ -3,6 +3,7 @@ package pos
 import (
 	"context"
 	"fmt"
+	"math"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/go-redsync/redsync/v4"
@@ -254,7 +255,7 @@ func (l *PosRewardLogic) GetTxInfo(nativeAccount string) (*types.ClaimPosRewardT
 	txInfo.Mint = l.srvCtx.TokenConfig.Mint
 	txInfo.TotalReward = totalRewardAmount
 	txInfo.Decimals = l.srvCtx.TokenConfig.Decimals
-	txInfo.CostFee = costFee
+	txInfo.CostFee = math.Ceil(costFee)
 
 	return &txInfo, nil
 }
@@ -329,8 +330,7 @@ func (l *PosRewardLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 
 // recordPosClaim 在同一数据库事务中：
 // 1. 将本次可领取奖励标记为 pending=true
-// 2. 写入 t_service_tx
-// 3. 写入 t_pos_reward_claim
+// 2. 写入 t_pos_reward_claim
 func (l *PosRewardLogic) recordPosClaim(nativeAccount, txId string, rewards []model.PosReward) error {
 	dbTx := l.db.Begin()
 	if dbTx.Error != nil {

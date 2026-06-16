@@ -1,0 +1,235 @@
+services:
+  - address: HtNfUbDaBamCBPWCFiESkXpewvwVLkwrSWRjjV8FNT7i
+    confirm: true
+    enabled: true
+    encrypted_key: ""
+    hook_type: 1
+    mq_group: Stake
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 416394272
+      initial_until_tx_id: 3K3qwwH28TdsooirY4fcdfA2uqQNVq7q5Q2QCzBbDTC8AHTBq11WG42wQzvbLemEkvJSj3wyb2u92rQoLziT4yHH
+      native_account: HtNfUbDaBamCBPWCFiESkXpewvwVLkwrSWRjjV8FNT7i
+      pda_account: HtNfUbDaBamCBPWCFiESkXpewvwVLkwrSWRjjV8FNT7i
+    service: pos
+    sub_service: market buy token
+    tx_source: 0
+    webhook: ""
+  - address: H61Yvf3aZxW56hBGDNxT4cyguj98gSZMowzetYhc3TCB
+    confirm: true
+    enabled: true
+    encrypted_key: L0IMgCTkXeqtoZGPYBvD7iedzO1ksEv+L78tgIZ0hmU/8dZqtW2HksiKV2gPV45DIATMflXgEISfbv0fTeOl5gqDJ3FzW3K+feYAruJ6DMBb8/MrttpobaTEd4aHx8SGaMgdNhFRets0/tAJ184DY9eH6XwGIvF7dsxXk14do68=
+    hook_type: 0
+    mq_group: pos
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 456800664
+      initial_until_tx_id: 5mkctZ2GUeA1B8zSare3AAYXp1aeQ9NQb8BM7xuageYCRBqnnwzuseZe1v9Srcc5FjfyZoUmj2BsLu5zGnugNNhC
+      native_account: H61Yvf3aZxW56hBGDNxT4cyguj98gSZMowzetYhc3TCB
+      pda_account: EZGgg2zSGCbuy7KxjoYUvMWGw3mPdavGjFhYmD6sr4zz
+    service: pos
+    sub_service: pos reward
+    tx_source: 0
+    webhook: ""
+  - address: CuQ885ndc1jzTWE5d21GTGVPLJvGxfRBVywwvUaRCjTj
+    confirm: true
+    enabled: true
+    encrypted_key: TlfmRrO93wUoFUmCtqVGWoDb79ivGYjx68ZSA15O/8BYOTqwljEQki7UpmSNQ0eSmExoayYirRg+hUptNNUU3YU3v3lpDnr5d1o+WLNfNYd26aWpzxoBoVWJhtAErs0FuF8+DddhYwbzyp2nhKNzvWvqNIZq1k4iA/Ymw8Slr94=
+    hook_type: 0
+    mq_group: Stake
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 453414783
+      initial_until_tx_id: 29dZDL5PFTaBYdqUz7E3gFBJsLzMsHckgwSiga2y1c2RBL95t2RL4y6PRepaZkfQcqxQhRCpe2RKPDn7UUyL9U7p
+      native_account: CuQ885ndc1jzTWE5d21GTGVPLJvGxfRBVywwvUaRCjTj
+      pda_account: BxuVu6mqtjsmouawujN4yJQVZfV9snToCoykofi6i75Q
+    service: pos
+    sub_service: stake leader reward
+    tx_source: 0
+    webhook: ""
+  - address: EgFd9DYSF6y6sSPDXzpzQsi2Qo4srCJCqDeSHsUpveej
+    confirm: true
+    enabled: true
+    encrypted_key: YDOe0++F4CK10+Lih4QpO0a6MNIouIN6oUexLBcEGHC4QK4zZvTLs2NTbMAa4zT8CK7cQRB5TIYDCx57n3sWHD4VIyjBoPoFmmJvu2+e+uQUv+VX4RtxbaYxVH7ot5rt/yKD8cF23lG+S/iavh5jD9MOQ5AHHZpmyW5h9YIATFc=
+    hook_type: 0
+    mq_group: Stake
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 457731465
+      initial_until_tx_id: 2jm1WxyBoDDa5EL3sPgzrUihZbbjcAdrtmv1rCnBQh7ejprDFiJLeXxe9g1A9jdwsYQjZJyG8f2SVZy54EzMdDA9
+      native_account: EgFd9DYSF6y6sSPDXzpzQsi2Qo4srCJCqDeSHsUpveej
+      pda_account: AwXCN4QbLoo1q558o7qAfKRDqJeqK3GLCDrH5F5eF1TB
+    service: pos
+    sub_service: stake reward
+    tx_source: 0
+    webhook: ""
+  - address: 89GUQB4BSn1G9ezeXMnDPm7bTPngNAcVxMn53VEpWYaA
+    confirm: true
+    enabled: true
+    encrypted_key: yN3U4PDyjRQg/S7ca/Wa+gZ4qfiztb6kxksRlwiOGPX4yjVmVyCG0QYDAH51awiF8RvkLJjEseL3YDJEZUCr3reAqOcjFhhSwggl5aSWCg00ttkU+nlgS+O9Z3aAoAbXZNpGVIpsRMAf+5Ii7Oqslf7OfnMO6YUbiZeTMts1aaU=
+    hook_type: 0
+    mq_group: Stake
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 457266363
+      initial_until_tx_id: 2Yt1wQSKway4tjp1Rut1d88k2sgzcmKeRywzfMkCppVFGfuXYPZpdh3JNAdHhKVVk6wVvRpfsHpg3Z265qaTe38i
+      native_account: 89GUQB4BSn1G9ezeXMnDPm7bTPngNAcVxMn53VEpWYaA
+      pda_account: 89GUQB4BSn1G9ezeXMnDPm7bTPngNAcVxMn53VEpWYaA
+    service: pos
+    sub_service: stake token
+    tx_source: 0
+    webhook: ""
+  - address: 4e1QkZ6mM3bXskMqESVKDs1GRgPGEyVQyPXjWM8GoTjS
+    confirm: true
+    enabled: true
+    encrypted_key: bXwH8yoaIQCO13Nt71akdcaMpUiRStamxsJg5lOQWDwI0Bl4pYuvKm2aaRRGxj6Pk+WR6dEqfdEm+j6ZlG+dgXBpMXLQCn5wV3QPzfwt3p2znYxh1bRkZb8okQzhAhA5UmcluVXUgFr5EtSIOltc7lgL1UjgBhFscUrQkKDO4s4=
+    hook_type: 0
+    mq_group: reward
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 451413105
+      initial_until_tx_id: 4Vteqp2SFBsq4EJF3dKvGJqQxL3CubrtnyE3pA6DCWaRZPoUJ8wekR7rDTWA4wHwiAKvECLD5BHxRJf49CU4MGuv
+      native_account: 4e1QkZ6mM3bXskMqESVKDs1GRgPGEyVQyPXjWM8GoTjS
+      pda_account: 7JKwZqRsx76an4eMUWUFWwAisuhhE8y5Zv396HNcsRGo
+    service: reward
+    sub_service: campaign quote
+    tx_source: 0
+    webhook: ""
+  - address: 5xaFm7Xj2kFvjFmW3kFU2A9Ush6Hx3mqK86cYo6aJsbY
+    confirm: true
+    enabled: true
+    encrypted_key: qLoVZIgBQbNfhjoIs8553sQthOH6Jg3bcPXSz4NQK3wAh+x9w6r57vxFeUU6sG7IyLxFFXMy6h7/57jkWIiJdEkw+HD9xlEq7OuHxzAHw5V7InKdWJdaLh1DgsnJzu7M6SpLPLAe9+9tW4zyhet/WEWC1e/rBf9phh0mO5vi2Ks=
+    hook_type: 0
+    mq_group: reward
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 457726042
+      initial_until_tx_id: 4wkMPNCCSf6c2FY2TvgfXBRitnakKhKJRpYFwM7zBFUYMegmKf7LeVoUBHWrBw8Za9jW2khPd9umS8QSGWvrTMKY
+      native_account: 5xaFm7Xj2kFvjFmW3kFU2A9Ush6Hx3mqK86cYo6aJsbY
+      pda_account: 9PEVsQ6Fnfgui5wpsXPSHa3L8byc3UvgZSc193ShUUzK
+    service: reward
+    sub_service: give token
+    tx_source: 0
+    webhook: ""
+  - address: 4fLi61UtmjtKXJHL1aKb1cdUv3KZfCVnQv45hPN8h3Sf
+    confirm: true
+    enabled: true
+    encrypted_key: MKn3DRy9uYJzgdg4CgPQiT+i/tllN78Ss1GWm8BbMxhX+V1v31JT7Gzks5zSYL5UrQI3K77Ttz/LJr6eqVzdiJ9i6PgqCtm4c3IGCotQUPJchbJtgCw+CrLBTe7Y+rpORkz58TAhqMSydsi4CAQOx861fqu10++khY+xu/pMQVg=
+    hook_type: 0
+    mq_group: reward
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 458651977
+      initial_until_tx_id: 27htS1bL59VGkXeSoQ9PVF3bPKWpg7vSXGEzzbwhABP7AxmqByrcnFZib8KstFH2itENDGwAEpcL5hn1idoRErs5
+      native_account: 4fLi61UtmjtKXJHL1aKb1cdUv3KZfCVnQv45hPN8h3Sf
+      pda_account: 4LQDhhNW9Nqyo7DTBDszs97RSQwSr648hsbGt85hw5Cf
+    service: reward
+    sub_service: lottery
+    tx_source: 0
+    webhook: ""
+  - address: 3WwtCT8m2rrjTHK1hgL47eBNZd1KNZQZNvCZhiVsCbN3
+    confirm: true
+    enabled: true
+    encrypted_key: JhypgxF6A4NGrkf+qlLVZ7Y+f3dlT9V6QeGuI5X1dIJCBr/+T+H2gZjexktCWY0ZrDpKBdB9q4loSR8eHL5fAphrWIDC92oNvh1qWiaR/Ot5WAkyUhXH9eCd7EQxvNlLV4xX01EMeOaWLLKvkaQutyJb3i4Xlogpc5JyNVBB4pk=
+    hook_type: 0
+    mq_group: reward
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 457726307
+      initial_until_tx_id: 5xGWuq26TrEVowk7WoPohoCMeVuHYAfxAzATK1fBynra217PFJDDFC1ARCr7ozjaLogUPcDq47hMGEUJvRFz52wv
+      native_account: 3WwtCT8m2rrjTHK1hgL47eBNZd1KNZQZNvCZhiVsCbN3
+      pda_account: F1oVN6C1gRDm3NMr5ZWgMTQxaEXZDhxsg51CVGAThSLT
+    service: reward
+    sub_service: reward code
+    tx_source: 0
+    webhook: ""
+  - address: 4fLi61UtmjtKXJHL1aKb1cdUv3KZfCVnQv45hPN8h3Sf
+    confirm: true
+    enabled: true
+    encrypted_key: fp2aXI50Gn9L+DFv+23PtzUmQ/gnFo5zT3l3vSdpbNtG91Sf1F155/TaQUGDZDpng9XVEJALcbP1zGZvfBYFWBTCSKUF0eCHGjd4BXPNtGV/g+/ozels210NcJZ7Yw/uyr4wjjQZ8MLo3XmBayeC7WfSiHjhTveXubxXDx84A+g=
+    hook_type: 0
+    mq_group: reward
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 458651977
+      initial_until_tx_id: 27htS1bL59VGkXeSoQ9PVF3bPKWpg7vSXGEzzbwhABP7AxmqByrcnFZib8KstFH2itENDGwAEpcL5hn1idoRErs5
+      native_account: 4fLi61UtmjtKXJHL1aKb1cdUv3KZfCVnQv45hPN8h3Sf
+      pda_account: 4LQDhhNW9Nqyo7DTBDszs97RSQwSr648hsbGt85hw5Cf
+    service: reward
+    sub_service: take token
+    tx_source: 0
+    webhook: ""
+  - address: AUq3iXbJjBjED6ZN2JqJDdZ3mknd7cXv9HQqNdYuEZ6q
+    confirm: true
+    enabled: true
+    encrypted_key: vSIx1nk/mc5I2caCC3JZ66OOychaleBkz6mPduAXm9YuO8CUszhwnuyVaczUKg3QuzIBani5ahqGao8jObY/RdY7xaXur4vyP9n/kkF6yIKHu+RteGpi6uwqgmFlcLumwkWR93eLrWXaNtjSawq1PWyskDaKFJmz18R34lKExwc=
+    hook_type: 0
+    mq_group: gs-relay-activity
+    mq_topic: ServiceTransaction
+    multi_sign: false
+    scan:
+      enabled: true
+      initial_slot: 462330911
+      initial_until_tx_id: CRygvMvL1nGvJhciEfHV1zhCUuXZfQoZX4Qzgm4HPkofBPBi7krKCLiX32E8WxVRMd3VbEJV4YW65yP8URyxCPi
+      native_account: AUq3iXbJjBjED6ZN2JqJDdZ3mknd7cXv9HQqNdYuEZ6q
+      pda_account: E2EauLpUaKMJz5hxJ3eJrwNfrBHgSa7nsDrCLBX2eXsx
+    service: gs-relay
+    sub_service: contribution
+    tx_source: 0
+    webhook: ""
+  - address: AUq3iXbJjBjED6ZN2JqJDdZ3mknd7cXv9HQqNdYuEZ6q
+    confirm: true
+    enabled: true
+    encrypted_key: vSIx1nk/mc5I2caCC3JZ66OOychaleBkz6mPduAXm9YuO8CUszhwnuyVaczUKg3QuzIBani5ahqGao8jObY/RdY7xaXur4vyP9n/kkF6yIKHu+RteGpi6uwqgmFlcLumwkWR93eLrWXaNtjSawq1PWyskDaKFJmz18R34lKExwc=
+    hook_type: 0
+    mq_group: gs-relay-activity
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 462330911
+      initial_until_tx_id: CRygvMvL1nGvJhciEfHV1zhCUuXZfQoZX4Qzgm4HPkofBPBi7krKCLiX32E8WxVRMd3VbEJV4YW65yP8URyxCPi
+      native_account: AUq3iXbJjBjED6ZN2JqJDdZ3mknd7cXv9HQqNdYuEZ6q
+      pda_account: E2EauLpUaKMJz5hxJ3eJrwNfrBHgSa7nsDrCLBX2eXsx
+    service: gs-relay
+    sub_service: payout
+    tx_source: 0
+    webhook: ""
+  - address: AUq3iXbJjBjED6ZN2JqJDdZ3mknd7cXv9HQqNdYuEZ6q
+    confirm: true
+    enabled: true
+    encrypted_key: vSIx1nk/mc5I2caCC3JZ66OOychaleBkz6mPduAXm9YuO8CUszhwnuyVaczUKg3QuzIBani5ahqGao8jObY/RdY7xaXur4vyP9n/kkF6yIKHu+RteGpi6uwqgmFlcLumwkWR93eLrWXaNtjSawq1PWyskDaKFJmz18R34lKExwc=
+    hook_type: 0
+    mq_group: gs-relay-activity
+    mq_topic: ServiceTransaction
+    multi_sign: true
+    scan:
+      enabled: true
+      initial_slot: 462330911
+      initial_until_tx_id: CRygvMvL1nGvJhciEfHV1zhCUuXZfQoZX4Qzgm4HPkofBPBi7krKCLiX32E8WxVRMd3VbEJV4YW65yP8URyxCPi
+      native_account: AUq3iXbJjBjED6ZN2JqJDdZ3mknd7cXv9HQqNdYuEZ6q
+      pda_account: E2EauLpUaKMJz5hxJ3eJrwNfrBHgSa7nsDrCLBX2eXsx
+    service: gs-relay
+    sub_service: refund
+    tx_source: 0
+    webhook: ""

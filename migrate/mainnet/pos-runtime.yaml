@@ -1,0 +1,131 @@
+# pos 服务业务运行配置（发布到 Nacos，dataId=pos-runtime.yaml, group=oshit-go）
+
+# ============ pos 持币奖励配置 ============
+
+pos_reward:
+  reward_account: "H61Yvf3aZxW56hBGDNxT4cyguj98gSZMowzetYhc3TCB"
+  cost_account: "4DZ3ry8LfaM3kEc6KCL4nDpNpnVX6g4Z6EFvYyNXsiqn"
+  cost_fee_rate: 200
+  max_cost_fee: 40000
+  quote_token_amount: 500000
+
+pos_star_level_rule:
+  - star_level: 1
+    amount: 3000000000
+    group_amount: 30000000000
+    rate: 10.00
+  - star_level: 2
+    amount: 10000000000
+    group_amount: 100000000000
+    rate: 20.00
+  - star_level: 3
+    amount: 30000000000
+    group_amount: 300000000000
+    rate: 30.00
+  - star_level: 4
+    amount: 150000000000
+    group_amount: 3000000000000
+    rate: 40.00
+  - star_level: 5
+    amount: 1000000000000
+    group_amount: 20000000000000
+    rate: 50.00
+
+pos_star_whitelist: []
+
+# ============ stake 质押配置 ============
+
+stake_reward:
+  program_id: "89GUQB4BSn1G9ezeXMnDPm7bTPngNAcVxMn53VEpWYaA"
+  reward_account: "EgFd9DYSF6y6sSPDXzpzQsi2Qo4srCJCqDeSHsUpveej"
+  cost_account: "4DZ3ry8LfaM3kEc6KCL4nDpNpnVX6g4Z6EFvYyNXsiqn"
+  quote_token_amount: 500000
+  cost_fee_rate: 110
+
+stake_leader_reward:
+  reward_account: "CuQ885ndc1jzTWE5d21GTGVPLJvGxfRBVywwvUaRCjTj"
+
+stake_fix_rate:
+  - stake_type: 0
+    min_amount: 100000000
+    fix_rate: 70.00
+    individual_rate: 100.00
+  - stake_type: 1
+    min_amount: 100000000
+    fix_rate: 100.00
+    individual_rate: 100.00
+
+stake_invite_dist:
+  dist_level: 2
+
+stake_invite_rate:
+  - dist_level: 1
+    rate: 10.00
+  - dist_level: 2
+    rate: 5.00
+
+stake_star_level_rule:
+  - star_level: 1
+    amount: 3000000000
+    group_amount: 30000000000
+    rate: 8.00
+  - star_level: 2
+    amount: 10000000000
+    group_amount: 100000000000
+    rate: 16.00
+  - star_level: 3
+    amount: 30000000000
+    group_amount: 300000000000
+    rate: 24.00
+  - star_level: 4
+    amount: 150000000000
+    group_amount: 3000000000000
+    rate: 32.00
+  - star_level: 5
+    amount: 1000000000000
+    group_amount: 20000000000000
+    rate: 40.00
+  - star_level: 6
+    amount: 1500000000000
+    group_amount: 30000000000000
+    rate: 48.00
+
+stake_star_whitelist:
+  - native_account: "EMzETjbAjEpc9mosncgySeRUMtayNVLrifsZTwafB9jh"
+    star_level: 4
+    rate: 32.00
+  - native_account: "Gwt3n495KMYnwyceHbAvHLGYtcZVKVFX9cJvkts9qUdX"
+    star_level: 5
+    rate: 40.00
+  - native_account: "G5jNET7pyDyEcNdc9MENSr3q6m3aUp5UvMcufHpdFZpu"
+    star_level: 6
+    rate: 48.00
+  - native_account: "DQZMZTmFWstjc1f5pGgr829gggWkcUkFDzFgmwKCY2dM"
+    star_level: 1
+    rate: 8.00
+  - native_account: "2ueDjAgybGjbdbgjKLDnc7KnUr5RVUSQCdLbTZyyFKWZ"
+    star_level: 1
+    rate: 8.00
+  - native_account: "5CVvAyCBiBqGjE1DJQANskmL9W7DVmLRctaVW4j3Rkgj"
+    star_level: 1
+    rate: 8.00
+  - native_account: "EgqrVc7LT4w9nuWTwMZ1bF9E15kiBK6rH2wSH4ywnvmC"
+    star_level: 2
+    rate: 16.00
+  - native_account: "7DLizFp8GTfB2Z6b5C9uEn5mQZc51CSECkc6Bn5ZfmsV"
+    star_level: 1
+    rate: 8.00
+
+stake_amm:
+  quote_token: "solana"
+  public_key: "GjkvqFpZ5gqbzYEUAGsn5ozmFgM52JJDgso426DiLXbQ"
+
+stake_total_leaders:
+  - native_account: "Gwt3n495KMYnwyceHbAvHLGYtcZVKVFX9cJvkts9qUdX"
+    stake_share: 7.00
+  - native_account: "HjvdyZXukoDYFjoPLnwNZaWuUwnzZuHKyj8HgRWMyYMZ"
+    stake_share: 3.00
+
+stake_token_pool:
+  - source_account: "Raydium"
+    from_token_account: "Gh6MjRrJFBU9HcYMYKBbaD8fX1dv3CjGtDDhtVThD9v3"

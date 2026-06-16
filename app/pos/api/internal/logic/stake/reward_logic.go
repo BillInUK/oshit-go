@@ -174,8 +174,7 @@ func (l *StakeRewardLogic) GetTxInfo(nativeAccount string) (*types.ClaimStakeRew
 
 // recordStakeClaim 在同一数据库事务中：
 // 1. 将本次可领取奖励标记为 pending=true
-// 2. 写入 t_service_tx
-// 3. 写入 t_stake_reward_claim_record
+// 2. 写入 t_stake_reward_claim_record
 func (l *StakeRewardLogic) recordStakeClaim(nativeAccount, txId string, rewards []model.StakeReward) error {
 	dbTx := l.db.Begin()
 	if dbTx.Error != nil {
