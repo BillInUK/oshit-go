@@ -29,7 +29,7 @@ echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.zshrc
 ### 2.1 PostgreSQL
 
 ```bash
-docker run --name postgres16.2 \
+docker run --name postgres18.2 \
     -e POSTGRES_USER=postgres \
     -e POSTGRES_PASSWORD=postgres \
     -e POSTGRES_DB=oshit_db \
@@ -40,7 +40,7 @@ docker run --name postgres16.2 \
 启动后验证：
 
 ```bash
-docker exec -it postgres16.2 psql -U postgres -d oshit_db -c "SELECT version();"
+docker exec -it postgres18.2 psql -U postgres -d oshit_db -c "SELECT version();"
 ```
 
 ### 2.2 Redis
@@ -143,7 +143,7 @@ kafka-ui                   Up ...       0.0.0.0:9080->8080/tcp
 kafka                      Up ...       0.0.0.0:9092->9092/tcp
 nacos-standalone-derby     Up ...       0.0.0.0:8080->8080/tcp, 0.0.0.0:8848->8848/tcp, 0.0.0.0:9848->9848/tcp
 redis                      Up ...       0.0.0.0:6379->6379/tcp
-postgres16.2               Up ...       0.0.0.0:5432->5432/tcp
+postgres18.2               Up ...       0.0.0.0:5432->5432/tcp
 ```
 
 ---
@@ -214,13 +214,13 @@ AWS_PROFILE=oshit-dev aws kms decrypt \
 
 ```bash
 # 安装 ULID 扩展和创建所有表
-docker exec -i postgres16.2 psql -U postgres -d oshit_db < repositories/structures.sql
+docker exec -i postgres18.2 psql -U postgres -d oshit_db < repositories/structures.sql
 ```
 
 验证：
 
 ```bash
-docker exec -it postgres16.2 psql -U postgres -d oshit_db -c "\dt"
+docker exec -it postgres18.2 psql -U postgres -d oshit_db -c "\dt"
 ```
 
 应能看到 `t_system_config`、`t_chain_config`、`t_token_config`、`t_service_tx` 等表。
@@ -228,7 +228,7 @@ docker exec -it postgres16.2 psql -U postgres -d oshit_db -c "\dt"
 ### 4.2 导入初始配置数据
 
 ```bash
-docker exec -i postgres16.2 psql -U postgres -d oshit_db < migrate/testnet/config.sql
+docker exec -i postgres18.2 psql -U postgres -d oshit_db < migrate/local/config.sql
 ```
 
 该脚本会初始化：
@@ -249,10 +249,10 @@ docker exec -i postgres16.2 psql -U postgres -d oshit_db < migrate/testnet/confi
 
 | Data ID | 对应本地文件 | 说明 |
 |---|---|---|
-| `base-runtime.yaml` | `migrate/testnet/base-runtime.yaml` | 全局链/Token/系统配置，三个服务共用 |
-| `base-service-registry.yaml` | `migrate/testnet/base-service-registry.yaml` | base 服务的业务注册配置（含加密私钥和扫描配置） |
-| `reward-runtime.yaml` | `migrate/testnet/reward-runtime.yaml` | reward 服务的奖励规则配置 |
-| `pos-runtime.yaml` | `migrate/testnet/pos-runtime.yaml` | pos/stake 服务的业务规则配置 |
+| `base-runtime.yaml` | `migrate/local/base-runtime.yaml` | 全局链/Token/系统配置，三个服务共用 |
+| `base-service-registry.yaml` | `migrate/local/base-service-registry.yaml` | base 服务的业务注册配置（含加密私钥和扫描配置） |
+| `reward-runtime.yaml` | `migrate/local/reward-runtime.yaml` | reward 服务的奖励规则配置 |
+| `pos-runtime.yaml` | `migrate/local/pos-runtime.yaml` | pos/stake 服务的业务规则配置 |
 
 操作步骤（每个配置重复）：
 
@@ -422,7 +422,7 @@ cd cmd && go run gen.go
 ```bash
 cd cmd/encrypt_config && go run main.go \
     --key "<AES密钥明文>" \
-    --file ../../migrate/testnet/base-runtime.yaml \
+    --file ../../migrate/local/base-runtime.yaml \
     --dry-run
 ```
 
@@ -436,7 +436,7 @@ cd cmd/encrypt_config && go run main.go \
 cd cmd/reencrypt_keys && go run main.go \
     --old-key "<旧密钥>" \
     --new-key "<新密钥>" \
-    --file ../../migrate/testnet/base-service-registry.yaml
+    --file ../../migrate/local/base-service-registry.yaml
 ```
 
 ---
