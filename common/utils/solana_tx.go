@@ -39,7 +39,7 @@ func GetTransactionResultByTxId(ctx context.Context, rpcClient *rpc.Client, txId
 		txId,
 		&rpc.GetTransactionOpts{
 			MaxSupportedTransactionVersion: &maxSupportVersion,
-			Commitment:                     rpc.CommitmentFinalized,
+			Commitment:                     rpc.CommitmentConfirmed,
 			Encoding:                       solana.EncodingBase64,
 		},
 	)

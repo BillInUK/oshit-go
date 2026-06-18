@@ -282,6 +282,20 @@ func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 	txIdStr := preCheckedTx.TxId.String()
 	prefix := fmt.Sprintf("%s 处理用户提交交易Id %v -", l.prefix, txIdStr)
 
+	// 0. DB 级别检查：是否存在未确认的交易（持久化，跨会话有效，防止页面刷新后重复提交）
+	var pendingRecord model.TakeTokenRecord
+	pendingCheckErr := l.db.Table(model.TableNameTakeTokenRecord).
+		Where("receipt_account = ? AND tx_state = ?", preCheckedTx.From.String(), constants.TxStateInit).
+		First(&pendingRecord).Error
+	if pendingCheckErr == nil {
+		log.Infof("%s 地址 %v 存在未确认交易 %v，拒绝新的领取请求", prefix, preCheckedTx.From.String(), pendingRecord.TxID)
+		return 0, errors.New("you have unfinished service.please try again later")
+	}
+	if !errors.Is(pendingCheckErr, gorm.ErrRecordNotFound) {
+		log.Errorf("%s 查询未确认交易错误: %v", prefix, pendingCheckErr)
+		return 0, errors.New("check pending transaction error")
+	}
+
 	// 1. 分布式锁，防止重复处理同一地址短时间内重复进行业务
 	mutex := l.rs.NewMutex("take-token:process:commit-tx:"+preCheckedTx.From.String(), redsync.WithExpiry(1*time.Hour))
 	if err := mutex.Lock(); err != nil {
@@ -347,6 +361,7 @@ func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 	}
 
 	// 10. 同步等待链上确认，最长 90 秒
+	// 90s 时 Solana blockhash 已过期（~60s），tx 不可能再上链，直接标记失败
 	select {
 	case txState := <-ch:
 		log.Infof("%s 链上确认结果 txState=%d", prefix, txState)
@@ -355,7 +370,13 @@ func (l *TakeTokenLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_
 		log.Infof("%s 请求取消，客户端已断开", prefix)
 		return 0, errors.New("request cancelled")
 	case <-time.After(90 * time.Second):
-		log.Infof("%s 等待链上确认超时（90s），txId=%s", prefix, txIdStr)
-		return 0, errors.New("confirmation timeout, please refresh to check result")
+		log.Infof("%s 等待链上确认超时（90s），txId=%s，直接标记失败", prefix, txIdStr)
+		l.db.Model(&model.TakeTokenRecord{}).
+			Where("tx_id = ? AND tx_state = ?", txIdStr, constants.TxStateInit).
+			Updates(map[string]interface{}{"tx_state": constants.TxStateFailed, "updated_at": time.Now()})
+		l.db.Model(&model.ServiceTx{}).
+			Where("tx_id = ? AND tx_state = ?", txIdStr, constants.TxStateInit).
+			Updates(map[string]interface{}{"tx_state": constants.TxStateFailed, "updated_at": time.Now()})
+		return 0, errors.New("transaction not confirmed on chain, please try again")
 	}
 }

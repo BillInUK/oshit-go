@@ -83,6 +83,14 @@ type GetLotteryStatusReq struct {
 	NativeAccount string `json:"nativeAccount"`
 }
 
+type GetStatusResponse struct {
+	TakeCount           int32 `json:"takeCount"`
+	NeedLottery         bool  `json:"needLottery"`
+	LotteryCount        int32 `json:"lotteryCount"`
+	HasPendingTx        bool  `json:"hasPendingTx"`
+	HasPendingLotteryTx bool  `json:"hasPendingLotteryTx"`
+}
+
 type ExecuteLotteryReq struct {
 	// native account comes from JWT
 }

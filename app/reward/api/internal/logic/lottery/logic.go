@@ -56,20 +56,39 @@ func isLotteryThreshold(takeCount int32) bool {
 	return takeCount == 5 || takeCount == 10 || takeCount == 20
 }
 
-// GetStatus 查询今日的领取统计
-func (l *LotteryLogic) GetStatus(nativeAccount string) (*model.DailyClaimStats, error) {
+// GetStatus 查询今日的领取统计，以及是否有进行中的 take 交易
+func (l *LotteryLogic) GetStatus(nativeAccount string) (*types.GetStatusResponse, error) {
 	today := time.Now().Truncate(24 * time.Hour)
+	resp := &types.GetStatusResponse{}
+
 	var stats model.DailyClaimStats
 	err := l.db.Table(model.TableNameDailyClaimStats).
 		Where("native_account = ? AND take_date = ?", nativeAccount, today).
 		First(&stats).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
-	return &stats, nil
+	if err == nil {
+		resp.TakeCount = stats.TakeCount
+		resp.NeedLottery = stats.NeedLottery
+		resp.LotteryCount = stats.LotteryCount
+	}
+
+	var pendingRecord model.TakeTokenRecord
+	pendingErr := l.db.Table(model.TableNameTakeTokenRecord).
+		Where("receipt_account = ? AND tx_state = ?", nativeAccount, constants.TxStateInit).
+		First(&pendingRecord).Error
+	resp.HasPendingTx = pendingErr == nil
+
+	var pendingClaimCount int64
+	l.db.Raw(`
+		SELECT COUNT(*) FROM t_lottery_claim lc
+		JOIN t_lottery_reward lr ON lr.record_id = REPLACE(REPLACE(lc.reward_ids, '{', ''), '}', '')
+		WHERE lr.native_account = ? AND lc.tx_state = ?
+	`, nativeAccount, constants.TxStateInit).Scan(&pendingClaimCount)
+	resp.HasPendingLotteryTx = pendingClaimCount > 0
+
+	return resp, nil
 }
 
 // ExecuteLottery 执行抽奖：校验条件，创建抽奖记录，递增 lottery_count
@@ -102,7 +121,7 @@ func (l *LotteryLogic) ExecuteLottery(nativeAccount string) (*model.LotteryRewar
 	// 3. 检查是否存在是否存在未兑换的抽奖记录
 	var pendingReward model.LotteryReward
 	pendingErr := l.db.Table(model.TableNameLotteryReward).
-		Where("native_account = ? AND pending = ? AND reward_state = ?", nativeAccount, false, constants.RewardStateInit).
+		Where("native_account = ? AND pending = ? AND reward_state = ?", nativeAccount, true, constants.RewardStateInit).
 		First(&pendingReward).Error
 	if pendingErr == nil {
 		// 已有pending记录
@@ -165,7 +184,7 @@ func (l *LotteryLogic) ExecuteLottery(nativeAccount string) (*model.LotteryRewar
 func (l *LotteryLogic) GetUnclaimedRewards(nativeAccount string) ([]*model.LotteryReward, error) {
 	var rewards []*model.LotteryReward
 	err := l.db.Table(model.TableNameLotteryReward).
-		Where("native_account = ? AND pending = ? AND reward_state = ?", nativeAccount, false, constants.RewardStateInit).
+		Where("native_account = ? AND pending = ? AND reward_state = ?", nativeAccount, true, constants.RewardStateInit).
 		Find(&rewards).Error
 	if err != nil {
 		return nil, err
@@ -240,10 +259,25 @@ func (l *LotteryLogic) recordLotteryClaim(txId, rewardId string) error {
 	return nil
 }
 
-// ProcessCommitTx 处理前端提交的抽奖领取交易
-func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, rewardId string) error {
+// ProcessCommitTx 处理前端提交的抽奖领取交易，同步等待链上确认结果。
+// 返回 (txState, error)：txState=1 成功，-1 链上失败，-2 过期；error 非 nil 表示提交前出错或等待超时。
+func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_utils.PreCheckedTx, rewardId string) (int32, error) {
 	txIdStr := preCheckedTx.TxId.String()
 	prefix := fmt.Sprintf("%s 处理用户提交交易Id %v -", l.prefix, txIdStr)
+
+	// 0. DB 级别检查：是否已有该奖励的进行中领取交易（持久化，跨会话有效）
+	var pendingClaim model.LotteryClaim
+	pendingCheckErr := l.db.Table(model.TableNameLotteryClaim).
+		Where("reward_ids = ? AND tx_state = ?", fmt.Sprintf("{%s}", rewardId), constants.TxStateInit).
+		First(&pendingClaim).Error
+	if pendingCheckErr == nil {
+		log.Infof("%s 奖励 %v 存在未确认的领取交易 %v，拒绝新的领取请求", prefix, rewardId, pendingClaim.TxID)
+		return 0, errors.New("you have unfinished service.please try again later")
+	}
+	if !errors.Is(pendingCheckErr, gorm.ErrRecordNotFound) {
+		log.Errorf("%s 查询未确认领取交易错误: %v", prefix, pendingCheckErr)
+		return 0, errors.New("check pending transaction error")
+	}
 
 	// 1. 分布式锁，防止重复处理同一地址短时间内重复进行业务
 	mutex := l.rs.NewMutex("lottery:process:commit-tx:"+preCheckedTx.From.String(), redsync.WithExpiry(1*time.Hour))
@@ -251,9 +285,9 @@ func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_ut
 		var errTaken *redsync.ErrTaken
 		if !errors.As(err, &errTaken) {
 			log.Errorf("%s 获取处理交易的分布式锁错误: %v", prefix, err)
-			return errors.New("process transaction error")
+			return 0, errors.New("process transaction error")
 		}
-		return errors.New("you have unfinished service.please try again later")
+		return 0, errors.New("you have unfinished service.please try again later")
 	}
 	defer mutex.Unlock()
 
@@ -263,49 +297,68 @@ func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_ut
 		Where("record_id = ? and native_account = ? and pending = ? and reward_state = ?", rewardId, preCheckedTx.From.String(), true, constants.RewardStateInit).
 		First(&reward).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("lottery reward record not found or already claimed")
+			return 0, errors.New("lottery reward record not found or already claimed")
 		}
 		log.Errorf("%s 查询抽奖记录错误: %v", prefix, err)
-		return errors.New("query lottery reward error")
+		return 0, errors.New("query lottery reward error")
 	}
 
 	// 3. 获取交易信息用于校验
 	rewardInfo, err := l.GetTxInfo(ctx, reward.RecordID)
 	if err != nil {
 		log.Errorf("%s 获取交易信息错误: %v", prefix, err)
-		return fmt.Errorf("get lottery tx info error: %v", err)
+		return 0, fmt.Errorf("get lottery tx info error: %v", err)
 	}
 
 	// 4. 解析交易
 	decodedTx, err := l.decodeSOLTx(&preCheckedTx.SOLTx, rewardInfo)
 	if err != nil {
 		log.Errorf("%s 解析solana交易错误: %v", prefix, err)
-		return fmt.Errorf("decode transaction error: %v", err)
+		return 0, fmt.Errorf("decode transaction error: %v", err)
 	}
 
 	// 5. 校验交易
 	if err := l.checkSOLTx(decodedTx, rewardInfo); err != nil {
 		log.Errorf("%s 校验交易错误: %v", prefix, err)
-		return fmt.Errorf("check transaction error: %v", err)
+		return 0, fmt.Errorf("check transaction error: %v", err)
 	}
 
-	// 6. 发送交易给 base 模块
+	// 6. 在广播前注册 channel，确保 Kafka 消费者通知不会早于 select 执行
+	ch := make(chan int32, 1)
+	lotteryPendingMap.Store(txIdStr, ch)
+	defer lotteryPendingMap.Delete(txIdStr)
+
+	// 7. 发送交易给 base 模块
 	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
 	if err != nil {
 		log.Errorf("%s 发送交易失败,错误: %v", prefix, err)
-		return errors.New(utils.FilterAndTranslateSOLError(err))
+		return 0, errors.New(utils.FilterAndTranslateSOLError(err))
 	}
 	// 如果发送的交易Id与预期的不一致，则报错
 	if sentTxId == "" || sentTxId != txIdStr {
 		log.Errorf("%s 调用base模块dubbo接口发送的交易Id %s 与预期的不一致", prefix, sentTxId)
-		return errors.New("sent transaction id not equal expected")
+		return 0, errors.New("sent transaction id not equal expected")
 	}
 
-	// 7. 在事务中记录领取记录
+	// 8. 在事务中记录领取记录
 	if err := l.recordLotteryClaim(txIdStr, rewardId); err != nil {
 		log.Errorf("%s 记录领取记录错误: %v", prefix, err)
-		return errors.New("record lottery claim error")
+		return 0, errors.New("record lottery claim error")
 	}
 
-	return nil
+	// 9. 同步等待链上确认，最长 90 秒
+	select {
+	case txState := <-ch:
+		log.Infof("%s 链上确认结果 txState=%d", prefix, txState)
+		return txState, nil
+	case <-ctx.Done():
+		log.Infof("%s 请求取消，客户端已断开", prefix)
+		return 0, errors.New("request cancelled")
+	case <-time.After(90 * time.Second):
+		log.Infof("%s 等待链上确认超时（90s），txId=%s，直接标记失败", prefix, txIdStr)
+		l.db.Table(model.TableNameLotteryClaim).
+			Where("tx_id = ? AND tx_state = ?", txIdStr, constants.TxStateInit).
+			Updates(map[string]interface{}{"tx_state": constants.TxStateFailed, "updated_at": time.Now()})
+		return 0, errors.New("transaction not confirmed on chain, please try again")
+	}
 }
