@@ -41,7 +41,7 @@ type StakeLogic struct {
 	// 业务相关参数
 	rewardConfig       *model.StakeRewardConfig
 	leaderRewardConfig *model.StakeLeaderRewardConfig
-	fixConfig          map[int32]model.StakeFixRateConfig
+	fixConfig          map[int32]map[int32]model.StakeFixRateConfig
 	totalLeaders       []model.StakeTotalLeader
 	service            constants.ServiceName
 	subService         constants.SubServiceName
@@ -72,7 +72,7 @@ func NewStakeLogic(ctx context.Context, srvCtx *svc.ServiceContext) *StakeLogic 
 
 // GetStakeMinAmount 获取最小质押金额
 func (l *StakeLogic) GetStakeMinAmount(stakeType int64) interface{} {
-	return l.fixConfig[int32(stakeType)]
+	return l.fixConfig[int32(stakeType)][1]
 }
 
 // ProcessStakeToken 处理前端提交的质押交易

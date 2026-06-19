@@ -39,7 +39,7 @@ type StakeSnapShotLogic struct {
 	serviceConfig *model.StakeRewardConfig            // 下发奖励配置
 	starWhiteList map[string]model.StakeStarWhitelist // 星级用户白名单
 	starLevelRule map[int32]model.StakeStarLevelRule  // 星级评定规则
-	fixConfig     map[int32]model.StakeFixRateConfig  // 每日固定利息配置
+	fixConfig     map[int32]map[int32]model.StakeFixRateConfig // 每日固定利息配置
 	inviteRate    map[int32]model.StakeInviteRate
 }
 
@@ -161,9 +161,14 @@ func (l *StakeSnapShotLogic) rewardOrdinaryStaker(snapShotDay time.Time) (map[st
 		if snapShot.Amount == 0.0 || snapShot.NativeAccount == "" {
 			continue
 		}
-		rateConfig, exist := fixConfigMap[snapShot.StakeType]
+		tierMap, exist := fixConfigMap[snapShot.StakeType]
 		if !exist {
 			log.Errorf("%s 发放质押奖励错误，地址 %s 的质押类型 %d 不支持", l.prefix, snapShot.NativeAccount, snapShot.StakeType)
+			continue
+		}
+		rateConfig, exist := tierMap[snapShot.RateTier]
+		if !exist {
+			log.Errorf("%s 发放质押奖励错误，地址 %s 的档位 %d 不支持", l.prefix, snapShot.NativeAccount, snapShot.RateTier)
 			continue
 		}
 		snapShotBase := snapShot.Amount * rateConfig.FixRate / 100

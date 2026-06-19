@@ -118,6 +118,7 @@ type stakeLeaderRewardConfig struct {
 
 type stakeFixRateItem struct {
 	StakeType      int32   `yaml:"stake_type"`
+	RateTier       int32   `yaml:"rate_tier"`
 	MinAmount      float64 `yaml:"min_amount"`
 	FixRate        float64 `yaml:"fix_rate"`
 	IndividualRate float64 `yaml:"individual_rate"`
@@ -393,10 +394,14 @@ func (s *ServiceContext) applyPosRuntimeContent(content string) error {
 	}
 
 	// stake 配置
-	stakeFixConfig := make(map[int32]model.StakeFixRateConfig, len(cfg.StakeFixRate))
+	stakeFixConfig := make(map[int32]map[int32]model.StakeFixRateConfig)
 	for _, c := range cfg.StakeFixRate {
-		stakeFixConfig[c.StakeType] = model.StakeFixRateConfig{
+		if stakeFixConfig[c.StakeType] == nil {
+			stakeFixConfig[c.StakeType] = make(map[int32]model.StakeFixRateConfig)
+		}
+		stakeFixConfig[c.StakeType][c.RateTier] = model.StakeFixRateConfig{
 			StakeType:      c.StakeType,
+			RateTier:       c.RateTier,
 			MinAmount:      c.MinAmount,
 			FixRate:        c.FixRate,
 			IndividualRate: c.IndividualRate,

@@ -15,6 +15,7 @@ type StakeFixRateConfig struct {
 	RecordID       string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
 	MinAmount      float64   `gorm:"column:min_amount" json:"minAmount"`
 	StakeType      int32     `gorm:"column:stake_type;not null" json:"stakeType"`
+	RateTier       int32     `gorm:"column:rate_tier;not null;default:1" json:"rateTier"`
 	FixRate        float64   `gorm:"column:fix_rate" json:"fixRate"`
 	IndividualRate float64   `gorm:"column:individual_rate" json:"individualRate"`
 	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
