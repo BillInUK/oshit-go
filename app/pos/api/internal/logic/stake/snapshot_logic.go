@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	posrpc "oshit-go/app/pos/api/internal/rpc"
 	"oshit-go/app/pos/api/internal/svc"
-	"oshit-go/app/pos/api/internal/task"
 	"oshit-go/app/pos/api/types"
 	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
@@ -69,12 +68,7 @@ func (l *StakeSnapShotLogic) TakeStakeSnapShot() error {
 	if l.srvCtx.SystemConfig.Env == 0 {
 		return errors.New("can not take snap shot manually on mainnet")
 	}
-	taskCtx := &task.TaskContext{
-		CoreContext:  l.srvCtx.CoreContext,
-		RewardConfig: l.srvCtx.StakeRewardConfig,
-	}
-	snapShotTask := task.NewStakeSnapShotTask(taskCtx)
-	snapShotTask.StartTaskManually()
+	l.srvCtx.TaskMgr.StartStakeSnapShotManually()
 	return nil
 }
 
