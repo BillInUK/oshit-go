@@ -319,8 +319,10 @@ insert into public.t_stake_token_pool(source_account,from_token_account)values('
 
 -- 质押每日固定利息
 delete from t_stake_fix_rate_config;
-insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000,0,70,100,now(),now());
-insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000,1,100,100,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000,0,1,70,70,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000,0,2,63,63,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000,1,1,100,100,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000,1,2,90,90,now(),now());
 
 -- 邀请奖励级别
 delete from t_stake_invite_dist;

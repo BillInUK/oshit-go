@@ -332,8 +332,10 @@ insert into public.t_stake_token_pool(source_account,from_token_account)values('
 
 -- 质押每日固定利息
 delete from t_stake_fix_rate_config;
-insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000000,0,70,100,now(),now());
-insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000000,1,100,100,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000000,0,1,70,70,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000000,0,2,63,63,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000000,1,1,100,100,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000000,1,2,90,90,now(),now());
 
 -- 邀请奖励级别
 delete from t_stake_invite_dist;
@@ -393,6 +395,7 @@ INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('D5MC5ot
 INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('CQGhfR1xv7cMqVQ2GiLPgf6NXiCnUqhbAqGFFGuE7oD4',1,'3ojkzguhJA2f9JTM8se3gq6CsipsJTedUs5mLfF1QSd7');
 INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('AZ2zpC41iXWXPaK2CgEDf62c8oSWdLVTp8ZcELhjVQWH',1,'3ojkzguhJA2f9JTM8se3gq6CsipsJTedUs5mLfF1QSd7');
 INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('2izq8DYVoHKk1wf636AbiqsaDK6GxoaX1gUZxmawdrgA',1,'3ojkzguhJA2f9JTM8se3gq6CsipsJTedUs5mLfF1QSd7');
+INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('DARnMkBvvwrKqX6niYyfYvJW8JJNNzPwYRixSRgjcYYP',1,'3ojkzguhJA2f9JTM8se3gq6CsipsJTedUs5mLfF1QSd7');
 
 INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('2gHf58q2Rqq6chGVQKBvYieG4nT4xaR1JhjVkLkLNBNL',1,'9PqbpkmcxxzzadBtUE3ddXVaHC1t5JN2PYKMNzRh4gUV');
 INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('HwNLVyiB5n27PDnHRXtDUJ3BGL5jH4daYgFJuX1CAR1C',1,'9PqbpkmcxxzzadBtUE3ddXVaHC1t5JN2PYKMNzRh4gUV');

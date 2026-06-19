@@ -70,8 +70,6 @@ var (
 	StakeSnapShot               *stakeSnapShot
 	StakeStarLevelRule          *stakeStarLevelRule
 	StakeStarWhitelist          *stakeStarWhitelist
-	StakeTeamRewardDeduction    *stakeTeamRewardDeduction
-	StakeTeamRewardDeductionLog *stakeTeamRewardDeductionLog
 	StakeTokenPool              *stakeTokenPool
 	StakeTotalLeader            *stakeTotalLeader
 	SystemConfig                *systemConfig
@@ -137,8 +135,6 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	StakeSnapShot = &Q.StakeSnapShot
 	StakeStarLevelRule = &Q.StakeStarLevelRule
 	StakeStarWhitelist = &Q.StakeStarWhitelist
-	StakeTeamRewardDeduction = &Q.StakeTeamRewardDeduction
-	StakeTeamRewardDeductionLog = &Q.StakeTeamRewardDeductionLog
 	StakeTokenPool = &Q.StakeTokenPool
 	StakeTotalLeader = &Q.StakeTotalLeader
 	SystemConfig = &Q.SystemConfig
@@ -205,8 +201,6 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		StakeSnapShot:               newStakeSnapShot(db, opts...),
 		StakeStarLevelRule:          newStakeStarLevelRule(db, opts...),
 		StakeStarWhitelist:          newStakeStarWhitelist(db, opts...),
-		StakeTeamRewardDeduction:    newStakeTeamRewardDeduction(db, opts...),
-		StakeTeamRewardDeductionLog: newStakeTeamRewardDeductionLog(db, opts...),
 		StakeTokenPool:              newStakeTokenPool(db, opts...),
 		StakeTotalLeader:            newStakeTotalLeader(db, opts...),
 		SystemConfig:                newSystemConfig(db, opts...),
@@ -274,8 +268,6 @@ type Query struct {
 	StakeSnapShot               stakeSnapShot
 	StakeStarLevelRule          stakeStarLevelRule
 	StakeStarWhitelist          stakeStarWhitelist
-	StakeTeamRewardDeduction    stakeTeamRewardDeduction
-	StakeTeamRewardDeductionLog stakeTeamRewardDeductionLog
 	StakeTokenPool              stakeTokenPool
 	StakeTotalLeader            stakeTotalLeader
 	SystemConfig                systemConfig
@@ -344,8 +336,6 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		StakeSnapShot:               q.StakeSnapShot.clone(db),
 		StakeStarLevelRule:          q.StakeStarLevelRule.clone(db),
 		StakeStarWhitelist:          q.StakeStarWhitelist.clone(db),
-		StakeTeamRewardDeduction:    q.StakeTeamRewardDeduction.clone(db),
-		StakeTeamRewardDeductionLog: q.StakeTeamRewardDeductionLog.clone(db),
 		StakeTokenPool:              q.StakeTokenPool.clone(db),
 		StakeTotalLeader:            q.StakeTotalLeader.clone(db),
 		SystemConfig:                q.SystemConfig.clone(db),
@@ -421,8 +411,6 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		StakeSnapShot:               q.StakeSnapShot.replaceDB(db),
 		StakeStarLevelRule:          q.StakeStarLevelRule.replaceDB(db),
 		StakeStarWhitelist:          q.StakeStarWhitelist.replaceDB(db),
-		StakeTeamRewardDeduction:    q.StakeTeamRewardDeduction.replaceDB(db),
-		StakeTeamRewardDeductionLog: q.StakeTeamRewardDeductionLog.replaceDB(db),
 		StakeTokenPool:              q.StakeTokenPool.replaceDB(db),
 		StakeTotalLeader:            q.StakeTotalLeader.replaceDB(db),
 		SystemConfig:                q.SystemConfig.replaceDB(db),
@@ -488,8 +476,6 @@ type queryCtx struct {
 	StakeSnapShot               IStakeSnapShotDo
 	StakeStarLevelRule          IStakeStarLevelRuleDo
 	StakeStarWhitelist          IStakeStarWhitelistDo
-	StakeTeamRewardDeduction    IStakeTeamRewardDeductionDo
-	StakeTeamRewardDeductionLog IStakeTeamRewardDeductionLogDo
 	StakeTokenPool              IStakeTokenPoolDo
 	StakeTotalLeader            IStakeTotalLeaderDo
 	SystemConfig                ISystemConfigDo
@@ -555,8 +541,6 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		StakeSnapShot:               q.StakeSnapShot.WithContext(ctx),
 		StakeStarLevelRule:          q.StakeStarLevelRule.WithContext(ctx),
 		StakeStarWhitelist:          q.StakeStarWhitelist.WithContext(ctx),
-		StakeTeamRewardDeduction:    q.StakeTeamRewardDeduction.WithContext(ctx),
-		StakeTeamRewardDeductionLog: q.StakeTeamRewardDeductionLog.WithContext(ctx),
 		StakeTokenPool:              q.StakeTokenPool.WithContext(ctx),
 		StakeTotalLeader:            q.StakeTotalLeader.WithContext(ctx),
 		SystemConfig:                q.SystemConfig.WithContext(ctx),
