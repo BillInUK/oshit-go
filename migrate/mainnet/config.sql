@@ -236,6 +236,7 @@ VALUES
 
 
 
+
 -- reward服务初始化数据
 delete from t_level_dist;
 insert into t_level_dist(dist_level)values(2);

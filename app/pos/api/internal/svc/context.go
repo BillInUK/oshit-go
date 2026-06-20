@@ -352,7 +352,7 @@ func (s *ServiceContext) initStakeConfig() error {
 	if err := table.Find(&starLevelRules).Order("star_level asc").Error; err != nil {
 		return errors.New("can not load any pos star level rule from database")
 	}
-	for _, r := range s.StakeStarLevelRule {
+	for _, r := range starLevelRules {
 		s.StakeStarLevelRule[r.StarLevel] = r
 	}
 	var rewardConfig model.StakeRewardConfig

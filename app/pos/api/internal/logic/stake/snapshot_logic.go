@@ -10,6 +10,7 @@ import (
 	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
+	"sort"
 	"time"
 
 	"github.com/gagliardetto/solana-go"
@@ -652,7 +653,9 @@ func (l *StakeSnapShotLogic) GetStakeStarLevelFromConfig(owner string, amount fl
 		// 如果不存在则根据持币数量和下级数量来判断是否是星级用户
 		var stakeLevel, groupLevel int32 = 0, 0
 		var stakeLevelRate, groupLevelRate = 0.0, 0.0
-		for _, rule := range l.starLevelRule {
+		sortedKeys := sortedStarLevelKeys(l.starLevelRule)
+		for _, k := range sortedKeys {
+			rule := l.starLevelRule[k]
 			if uint64(amount) >= uint64(rule.Amount) {
 				stakeLevel = rule.StarLevel
 				stakeLevelRate = rule.Rate
@@ -675,7 +678,8 @@ func (l *StakeSnapShotLogic) GetStakeStarLevelFromConfig(owner string, amount fl
 		if stakeLevel < 5 {
 			// 如果持币量的星级小于5星，则判断团队持币星级的时候包含账户自己的持币量
 			groupStakeAmount += amount
-			for _, rule := range l.starLevelRule {
+			for _, k := range sortedKeys {
+				rule := l.starLevelRule[k]
 				if uint64(groupStakeAmount) >= uint64(rule.GroupAmount) {
 					groupLevel = rule.StarLevel
 					groupLevelRate = rule.Rate
@@ -694,7 +698,8 @@ func (l *StakeSnapShotLogic) GetStakeStarLevelFromConfig(owner string, amount fl
 			} else {
 				// 如果下级持币量没有达到5星，则判断总持币量是否能达到最高4星
 				groupStakeAmount += amount
-				for _, rule := range l.starLevelRule {
+				for _, k := range sortedKeys {
+					rule := l.starLevelRule[k]
 					if groupStakeAmount >= rule.GroupAmount {
 						groupLevel = rule.StarLevel
 						groupLevelRate = rule.Rate
@@ -864,6 +869,15 @@ func (l *StakeSnapShotLogic) calculateStakeBase(records []types.InviteNode, inde
 // 	}
 // 	return nil
 // }
+
+func sortedStarLevelKeys(m map[int32]model.StakeStarLevelRule) []int32 {
+	keys := make([]int32, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	return keys
+}
 
 // insertRewardRecord 将奖励记录写入 t_stake_reward，冲突则跳过。
 func (l *StakeSnapShotLogic) insertRewardRecord(tx *gorm.DB, reward model.StakeReward) error {

@@ -2,7 +2,6 @@ package campaign
 
 import (
 	"fmt"
-	"github.com/gagliardetto/solana-go"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
 	"oshit-go/app/reward/api/types"
@@ -51,10 +50,10 @@ func (l *CampaignLogic) checkSOLTx(txInfo *types.CampaignQuoteTxInfo, decodedTx 
 	}
 	if inst.Amount != uint64(txInfo.TokenAmount) {
 		log.Errorf("%s 解析交易错误，交易当中兑换的金额: %d 与实际能兑换的金额 %d 不一致", prefix, inst.Amount, uint64(txInfo.TokenAmount))
-		return nil, errors.New("transfer instructions count must be 0")
+		return nil, errors.New("transfer checked amount mismatch")
 	}
 
-	dexMinInstFee := uint64(txInfo.CostFee * (1 - l.srvCtx.FeeTolerance.MaxLessRate) * float64(solana.LAMPORTS_PER_SOL))
+	dexMinInstFee := uint64(txInfo.CostFee * (1 - l.srvCtx.FeeTolerance.MaxLessRate))
 	if transferInst.Amount < dexMinInstFee {
 		log.Errorf("%s 解析交易错误: 转给dex的手续费 %d 小于规则要求的 %d ", prefix, transferInst.Amount, dexMinInstFee)
 		return nil, errors.New("transfer funding less than rule required")

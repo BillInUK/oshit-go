@@ -215,7 +215,7 @@ MIGRATIONS: list[TableMigration] = [
         #        CreateTime, UpdateTime, Level
         # 新表有 UNIQUE(invitee) 和 UNIQUE(tx_id)，冲突时跳过
         column_map={
-            "inviter": "InviterTokenAccount", "invitee": "InviteeNativeAccount",
+            "inviter": "InviterNativeAccount", "invitee": "InviteeNativeAccount",
             "channel": "InviteChannel", "inviter_level": "Level",
             "tx_id": "TransferTxId",
             **CT_ID,
