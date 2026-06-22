@@ -711,7 +711,7 @@ MIGRATIONS: list[TableMigration] = [
         # 旧列: RecordId, NativeAccount, Amount, StakeType, Day, CreateTime, UpdateTime
         column_map={
             "native_account": "NativeAccount", "amount": "Amount",
-            "stake_type": "StakeType", "snap_day": "Day",
+            "stake_type": "StakeType", "snap_day": "Day","rate_tier": "RateTier",
             **CT_ID,
         },
         where=TTL_3M_CT,

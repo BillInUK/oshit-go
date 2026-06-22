@@ -33,6 +33,7 @@ func newStakeSnapShot(db *gorm.DB, opts ...gen.DOOption) stakeSnapShot {
 	_stakeSnapShot.Amount = field.NewFloat64(tableName, "amount")
 	_stakeSnapShot.StakeType = field.NewInt32(tableName, "stake_type")
 	_stakeSnapShot.SnapDay = field.NewTime(tableName, "snap_day")
+	_stakeSnapShot.RateTier = field.NewInt32(tableName, "rate_tier")
 	_stakeSnapShot.CreatedAt = field.NewTime(tableName, "created_at")
 	_stakeSnapShot.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -50,6 +51,7 @@ type stakeSnapShot struct {
 	Amount        field.Float64
 	StakeType     field.Int32
 	SnapDay       field.Time
+	RateTier      field.Int32
 	CreatedAt     field.Time
 	UpdatedAt     field.Time
 
@@ -73,6 +75,7 @@ func (s *stakeSnapShot) updateTableName(table string) *stakeSnapShot {
 	s.Amount = field.NewFloat64(table, "amount")
 	s.StakeType = field.NewInt32(table, "stake_type")
 	s.SnapDay = field.NewTime(table, "snap_day")
+	s.RateTier = field.NewInt32(table, "rate_tier")
 	s.CreatedAt = field.NewTime(table, "created_at")
 	s.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -103,12 +106,13 @@ func (s *stakeSnapShot) GetFieldByName(fieldName string) (field.OrderExpr, bool)
 }
 
 func (s *stakeSnapShot) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 7)
+	s.fieldMap = make(map[string]field.Expr, 8)
 	s.fieldMap["record_id"] = s.RecordID
 	s.fieldMap["native_account"] = s.NativeAccount
 	s.fieldMap["amount"] = s.Amount
 	s.fieldMap["stake_type"] = s.StakeType
 	s.fieldMap["snap_day"] = s.SnapDay
+	s.fieldMap["rate_tier"] = s.RateTier
 	s.fieldMap["created_at"] = s.CreatedAt
 	s.fieldMap["updated_at"] = s.UpdatedAt
 }
