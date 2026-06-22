@@ -17,6 +17,7 @@ type StakeSnapShot struct {
 	Amount        float64   `gorm:"column:amount" json:"amount"`
 	StakeType     int32     `gorm:"column:stake_type;not null" json:"stakeType"`
 	SnapDay       time.Time `gorm:"column:snap_day;not null" json:"snapDay"`
+	RateTier      int32     `gorm:"column:rate_tier;not null;default:1" json:"rateTier"`
 	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"createdAt"`
 	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updatedAt"`
 }

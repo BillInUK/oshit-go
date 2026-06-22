@@ -118,3 +118,5 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_stake_snap_shot_snap_day
 -- stake_logic.go: WHERE from_account = ? AND expired = false AND remaining_amount > 0
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_stake_buy_token_from_account_active
     ON public.t_stake_buy_token (from_account) WHERE expired = false AND remaining_amount > 0;
+
+
