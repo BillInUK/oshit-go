@@ -920,6 +920,34 @@ create index on public.t_stake_leader_reward_claim (tx_state, created_at);
 create index on public.t_stake_leader_reward_claim (native_account, tx_state);
 
 
+drop table if exists public.t_stake_team_reward_deduction;
+create table public.t_stake_team_reward_deduction
+(
+    native_account varchar(64)      not null,
+    total          double precision not null,
+    deducted       double precision not null,
+    remaining      double precision not null,
+    created_at     timestamp without time zone default current_timestamp,
+    updated_at     timestamp without time zone default current_timestamp,
+    primary key (native_account)
+);
+
+drop table if exists public.t_stake_team_reward_deduction_log;
+create table public.t_stake_team_reward_deduction_log
+(
+    record_id      ulid        not null default gen_ulid(),
+    native_account varchar(64) not null,
+    snap_day       date        not null,
+    reward_type    int         not null,
+    original       double precision not null,
+    deduction      double precision not null,
+    created_at     timestamp without time zone default current_timestamp,
+    updated_at     timestamp without time zone default current_timestamp,
+    primary key (record_id)
+);
+create index on public.t_stake_team_reward_deduction_log (native_account, snap_day);
+
+
 -- 授权阶段
 -- 1. 把现有所有表的 owner 改成 meme_server
 DO $$

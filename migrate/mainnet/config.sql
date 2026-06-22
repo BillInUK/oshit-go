@@ -371,7 +371,7 @@ INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('G5jNET
 INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('DQZMZTmFWstjc1f5pGgr829gggWkcUkFDzFgmwKCY2dM',1,8);
 INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('2ueDjAgybGjbdbgjKLDnc7KnUr5RVUSQCdLbTZyyFKWZ',1,8);
 INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('5CVvAyCBiBqGjE1DJQANskmL9W7DVmLRctaVW4j3Rkgj',1,8);
-INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('EgqrVc7LT4w9nuWTwMZ1bF9E15kiBK6rH2wSH4ywnvmC',1,16);
+INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('EgqrVc7LT4w9nuWTwMZ1bF9E15kiBK6rH2wSH4ywnvmC',2,16);
 INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('7DLizFp8GTfB2Z6b5C9uEn5mQZc51CSECkc6Bn5ZfmsV',1,8);
 
 -- 插入区域经理配置
