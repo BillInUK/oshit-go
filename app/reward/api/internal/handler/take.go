@@ -90,13 +90,17 @@ func (h *TakeTokenHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 	prefix = fmt.Sprintf("%s 业务发起地址 %v 交易id %v", prefix, preCheckedTx.From, preCheckedTx.TxId)
 	log.Infof("%s 使用邀请码 %s", prefix, req.InviteCode)
 
-	// 4. 处理交易主逻辑
+	// 4. 处理交易主逻辑，同步等待链上确认
 	l := take.NewTakeLogic(ctx, h.srvCtx)
-	if err := l.ProcessCommitTx(ctx, preCheckedTx, inviteCode); err != nil {
+	txState, err := l.ProcessCommitTx(ctx, preCheckedTx, inviteCode)
+	if err != nil {
 		log.Errorf("%s 处理交易错误: %v", prefix, err)
 		return response.FailWithError(fiberCtx, "process commit tx error", err)
 	}
 
-	// 5. 返回交易id给到前端
-	return response.OkWithData(fiberCtx, preCheckedTx.TxId)
+	// 5. 返回链上确认结果给前端
+	return response.OkWithData(fiberCtx, types.CommitTxResult{
+		TxId:    preCheckedTx.TxId.String(),
+		TxState: txState,
+	})
 }

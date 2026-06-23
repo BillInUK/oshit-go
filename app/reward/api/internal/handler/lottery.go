@@ -142,11 +142,17 @@ func (h *LotteryHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 	prefix = fmt.Sprintf("%s 业务发起地址 %v 交易id %v", prefix, preCheckedTx.From, preCheckedTx.TxId)
 	log.Infof("%s 提交抽奖领取交易 rewardId %s", prefix, req.RewardId)
 
-	// 5. 处理交易主体逻辑
+	// 5. 处理交易主体逻辑，同步等待链上确认
 	l := lottery.NewLotteryLogic(ctx, h.srvCtx)
-	if err := l.ProcessCommitTx(ctx, preCheckedTx, req.RewardId); err != nil {
+	txState, err := l.ProcessCommitTx(ctx, preCheckedTx, req.RewardId)
+	if err != nil {
 		log.Errorf("%s 处理交易错误: %v", prefix, err)
 		return response.FailWithError(fiberCtx, "process commit lottery tx error", err)
 	}
-	return response.OkWithData(fiberCtx, preCheckedTx.TxId)
+
+	// 6. 返回链上确认结果给前端
+	return response.OkWithData(fiberCtx, types.CommitTxResult{
+		TxId:    preCheckedTx.TxId.String(),
+		TxState: txState,
+	})
 }

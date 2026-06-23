@@ -85,3 +85,17 @@
 2026-06-11T22:07:05.905+0800	INFO	rpc/rpc_client.go:486	config-0-f3473501-b21a-468d-a47e-8f3c190758bb notify connected event to listeners , connectionId=1781186825803_172.17.0.1_64800
 2026-06-11T22:07:05.905+0800	INFO	config_client/config_connection_event_listener.go:38	[ConfigConnectionEventListener] connect to config server for taskId: 0
 2026-06-11T22:07:05.908+0800	WARN	cache/disk_cache.go:193	read Config Content failed. cause file doesn't exist, file path: ./cache/nacos/config/pos-runtime.yaml@@oshit-go@@_failover.
+2026-06-22T21:50:37.974+0800	WARN	cache/disk_cache.go:193	read Config Content failed. cause file doesn't exist, file path: ./cache/nacos/config/base-runtime.yaml@@oshit-go@@_failover.
+2026-06-22T21:50:37.975+0800	INFO	rpc/rpc_client.go:157	init rpc client for name %!(EXTRA string=config-0-3f523779-ecfc-4a56-b5a6-05cfc927ff03)
+2026-06-22T21:50:37.975+0800	INFO	rpc/rpc_client.go:166	get app conn labels from client config map[] 
+2026-06-22T21:50:37.975+0800	INFO	rpc/rpc_client.go:168	get app conn labels from env map[] 
+2026-06-22T21:50:37.975+0800	INFO	rpc/rpc_client.go:171	final app conn labels : map[] 
+2026-06-22T21:50:37.975+0800	INFO	rpc/rpc_client.go:327	[RpcClient.Start] config-0-3f523779-ecfc-4a56-b5a6-05cfc927ff03 try to connect to server on start up, server: {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848}
+2026-06-22T21:50:37.975+0800	INFO	rpc/grpc_client.go:175	check tls config %!(EXTRA *constant.TLSConfig=&{false false false    })
+2026-06-22T21:50:37.975+0800	INFO	rpc/grpc_client.go:180	try to get tls config from env
+2026-06-22T21:50:37.975+0800	INFO	rpc/grpc_client.go:189	 tls config from env is not enable
+2026-06-22T21:50:37.975+0800	INFO	util/common.go:96	Local IP:192.168.110.121
+2026-06-22T21:50:38.080+0800	INFO	rpc/rpc_client.go:337	config-0-3f523779-ecfc-4a56-b5a6-05cfc927ff03 success to connect to server {serverIp:127.0.0.1 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1782136237978_172.17.0.1_55190
+2026-06-22T21:50:38.080+0800	INFO	rpc/rpc_client.go:486	config-0-3f523779-ecfc-4a56-b5a6-05cfc927ff03 notify connected event to listeners , connectionId=1782136237978_172.17.0.1_55190
+2026-06-22T21:50:38.080+0800	INFO	config_client/config_connection_event_listener.go:38	[ConfigConnectionEventListener] connect to config server for taskId: 0
+2026-06-22T21:50:38.089+0800	WARN	cache/disk_cache.go:193	read Config Content failed. cause file doesn't exist, file path: ./cache/nacos/config/pos-runtime.yaml@@oshit-go@@_failover.

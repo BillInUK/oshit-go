@@ -669,6 +669,7 @@ CREATE TABLE public.t_stake_fix_rate_config
     record_id       ulid NOT NULL DEFAULT gen_ulid(),                      -- 记录Id
     min_amount      NUMERIC(78, 0),                                        -- 持币地址的金额
     stake_type      INT  NOT NULL,                                         -- 质押类型 0.180天 1.360天
+    rate_tier       INT  NOT NULL DEFAULT 1,                               -- 档位 1.cutoff前 2.cutoff后
     fix_rate        NUMERIC(5, 2),                                         -- 每日固定利息费率
     individual_rate NUMERIC(5, 2),                                         -- 星级奖励当中个人费率 每日固定利息 * 个人费率=质押激励奖励个人部分
     created_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- 记录创建时间
@@ -793,6 +794,7 @@ CREATE TABLE public.t_stake_snap_shot
     native_account varchar(64) not null,                                  -- native account 地址
     amount         numeric(78, 0),                                        -- 质押金额
     stake_type     int         not null,                                  -- 质押类型 0.180天 1.360天
+    rate_tier      int         not null default 1,                        -- 档位 1.cutoff前 2.cutoff后
     snap_day       date        not null,                                  -- 快照的日期
     rate_tier      integer     not null default 1,                        -- 快照的日期
     created_at     timestamp without time zone default current_timestamp, -- 记录创建时间
@@ -800,7 +802,7 @@ CREATE TABLE public.t_stake_snap_shot
     PRIMARY KEY (record_id)
 );
 CREATE INDEX ON public.t_stake_snap_shot (native_account);
-CREATE UNIQUE INDEX ON public.t_stake_snap_shot (native_account, stake_type, snap_day);
+CREATE UNIQUE INDEX ON public.t_stake_snap_shot (native_account, stake_type, rate_tier, snap_day);
 CREATE INDEX idx_stake_snap_shot_ttl ON public.t_stake_snap_shot (created_at);
 
 -- 质押记录表
@@ -917,6 +919,34 @@ create table public.t_stake_leader_reward_claim
 create index on public.t_stake_leader_reward_claim (tx_id);
 create index on public.t_stake_leader_reward_claim (tx_state, created_at);
 create index on public.t_stake_leader_reward_claim (native_account, tx_state);
+
+
+drop table if exists public.t_stake_team_reward_deduction;
+create table public.t_stake_team_reward_deduction
+(
+    native_account varchar(64)      not null,
+    total          double precision not null,
+    deducted       double precision not null,
+    remaining      double precision not null,
+    created_at     timestamp without time zone default current_timestamp,
+    updated_at     timestamp without time zone default current_timestamp,
+    primary key (native_account)
+);
+
+drop table if exists public.t_stake_team_reward_deduction_log;
+create table public.t_stake_team_reward_deduction_log
+(
+    record_id      ulid        not null default gen_ulid(),
+    native_account varchar(64) not null,
+    snap_day       date        not null,
+    reward_type    int         not null,
+    original       double precision not null,
+    deduction      double precision not null,
+    created_at     timestamp without time zone default current_timestamp,
+    updated_at     timestamp without time zone default current_timestamp,
+    primary key (record_id)
+);
+create index on public.t_stake_team_reward_deduction_log (native_account, snap_day);
 
 
 -- 授权阶段

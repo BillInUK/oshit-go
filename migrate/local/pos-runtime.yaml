@@ -47,13 +47,25 @@ stake_leader_reward:
 
 stake_fix_rate:
   - stake_type: 0
+    rate_tier: 1
     min_amount: 100000
     fix_rate: 70.00
-    individual_rate: 100.00
+    individual_rate: 70.00
+  - stake_type: 0
+    rate_tier: 2
+    min_amount: 100000
+    fix_rate: 63.00
+    individual_rate: 63.00
   - stake_type: 1
+    rate_tier: 1
     min_amount: 100000
     fix_rate: 100.00
     individual_rate: 100.00
+  - stake_type: 1
+    rate_tier: 2
+    min_amount: 100000
+    fix_rate: 90.00
+    individual_rate: 90.00
 
 stake_invite_dist:
   dist_level: 2

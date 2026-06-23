@@ -810,3 +810,6 @@ Reward API starting on :1200
 {"time":"2026-06-11T22:06:51.574711+08:00","level":"INFO","service":"reward-api","caller":"app/reward/api/internal/svc/nacos_config.go:313","msg":"loaded base runtime config from nacos"}
 {"time":"2026-06-11T22:06:51.578406+08:00","level":"INFO","service":"reward-api","caller":"app/reward/api/internal/svc/nacos_config.go:413","msg":"loaded reward runtime config from nacos"}
 Reward API starting on :1200
+{"time":"2026-06-22T21:50:11.329473+08:00","level":"INFO","service":"reward-api","caller":"app/reward/api/internal/svc/nacos_config.go:313","msg":"loaded base runtime config from nacos"}
+{"time":"2026-06-22T21:50:11.33326+08:00","level":"INFO","service":"reward-api","caller":"app/reward/api/internal/svc/nacos_config.go:413","msg":"loaded reward runtime config from nacos"}
+Reward API starting on :1200

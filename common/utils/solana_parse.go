@@ -467,7 +467,7 @@ func decodeTokenInstructionForTransferChecked(inst rpc.CompiledInstruction, full
 func HeliusParseMarketBuyTx(heliusAPIKey string, txSig solana.Signature) (*entity.DecodedSolanaTransaction, error) {
 	tokenMint := solana.MPK("ShitJuMfPKCQU7LedLERFYapDta7CCdKExPWX2gETRH")
 	const maxRetries = 5
-	url := fmt.Sprintf("https://api-mainnet.helius-rpc.com/v0/transactions/?api-key=%s", heliusAPIKey)
+	url := fmt.Sprintf("https://mainnet.helius-rpc.com/v0/transactions/?api-key=%s", heliusAPIKey)
 	reqBody, err := json.Marshal(map[string]interface{}{"transactions": []string{txSig.String()}})
 	if err != nil {
 		return nil, fmt.Errorf("序列化请求失败: %w", err)

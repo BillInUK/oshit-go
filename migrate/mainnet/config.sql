@@ -236,6 +236,7 @@ VALUES
 
 
 
+
 -- reward服务初始化数据
 delete from t_level_dist;
 insert into t_level_dist(dist_level)values(2);
@@ -332,8 +333,10 @@ insert into public.t_stake_token_pool(source_account,from_token_account)values('
 
 -- 质押每日固定利息
 delete from t_stake_fix_rate_config;
-insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000000,0,70,100,now(),now());
-insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000000,1,100,100,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000000,0,1,70,70,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000000,0,2,63,63,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000000,1,1,100,100,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000000,1,2,90,90,now(),now());
 
 -- 邀请奖励级别
 delete from t_stake_invite_dist;
@@ -368,7 +371,7 @@ INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('G5jNET
 INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('DQZMZTmFWstjc1f5pGgr829gggWkcUkFDzFgmwKCY2dM',1,8);
 INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('2ueDjAgybGjbdbgjKLDnc7KnUr5RVUSQCdLbTZyyFKWZ',1,8);
 INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('5CVvAyCBiBqGjE1DJQANskmL9W7DVmLRctaVW4j3Rkgj',1,8);
-INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('EgqrVc7LT4w9nuWTwMZ1bF9E15kiBK6rH2wSH4ywnvmC',1,16);
+INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('EgqrVc7LT4w9nuWTwMZ1bF9E15kiBK6rH2wSH4ywnvmC',2,16);
 INSERT INTO t_stake_star_whitelist(native_account,star_level,rate)VALUES('7DLizFp8GTfB2Z6b5C9uEn5mQZc51CSECkc6Bn5ZfmsV',1,8);
 
 -- 插入区域经理配置
@@ -393,6 +396,7 @@ INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('D5MC5ot
 INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('CQGhfR1xv7cMqVQ2GiLPgf6NXiCnUqhbAqGFFGuE7oD4',1,'3ojkzguhJA2f9JTM8se3gq6CsipsJTedUs5mLfF1QSd7');
 INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('AZ2zpC41iXWXPaK2CgEDf62c8oSWdLVTp8ZcELhjVQWH',1,'3ojkzguhJA2f9JTM8se3gq6CsipsJTedUs5mLfF1QSd7');
 INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('2izq8DYVoHKk1wf636AbiqsaDK6GxoaX1gUZxmawdrgA',1,'3ojkzguhJA2f9JTM8se3gq6CsipsJTedUs5mLfF1QSd7');
+INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('DARnMkBvvwrKqX6niYyfYvJW8JJNNzPwYRixSRgjcYYP',1,'3ojkzguhJA2f9JTM8se3gq6CsipsJTedUs5mLfF1QSd7');
 
 INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('2gHf58q2Rqq6chGVQKBvYieG4nT4xaR1JhjVkLkLNBNL',1,'9PqbpkmcxxzzadBtUE3ddXVaHC1t5JN2PYKMNzRh4gUV');
 INSERT INTO t_stake_leader(native_account,leader_level,up_leader)VALUES('HwNLVyiB5n27PDnHRXtDUJ3BGL5jH4daYgFJuX1CAR1C',1,'9PqbpkmcxxzzadBtUE3ddXVaHC1t5JN2PYKMNzRh4gUV');

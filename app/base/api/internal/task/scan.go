@@ -293,7 +293,7 @@ func (t *TxScanTask) getLatestTransaction(ctx context.Context, rpcClient *rpc.Cl
 		ctx,
 		pdaAccount,
 		&rpc.GetSignaturesForAddressOpts{
-			Commitment: rpc.CommitmentFinalized,
+			Commitment: rpc.CommitmentConfirmed,
 			Until:      untilTx,
 			Limit:      &limit,
 		},
@@ -386,7 +386,7 @@ func (t *TxScanTask) startTxScanTasks(ctx context.Context, service, subService, 
 			}
 		}()
 
-		timer := time.NewTimer(3 * time.Second)
+		timer := time.NewTimer(1 * time.Second)
 		select {
 		case <-ctx.Done():
 			timer.Stop()

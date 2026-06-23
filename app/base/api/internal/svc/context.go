@@ -37,7 +37,8 @@ aSxPflUNtEqE0dmLfbA8kZw7Rs8eGkUj4kOEMSZA4y4jtp1wn0QJJF31Obop60j1
 type ServiceContext struct {
 	core_context.CoreContext
 	TaskMgr              *task.TaskManager
-	serviceKeyDecryptPwd string
+	serviceKeyDecryptPwd string // AES key for config fields (DB/Redis/Nacos passwords, API keys)
+	privKeyDecryptPwd    string // AES key for Solana private keys (t_service_key / Nacos encrypted_key)
 }
 
 func NewServiceContext() (*ServiceContext, error) {
@@ -47,10 +48,16 @@ func NewServiceContext() (*ServiceContext, error) {
 		return nil, err
 	}
 
-	// 加载解密密钥
+	// 3.1 加载配置解密密钥（用于 DB/Redis/Nacos 等配置密码）
 	decryptKey, err := utils.LoadConfigDecryptKey()
 	if err != nil {
 		return nil, fmt.Errorf("load config decrypt key: %w", err)
+	}
+
+	// 3.2 加载私钥解密密钥（用于 t_service_key / Nacos 中的 Solana 私钥）
+	privKeyDecryptKey, err := utils.LoadPrivKeyDecryptKey()
+	if err != nil {
+		return nil, fmt.Errorf("load priv key decrypt key: %w", err)
 	}
 
 	// 解密 application.yaml 中的 ENC~ 字段（DB密码、Redis密码、Nacos凭据等）
@@ -76,6 +83,7 @@ func NewServiceContext() (*ServiceContext, error) {
 	// 创建ServiceContext
 	svcCtx := &ServiceContext{
 		serviceKeyDecryptPwd: decryptKey,
+		privKeyDecryptPwd:    privKeyDecryptKey,
 		CoreContext: core_context.CoreContext{
 			Config:  cfg,
 			DB:      db,
@@ -294,7 +302,7 @@ func (s *ServiceContext) initServiceKeys() error {
 
 	s.ServiceKeyMap = make(core_context.ServiceKey)
 	for _, k := range keys {
-		plainKey, err := utils.JasyptDecrypt(k.EncryptedKey, s.serviceKeyDecryptPwd, serviceKeyDecryptAlgo)
+		plainKey, err := utils.JasyptDecrypt(k.EncryptedKey, s.privKeyDecryptPwd, serviceKeyDecryptAlgo)
 		if err != nil {
 			return fmt.Errorf("decrypt service key [%s/%s] error: %v", k.Service, k.SubService, err)
 		}

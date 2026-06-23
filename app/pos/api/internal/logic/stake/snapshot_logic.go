@@ -6,11 +6,11 @@ import (
 	"github.com/pkg/errors"
 	posrpc "oshit-go/app/pos/api/internal/rpc"
 	"oshit-go/app/pos/api/internal/svc"
-	"oshit-go/app/pos/api/internal/task"
 	"oshit-go/app/pos/api/types"
 	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
+	"sort"
 	"time"
 
 	"github.com/gagliardetto/solana-go"
@@ -39,7 +39,7 @@ type StakeSnapShotLogic struct {
 	serviceConfig *model.StakeRewardConfig            // 下发奖励配置
 	starWhiteList map[string]model.StakeStarWhitelist // 星级用户白名单
 	starLevelRule map[int32]model.StakeStarLevelRule  // 星级评定规则
-	fixConfig     map[int32]model.StakeFixRateConfig  // 每日固定利息配置
+	fixConfig     map[int32]map[int32]model.StakeFixRateConfig // 每日固定利息配置
 	inviteRate    map[int32]model.StakeInviteRate
 }
 
@@ -69,12 +69,7 @@ func (l *StakeSnapShotLogic) TakeStakeSnapShot() error {
 	if l.srvCtx.SystemConfig.Env == 0 {
 		return errors.New("can not take snap shot manually on mainnet")
 	}
-	taskCtx := &task.TaskContext{
-		CoreContext:  l.srvCtx.CoreContext,
-		RewardConfig: l.srvCtx.StakeRewardConfig,
-	}
-	snapShotTask := task.NewStakeSnapShotTask(taskCtx)
-	snapShotTask.StartTaskManually()
+	l.srvCtx.TaskMgr.StartStakeSnapShotManually()
 	return nil
 }
 
@@ -161,9 +156,14 @@ func (l *StakeSnapShotLogic) rewardOrdinaryStaker(snapShotDay time.Time) (map[st
 		if snapShot.Amount == 0.0 || snapShot.NativeAccount == "" {
 			continue
 		}
-		rateConfig, exist := fixConfigMap[snapShot.StakeType]
+		tierMap, exist := fixConfigMap[snapShot.StakeType]
 		if !exist {
 			log.Errorf("%s 发放质押奖励错误，地址 %s 的质押类型 %d 不支持", l.prefix, snapShot.NativeAccount, snapShot.StakeType)
+			continue
+		}
+		rateConfig, exist := tierMap[snapShot.RateTier]
+		if !exist {
+			log.Errorf("%s 发放质押奖励错误，地址 %s 的档位 %d 不支持", l.prefix, snapShot.NativeAccount, snapShot.RateTier)
 			continue
 		}
 		snapShotBase := snapShot.Amount * rateConfig.FixRate / 100
@@ -545,12 +545,15 @@ func (l *StakeSnapShotLogic) distributeInviteRewardsWithRecursiveCTE(tx *gorm.DB
             inner join invite_chain ic on ir.invitee = ic.inviter
             where ic.level < ?
         )
-        select 
+        select
             ic.inviter,
             ic.level AS level
         from invite_chain ic
-        inner join public.t_stake_snap_shot ss on ic.inviter = ss.native_account 
-            and ss.snap_day = ?
+        inner join (
+            select distinct native_account
+            from public.t_stake_snap_shot
+            where snap_day = ?
+        ) ss on ic.inviter = ss.native_account
         order by ic.level
     `
 
@@ -653,7 +656,9 @@ func (l *StakeSnapShotLogic) GetStakeStarLevelFromConfig(owner string, amount fl
 		// 如果不存在则根据持币数量和下级数量来判断是否是星级用户
 		var stakeLevel, groupLevel int32 = 0, 0
 		var stakeLevelRate, groupLevelRate = 0.0, 0.0
-		for _, rule := range l.starLevelRule {
+		sortedKeys := sortedStarLevelKeys(l.starLevelRule)
+		for _, k := range sortedKeys {
+			rule := l.starLevelRule[k]
 			if uint64(amount) >= uint64(rule.Amount) {
 				stakeLevel = rule.StarLevel
 				stakeLevelRate = rule.Rate
@@ -676,7 +681,8 @@ func (l *StakeSnapShotLogic) GetStakeStarLevelFromConfig(owner string, amount fl
 		if stakeLevel < 5 {
 			// 如果持币量的星级小于5星，则判断团队持币星级的时候包含账户自己的持币量
 			groupStakeAmount += amount
-			for _, rule := range l.starLevelRule {
+			for _, k := range sortedKeys {
+				rule := l.starLevelRule[k]
 				if uint64(groupStakeAmount) >= uint64(rule.GroupAmount) {
 					groupLevel = rule.StarLevel
 					groupLevelRate = rule.Rate
@@ -695,7 +701,8 @@ func (l *StakeSnapShotLogic) GetStakeStarLevelFromConfig(owner string, amount fl
 			} else {
 				// 如果下级持币量没有达到5星，则判断总持币量是否能达到最高4星
 				groupStakeAmount += amount
-				for _, rule := range l.starLevelRule {
+				for _, k := range sortedKeys {
+					rule := l.starLevelRule[k]
 					if groupStakeAmount >= rule.GroupAmount {
 						groupLevel = rule.StarLevel
 						groupLevelRate = rule.Rate
@@ -798,12 +805,10 @@ func (l *StakeSnapShotLogic) calculateStakeBase(records []types.InviteNode, inde
 func (l *StakeSnapShotLogic) writeRewardWithDeduction(reward model.StakeReward) error {
 	needDeductionCheck := reward.RewardType == int32(types.StakeInvite) || reward.RewardType == int32(types.StakeStarGroup)
 	if !needDeductionCheck {
-		// 非扣减类型，直接插入
 		return l.insertRewardRecord(l.db, reward)
 	}
 
 	return l.db.Transaction(func(tx *gorm.DB) error {
-		// 查询扣减配置，SELECT ... FOR UPDATE 防止并发
 		var deduction model.StakeTeamRewardDeduction
 		err := tx.Set("gorm:query_option", "FOR UPDATE").
 			Where("native_account = ?", reward.NativeAccount).
@@ -811,21 +816,18 @@ func (l *StakeSnapShotLogic) writeRewardWithDeduction(reward model.StakeReward) 
 
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
-				// 情况1：无扣减记录，直接写入原始奖励
 				return l.insertRewardRecord(tx, reward)
 			}
 			return fmt.Errorf("查询扣减配置失败 地址 %s: %w", reward.NativeAccount, err)
 		}
 
 		if deduction.Remaining <= 0 {
-			// 情况1：remaining 已耗尽，直接写入原始奖励
 			return l.insertRewardRecord(tx, reward)
 		}
 
 		originalAmount := reward.RewardAmount
 
 		if deduction.Remaining >= originalAmount {
-			// 情况2：全额扣减，跳过奖励写入
 			deductAmount := originalAmount
 			if err = l.applyDeduction(tx, &deduction, deductAmount, reward, originalAmount); err != nil {
 				return err
@@ -835,7 +837,6 @@ func (l *StakeSnapShotLogic) writeRewardWithDeduction(reward model.StakeReward) 
 			return nil
 		}
 
-		// 情况3：部分扣减，发放 rewardAmount - remaining
 		deductAmount := deduction.Remaining
 		reward.RewardAmount = originalAmount - deductAmount
 		if err = l.applyDeduction(tx, &deduction, deductAmount, reward, originalAmount); err != nil {
@@ -847,9 +848,7 @@ func (l *StakeSnapShotLogic) writeRewardWithDeduction(reward model.StakeReward) 
 	})
 }
 
-// applyDeduction 在事务内更新扣减主表并写入扣减日志。
 func (l *StakeSnapShotLogic) applyDeduction(tx *gorm.DB, deduction *model.StakeTeamRewardDeduction, deductAmount float64, reward model.StakeReward, originalAmount float64) error {
-	// 更新 t_stake_team_reward_deduction
 	if err := tx.Model(deduction).Updates(map[string]interface{}{
 		"deducted":   gorm.Expr("deducted + ?", deductAmount),
 		"remaining":  gorm.Expr("remaining - ?", deductAmount),
@@ -858,7 +857,6 @@ func (l *StakeSnapShotLogic) applyDeduction(tx *gorm.DB, deduction *model.StakeT
 		return fmt.Errorf("更新扣减配置失败 地址 %s: %w", reward.NativeAccount, err)
 	}
 
-	// 写入扣减日志
 	logRecord := model.StakeTeamRewardDeductionLog{
 		NativeAccount: reward.NativeAccount,
 		SnapDay:       reward.SnapDay,
@@ -872,6 +870,15 @@ func (l *StakeSnapShotLogic) applyDeduction(tx *gorm.DB, deduction *model.StakeT
 		return fmt.Errorf("写入扣减日志失败 地址 %s: %w", reward.NativeAccount, err)
 	}
 	return nil
+}
+
+func sortedStarLevelKeys(m map[int32]model.StakeStarLevelRule) []int32 {
+	keys := make([]int32, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	return keys
 }
 
 // insertRewardRecord 将奖励记录写入 t_stake_reward，冲突则跳过。

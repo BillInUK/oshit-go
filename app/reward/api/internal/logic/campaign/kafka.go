@@ -245,7 +245,6 @@ func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedSer
 	score := float64(opResult.OperationResult.Log.DeltaScore)
 	scoreTxId := opResult.OperationResult.Log.TransactionID
 	scoreFlowId := int32(opResult.OperationResult.Log.LogID)
-	amount := decodedServiceTx.TransferTokenInst.Amount
 	exchangeTokenRecord := model.CampaignQuoteRecord{
 		RewardAccount:  decodedServiceTx.RewardInst.FromNativeAccount,
 		ReceiptAccount: decodedServiceTx.RewardInst.ToNativeAccount,
@@ -254,7 +253,7 @@ func (l *CampaignLogic) recordExchangeRecord(decodedServiceTx *entity.DecodedSer
 		ScoreFlowID:    scoreFlowId,
 		ScoreTxID:      scoreTxId,
 		TxID:           decodedServiceTx.TxID,
-		Amount:         amount,
+		Amount:         tokenAmount,
 		Score:          score,
 		QuoteState:     int32(constants.QuoteStateInit),
 		Session:        globalLimit.Session,    // 记录下单时的全局场次，Kafka回调时恢复对应session额度

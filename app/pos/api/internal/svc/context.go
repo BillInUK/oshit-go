@@ -40,7 +40,7 @@ type ServiceContext struct {
 	StakeAmmConfig     *model.StakeAmmConfig               // stake amm 做市地址
 	StakeRewardConfig  *model.StakeRewardConfig            // stake 普通用户奖励发放配置
 	LeaderRewardConfig *model.StakeLeaderRewardConfig      // stake 区域经理(领导)奖励发放配置
-	StakeFixConfig     map[int32]model.StakeFixRateConfig  // stake 每日固定利息配置
+	StakeFixConfig     map[int32]map[int32]model.StakeFixRateConfig // stake 每日固定利息配置
 	StakeInviteRate    map[int32]model.StakeInviteRate     // stake 邀请人奖励配置
 	StakeStarLevelRule map[int32]model.StakeStarLevelRule  // stake 星级用户配置
 	TotalAreaLeaders   []model.StakeTotalLeader            // stake 总区域经理(领导)配置
@@ -308,7 +308,7 @@ func (s *ServiceContext) initStakeConfig() error {
 	var fixConfig []model.StakeFixRateConfig
 	var inviteRates []model.StakeInviteRate
 	var stakeTokenPools []model.StakeTokenPool
-	s.StakeFixConfig = make(map[int32]model.StakeFixRateConfig)
+	s.StakeFixConfig = make(map[int32]map[int32]model.StakeFixRateConfig)
 	s.StakeInviteRate = make(map[int32]model.StakeInviteRate)
 	s.StakeStarLevelRule = make(map[int32]model.StakeStarLevelRule)
 	s.StakeTokenPoolMap = make(map[string]model.StakeTokenPool)
@@ -331,7 +331,10 @@ func (s *ServiceContext) initStakeConfig() error {
 		return errors.New("can not find any stake fix config")
 	}
 	for _, c := range fixConfig {
-		s.StakeFixConfig[c.StakeType] = c
+		if s.StakeFixConfig[c.StakeType] == nil {
+			s.StakeFixConfig[c.StakeType] = make(map[int32]model.StakeFixRateConfig)
+		}
+		s.StakeFixConfig[c.StakeType][c.RateTier] = c
 	}
 
 	// 初始化stake星级配置
@@ -349,7 +352,7 @@ func (s *ServiceContext) initStakeConfig() error {
 	if err := table.Find(&starLevelRules).Order("star_level asc").Error; err != nil {
 		return errors.New("can not load any pos star level rule from database")
 	}
-	for _, r := range s.StakeStarLevelRule {
+	for _, r := range starLevelRules {
 		s.StakeStarLevelRule[r.StarLevel] = r
 	}
 	var rewardConfig model.StakeRewardConfig

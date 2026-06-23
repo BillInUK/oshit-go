@@ -215,7 +215,7 @@ MIGRATIONS: list[TableMigration] = [
         #        CreateTime, UpdateTime, Level
         # 新表有 UNIQUE(invitee) 和 UNIQUE(tx_id)，冲突时跳过
         column_map={
-            "inviter": "InviterTokenAccount", "invitee": "InviteeNativeAccount",
+            "inviter": "InviterNativeAccount", "invitee": "InviteeNativeAccount",
             "channel": "InviteChannel", "inviter_level": "Level",
             "tx_id": "TransferTxId",
             **CT_ID,
@@ -803,30 +803,30 @@ MIGRATIONS: list[TableMigration] = [
 
     # ─── 直接平移（旧库已是 snake_case）───────────────────────────
 
-    # TableMigration(
-    #     new_table="t_stake_team_reward_deduction",
-    #     old_table="t_stake_team_reward_deduction",
-    #     # 旧列: native_account, total, deducted, remaining, created_at, updated_at (已 snake_case)
-    #     column_map={
-    #         "native_account": "native_account", "total": "total",
-    #         "deducted": "deducted", "remaining": "remaining",
-    #         "created_at": "created_at", "updated_at": "updated_at",
-    #     },
-    #     note="新旧一致，直接平移",
-    # ),
-    #
-    # TableMigration(
-    #     new_table="t_stake_team_reward_deduction_log",
-    #     old_table="t_stake_team_reward_deduction_log",
-    #     # 旧列: record_id, native_account, snap_day, reward_type, original, deduction, created_at, updated_at (已 snake_case)
-    #     column_map={
-    #         "record_id": "record_id", "native_account": "native_account",
-    #         "snap_day": "snap_day", "reward_type": "reward_type",
-    #         "original": "original", "deduction": "deduction",
-    #         "created_at": "created_at", "updated_at": "updated_at",
-    #     },
-    #     note="新旧一致，直接平移",
-    # ),
+    TableMigration(
+        new_table="t_stake_team_reward_deduction",
+        old_table="t_stake_team_reward_deduction",
+        # 旧列: native_account, total, deducted, remaining, created_at, updated_at (已 snake_case)
+        column_map={
+            "native_account": "native_account", "total": "total",
+            "deducted": "deducted", "remaining": "remaining",
+            "created_at": "created_at", "updated_at": "updated_at",
+        },
+        note="新旧一致，直接平移",
+    ),
+
+    TableMigration(
+        new_table="t_stake_team_reward_deduction_log",
+        old_table="t_stake_team_reward_deduction_log",
+        # 旧列: record_id, native_account, snap_day, reward_type, original, deduction, created_at, updated_at (已 snake_case)
+        column_map={
+            "record_id": "record_id", "native_account": "native_account",
+            "snap_day": "snap_day", "reward_type": "reward_type",
+            "original": "original", "deduction": "deduction",
+            "created_at": "created_at", "updated_at": "updated_at",
+        },
+        note="新旧一致，直接平移",
+    ),
 ]
 
 

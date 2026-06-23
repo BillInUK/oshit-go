@@ -1208,3 +1208,9 @@ Pos API starting on :1300
 Pos API starting on :1300
 {"time":"2026-06-11T22:07:06.103311+08:00","level":"INFO","service":"pos-api","caller":"app/pos/api/internal/task/pos_snapshot.go:70","msg":"Pos业务 - 距离快照任务的首次执行时间还有: 13h52m53.896694s"}
 {"time":"2026-06-11T22:07:06.10331+08:00","level":"INFO","service":"pos-api","caller":"app/pos/api/internal/task/stake_snapshot.go:95","msg":"Stake - 距离快照任务的首次执行时间还有: 13h52m53.896699s"}
+{"time":"2026-06-22T21:50:38.088805+08:00","level":"INFO","service":"pos-api","caller":"app/pos/api/internal/svc/nacos_config.go:348","msg":"loaded base runtime config from nacos"}
+{"time":"2026-06-22T21:50:38.093423+08:00","level":"INFO","service":"pos-api","caller":"app/pos/api/internal/svc/nacos_config.go:495","msg":"loaded pos runtime config from nacos"}
+Pos API starting on :1300
+{"time":"2026-06-22T21:50:38.296393+08:00","level":"INFO","service":"pos-api","caller":"app/pos/api/internal/task/pos_snapshot.go:70","msg":"Pos业务 - 距离快照任务的首次执行时间还有: 14h9m21.703616s"}
+{"time":"2026-06-22T21:50:38.29639+08:00","level":"INFO","service":"pos-api","caller":"app/pos/api/internal/task/stake_snapshot.go:95","msg":"Stake - 距离快照任务的首次执行时间还有: 14h9m21.703618s"}
+{"time":"2026-06-22T21:50:38.304287+08:00","level":"INFO","service":"pos-api","caller":"app/pos/api/internal/task/buy_token_expire.go:52","msg":"BuyTokenExpireTask: 标记 221 条购买记录为过期"}

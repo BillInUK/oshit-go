@@ -12,14 +12,14 @@ const TableNameStakeTeamRewardDeductionLog = "t_stake_team_reward_deduction_log"
 
 // StakeTeamRewardDeductionLog mapped from table <t_stake_team_reward_deduction_log>
 type StakeTeamRewardDeductionLog struct {
-	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"recordId"`
-	NativeAccount string    `gorm:"column:native_account;not null" json:"nativeAccount"`
-	SnapDay       time.Time `gorm:"column:snap_day;not null" json:"snapDay"`
-	RewardType    int32     `gorm:"column:reward_type;not null" json:"rewardType"`
+	RecordID      string    `gorm:"column:record_id;primaryKey;default:gen_ulid()" json:"record_id"`
+	NativeAccount string    `gorm:"column:native_account;not null" json:"native_account"`
+	SnapDay       time.Time `gorm:"column:snap_day;not null" json:"snap_day"`
+	RewardType    int32     `gorm:"column:reward_type;not null" json:"reward_type"`
 	Original      float64   `gorm:"column:original;not null" json:"original"`
 	Deduction     float64   `gorm:"column:deduction;not null" json:"deduction"`
-	CreatedAt     time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"createdAt"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP" json:"updatedAt"`
+	CreatedAt     time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
 // TableName StakeTeamRewardDeductionLog's table name

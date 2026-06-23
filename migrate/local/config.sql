@@ -106,62 +106,62 @@ delete from t_service_key;
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('reward','take token','81V+ZOMZDY5lJX83vNmp1oN3eUEe27lihyiVP0uPzjXzxCH6OltnBJrDm3/toFPyEu/RHRpjek3sQoCVjoSlM3idYtDmnmhCdSZYZ98ayQDsV0h2CmAArhgq6/EeXoc2tDREzT1/0SLiovNd6bV5A3ujJD23I+Tqclc/h32fsl0=',NOW(),NOW());
+    ('reward','take token','0sCivDuWlbgtW/tc1i3KPVlkChE/2iu+AvTn0UZ5TBIoYEmfRdyRKcXCZe+pQfWcJsflnE53zDqUyGNPF9ReU54gChS4WosO0WhOP/jc1u+MIwix37rElwUa8BXS64pKwXoFbMSMd5t51VL9uM5O8rrpXWN9NUCeo4aIJDDg9FE=',NOW(),NOW());
 
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('reward','give token','u1FrubBtz37+XscqN8ICtaD3B+1heQAJ2ciNbqVMK3B903pfQULVzLhPbAXrCKQHg4EQP8l2ipI+hbn/O/K4UgstiHKXmGmuSQVBCtqJuhoNpwqCtAvVzpDRTfbRSN7St1KPjhiGBmegyMIvosSehZQd5eLeQRlCgKROb1jIHJM=',NOW(),NOW());
+    ('reward','give token','0g78tKE/TLzl/tOm16/96IZELZH9q64LawBT4tZY4XTboPvNLkZwJMv3Ieo2h3Z3IKqp/Hl2Cw2nTufxVGGWbOmmEihCzd3TuCeUKjBYHq5++/UIMBLlUZfKN6it9ZOYyASE2Bn1K5SY4FJ2CmnNTsGnIriAGlCOeZztEW7vPR8=',NOW(),NOW());
 
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('reward','lottery','B6cjUlsAPGcrFD37xcne0/idG4WzwNJrW2Xaxh3imTk3tVtzmAttX8jALwTh2RvGvhbghDfUvxBrxnWQTLHLD/jt1Ooj2gB8Swg+Dc80QTVMqXJR/Y6U7+H9bYiP1DBfbgeTFfHwZTIqenm+BzTo9WdnSONM1dUT5H0gqL95piE=',NOW(),NOW());
+    ('reward','lottery','W4OQKGKWq3d6fNKWjXP5ShxBIEug3ZQbBzmcSHZtmCohOAnhZ3a7ClNQ7v+Ab02lFk8p2aZcapV840R78iFxpwR5lJL/xm5ZArSQccG6x1nSWPMEw6otmiMpG8bHtWZBhIk9yF3aqcMEbW/Qh1BK1bHGVrMx7g46fzVPRDfH9Mg=',NOW(),NOW());
 
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('reward','reward code','VirbPv2HZFpXmlCPLWRwszP8xb5GVu3MaL4u+wLwh7xZJU15r1DAaePF8EeL5y4DyHdmAQ1GH94H6RZ5vHr0tQSblxGWu0UqgbUfCXqU/R+XWKThqZ2Trz7Qu+szOOiZRSG94EGy9i3GVCc3L13ZpTqmJoknAoH87MaMGg04zVc=',NOW(),NOW());
+    ('reward','reward code','UG5VJEVHBKZBJ1JF3c1/by9mrI2Jc0PTFmiIMOgGPhMud/885x65TeCYnjdkaX1N70N+Rh5CrBV0T7VSRrZ3lT1L01EXJ3B9MlmcBld2xOnDF1jL+t4Vdm/kylSHArhJ7oucJokKFYk0Trh3J00tM1r1aQQSSltTaASMycgshvc=',NOW(),NOW());
 
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('reward','campaign quote','1XBismGApW//mt8TYj4Sv99i2BDuZheuKKJpltCHBlSzmkNjB4VoeN57/R+0xOtkizMjpjbLZtOux7MSQijeBKQ7hYzVxHDxuV1CvA9ZlRRiJCB2U3VUUwYbV7/fvJtOfKekzOXh1q7vQ2h4ytwP5DUZnR9vm1ZQcC5eUnMG8CQ=',NOW(),NOW());
+    ('reward','campaign quote','3KU/wRvdyP2b+6TXaelumobcPXeGqR9mnZZKnvLHRPkh5jWRTjczKVcH0oiTrKKba5mqAMVUd0pAhipXkHZ8jL624dqIybR3AELyXTWCDqCsG1fGjWsmHRHPOwAsU0EtDsMuBZWmXlPEcSPVlzr7BBPREphvB3ohI/8c7Vk6VmQ=',NOW(),NOW());
 
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('pos','pos reward','gwQucXNCZT/34WHtyYW6KSkrzwKc/GJNBShcuC5WelMP5U4aB0XIH4+bkg3h+IXd2iHjMt70o3L0gN7uZsVFWOKOnLYmRNjCio4o27dYsfZMJM0fyy++nyfstM5OU0tBrUsgEcxlAEpchucd7E5KngN9vVZYQu5L/nV1bDEcImQ=',NOW(),NOW());
+    ('pos','pos reward','qDzkq4Y5h4FQ2DN0RGm3Cq4pbtrxX9cfxrboJUBWLEpgWdc6Lskz01LTnEWCxki0ywpXLEsnDjWnPfc9kzZr1S4sv2/n+EkYoNj32qFV9kxsMjpHTMj0ivr3ukbSXscfL/neXKIrS9lsedgX3WGtZvc50fUgIAInYX3GCcE3HeI=',NOW(),NOW());
 
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('pos','stake token','jI6y/Rvd9S2hOKD8d1rItiywpLryW9oyd2+ZN9WWOPnZltbAi4+gjVPwJnBg/IlHn652tt+dBty/D6jlLEAbOPcANBUtLj2ZEQJsXA53nxdqodWwmznWzZqeZw2UYd0UPz+iHDWbbQKzFw/pmbKE2Y7wkqEf/bn4y6oOX6D1A70=',NOW(),NOW());
+    ('pos','stake token','MOoGsyzGtBhmzH0ntTdj/zAEnvLOw0UDKMvR4mc8Lmy7RdTH2nPR8Bnjhv2LzrEnZyosuoiwVRVJFtchkcv4HB4RUIhCZDcwd86a75qbr3yYSo2x+y0GXs76vuRpvnuiYTshOxBKc+84ItSSBlw+08Gq+kwj0qZ74aRmA/ElHQ0=',NOW(),NOW());
 
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('pos','stake reward','MxDWK7jV2h4Li4F0B7UGe8I50HOEgkPOAhrnC38euQ6cZUdO+FLfIjW40TT3UMzZW40RZSLnyl5pJQQKTrlYvHLOIVT90NY17LvIJrQfa2SCOi56BtBolordn0MMFzahtIrhdOXJEW2son6mXODXPhWB3sHYh7/pvgvB+khvbTU=',NOW(),NOW());
+    ('pos','stake reward','d6XA694aFMnzgh1yqPxpwZ0ip8UPalfmYcSmq5emsNuVRUkamhQf8nw2ALbI8gewLX2Y4ubR9tl11e6UWXymw5sdhG9fDtQYqL1TvCT25Od5avUqd+4rCm+bk9Wm5hZQttRVAAcnf9KTMvAaIUdC7R+C8maQKs90Rl/g49VinLw=',NOW(),NOW());
 
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('pos','stake leader reward','l7NONthmgtfxMkOlj0BWkvWUpQ6NdaIX21GKGq1LdU+U0GYQOgZ75glzrE5AiaHNPHhRSl+Oosqms4cvL053P2rsSU7oL/MjVP4GUn2ilZgC5VVGaWkmRC3BxL1YMLzW1SjO3d2RWUx9uXzoxAx/Wk7/V7vs2sj3k9LVp2wHZsY=',NOW(),NOW());
+    ('pos','stake leader reward','rPA75VSKyaUOzkdslSyBh93ZTDNQ7inqe8TuzmuN11QP4OM70mIh0+UTt6Ijb0xcf9YCxUn1eQBuw3lCKnu4o4nHyKaycRMkrFeDeKs9QjgTIbKJDWbCkMEGcPBLJve5TM0BeMBPAcR43kaRytiYIQVIl9UPc8UlS6u/sB2FN6M=',NOW(),NOW());
 
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('gs-relay','contribution','i4ovHK9t5oq6heyhMihpUrXeh+AniV4QRuoRdVaC7s4xpqB+L1xJjm6HfCGcCp3xxAO9Ym1B0HJA2wsCk/7sGoVKqwH94q34ezS3zaOcBsLQapEdPZ+plttwWOZccVuj3JT4QWoG6ksmh6LMXpFkE1hZq2estUUZM6PMemHNbpQ=',NOW(),NOW());
+    ('gs-relay','contribution','sqDwITATtSmuUrVo1J6FB3iRPlbr4hUhUR0CAs8rphOnCAUYWTDtdDtT1cFSW7zpclN9wrTDfKBm2kZybR+x0QSYZrXimUJNp4JJBXcHIqVAOH8v+o2t/wbjNO1wd5z59x5wHIoJ1iBD5wDISMWxS5iponamObzrvnAnqtND+q8=',NOW(),NOW());
 
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('gs-relay','payout','i4ovHK9t5oq6heyhMihpUrXeh+AniV4QRuoRdVaC7s4xpqB+L1xJjm6HfCGcCp3xxAO9Ym1B0HJA2wsCk/7sGoVKqwH94q34ezS3zaOcBsLQapEdPZ+plttwWOZccVuj3JT4QWoG6ksmh6LMXpFkE1hZq2estUUZM6PMemHNbpQ=',NOW(),NOW());
+    ('gs-relay','payout','sqDwITATtSmuUrVo1J6FB3iRPlbr4hUhUR0CAs8rphOnCAUYWTDtdDtT1cFSW7zpclN9wrTDfKBm2kZybR+x0QSYZrXimUJNp4JJBXcHIqVAOH8v+o2t/wbjNO1wd5z59x5wHIoJ1iBD5wDISMWxS5iponamObzrvnAnqtND+q8=',NOW(),NOW());
 
 insert into t_service_key
     (service,sub_service,encrypted_key,created_at,updated_at)
 values
-    ('gs-relay','refund','i4ovHK9t5oq6heyhMihpUrXeh+AniV4QRuoRdVaC7s4xpqB+L1xJjm6HfCGcCp3xxAO9Ym1B0HJA2wsCk/7sGoVKqwH94q34ezS3zaOcBsLQapEdPZ+plttwWOZccVuj3JT4QWoG6ksmh6LMXpFkE1hZq2estUUZM6PMemHNbpQ=',NOW(),NOW());
+    ('gs-relay','refund','sqDwITATtSmuUrVo1J6FB3iRPlbr4hUhUR0CAs8rphOnCAUYWTDtdDtT1cFSW7zpclN9wrTDfKBm2kZybR+x0QSYZrXimUJNp4JJBXcHIqVAOH8v+o2t/wbjNO1wd5z59x5wHIoJ1iBD5wDISMWxS5iponamObzrvnAnqtND+q8=',NOW(),NOW());
 
 
 -- 业务交易扫描表
@@ -200,7 +200,7 @@ VALUES
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
-    ('pos', 'market buy token', 'HtNfUbDaBamCBPWCFiESkXpewvwVLkwrSWRjjV8FNT7i', 'HtNfUbDaBamCBPWCFiESkXpewvwVLkwrSWRjjV8FNT7i', '4KLb4yP9sYRxfJ11Kvg9CN8vkbRqmbHtqPpBWoMb7Et8ad1iuQMNPD8fVNRQsFq5dR1t4pBnnfpc5k1fhrYhDtuT', '', '425727261', NOW(),NOW());
+    ('pos', 'market buy token', 'HtNfUbDaBamCBPWCFiESkXpewvwVLkwrSWRjjV8FNT7i', 'HtNfUbDaBamCBPWCFiESkXpewvwVLkwrSWRjjV8FNT7i', '3Ujgy4P55C29AqL3QooUYj3RQsdQipktFKpnKo8t6pVfWHMcmUYuXutP1XACdexJkJHtKTBHur14e2ojA9UnEGSJ', '', '428168081', NOW(),NOW());
 
 INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
@@ -231,6 +231,7 @@ INSERT INTO public.t_tx_scan_info
     (service, sub_service, native_account, pda_account, until_tx_id, before_tx_id, slot, created_at, updated_at)
 VALUES
     ('gs-relay', 'refund', 'AUq3iXbJjBjED6ZN2JqJDdZ3mknd7cXv9HQqNdYuEZ6q', '7BV3LUAhoq4JpsLYejzx5dCdPpesB2ubAevxMNEoSbWE', '5xJDwFhzR1d9h2BLncVKUUCKdwwYdY38HNKRMiXFPPYRMMkq83Y4AMZJQvCqRnDXJkQSSanb7wEzNWritHCNLvkh', '', '467262544', NOW(),NOW());
+
 
 
 -- reward服务初始化数据
@@ -320,8 +321,10 @@ insert into public.t_stake_token_pool(source_account,from_token_account)values('
 
 -- 质押每日固定利息
 delete from t_stake_fix_rate_config;
-insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000,0,70,100,now(),now());
-insert into public.t_stake_fix_rate_config(min_amount,stake_type,fix_rate,individual_rate,created_at,updated_at)values(100000,1,100,100,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000,0,1,70,70,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000,0,2,63,63,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000,1,1,100,100,now(),now());
+insert into public.t_stake_fix_rate_config(min_amount,stake_type,rate_tier,fix_rate,individual_rate,created_at,updated_at)values(100000,1,2,90,90,now(),now());
 
 -- 邀请奖励级别
 delete from t_stake_invite_dist;

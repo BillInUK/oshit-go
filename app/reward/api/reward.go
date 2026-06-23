@@ -67,5 +67,8 @@ func main() {
 
 	// 启动服务
 	log.Printf("Reward API starting on :%s", appPort)
-	log.Fatal(app.Listen(":" + appPort))
+	if err := app.Listen(":" + appPort); err != nil {
+		fmt.Fprintf(os.Stderr, "[FATAL] %v\n", err)
+		log.Fatal(err)
+	}
 }

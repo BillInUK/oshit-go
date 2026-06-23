@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"github.com/gagliardetto/solana-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"oshit-go/app/reward/api/internal/logic/campaign"
@@ -125,7 +124,6 @@ func (h *CampaignHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 // CommitTx 通过官网领取token
 func (h *CampaignHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 	var err error
-	var txId *solana.Signature
 	prefix := fmt.Sprintf("%s 处理钱包提交交易请求 -", h.prefix)
 	ctx := fiberCtx.Context()
 
@@ -142,7 +140,8 @@ func (h *CampaignHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 		return response.FailWithMsg(fiberCtx, "score value must be 1,5,10")
 	}
 	// 3. 获取campaign的 userId 是否存在
-	userId, err := h.srvCtx.CampaignClientV1.LoginTokenToUserID(req.XAcJwt)
+	xAcJwt := fiberCtx.Get("x-ac-jwt")
+	userId, err := h.srvCtx.CampaignClientV1.LoginTokenToUserID(xAcJwt)
 	if err != nil {
 		log.Errorf("%s 根据x-ac-jwt获取用户id错误: %v", prefix, err)
 		return response.UnAuthorizedError(fiberCtx, "can not get user id")
@@ -164,5 +163,8 @@ func (h *CampaignHandler) CommitTx(fiberCtx *fiber.Ctx) error {
 		log.Errorf("%s 处理交易错误: %v", prefix, err)
 		return response.FailWithError(fiberCtx, "process transaction error:", err)
 	}
-	return response.OkWithData(fiberCtx, txId)
+	return response.OkWithData(fiberCtx, types.CommitTxResult{
+		TxId:    preCheckedTx.TxId.String(),
+		TxState: 1,
+	})
 }

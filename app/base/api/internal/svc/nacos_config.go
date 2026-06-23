@@ -376,7 +376,7 @@ func (s *ServiceContext) applyServiceRegistryContent(content string) ([]task.Sca
 			UpdatedAt:  now,
 		}
 		if strings.TrimSpace(item.EncryptedKey) != "" {
-			plainKey, err := utils.JasyptDecrypt(item.EncryptedKey, s.serviceKeyDecryptPwd, serviceKeyDecryptAlgo)
+			plainKey, err := utils.JasyptDecrypt(item.EncryptedKey, s.privKeyDecryptPwd, serviceKeyDecryptAlgo)
 			if err != nil {
 				return nil, fmt.Errorf("decrypt service key [%s/%s] error: %v", item.Service, item.SubService, err)
 			}

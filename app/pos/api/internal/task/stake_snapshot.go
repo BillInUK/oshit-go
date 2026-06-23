@@ -25,7 +25,8 @@ import (
 )
 
 const (
-	MaxStakeRecordNum = 10
+	MaxStakeRecordNum   = 10
+	RateTierCutoffSlot  = uint64(425359465) // 2026-06-10 00:00:00 HKT
 )
 
 // StakeSnapshotTask 质押快照服务
@@ -117,39 +118,33 @@ func (t *StakeSnapshotTask) startTask() {
 		today := time.Now().UTC().Truncate(24 * time.Hour) // 获取今天的日期
 
 		for _, stakeInfo := range stakeInfos {
-			// 按类型统计未过期的质押金额
-			type0Amount := uint64(0) // 类型0总金额
-			type1Amount := uint64(0) // 类型1总金额
+			type groupKey struct {
+				stakeType uint8
+				rateTier  int32
+			}
+			groupMap := make(map[groupKey]uint64)
 
 			for _, record := range stakeInfo.Stakes {
-				if record.StakedAmount > 0 {
-					// 检查是否过期：如果没有当前slot信息或者当前slot小于结束slot，则认为未过期
-					if currentSlot == 0 || currentSlot < record.StakeEndSlot {
-						switch record.StakeType {
-						case 0:
-							type0Amount += record.StakedAmount
-						case 1:
-							type1Amount += record.StakedAmount
-						}
-					}
+				if record.StakedAmount == 0 {
+					continue
 				}
+				if currentSlot != 0 && currentSlot >= record.StakeEndSlot {
+					continue
+				}
+				rateTier := int32(1)
+				if record.StakeStartSlot >= RateTierCutoffSlot {
+					rateTier = 2
+				}
+				key := groupKey{stakeType: record.StakeType, rateTier: rateTier}
+				groupMap[key] += record.StakedAmount
 			}
 
-			// 创建快照记录
-			if type0Amount > 0 {
+			for key, amount := range groupMap {
 				snapshots = append(snapshots, model.StakeSnapShot{
 					NativeAccount: stakeInfo.UserWallet.String(),
-					Amount:        float64(type0Amount), // 注意：这里存储的是基础单位
-					StakeType:     0,
-					SnapDay:       today,
-				})
-			}
-
-			if type1Amount > 0 {
-				snapshots = append(snapshots, model.StakeSnapShot{
-					NativeAccount: stakeInfo.UserWallet.String(),
-					Amount:        float64(type1Amount), // 注意：这里存储的是基础单位
-					StakeType:     1,
+					Amount:        float64(amount),
+					StakeType:     int32(key.stakeType),
+					RateTier:      key.rateTier,
 					SnapDay:       today,
 				})
 			}
@@ -209,39 +204,33 @@ func (t *StakeSnapshotTask) StartTaskManually() {
 	today := time.Now().UTC().Truncate(24 * time.Hour) // 获取今天的日期
 
 	for _, stakeInfo := range stakeInfos {
-		// 按类型统计未过期的质押金额
-		type0Amount := uint64(0) // 类型0总金额
-		type1Amount := uint64(0) // 类型1总金额
+		type groupKey struct {
+			stakeType uint8
+			rateTier  int32
+		}
+		groupMap := make(map[groupKey]uint64)
 
 		for _, record := range stakeInfo.Stakes {
-			if record.StakedAmount > 0 {
-				// 检查是否过期：如果没有当前slot信息或者当前slot小于结束slot，则认为未过期
-				if currentSlot == 0 || currentSlot < record.StakeEndSlot {
-					switch record.StakeType {
-					case 0:
-						type0Amount += record.StakedAmount
-					case 1:
-						type1Amount += record.StakedAmount
-					}
-				}
+			if record.StakedAmount == 0 {
+				continue
 			}
+			if currentSlot != 0 && currentSlot >= record.StakeEndSlot {
+				continue
+			}
+			rateTier := int32(1)
+			if record.StakeStartSlot >= RateTierCutoffSlot {
+				rateTier = 2
+			}
+			key := groupKey{stakeType: record.StakeType, rateTier: rateTier}
+			groupMap[key] += record.StakedAmount
 		}
 
-		// 创建快照记录
-		if type0Amount > 0 {
+		for key, amount := range groupMap {
 			snapshots = append(snapshots, model.StakeSnapShot{
 				NativeAccount: stakeInfo.UserWallet.String(),
-				Amount:        float64(type0Amount), // 注意：这里存储的是基础单位
-				StakeType:     0,
-				SnapDay:       today,
-			})
-		}
-
-		if type1Amount > 0 {
-			snapshots = append(snapshots, model.StakeSnapShot{
-				NativeAccount: stakeInfo.UserWallet.String(),
-				Amount:        float64(type1Amount), // 注意：这里存储的是基础单位
-				StakeType:     1,
+				Amount:        float64(amount),
+				StakeType:     int32(key.stakeType),
+				RateTier:      key.rateTier,
 				SnapDay:       today,
 			})
 		}
@@ -298,6 +287,7 @@ func (t *StakeSnapshotTask) saveSnapshots(snapshots []model.StakeSnapShot) error
 				{Name: "native_account"},
 				{Name: "snap_day"},
 				{Name: "stake_type"},
+				{Name: "rate_tier"},
 			},
 			DoUpdates: clause.AssignmentColumns([]string{"amount", "updated_at"}),
 		},
