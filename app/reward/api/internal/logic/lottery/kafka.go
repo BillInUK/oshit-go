@@ -1,6 +1,7 @@
 package lottery
 
 import (
+	"context"
 	"fmt"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
@@ -113,6 +114,14 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		log.Errorf("%s 提交事务失败: %v", prefix, err)
 		dbTx.Rollback()
 		return err
+	}
+
+	// 清理 ProcessCommitTx 持有的分布式锁（服务重启导致 defer 未执行时锁会残留）
+	var rewardForLock model.LotteryReward
+	if err := l.db.Table(model.TableNameLotteryReward).
+		Where("record_id = ?", strings.Trim(claimRecord.RewardIds, "{}")).
+		First(&rewardForLock).Error; err == nil {
+		l.rd.Del(context.Background(), "lottery:process:commit-tx:"+rewardForLock.NativeAccount)
 	}
 
 	// 通知 ProcessCommitTx 中等待确认的 channel

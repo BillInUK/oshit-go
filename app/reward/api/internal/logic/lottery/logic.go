@@ -280,7 +280,7 @@ func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_ut
 	}
 
 	// 1. 分布式锁，防止重复处理同一地址短时间内重复进行业务
-	mutex := l.rs.NewMutex("lottery:process:commit-tx:"+preCheckedTx.From.String(), redsync.WithExpiry(1*time.Hour))
+	mutex := l.rs.NewMutex("lottery:process:commit-tx:"+preCheckedTx.From.String(), redsync.WithExpiry(5*time.Minute))
 	if err := mutex.Lock(); err != nil {
 		var errTaken *redsync.ErrTaken
 		if !errors.As(err, &errTaken) {
@@ -359,6 +359,20 @@ func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_ut
 		l.db.Table(model.TableNameLotteryClaim).
 			Where("tx_id = ? AND tx_state = ?", txIdStr, constants.TxStateInit).
 			Updates(map[string]interface{}{"tx_state": constants.TxStateFailed, "updated_at": time.Now()})
+		// HandleScannedTx 可能刚好在超时边界发出了通知，检查 channel 和 DB 避免误报失败
+		select {
+		case txState := <-ch:
+			log.Infof("%s 超时后从 channel 收到确认结果 txState=%d，返回真实结果", prefix, txState)
+			return txState, nil
+		default:
+		}
+		var finalClaim model.LotteryClaim
+		if err := l.db.Table(model.TableNameLotteryClaim).
+			Where("tx_id = ? AND tx_state = ?", txIdStr, constants.TxStateSuccess).
+			Take(&finalClaim).Error; err == nil {
+			log.Infof("%s 超时后查 DB 发现已成功，返回成功", prefix)
+			return int32(constants.TxStateSuccess), nil
+		}
 		return 0, errors.New("transaction not confirmed on chain, please try again")
 	}
 }
