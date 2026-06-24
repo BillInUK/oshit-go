@@ -435,11 +435,17 @@ func (t *TxScanTask) handleServiceTx(service, subService string, txSig rpc.Trans
 		if err == nil {
 			break
 		}
-		if errors.Is(err, rpc.ErrNotFound) || app_utils.IsRpcRateLimitedError(err) {
-			delay := 5 * time.Duration(1<<i) * time.Second
+		if errors.Is(err, rpc.ErrNotFound) {
+			// tx 刚被 getSignaturesForAddress 发现，ErrNotFound 是 RPC 内部短暂传播延迟，用短退避
+			delay := time.Duration(1<<uint(i)) * time.Second // 1s, 2s, 4s, 8s, 16s, 32s
+			randomDelay := time.Duration(rand.Intn(500)) * time.Millisecond
+			time.Sleep(delay + randomDelay)
+			continue
+		}
+		if app_utils.IsRpcRateLimitedError(err) {
+			delay := 5 * time.Duration(1<<uint(i)) * time.Second // 保持原有长退避
 			randomDelay := time.Duration(rand.Intn(1000)) * time.Millisecond
-			totalDelay := delay + randomDelay
-			time.Sleep(totalDelay)
+			time.Sleep(delay + randomDelay)
 			continue
 		}
 		log.Errorf("%s 交易Id[%s] 查询交易错误[%v]", prefix, txSig.Signature.String(), err)

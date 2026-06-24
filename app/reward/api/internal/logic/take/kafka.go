@@ -1,6 +1,7 @@
 package take
 
 import (
+	"context"
 	"fmt"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
@@ -141,6 +142,9 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		dbTx.Rollback()
 		return err
 	}
+
+	// 清理 ProcessCommitTx 持有的分布式锁（服务重启导致 defer 未执行时锁会残留长达 1 小时）
+	l.rd.Del(context.Background(), "take-token:process:commit-tx:"+takeTokenRecord.ReceiptAccount)
 
 	// 通知 ProcessCommitTx 中等待确认的 channel
 	finalState := constants.TxStateSuccess
