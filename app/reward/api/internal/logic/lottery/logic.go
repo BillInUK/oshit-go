@@ -72,6 +72,11 @@ func (l *LotteryLogic) GetStatus(nativeAccount string) (*types.GetStatusResponse
 		resp.TakeCount = stats.TakeCount
 		resp.NeedLottery = stats.NeedLottery
 		resp.LotteryCount = stats.LotteryCount
+		resp.TotalTake = stats.TotalTake
+		resp.TotalLottery = stats.TotalLottery
+		if !stats.LastTakeTime.IsZero() {
+			resp.LastTakeTime = stats.LastTakeTime.Format("2006-01-02T15:04:05")
+		}
 	}
 
 	var pendingRecord model.TakeTokenRecord

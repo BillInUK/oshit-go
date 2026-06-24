@@ -84,11 +84,14 @@ type GetLotteryStatusReq struct {
 }
 
 type GetStatusResponse struct {
-	TakeCount           int32 `json:"takeCount"`
-	NeedLottery         bool  `json:"needLottery"`
-	LotteryCount        int32 `json:"lotteryCount"`
-	HasPendingTx        bool  `json:"hasPendingTx"`
-	HasPendingLotteryTx bool  `json:"hasPendingLotteryTx"`
+	TakeCount           int32   `json:"takeCount"`
+	NeedLottery         bool    `json:"needLottery"`
+	LotteryCount        int32   `json:"lotteryCount"`
+	HasPendingTx        bool    `json:"hasPendingTx"`
+	HasPendingLotteryTx bool    `json:"hasPendingLotteryTx"`
+	TotalTake           float64 `json:"totalTake"`
+	TotalLottery        float64 `json:"totalLottery"`
+	LastTakeTime        string  `json:"lastTakeTime"`
 }
 
 type ExecuteLotteryReq struct {
