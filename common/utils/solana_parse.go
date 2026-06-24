@@ -463,6 +463,43 @@ func decodeTokenInstructionForTransferChecked(inst rpc.CompiledInstruction, full
 	}
 }
 
+// HeliusFetchTxStatus 通过 Helius Enhanced Transactions API 查询交易是否已被索引。
+// 返回 (txFailed bool, err error)：
+//   - err == rpc.ErrNotFound：交易尚未被 Helius 索引，调用方应稍后重试
+//   - txFailed == true：交易已上链但执行失败（transactionError != null）
+//   - txFailed == false, err == nil：交易已上链且成功
+func HeliusFetchTxStatus(heliusAPIKey string, txSig solana.Signature) (txFailed bool, err error) {
+	url := fmt.Sprintf("https://mainnet.helius-rpc.com/v0/transactions/?api-key=%s", heliusAPIKey)
+	reqBody, err := json.Marshal(map[string]interface{}{"transactions": []string{txSig.String()}})
+	if err != nil {
+		return false, fmt.Errorf("序列化请求失败: %w", err)
+	}
+
+	httpClient := &http.Client{Timeout: 10 * time.Second}
+	resp, err := httpClient.Post(url, "application/json", bytes.NewReader(reqBody))
+	if err != nil {
+		return false, fmt.Errorf("Helius API 网络错误: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return false, fmt.Errorf("Helius API 限流")
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return false, fmt.Errorf("Helius API 错误 %d: %s", resp.StatusCode, string(body))
+	}
+
+	var results []heliusEnhancedTx
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+		return false, fmt.Errorf("解析 Helius 响应失败: %w", err)
+	}
+	if len(results) == 0 {
+		return false, rpc.ErrNotFound
+	}
+	return results[0].TransactionError != nil, nil
+}
+
 // HeliusParseMarketBuyTx 通过 Helius Enhanced Transactions API 解析主网购买 token 的交易。
 func HeliusParseMarketBuyTx(heliusAPIKey string, txSig solana.Signature) (*entity.DecodedSolanaTransaction, error) {
 	tokenMint := solana.MPK("ShitJuMfPKCQU7LedLERFYapDta7CCdKExPWX2gETRH")

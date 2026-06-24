@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	bin "github.com/gagliardetto/binary"
+	// bin "github.com/gagliardetto/binary" // 原 RPC 路径用于解码原始交易体，已改为 Helius Enhanced API
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/go-redsync/redsync/v4"
@@ -423,58 +423,79 @@ func (t *TxScanTask) handleServiceTx(service, subService string, txSig rpc.Trans
 	}
 	defer handleMutex.Unlock()
 
-	// 根据 subService 选择 RPC 客户端
-	rpcClient := t.getRpcClient(subService)
-
-	// 获取交易执行结果
-	var err error
-	var tr *rpc.GetTransactionResult
-	maxRetries := 5
-	for i := 0; i <= maxRetries; i++ {
-		tr, err = utils.GetTransactionResultByTxId(context.Background(), rpcClient, txSig.Signature)
-		if err == nil {
-			break
-		}
-		if errors.Is(err, rpc.ErrNotFound) {
-			// tx 刚被 getSignaturesForAddress 发现，ErrNotFound 是 RPC 内部短暂传播延迟，用短退避
-			delay := time.Duration(1<<uint(i)) * time.Second // 1s, 2s, 4s, 8s, 16s, 32s
-			randomDelay := time.Duration(rand.Intn(500)) * time.Millisecond
-			time.Sleep(delay + randomDelay)
-			continue
-		}
-		if app_utils.IsRpcRateLimitedError(err) {
-			delay := 5 * time.Duration(1<<uint(i)) * time.Second // 保持原有长退避
-			randomDelay := time.Duration(rand.Intn(1000)) * time.Millisecond
-			time.Sleep(delay + randomDelay)
-			continue
-		}
-		log.Errorf("%s 交易Id[%s] 查询交易错误[%v]", prefix, txSig.Signature.String(), err)
-		return
-	}
-
-	if tr == nil {
-		log.Errorf("%s 交易Id[%s] 获取交易数据为空", prefix, txSig.Signature.String())
-		return
-	}
-
-	// MarketBuyToken 走独立的解析流程（DEX inner instruction）
+	// MarketBuyToken 走独立的解析流程（DEX inner instruction），仍使用旧 RPC 路径
 	if subService == constants.SubServiceMarketBuyToken.String() {
+		// 根据 subService 选择 RPC 客户端
+		rpcClient := t.getRpcClient(subService)
+		var err error
+		var tr *rpc.GetTransactionResult
+		maxRetries := 5
+		for i := 0; i <= maxRetries; i++ {
+			tr, err = utils.GetTransactionResultByTxId(context.Background(), rpcClient, txSig.Signature)
+			if err == nil {
+				break
+			}
+			if errors.Is(err, rpc.ErrNotFound) {
+				delay := time.Duration(1<<uint(i)) * time.Second
+				randomDelay := time.Duration(rand.Intn(500)) * time.Millisecond
+				time.Sleep(delay + randomDelay)
+				continue
+			}
+			if app_utils.IsRpcRateLimitedError(err) {
+				delay := 5 * time.Duration(1<<uint(i)) * time.Second
+				randomDelay := time.Duration(rand.Intn(1000)) * time.Millisecond
+				time.Sleep(delay + randomDelay)
+				continue
+			}
+			log.Errorf("%s 交易Id[%s] 查询交易错误[%v]", prefix, txSig.Signature.String(), err)
+			return
+		}
+		if tr == nil {
+			log.Errorf("%s 交易Id[%s] 获取交易数据为空", prefix, txSig.Signature.String())
+			return
+		}
 		t.handleMarketBuyTokenTx(prefix, service, subService, txSig, tr)
 		return
 	}
 
-	// 原有的处理逻辑，适用于 Stake, StakeToken, Pos, Reward 等
-	tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(tr.Transaction.GetBinary()))
+	// 使用 Helius Enhanced Transactions API 确认交易已上链，替换原来的 getTransaction + 指数退避
+	// 原始 RPC 路径（保留注释，备用）：
+	// rpcClient := t.getRpcClient(subService)
+	// var tr *rpc.GetTransactionResult
+	// for i := 0; i <= 5; i++ {
+	//     tr, err = utils.GetTransactionResultByTxId(context.Background(), rpcClient, txSig.Signature)
+	//     if err == nil { break }
+	//     if errors.Is(err, rpc.ErrNotFound) { time.Sleep(time.Duration(1<<uint(i)) * time.Second); continue }
+	//     if app_utils.IsRpcRateLimitedError(err) { time.Sleep(5 * time.Duration(1<<uint(i)) * time.Second); continue }
+	//     log.Errorf(...); return
+	// }
+	// tx, _ := solana.TransactionFromDecoder(bin.NewBinDecoder(tr.Transaction.GetBinary()))
+	// decodedTx, _ := app_utils.DecodeSolanaTransaction(rpcClient, t.db, tx, txSig.Signature)
+	var err error
+	maxRetries := 5
+	for i := 0; i <= maxRetries; i++ {
+		_, err = utils.HeliusFetchTxStatus(t.heliusAPIKey, txSig.Signature)
+		if err == nil {
+			break
+		}
+		if errors.Is(err, rpc.ErrNotFound) {
+			delay := time.Duration(1<<uint(i)) * time.Second // 1s, 2s, 4s, 8s, 16s, 32s
+			randomDelay := time.Duration(rand.Intn(500)) * time.Millisecond
+			log.Infof("%s 交易Id[%s] Helius 尚未索引，%v 后重试（第%d次）", prefix, txSig.Signature.String(), delay, i+1)
+			time.Sleep(delay + randomDelay)
+			continue
+		}
+		log.Errorf("%s 交易Id[%s] Helius 查询错误[%v]", prefix, txSig.Signature.String(), err)
+		return
+	}
 	if err != nil {
-		log.Errorf("%s 交易Id[%s] 从交易执行结果获取交错误: %v", prefix, txSig.Signature.String(), err)
+		log.Errorf("%s 交易Id[%s] Helius 确认超时，放弃处理", prefix, txSig.Signature.String())
 		return
 	}
 
-	decodedTx, err := app_utils.DecodeSolanaTransaction(rpcClient, t.db, tx, txSig.Signature)
-	if err != nil {
-		log.Errorf("%s 交易Id[%s],解析交易错误[%v]", prefix, txSig.Signature.String(), err)
-		return
-	}
+	// txSig.Err 已由 getSignaturesForAddress 设置（非 nil = 链上执行失败），无需再从 Helius 取
+	// take/lottery 的 HandleScannedTx 不使用 DecodedTx，置空即可
+	decodedTx := &entity.DecodedSolanaTransaction{TxID: txSig.Signature}
 	// 查询数据库里面是否存在该交易Id
 	rewardTxRecord, err := t.GetTxFetchState(txSig.Signature.String())
 	if err != nil || rewardTxRecord == nil {

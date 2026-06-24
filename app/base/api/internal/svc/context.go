@@ -222,6 +222,9 @@ func (s *ServiceContext) initDatabaseConfigs() error {
 		}
 		if ep.Scope == "env" {
 			envEndpoints = append(envEndpoints, cfg)
+			if ep.Provider == "helius" && ep.APIKey != "" && s.HeliusAPIKey == "" {
+				s.HeliusAPIKey = ep.APIKey
+			}
 		} else if ep.Scope == "mainnet" {
 			mainnetURL := utils.BuildRPCURL(ep.Provider, ep.Endpoint, ep.APIKey)
 			s.MainnetRpcClient = rpc.New(mainnetURL)
