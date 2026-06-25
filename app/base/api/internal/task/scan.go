@@ -458,7 +458,8 @@ func (t *TxScanTask) handleServiceTx(service, subService string, txSig rpc.Trans
 		return
 	}
 
-	// 使用 Helius Enhanced Transactions API 确认交易已上链，替换原来的 getTransaction + 指数退避
+	// take/lottery 的 HandleScannedTx 只使用 txSig.Err（已由 getSignaturesForAddress CommitmentConfirmed 设置），
+	// 不需要解码交易体，直接跳过 Helius / RPC getTransaction，减少延迟和故障点
 	// 原始 RPC 路径（保留注释，备用）：
 	// rpcClient := t.getRpcClient(subService)
 	// var tr *rpc.GetTransactionResult
@@ -471,30 +472,13 @@ func (t *TxScanTask) handleServiceTx(service, subService string, txSig rpc.Trans
 	// }
 	// tx, _ := solana.TransactionFromDecoder(bin.NewBinDecoder(tr.Transaction.GetBinary()))
 	// decodedTx, _ := app_utils.DecodeSolanaTransaction(rpcClient, t.db, tx, txSig.Signature)
-	var err error
-	maxRetries := 5
-	for i := 0; i <= maxRetries; i++ {
-		_, err = utils.HeliusFetchTxStatus(t.heliusAPIKey, txSig.Signature)
-		if err == nil {
-			break
-		}
-		if errors.Is(err, rpc.ErrNotFound) {
-			delay := time.Duration(1<<uint(i)) * time.Second // 1s, 2s, 4s, 8s, 16s, 32s
-			randomDelay := time.Duration(rand.Intn(500)) * time.Millisecond
-			log.Infof("%s 交易Id[%s] Helius 尚未索引，%v 后重试（第%d次）", prefix, txSig.Signature.String(), delay, i+1)
-			time.Sleep(delay + randomDelay)
-			continue
-		}
-		log.Errorf("%s 交易Id[%s] Helius 查询错误[%v]", prefix, txSig.Signature.String(), err)
-		return
-	}
-	if err != nil {
-		log.Errorf("%s 交易Id[%s] Helius 确认超时，放弃处理", prefix, txSig.Signature.String())
-		return
-	}
-
-	// txSig.Err 已由 getSignaturesForAddress 设置（非 nil = 链上执行失败），无需再从 Helius 取
-	// take/lottery 的 HandleScannedTx 不使用 DecodedTx，置空即可
+	// Helius Enhanced API 路径（保留注释，备用）：
+	// for i := 0; i <= 5; i++ {
+	//     _, err = utils.HeliusFetchTxStatus(t.heliusAPIKey, txSig.Signature)
+	//     if err == nil { break }
+	//     if errors.Is(err, rpc.ErrNotFound) { time.Sleep(...); continue }
+	//     log.Errorf(...); return
+	// }
 	decodedTx := &entity.DecodedSolanaTransaction{TxID: txSig.Signature}
 	// 查询数据库里面是否存在该交易Id
 	rewardTxRecord, err := t.GetTxFetchState(txSig.Signature.String())
@@ -523,8 +507,18 @@ func (t *TxScanTask) handleServiceTx(service, subService string, txSig rpc.Trans
 			DecodedTx:  *decodedTx,
 		},
 	}
-	if err = t.sendMsgToKafka(rmqMsg); err != nil {
-		log.Errorf("%s 分发Kafka消息错误: %v", prefix, err)
+	// Kafka 发送失败时重试，最多 3 次（网络抖动导致发送失败后不能重扫，必须在这里保证发出去）
+	var kafkaErr error
+	for i := 0; i < 3; i++ {
+		kafkaErr = t.sendMsgToKafka(rmqMsg)
+		if kafkaErr == nil {
+			break
+		}
+		log.Warnf("%s 交易Id[%s] 第%d次Kafka发送失败，重试: %v", prefix, txSig.Signature.String(), i+1, kafkaErr)
+		time.Sleep(time.Duration(1<<uint(i)) * time.Second)
+	}
+	if kafkaErr != nil {
+		log.Errorf("%s 交易Id[%s] Kafka发送最终失败，交易将由TxExpireTask兜底处理: %v", prefix, txSig.Signature.String(), kafkaErr)
 		return
 	}
 }

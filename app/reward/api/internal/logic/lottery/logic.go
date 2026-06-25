@@ -10,6 +10,7 @@ import (
 	"oshit-go/common/constants"
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/utils"
+	"strconv"
 	"time"
 
 	"github.com/gagliardetto/solana-go"
@@ -270,20 +271,6 @@ func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_ut
 	txIdStr := preCheckedTx.TxId.String()
 	prefix := fmt.Sprintf("%s 处理用户提交交易Id %v -", l.prefix, txIdStr)
 
-	// 0. DB 级别检查：是否已有该奖励的进行中领取交易（持久化，跨会话有效）
-	var pendingClaim model.LotteryClaim
-	pendingCheckErr := l.db.Table(model.TableNameLotteryClaim).
-		Where("reward_ids = ? AND tx_state = ?", fmt.Sprintf("{%s}", rewardId), constants.TxStateInit).
-		First(&pendingClaim).Error
-	if pendingCheckErr == nil {
-		log.Infof("%s 奖励 %v 存在未确认的领取交易 %v，拒绝新的领取请求", prefix, rewardId, pendingClaim.TxID)
-		return 0, errors.New("you have unfinished service.please try again later")
-	}
-	if !errors.Is(pendingCheckErr, gorm.ErrRecordNotFound) {
-		log.Errorf("%s 查询未确认领取交易错误: %v", prefix, pendingCheckErr)
-		return 0, errors.New("check pending transaction error")
-	}
-
 	// 1. 分布式锁，防止重复处理同一地址短时间内重复进行业务
 	mutex := l.rs.NewMutex("lottery:process:commit-tx:"+preCheckedTx.From.String(), redsync.WithExpiry(5*time.Minute))
 	if err := mutex.Lock(); err != nil {
@@ -328,10 +315,10 @@ func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_ut
 		return 0, fmt.Errorf("check transaction error: %v", err)
 	}
 
-	// 6. 在广播前注册 channel，确保 Kafka 消费者通知不会早于 select 执行
-	ch := make(chan int32, 1)
-	lotteryPendingMap.Store(txIdStr, ch)
-	defer lotteryPendingMap.Delete(txIdStr)
+	// 6. 在广播前订阅 Redis 通知频道，确保任意实例的 HandleScannedTx 都能通知到本实例
+	redisPubSub := l.rd.Subscribe(context.Background(), "tx:notify:"+txIdStr)
+	defer redisPubSub.Close()
+	redisMsgCh := redisPubSub.Channel()
 
 	// 7. 发送交易给 base 模块
 	sentTxId, err := l.baseClient.SendTransaction(ctx, &preCheckedTx.SOLTx, l.service, l.subService)
@@ -353,22 +340,21 @@ func (l *LotteryLogic) ProcessCommitTx(ctx context.Context, preCheckedTx *app_ut
 
 	// 9. 同步等待链上确认，最长 90 秒
 	select {
-	case txState := <-ch:
+	case msg := <-redisMsgCh:
+		txState, _ := strconv.ParseInt(msg.Payload, 10, 32)
 		log.Infof("%s 链上确认结果 txState=%d", prefix, txState)
-		return txState, nil
-	case <-ctx.Done():
-		log.Infof("%s 请求取消，客户端已断开", prefix)
-		return 0, errors.New("request cancelled")
+		return int32(txState), nil
 	case <-time.After(90 * time.Second):
 		log.Infof("%s 等待链上确认超时（90s），txId=%s，直接标记失败", prefix, txIdStr)
 		l.db.Table(model.TableNameLotteryClaim).
 			Where("tx_id = ? AND tx_state = ?", txIdStr, constants.TxStateInit).
 			Updates(map[string]interface{}{"tx_state": constants.TxStateFailed, "updated_at": time.Now()})
-		// HandleScannedTx 可能刚好在超时边界发出了通知，检查 channel 和 DB 避免误报失败
+		// HandleScannedTx 可能刚好在超时边界发出了通知，检查 Redis channel 和 DB 避免误报失败
 		select {
-		case txState := <-ch:
-			log.Infof("%s 超时后从 channel 收到确认结果 txState=%d，返回真实结果", prefix, txState)
-			return txState, nil
+		case msg := <-redisMsgCh:
+			txState, _ := strconv.ParseInt(msg.Payload, 10, 32)
+			log.Infof("%s 超时后从 Redis channel 收到确认结果 txState=%d，返回真实结果", prefix, txState)
+			return int32(txState), nil
 		default:
 		}
 		var finalClaim model.LotteryClaim

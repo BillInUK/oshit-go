@@ -11,11 +11,12 @@ import (
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"runtime/debug"
+	"strconv"
 	"time"
 )
 
 // updateDailyClaimStats 在 dbTx 事务内更新每日领取统计，并在 take_count 达到阈值时设置 need_lottery=true
-func (l *TakeTokenLogic) updateDailyClaimStats(dbTx *gorm.DB, nativeAccount string) error {
+func (l *TakeTokenLogic) updateDailyClaimStats(dbTx *gorm.DB, nativeAccount string, takeAmountUI float64) error {
 	today := time.Now().Truncate(24 * time.Hour)
 	now := time.Now()
 
@@ -25,13 +26,13 @@ func (l *TakeTokenLogic) updateDailyClaimStats(dbTx *gorm.DB, nativeAccount stri
 	}
 	var res result
 	rawSQL := `
-		INSERT INTO t_daily_claim_stats (native_account, take_date, take_count, need_lottery, last_take_time)
-		VALUES (?, ?, 1, false, ?)
+		INSERT INTO t_daily_claim_stats (native_account, take_date, take_count, need_lottery, last_take_time, total_take)
+		VALUES (?, ?, 1, false, ?, ?)
 		ON CONFLICT (native_account, take_date)
-		DO UPDATE SET take_count = t_daily_claim_stats.take_count + 1, last_take_time = ?
+		DO UPDATE SET take_count = t_daily_claim_stats.take_count + 1, last_take_time = ?, total_take = t_daily_claim_stats.total_take + ?
 		RETURNING take_count
 	`
-	if err := dbTx.Raw(rawSQL, nativeAccount, today, now, now).Scan(&res).Error; err != nil {
+	if err := dbTx.Raw(rawSQL, nativeAccount, today, now, takeAmountUI, now, takeAmountUI).Scan(&res).Error; err != nil {
 		log.Errorf("TakeToken - 更新每日领取统计错误: %v", err)
 		return err
 	}
@@ -86,6 +87,8 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	if takeTokenRecord.TxState != int32(constants.TxStateInit) {
 		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, takeTokenRecord.TxState)
 		dbTx.Rollback()
+		// 无论如何都清理 Redis 锁，防止 90s 超时写 Failed 后锁残留
+		l.rd.Del(context.Background(), "take-token:process:commit-tx:"+takeTokenRecord.ReceiptAccount)
 		return nil
 	}
 
@@ -105,8 +108,8 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		}
 		log.Infof("%s 更新记录为成功，邀请码 %v，确定邀请关系 %v", prefix, takeTokenRecord.InviteCode, takeTokenRecord.Invited)
 
-		// 更新每日领取统计
-		if err = l.updateDailyClaimStats(dbTx, takeTokenRecord.ReceiptAccount); err != nil {
+		// 更新每日领取统计（存 raw 金额，前端 /1000 显示）
+		if err = l.updateDailyClaimStats(dbTx, takeTokenRecord.ReceiptAccount, takeTokenRecord.Amount); err != nil {
 			log.Errorf("%s 更新每日领取统计错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -146,15 +149,13 @@ func (l *TakeTokenLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	// 清理 ProcessCommitTx 持有的分布式锁（服务重启导致 defer 未执行时锁会残留长达 1 小时）
 	l.rd.Del(context.Background(), "take-token:process:commit-tx:"+takeTokenRecord.ReceiptAccount)
 
-	// 通知 ProcessCommitTx 中等待确认的 channel
+	// 通过 Redis Pub/Sub 通知 ProcessCommitTx（支持多实例部署）
 	finalState := constants.TxStateSuccess
 	if msg.TxSig.Err != nil {
 		finalState = constants.TxStateFailed
 	}
-	if ch, ok := takePendingMap.LoadAndDelete(txId); ok {
-		if c, ok := ch.(chan int32); ok {
-			c <- int32(finalState)
-		}
+	if err := l.rd.Publish(context.Background(), "tx:notify:"+txId, strconv.Itoa(int(finalState))).Err(); err != nil {
+		log.Warnf("%s Redis 通知发布失败: %v", prefix, err)
 	}
 
 	return nil
@@ -211,11 +212,9 @@ func (l *TakeTokenLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		return err
 	}
 
-	// 通知 ProcessCommitTx 中等待确认的 channel（交易已过期）
-	if ch, ok := takePendingMap.LoadAndDelete(txId); ok {
-		if c, ok := ch.(chan int32); ok {
-			c <- int32(constants.TxStateExpired)
-		}
+	// 通过 Redis Pub/Sub 通知 ProcessCommitTx（交易已过期）
+	if err := l.rd.Publish(context.Background(), "tx:notify:"+txId, strconv.Itoa(int(constants.TxStateExpired))).Err(); err != nil {
+		log.Warnf("%s Redis 通知发布失败: %v", prefix, err)
 	}
 
 	return nil

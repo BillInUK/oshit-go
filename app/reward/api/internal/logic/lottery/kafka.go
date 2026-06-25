@@ -11,6 +11,7 @@ import (
 	"oshit-go/common/pkg/dal/model"
 	"oshit-go/common/pkg/entity"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -48,6 +49,14 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 	if claimRecord.TxState != int32(constants.TxStateInit) {
 		log.Infof("%s 交易状态已为 %d，跳过重复处理", prefix, claimRecord.TxState)
 		dbTx.Rollback()
+		// 无论如何都清理 Redis 锁，防止 90s 超时写 Failed 后锁残留
+		rewardIdForLock := strings.Trim(claimRecord.RewardIds, "{}")
+		var rewardForLock model.LotteryReward
+		if err := l.db.Table(model.TableNameLotteryReward).
+			Where("record_id = ?", rewardIdForLock).
+			First(&rewardForLock).Error; err == nil {
+			l.rd.Del(context.Background(), "lottery:process:commit-tx:"+rewardForLock.NativeAccount)
+		}
 		return nil
 	}
 
@@ -98,11 +107,16 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 			return err
 		}
 
-		// 更新 t_daily_claim_stats.need_lottery = false
+		// 更新 t_daily_claim_stats.need_lottery = false，累加 total_lottery
 		today := time.Now().Truncate(24 * time.Hour)
+		// 存 raw 金额，前端 /1000 显示
 		if err := dbTx.Table(model.TableNameDailyClaimStats).
 			Where("native_account = ? AND take_date = ?", reward.NativeAccount, today).
-			Updates(map[string]interface{}{"need_lottery": false, "updated_at": time.Now()}).Error; err != nil {
+			Updates(map[string]interface{}{
+				"need_lottery":  false,
+				"total_lottery": gorm.Expr("total_lottery + ?", reward.RewardAmount),
+				"updated_at":    time.Now(),
+			}).Error; err != nil {
 			log.Errorf("%s 更新每日统计need_lottery为false错误: %v", prefix, err)
 			dbTx.Rollback()
 			return err
@@ -124,15 +138,13 @@ func (l *LotteryLogic) HandleScannedTx(msg entity.NewScannedTx) error {
 		l.rd.Del(context.Background(), "lottery:process:commit-tx:"+rewardForLock.NativeAccount)
 	}
 
-	// 通知 ProcessCommitTx 中等待确认的 channel
+	// 通过 Redis Pub/Sub 通知 ProcessCommitTx（支持多实例部署）
 	finalState := constants.TxStateSuccess
 	if msg.TxSig.Err != nil {
 		finalState = constants.TxStateFailed
 	}
-	if ch, ok := lotteryPendingMap.LoadAndDelete(txId); ok {
-		if c, ok := ch.(chan int32); ok {
-			c <- int32(finalState)
-		}
+	if err := l.rd.Publish(context.Background(), "tx:notify:"+txId, strconv.Itoa(int(finalState))).Err(); err != nil {
+		log.Warnf("%s Redis 通知发布失败: %v", prefix, err)
 	}
 
 	return nil
@@ -200,11 +212,9 @@ func (l *LotteryLogic) HandleExpiredTx(msg entity.NewExpiredTx) error {
 		return err
 	}
 
-	// 通知 ProcessCommitTx 中等待确认的 channel（交易已过期）
-	if ch, ok := lotteryPendingMap.LoadAndDelete(txId); ok {
-		if c, ok := ch.(chan int32); ok {
-			c <- int32(constants.TxStateExpired)
-		}
+	// 通过 Redis Pub/Sub 通知 ProcessCommitTx（交易已过期）
+	if err := l.rd.Publish(context.Background(), "tx:notify:"+txId, strconv.Itoa(int(constants.TxStateExpired))).Err(); err != nil {
+		log.Warnf("%s Redis 通知发布失败: %v", prefix, err)
 	}
 
 	return nil
