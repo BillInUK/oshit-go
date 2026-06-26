@@ -125,8 +125,12 @@ func NewServiceContext() (*ServiceContext, error) {
 		fmt.Printf("Init kafka producer error: %v\n", err)
 	}
 
-	// 初始化 dtoken 管理器（JWT 鉴权）
-	utils.InitDTokenManager()
+	if err := utils.LoadJWTSecretFromEnv(); err != nil {
+		return nil, err
+	}
+	if err := utils.InitDTokenManager(); err != nil {
+		return nil, err
+	}
 
 	// 初始化任务管理器
 	svcCtx.startTasks()

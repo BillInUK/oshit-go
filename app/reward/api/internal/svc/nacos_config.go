@@ -26,6 +26,7 @@ const (
 
 type baseRuntimeNacosConfig struct {
 	System            runtimeSystemConfig  `yaml:"system"`
+	Auth              runtimeAuthConfig    `yaml:"auth"`
 	Chain             runtimeChainConfig   `yaml:"chain"`
 	RPCEndpoints      []runtimeRPCEndpoint `yaml:"rpc_endpoints"`
 	Token             runtimeTokenConfig   `yaml:"token"`
@@ -44,6 +45,10 @@ type runtimeRPCEndpoint struct {
 
 type runtimeSystemConfig struct {
 	Env int32 `yaml:"env"`
+}
+
+type runtimeAuthConfig struct {
+	JWTSecret string `yaml:"jwt_secret"`
 }
 
 type runtimeChainConfig struct {
@@ -270,6 +275,11 @@ func (s *ServiceContext) applyBaseRuntimeContent(content string) error {
 	}
 	if cfg.Token.Mint == "" {
 		return fmt.Errorf("token.mint is required")
+	}
+	if cfg.Auth.JWTSecret != "" {
+		if err := utils.SetJWTSecret(cfg.Auth.JWTSecret); err != nil {
+			return fmt.Errorf("set jwt secret: %w", err)
+		}
 	}
 	lighthouse := cfg.LightHouseAddress
 	if lighthouse == "" {

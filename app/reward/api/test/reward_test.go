@@ -19,26 +19,14 @@ const (
 	Symbol          = "OShit"
 	SOLLoginSignMsg = "I am login %s for token %s with my address %s with nonce %d"
 
-	// mainnet:
-	//RpcUrl           = "https://radial-purple-sailboat.solana-mainnet.quiknode.pro/0afcb192bb26b0dbcba3d49df6ad2ee2829c529b/"
-	//WssUrl           = "wss://radial-purple-sailboat.solana-mainnet.quiknode.pro/0afcb192bb26b0dbcba3d49df6ad2ee2829c529b/"
-	//TokenMintAddress = "ShitJuMfPKCQU7LedLERFYapDta7CCdKExPWX2gETRH"
-
-	// testnet:
-	RpcUrl           = "https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
-	WssUrl           = "wss://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
 	TokenMintAddress = "wtnrTujJqBRUknLRhQQcUSwzAzx8LvcxKXEuBwvFnJM"
 
-	AlicePrivate      = "46dPKNS2nHDuaGrdJ9tyr7mJ1H6Gu8EKcvPNDmC8zZ2xf1SpuhzR9kfK7uA3mf1RsfwoYvJDYdjA4WPkjtSv1r4E"
 	AliceNativePubKey = "5D4MWh35wxUcY1hBsm5GwuippPL2UBmfDnfkC8MeqxcN"
 
-	BobPrivate      = "43HXEVBSJzsfA9PQpYbE9GFuAg1YwcKuLiecqvqUVMg8p8EcDSXgQShBMBsqURWogs7k173BehCWF2y17VEXnZkn"
 	BobNativePubKey = "27htRMGeQ4HV32SPHsJrpndZn1zwmF2kiPqmABcHgehx"
 
-	DavidPrivate      = "4LRdCeZ4EYHsGtRr99zbh6WLZCa7jACVuhunzrbgyKvP4NxKuHPnaJ52t1AKzREbaD5n2NMsKYkdPMcnYRMacjgU"
 	DavidNativePubKey = "JAZtFeZfLeeVtWS4vrruCpTa5LdASRDJuMe7yLKbkJk"
 
-	RobertPrivate      = "MzJGrbzW1yqSzAAbGLHbSkHKmGFS6kuhACV8wFxePqSwe6rTsv7N3eRVozdJcJSBQAPT6rjtnmoCFxv6YuA5hGq"
 	RobertNativePubKey = "6HLScqNL4EQWLk8DTcB4hXUrHjDkVbeP2a3Sc5VtHozM"
 
 	BaseURL   = "http://localhost:1100/base"
@@ -47,7 +35,11 @@ const (
 	//RewardURL = "https://beta.testnet.oshit.io/meme/reward/api/v1"
 )
 
-var rpcClient = rpc.New(RpcUrl)
+var (
+	RpcUrl    = testRPCURL()
+	WssUrl    = testWSSURL()
+	rpcClient = rpc.New(RpcUrl)
+)
 
 // ---- 公共数据类型 ----
 
@@ -225,10 +217,7 @@ func getInstUnits() (*InstUnitsRsp, error) {
 // ---- 通用测试用例 ----
 
 func TestLogin(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(BobPrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "bob")
 	nativeAccount := privKey.PublicKey()
 	t.Logf("账户地址: %s", nativeAccount.String())
 

@@ -17,6 +17,7 @@ var sensitiveFields = []string{
 	// base-runtime.yaml
 	"aws.access_key_id",
 	"aws.secret_access_key",
+	"auth.jwt_secret",
 	"mainnet_rpc.api_key",
 	"rpc_endpoints.*.api_key",
 	"rpc_endpoints.*.wss_api_key",

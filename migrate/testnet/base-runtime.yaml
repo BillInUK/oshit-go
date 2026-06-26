@@ -1,3 +1,5 @@
+auth:
+  jwt_secret: ENC~oI49JumRyrTe+ZFXkL5dlMR5p0z/jtJwyKhOxTQqY4lb94pdmXQS4t83yr6NyIK3EwGFMmtqS1Uz0O6Gs5ZwLozTj/xEkDe5iDebgcsj3XA=
 aws:
   access_key_id: ENC~ihWNxeVRQ0slBhNekwpyYPvSS8P+d8Kah0eO8RkedaWgwB74S4IExXSM6GOLnq2OrPMYeMsHAVPI4OSDAzr/0Q==
   region: ap-southeast-1

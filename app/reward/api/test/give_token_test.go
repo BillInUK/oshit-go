@@ -206,10 +206,7 @@ func createGiveTokenHexEncodedTx(ctx context.Context, privKey solana.PrivateKey,
 // ---- GiveToken 测试用例 ----
 
 func TestGetGiveTokenTxInfo(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "david")
 	fromPubKey := privKey.PublicKey()
 
 	jwtToken, err := loginForToken(Brand, Symbol, fromPubKey, privKey)
@@ -240,11 +237,8 @@ func TestGetGiveTokenTxInfo(t *testing.T) {
 }
 
 func TestGiveToken(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
+	privKey := loadTestPrivateKey(t, "david")
 	to := RobertNativePubKey
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
 
 	encodedTx, err := createGiveTokenHexEncodedTx(context.Background(), privKey, to, 1000)
 	if err != nil {

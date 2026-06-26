@@ -37,7 +37,7 @@ func parseLoginIDFromJWT(tokenStr string) (string, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(utils.JWT_SECRET_KEY), nil
+		return utils.JWTSecretBytes()
 	})
 	if err != nil || !token.Valid {
 		return "", fmt.Errorf("invalid token")

@@ -140,7 +140,12 @@ func NewServiceContext() (*ServiceContext, error) {
 
 	// 初始化 dtoken 管理器（JWT 鉴权）
 	fmt.Println("[init] initializing token manager...")
-	utils.InitDTokenManager()
+	if err := utils.LoadJWTSecretFromEnv(); err != nil {
+		return nil, err
+	}
+	if err := utils.InitDTokenManager(); err != nil {
+		return nil, err
+	}
 
 	// 初始化任务管理器
 	srvCtx.startTasks()

@@ -208,10 +208,7 @@ func TestGetPosRewardConfig(t *testing.T) {
 
 // TestGetPosRewardRecords 查询未领取的 pos 奖励列表
 func TestGetPosRewardRecords(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "david")
 	jwtToken, err := loginForToken(Brand, Symbol, privKey.PublicKey(), privKey)
 	if err != nil {
 		t.Fatalf("loginForToken failed: %v", err)
@@ -231,10 +228,7 @@ func TestGetPosRewardRecords(t *testing.T) {
 
 // TestGetPosRewardTxInfo 获取领取 pos 奖励的交易参数
 func TestGetPosRewardTxInfo(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "david")
 	jwtToken, err := loginForToken(Brand, Symbol, privKey.PublicKey(), privKey)
 	if err != nil {
 		t.Fatalf("loginForToken failed: %v", err)
@@ -257,10 +251,7 @@ func TestGetPosRewardTxInfo(t *testing.T) {
 // TestClaimPosReward 完整领取流程：tx-info → 构建交易 → commit-tx → 轮询确认
 func TestClaimPosReward(t *testing.T) {
 	ctx := context.Background()
-	privKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "david")
 	pubKey := privKey.PublicKey()
 
 	// 1. 登录获取 JWT

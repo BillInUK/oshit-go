@@ -28,18 +28,23 @@ const (
 )
 
 type baseRuntimeNacosConfig struct {
-	System            runtimeSystemConfig      `yaml:"system"`
-	Chain             runtimeChainConfig       `yaml:"chain"`
-	RPCEndpoints      []runtimeRPCEndpoint     `yaml:"rpc_endpoints"`
-	MainnetRPC        runtimeMainnetRPCConfig  `yaml:"mainnet_rpc"`
-	Token             runtimeTokenConfig       `yaml:"token"`
-	FeeTolerance      runtimeFeeTolerance      `yaml:"fee_tolerance"`
-	AWS               runtimeAWSConfig         `yaml:"aws"`
-	LightHouseAddress string                   `yaml:"lighthouse_address"`
+	System            runtimeSystemConfig     `yaml:"system"`
+	Auth              runtimeAuthConfig       `yaml:"auth"`
+	Chain             runtimeChainConfig      `yaml:"chain"`
+	RPCEndpoints      []runtimeRPCEndpoint    `yaml:"rpc_endpoints"`
+	MainnetRPC        runtimeMainnetRPCConfig `yaml:"mainnet_rpc"`
+	Token             runtimeTokenConfig      `yaml:"token"`
+	FeeTolerance      runtimeFeeTolerance     `yaml:"fee_tolerance"`
+	AWS               runtimeAWSConfig        `yaml:"aws"`
+	LightHouseAddress string                  `yaml:"lighthouse_address"`
 }
 
 type runtimeSystemConfig struct {
 	Env int32 `yaml:"env"`
+}
+
+type runtimeAuthConfig struct {
+	JWTSecret string `yaml:"jwt_secret"`
 }
 
 type runtimeChainConfig struct {
@@ -259,6 +264,11 @@ func (s *ServiceContext) applyRuntimeConfigContent(content string) error {
 	}
 	if cfg.Token.Mint == "" {
 		return fmt.Errorf("token.mint is required")
+	}
+	if cfg.Auth.JWTSecret != "" {
+		if err := utils.SetJWTSecret(cfg.Auth.JWTSecret); err != nil {
+			return fmt.Errorf("set jwt secret: %w", err)
+		}
 	}
 	lighthouse := cfg.LightHouseAddress
 	if lighthouse == "" {

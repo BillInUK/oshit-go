@@ -37,16 +37,16 @@ type ServiceContext struct {
 	PosWhiteListMap  map[string]model.PosStarWhitelist // pos 星级用户白名单
 
 	// stake业务配置
-	StakeAmmConfig     *model.StakeAmmConfig               // stake amm 做市地址
-	StakeRewardConfig  *model.StakeRewardConfig            // stake 普通用户奖励发放配置
-	LeaderRewardConfig *model.StakeLeaderRewardConfig      // stake 区域经理(领导)奖励发放配置
+	StakeAmmConfig     *model.StakeAmmConfig                        // stake amm 做市地址
+	StakeRewardConfig  *model.StakeRewardConfig                     // stake 普通用户奖励发放配置
+	LeaderRewardConfig *model.StakeLeaderRewardConfig               // stake 区域经理(领导)奖励发放配置
 	StakeFixConfig     map[int32]map[int32]model.StakeFixRateConfig // stake 每日固定利息配置
-	StakeInviteRate    map[int32]model.StakeInviteRate     // stake 邀请人奖励配置
-	StakeStarLevelRule map[int32]model.StakeStarLevelRule  // stake 星级用户配置
-	TotalAreaLeaders   []model.StakeTotalLeader            // stake 总区域经理(领导)配置
-	StakeTokenPoolMap  map[string]model.StakeTokenPool     // stake token 池配置
-	StakeDistLevel     int32                               // stake 奖励层级配置
-	StakeStarWhitelist map[string]model.StakeStarWhitelist // stake 星级用户白名单
+	StakeInviteRate    map[int32]model.StakeInviteRate              // stake 邀请人奖励配置
+	StakeStarLevelRule map[int32]model.StakeStarLevelRule           // stake 星级用户配置
+	TotalAreaLeaders   []model.StakeTotalLeader                     // stake 总区域经理(领导)配置
+	StakeTokenPoolMap  map[string]model.StakeTokenPool              // stake token 池配置
+	StakeDistLevel     int32                                        // stake 奖励层级配置
+	StakeStarWhitelist map[string]model.StakeStarWhitelist          // stake 星级用户白名单
 	configDecryptKey   string
 }
 
@@ -141,7 +141,12 @@ func NewServiceContext() (*ServiceContext, error) {
 	}
 
 	// 初始化 dtoken 管理器（JWT 鉴权）
-	utils.InitDTokenManager()
+	if err := utils.LoadJWTSecretFromEnv(); err != nil {
+		return nil, err
+	}
+	if err := utils.InitDTokenManager(); err != nil {
+		return nil, err
+	}
 
 	// 初始化任务管理器
 	srvCtx.startTasks()

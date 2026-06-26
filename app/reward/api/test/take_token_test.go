@@ -199,10 +199,7 @@ func TestGetTakeTokenTxInfo(t *testing.T) {
 
 func TestTakeToken(t *testing.T) {
 	inviteCode := "ogG0W1OK"
-	privKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "david")
 
 	encodedTx, err := createHexEncodedTx(context.Background(), privKey, inviteCode)
 	if err != nil {

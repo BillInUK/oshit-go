@@ -13,3 +13,18 @@
 *.so
 *.dylib
 bin/
+
+# Runtime output
+app/*/api/cache/
+app/*/api/log/
+*.log
+
+# Local secrets and key material
+.env
+.env.*
+*.pem
+*keypair*.json
+*config-key.enc
+*priv-key.enc
+*wallet*.json
+*id_rsa*

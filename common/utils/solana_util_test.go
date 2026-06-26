@@ -3,6 +3,8 @@ package utils
 import (
 	"fmt"
 	"github.com/gagliardetto/solana-go"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -22,7 +24,11 @@ func TestGetATA(t *testing.T) {
 }
 
 func TestLoadPrivateKey(t *testing.T) {
-	privateKey, err := solana.PrivateKeyFromBase58("5EEB7yAG8pyHLZDfk7zzzGfsMcKfgMCwFbr6pwoaXKDDVQa78umAk3m6ehr7em8ZsWubg7FnjWBvZHgarxHKFJk2")
+	path := strings.TrimSpace(os.Getenv("OSHIT_TEST_KEYPAIR"))
+	if path == "" {
+		t.Skip("OSHIT_TEST_KEYPAIR is required for this test")
+	}
+	privateKey, err := solana.PrivateKeyFromSolanaKeygenFile(path)
 	if err != nil {
 		panic(err)
 	}

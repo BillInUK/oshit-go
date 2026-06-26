@@ -28,12 +28,9 @@ const (
 	Symbol          = "OShit"
 	SOLLoginSignMsg = "I am login %s for token %s with my address %s with nonce %d"
 
-	// devnet
-	RpcUrl           = "https://solitary-solitary-brook.solana-devnet.quiknode.pro/59ff9976f07ec18f5fceb2766ebecbb9b2247bc8/"
 	TokenMintAddress = "wtnrTujJqBRUknLRhQQcUSwzAzx8LvcxKXEuBwvFnJM"
 
 	// 测试账户（devnet）
-	DavidPrivate      = "4LRdCeZ4EYHsGtRr99zbh6WLZCa7jACVuhunzrbgyKvP4NxKuHPnaJ52t1AKzREbaD5n2NMsKYkdPMcnYRMacjgU"
 	DavidNativePubKey = "JAZtFeZfLeeVtWS4vrruCpTa5LdASRDJuMe7yLKbkJk"
 
 	BaseURL = "http://localhost:1100/base"
@@ -45,7 +42,10 @@ const (
 	systemTransferCU uint64 = 500 // System.Transfer 固定预留 CU
 )
 
-var rpcClient = rpc.New(RpcUrl)
+var (
+	RpcUrl    = testRPCURL()
+	rpcClient = rpc.New(RpcUrl)
+)
 
 // ---- 公共数据类型 ----
 
@@ -342,10 +342,7 @@ func createStakeRewardHexEncodedTx(ctx context.Context, privKey solana.PrivateKe
 
 // TestGetStakeRewardRecords 查询未领取的 stake 奖励列表
 func TestGetStakeRewardRecords(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "david")
 	jwtToken, err := loginForToken(Brand, Symbol, privKey.PublicKey(), privKey)
 	if err != nil {
 		t.Fatalf("loginForToken failed: %v", err)
@@ -365,10 +362,7 @@ func TestGetStakeRewardRecords(t *testing.T) {
 
 // TestGetStakeRewardTxInfo 获取领取 stake 奖励的交易参数
 func TestGetStakeRewardTxInfo(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "david")
 	jwtToken, err := loginForToken(Brand, Symbol, privKey.PublicKey(), privKey)
 	if err != nil {
 		t.Fatalf("loginForToken failed: %v", err)
@@ -393,10 +387,7 @@ func TestGetStakeRewardTxInfo(t *testing.T) {
 // TestClaimStakeReward 完整领取流程：tx-info → 构建交易 → commit-tx → 轮询确认
 func TestClaimStakeReward(t *testing.T) {
 	ctx := context.Background()
-	privKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "david")
 	pubKey := privKey.PublicKey()
 
 	// 1. 登录获取 JWT

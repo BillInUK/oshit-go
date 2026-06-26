@@ -100,9 +100,9 @@ Kafka UI 访问地址：http://localhost:9080
 # 2. 启动 Nacos（standalone 模式，内置 Derby 数据库）
 docker run --name nacos-standalone-derby \
     -e MODE=standalone \
-    -e NACOS_AUTH_TOKEN=pHVWBPFlwQ9EYMntyyzIQPweJOdU7BerkjGFsV6aohFBGjxW \
-    -e NACOS_AUTH_IDENTITY_KEY=4bb5bd15aa29f5e8 \
-    -e NACOS_AUTH_IDENTITY_VALUE=+2a+Nwzd038BV5pEQDANara7fTwVbMXt \
+    -e NACOS_AUTH_TOKEN=${NACOS_AUTH_TOKEN} \
+    -e NACOS_AUTH_IDENTITY_KEY=${NACOS_AUTH_IDENTITY_KEY} \
+    -e NACOS_AUTH_IDENTITY_VALUE=${NACOS_AUTH_IDENTITY_VALUE} \
     -p 8080:8080 \
     -p 8848:8848 \
     -p 9848:9848 \

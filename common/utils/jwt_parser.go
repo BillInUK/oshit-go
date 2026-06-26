@@ -94,5 +94,5 @@ func VerifyToken(c *fiber.Ctx) (*jwt.Token, error) {
 }
 
 func JwtKeyFunc(token *jwt.Token) (interface{}, error) {
-	return []byte(JWT_SECRET_KEY), nil
+	return JWTSecretBytes()
 }

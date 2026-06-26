@@ -9,17 +9,58 @@ import (
 	"fmt"
 	"github.com/form3tech-oss/jwt-go"
 	"math/rand"
+	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 const (
-	JWT_SECRET_KEY                      = "5PFv/UUuAPjvN/XZlfT9Eg=="
 	JWT_SECRET_KEY_EXPIRE_MINUTES_COUNT = 5 * 24 * 60 // 5*24*60
 	JWT_REFRESH_KEY                     = "refresh"
 	JWT_REFRESH_KEY_EXPIRE_HOURS_COUNT  = 5
 )
+
+var (
+	jwtSecretMu sync.RWMutex
+	jwtSecret   string
+)
+
+func SetJWTSecret(secret string) error {
+	if strings.TrimSpace(secret) == "" {
+		return fmt.Errorf("jwt secret is empty")
+	}
+	jwtSecretMu.Lock()
+	defer jwtSecretMu.Unlock()
+	jwtSecret = secret
+	return nil
+}
+
+func JWTSecret() string {
+	jwtSecretMu.RLock()
+	defer jwtSecretMu.RUnlock()
+	return jwtSecret
+}
+
+func JWTSecretBytes() ([]byte, error) {
+	secret := JWTSecret()
+	if strings.TrimSpace(secret) == "" {
+		return nil, fmt.Errorf("jwt secret is not initialized")
+	}
+	return []byte(secret), nil
+}
+
+func LoadJWTSecretFromEnv() error {
+	if strings.TrimSpace(JWTSecret()) != "" {
+		return nil
+	}
+	secret := strings.TrimSpace(os.Getenv("OSHIT_JWT_SECRET"))
+	if secret == "" {
+		return nil
+	}
+	return SetJWTSecret(secret)
+}
 
 // Tokens struct to describe tokens object.
 type Tokens struct {
@@ -84,7 +125,11 @@ func generateNewAccessToken(id string, credentials map[string]interface{}) (stri
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate token.
-	t, err := token.SignedString([]byte(JWT_SECRET_KEY))
+	secret, err := JWTSecretBytes()
+	if err != nil {
+		return "", err
+	}
+	t, err := token.SignedString(secret)
 	if err != nil {
 		// Return error, it JWT token generation failed.
 		return "", err

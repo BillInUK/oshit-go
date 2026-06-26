@@ -195,10 +195,7 @@ func TestGetRewardCodeTxInfo(t *testing.T) {
 
 // TestRewardCode 执行完整奖励码领取流程：随机选码 → tx-info → 构建交易 → commit-tx → 轮询确认
 func TestRewardCode(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(AlicePrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "alice")
 
 	// 1. 随机选择奖励码（1000000~1000010）
 	rand.New(rand.NewSource(time.Now().UnixNano()))

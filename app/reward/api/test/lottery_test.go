@@ -189,10 +189,7 @@ func createLotteryHexEncodedTx(ctx context.Context, privKey solana.PrivateKey, t
 // ---- Lottery 测试用例 ----
 
 func TestGetLotteryStatus(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(AlicePrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "alice")
 	jwtToken, err := loginForToken(Brand, Symbol, privKey.PublicKey(), privKey)
 	if err != nil {
 		t.Fatalf("loginForToken failed: %v", err)
@@ -229,10 +226,7 @@ func TestGetUnclaimedLotteryRewards(t *testing.T) {
 }
 
 func TestExecuteLottery(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(AlicePrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "alice")
 
 	jwtToken, err := loginForToken(Brand, Symbol, privKey.PublicKey(), privKey)
 	if err != nil {
@@ -272,10 +266,7 @@ func TestGetLotteryTxInfo(t *testing.T) {
 
 // TestLottery 执行完整抽奖领取流程：execute → tx-info → 构建交易 → commit-tx
 func TestLottery(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(AlicePrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "alice")
 	pubKey := privKey.PublicKey()
 
 	// 1. 登录获取 JWT
@@ -411,10 +402,7 @@ func doFullLotteryFlow(t *testing.T, privKey solana.PrivateKey) {
 
 // TestTakeAndLottery 模拟连续 take token，分别在第 5、10、20 次触发抽奖
 func TestTakeAndLottery(t *testing.T) {
-	privKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("parse private key failed: %v", err)
-	}
+	privKey := loadTestPrivateKey(t, "david")
 	inviteCode := ""
 	pollTimeout := 3 * time.Minute
 

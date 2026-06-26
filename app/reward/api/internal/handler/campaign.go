@@ -91,7 +91,6 @@ func (h *CampaignHandler) GetExchangeLimit(fiberCtx *fiber.Ctx) error {
 
 // GetTxInfo 获取兑换积分交易信息
 func (h *CampaignHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
-	prefix := fmt.Sprintf("%s 获取交易信息 -")
 	ctx := fiberCtx.Context()
 	xAcJwt := fiberCtx.Get("x-ac-jwt")
 	if xAcJwt == "" {
@@ -115,7 +114,7 @@ func (h *CampaignHandler) GetTxInfo(fiberCtx *fiber.Ctx) error {
 	l := campaign.NewCampaignLogic(ctx, h.srvCtx)
 	txInfo, err := l.GetTxInfo(ctx, userId, req.Score)
 	if err != nil {
-		log.Errorf("%s 用户id: %d 兑换积分额度: %d", prefix, userId, req.Score)
+		log.Errorf("%s 获取交易信息 - 用户id: %d 兑换积分额度: %d", h.prefix, userId, req.Score)
 		return response.FailWithMsg(fiberCtx, "get transaction info error")
 	}
 	return response.OkWithData(fiberCtx, txInfo)

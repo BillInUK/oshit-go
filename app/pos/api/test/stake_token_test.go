@@ -22,9 +22,6 @@ import (
 const (
 	StakingProgramIDStr = "CyLTEgvmqVF9dPJkT6bMgccfXL7G26EXRAM9FEuP5ki6"
 
-	// devnet 测试环境下管理员与用户使用同一密钥
-	StakingAdminPrivate = "5LCaLqUSWKaD95BsR6sNQ4A62rCoADsxVsfYqhirEsGa5eNmDZwx1vxWoDTgio8eKT3K9HHwj7b5KfaVjYEsin6a"
-
 	// 每次质押的基础数量（不含精度，合约最小要求 100000）
 	StakingBaseAmount uint64 = 100000
 
@@ -297,14 +294,8 @@ func stakingSendAndConfirm(
 func TestStakeUnstakeRestake(t *testing.T) {
 	ctx := context.Background()
 
-	userKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("解析用户私钥失败: %v", err)
-	}
-	adminKey, err := solana.PrivateKeyFromBase58(StakingAdminPrivate)
-	if err != nil {
-		t.Fatalf("解析管理员私钥失败: %v", err)
-	}
+	userKey := loadTestPrivateKey(t, "david")
+	adminKey := loadTestPrivateKey(t, "staking_admin")
 
 	programID := solana.MPK(StakingProgramIDStr)
 	mintPubKey := solana.MPK(TokenMintAddress)
@@ -551,10 +542,7 @@ func stakingBuildHexEncodedTx(
 func TestSubmitStakeTokenViaBackend(t *testing.T) {
 	ctx := context.Background()
 
-	userKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("解析用户私钥失败: %v", err)
-	}
+	userKey := loadTestPrivateKey(t, "david")
 	userPubKey := userKey.PublicKey()
 
 	programID := solana.MPK(StakingProgramIDStr)
@@ -646,10 +634,7 @@ func TestSubmitStakeTokenViaBackend(t *testing.T) {
 func TestUnstakeAll(t *testing.T) {
 	ctx := context.Background()
 
-	userKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("解析私钥失败: %v", err)
-	}
+	userKey := loadTestPrivateKey(t, "david")
 	userPubKey := userKey.PublicKey()
 
 	programID := solana.MPK(StakingProgramIDStr)
@@ -789,10 +774,7 @@ func TestUnstakeAll(t *testing.T) {
 func TestRestakeAll(t *testing.T) {
 	ctx := context.Background()
 
-	userKey, err := solana.PrivateKeyFromBase58(DavidPrivate)
-	if err != nil {
-		t.Fatalf("解析私钥失败: %v", err)
-	}
+	userKey := loadTestPrivateKey(t, "david")
 	userPubKey := userKey.PublicKey()
 
 	programID := solana.MPK(StakingProgramIDStr)
