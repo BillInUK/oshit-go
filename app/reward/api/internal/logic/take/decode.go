@@ -187,7 +187,7 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 		// 如果token的收款地址为转账发起人的TokenAccount，则认为是奖励转账人token指令
 		if toTokenAccount.Equals(decodedTx.FromTokenAccount) {
 			log.Infof("%s 邀请码[%s] 有效 [%t]", prefix, txInfo.InviteCode, txInfo.InviteCodeValid)
-			err := l.checkRewardInst(decodedInst, decodedTx.FromNativeAccount, txInfo.InviteCodeValid)
+			err := l.checkRewardInst(decodedInst, decodedTx.FromNativeAccount, txInfo.RewardInfo.Amount)
 			if err != nil {
 				log.Errorf("%s 检查奖励领取地址的指令错误: %v", prefix, err)
 				return nil, fmt.Errorf("check official given token reward instruction error: %v", err)
@@ -242,7 +242,7 @@ func (l *TakeTokenLogic) checkDecodedSOLTx(txInfo *types.TakeTokenTxInfo, decode
 }
 
 // checkRewardInst 检查官网领取奖励的发送token指令是否符合规则
-func (l *TakeTokenLogic) checkRewardInst(decodedInst entity.DecodedSolTransferCheckedInst, txFromNativeAccount solana.PublicKey, inviteCodeValid bool) error {
+func (l *TakeTokenLogic) checkRewardInst(decodedInst entity.DecodedSolTransferCheckedInst, txFromNativeAccount solana.PublicKey, expectedAmount uint64) error {
 	prefix := fmt.Sprintf("%s 检查奖励领取人指令 -", l.prefix)
 
 	rewardTokenAccount, _, _ := solana.FindAssociatedTokenAddress(
@@ -271,12 +271,8 @@ func (l *TakeTokenLogic) checkRewardInst(decodedInst entity.DecodedSolTransferCh
 	// TODO: 校验Owner地址
 
 	// 金额是否跟规则规定的一样
-	if inviteCodeValid && decodedInst.Amount != uint64(l.serviceConfig.InviteAmount) {
-		log.Errorf("%s 错误: 奖励金额[%d]和规则规定的金额[%d]不一致", prefix, decodedInst.Amount, uint64(l.serviceConfig.InviteAmount))
-		return errors.New("reward amount not equal officially rule")
-	}
-	if !inviteCodeValid && decodedInst.Amount != uint64(l.serviceConfig.Amount) {
-		log.Errorf("%s 错误: 奖励金额[%d]和规则规定的金额[%d]不一致", prefix, decodedInst.Amount, uint64(l.serviceConfig.Amount))
+	if decodedInst.Amount != expectedAmount {
+		log.Errorf("%s 错误: 奖励金额[%d]和规则规定的金额[%d]不一致", prefix, decodedInst.Amount, expectedAmount)
 		return errors.New("reward amount not equal officially rule")
 	}
 

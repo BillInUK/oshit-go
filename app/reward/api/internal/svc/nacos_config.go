@@ -99,6 +99,7 @@ type rewardTakeTokenConfig struct {
 	Amount        float64 `yaml:"amount"`
 	InviteAmount  float64 `yaml:"invite_amount"`
 	CostFeeRate   float64 `yaml:"cost_fee_rate"`
+	InvitedRate   float64 `yaml:"invited_rate"`
 	MaxCostFee    float64 `yaml:"max_cost_fee"`
 	IsDefault     bool    `yaml:"is_default"`
 	RewardInviter bool    `yaml:"reward_inviter"`
@@ -379,6 +380,7 @@ func (s *ServiceContext) applyRewardRuntimeContent(content string) error {
 		Amount:        cfg.TakeTokenConfig.Amount,
 		InviteAmount:  cfg.TakeTokenConfig.InviteAmount,
 		CostFeeRate:   cfg.TakeTokenConfig.CostFeeRate,
+		InvitedRate:   cfg.TakeTokenConfig.InvitedRate,
 		MaxCostFee:    cfg.TakeTokenConfig.MaxCostFee,
 		IsDefault:     cfg.TakeTokenConfig.IsDefault,
 		RewardInviter: cfg.TakeTokenConfig.RewardInviter,
