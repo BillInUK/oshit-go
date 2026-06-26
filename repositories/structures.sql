@@ -794,7 +794,6 @@ CREATE TABLE public.t_stake_snap_shot
     native_account varchar(64) not null,                                  -- native account 地址
     amount         numeric(78, 0),                                        -- 质押金额
     stake_type     int         not null,                                  -- 质押类型 0.180天 1.360天
-    rate_tier      int         not null default 1,                        -- 档位 1.cutoff前 2.cutoff后
     snap_day       date        not null,                                  -- 快照的日期
     rate_tier      integer     not null default 1,                        -- 快照的日期
     created_at     timestamp without time zone default current_timestamp, -- 记录创建时间

@@ -61,17 +61,20 @@ func NewServiceContext() (*ServiceContext, error) {
 	}
 
 	// 解密 application.yaml 中的 ENC~ 字段
+	fmt.Println("[init] decrypting config...")
 	if err := utils.JasyptDecode(cfg, decryptKey, decryptAlgo); err != nil {
 		return nil, fmt.Errorf("decrypt application config: %w", err)
 	}
 
 	// 初始化数据库
+	fmt.Println("[init] connecting to database...")
 	db, err := initDatabase(cfg.Database)
 	if err != nil {
 		return nil, err
 	}
 
 	// 初始化 Redis
+	fmt.Println("[init] connecting to redis...")
 	redisClient, err := initRedis(cfg.Redis)
 	if err != nil {
 		return nil, err
@@ -93,45 +96,56 @@ func NewServiceContext() (*ServiceContext, error) {
 	}
 
 	// 初始化数据库配置
+	fmt.Println("[init] loading database configs...")
 	if err := srvCtx.initDatabaseConfigs(); err != nil {
 		return nil, err
 	}
 
+	fmt.Println("[init] connecting to nacos config client...")
 	if err := srvCtx.initNacosConfigClient(); err != nil {
 		fmt.Printf("Init nacos config client error: %v\n", err)
-	} else if err := srvCtx.initNacosRuntimeConfigs(); err != nil {
-		fmt.Printf("Init nacos runtime configs error: %v\n", err)
+	} else {
+		fmt.Println("[init] loading nacos runtime configs...")
+		if err := srvCtx.initNacosRuntimeConfigs(); err != nil {
+			fmt.Printf("Init nacos runtime configs error: %v\n", err)
+		}
 	}
 
 	// 初始化Solana RPC客户端
 	srvCtx.initSolanaRPC()
 
 	// 初始化Kafka生产者
+	fmt.Println("[init] connecting to kafka producer...")
 	if err := srvCtx.initKafkaProducer(); err != nil {
 		fmt.Printf("Init kafka producer error: %v\n", err)
 	}
 
 	// 初始化Kafka消费者
+	fmt.Println("[init] connecting to kafka consumer...")
 	if err := srvCtx.initKafkaConsumer(); err != nil {
 		fmt.Printf("Init kafka consumer error: %v\n", err)
 	}
 
 	// 初始化 Base 模块 RPC 客户端
+	fmt.Println("[init] connecting to base dubbo client...")
 	if err := srvCtx.initBaseClient(); err != nil {
 		fmt.Printf("Init base client error: %v\n", err)
 	}
 
 	// 初始化 Campaign 模块 RPC 客户端
+	fmt.Println("[init] connecting to campaign client...")
 	if err := srvCtx.initCampaignClient(); err != nil {
 		fmt.Printf("Init campaign client error: %v\n", err)
 	}
 
 	// 初始化 dtoken 管理器（JWT 鉴权）
+	fmt.Println("[init] initializing token manager...")
 	utils.InitDTokenManager()
 
 	// 初始化任务管理器
 	srvCtx.startTasks()
 
+	fmt.Println("[init] listening nacos configs...")
 	if err := srvCtx.listenNacosConfigs(); err != nil {
 		fmt.Printf("Listen nacos configs error: %v\n", err)
 	}

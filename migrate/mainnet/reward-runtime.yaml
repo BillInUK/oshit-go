@@ -40,11 +40,11 @@ lottery_token:
 campaign_quote:
   reward_account: "4e1QkZ6mM3bXskMqESVKDs1GRgPGEyVQyPXjWM8GoTjS"
   cost_account: "4DZ3ry8LfaM3kEc6KCL4nDpNpnVX6g4Z6EFvYyNXsiqn"
-  quote_rate: 500.00
+  quote_rate: 50000.00
   cost_rate: 17.00
   global_daily_limit: 500000000
   user_daily_limit: 50000000
 
 reward_code:
-  reward_account: "3WwtCT8m2rrjTHK1hgL47eBNZd1KNZQZNvCZhiVsCbN3"
+  reward_account: "xfMYopaKia2LYHsppTwRqNrs1YyY9PSu43abnNTtJif"
   cost_account: "4DZ3ry8LfaM3kEc6KCL4nDpNpnVX6g4Z6EFvYyNXsiqn"
