@@ -43,7 +43,7 @@ func (p *StakeTxParser) ParseStakeTx(ctx context.Context, txSignature solana.Sig
 		txSignature,
 		&rpc.GetTransactionOpts{
 			MaxSupportedTransactionVersion: &maxSupportVersion,
-			Commitment:                     rpc.CommitmentFinalized,
+			Commitment:                     rpc.CommitmentConfirmed,
 			Encoding:                       solana.EncodingBase64,
 		},
 	)
